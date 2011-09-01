@@ -1,0 +1,18 @@
+LIBRARY	"weasel.ime"
+
+EXPORTS
+                ImeConversionList
+                ImeConfigure
+                ImeDestroy
+                ImeEscape
+                ImeInquire
+                ImeProcessKey
+                ImeSelect
+                ImeSetActiveContext
+                ImeToAsciiEx
+                NotifyIME
+                ImeRegisterWord
+                ImeUnregisterWord
+                ImeGetRegisterWordStyle
+                ImeEnumRegisterWord
+                ImeSetCompositionString

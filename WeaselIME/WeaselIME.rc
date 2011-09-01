@@ -1,0 +1,127 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,3,0,0
+ PRODUCTVERSION 0,3,0,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x3L
+ FILESUBTYPE 0xbL
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040404b0"
+        BEGIN
+            VALUE "CompanyName", "中州式恕堂"
+            VALUE "FileDescription", "小狼毫"
+            VALUE "FileVersion", "0, 3, 0, 0"
+            VALUE "InternalName", "WeaselIME"
+            VALUE "LegalCopyright", "版權所無 中州式恕堂 2011"
+            VALUE "OriginalFilename", "weasel.ime"
+            VALUE "ProductName", "小狼毫"
+            VALUE "ProductVersion", "0, 3, 0, 0"
+        END
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName", "中州式恕堂"
+            VALUE "FileDescription", "小狼毫"
+            VALUE "FileVersion", "0, 3, 0, 0"
+            VALUE "InternalName", "WeaselIME"
+            VALUE "LegalCopyright", "版權所無 中州式恕堂 2011"
+            VALUE "OriginalFilename", "weasel.ime"
+            VALUE "ProductName", "小狼毫"
+            VALUE "ProductVersion", "0, 3, 0, 0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+#ifdef WEASEL_HANT
+        VALUE "Translation", 0x404, 1200
+#else
+        VALUE "Translation", 0x804, 1200
+#endif
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ZHUNG               ICON                    "..\\resource\\zhung.ico"
+IDI_ALPHA               ICON                    "..\\resource\\alpha.ico"
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

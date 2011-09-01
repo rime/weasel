@@ -1,0 +1,2 @@
+call env.bat
+cmd
