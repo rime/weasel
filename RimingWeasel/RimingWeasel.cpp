@@ -12,7 +12,7 @@ const WCHAR* utf8towcs(const char* utf8_str)
 {
 	const int buffer_len = 8192;
 	static WCHAR buffer[buffer_len];
-	if (!MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, utf8_str, -1, buffer, buffer_len))
+	if (!MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, buffer, buffer_len))
 		buffer[buffer_len - 1] = '\0';
 	return buffer;
 }
