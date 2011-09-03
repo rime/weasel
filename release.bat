@@ -21,7 +21,7 @@ copy misc\*.py %OUTPUT%
 copy misc\*.reg %OUTPUT%
 copy misc\*.txt %OUTPUT%
 copy Release\WeaselServer.exe %OUTPUT%
-copy Release\weasel.ime %OUTPUT%\weasels.ime
+copy ReleaseHans\weasel.ime %OUTPUT%\weasels.ime
 copy ReleaseHant\weasel.ime %OUTPUT%\weaselt.ime
 rem for installer
 copy misc\zhung.* output

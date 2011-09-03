@@ -371,7 +371,7 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 	{
 		// may suffer loss of data...
 		m_ctx.aux.clear();
-		m_ctx.aux.str = L"未能完整讀取候選信息！";
+		m_ctx.aux.str = L":(";
 		//return TRUE;
 	}
 

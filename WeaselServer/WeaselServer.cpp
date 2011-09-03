@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include <WeaselIPC.h>
+#include <RimingWeasel.h>
 
 CAppModule _Module;
 
@@ -38,7 +39,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	int nRet = 0;
 	try
 	{
-		weasel::Server server(NULL);
+		weasel::Server server(new RimingWeaselHandler);
 		if (!server.Start())
 			return -1;
 		nRet = server.Run();

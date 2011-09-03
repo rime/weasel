@@ -224,15 +224,15 @@ namespace ibus
 		MOD4_MASK = 1 << 6,
 		MOD5_MASK = 1 << 7,
 
-		HANDLED_MASK = 1 << 8,
-		IGNORED_MASK = 1 << 9,
-		FORWARD_MASK = 1 << 9,
+		HANDLED_MASK = 1 << 8,  // 24
+		IGNORED_MASK = 1 << 9,  // 25
+		FORWARD_MASK = 1 << 9,  // 25
 
-		SUPER_MASK = 1 << 10,
-		HYPER_MASK = 1 << 11,
-		META_MASK = 1 << 12,
+		SUPER_MASK = 1 << 10,   // 26
+		HYPER_MASK = 1 << 11,   // 27
+		META_MASK = 1 << 12,    // 28
 
-		RELEASE_MASK = 1 << 14,
+		RELEASE_MASK = 1 << 14,  // 30
 
 		MODIFIER_MASK = 0x2fff
 	};
