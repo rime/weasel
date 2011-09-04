@@ -32,8 +32,8 @@ if exist "%UserProfile%\.ibus\zime\zime.db" goto db_ok
 echo stopping service.
 call stop_service.bat
 
-echo creating database.
-call install_schema.bat
+rem echo creating database.
+rem call install_schema.bat
 
 :db_ok
 

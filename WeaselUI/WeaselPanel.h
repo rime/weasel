@@ -4,9 +4,9 @@
 static LPCWSTR DEFAULT_FONT_FACE = L"Arial";
 static const int DEFAULT_FONT_POINT = 12;
 
-static const int MIN_WIDTH = 200;
+static const int MIN_WIDTH = 100;
 static const int MIN_HEIGHT = 0;
-static const int BORDER = 1;
+static const int BORDER = 3;
 static const int MARGIN_X = 12;
 static const int MARGIN_Y = 10;
 static const int SPACING = 9;

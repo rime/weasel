@@ -20,9 +20,11 @@ copy misc\*.js %OUTPUT%
 copy misc\*.py %OUTPUT%
 copy misc\*.reg %OUTPUT%
 copy misc\*.txt %OUTPUT%
+copy misc\*.yaml %OUTPUT%
+copy misc\*.bin %OUTPUT%
 copy Release\WeaselServer.exe %OUTPUT%
 copy ReleaseHans\weasel.ime %OUTPUT%\weasels.ime
 copy ReleaseHant\weasel.ime %OUTPUT%\weaselt.ime
 rem for installer
-copy misc\zhung.* output
+rem copy misc\zhung.* output
 pause

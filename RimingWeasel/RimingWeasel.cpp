@@ -10,11 +10,16 @@
 
 const WCHAR* utf8towcs(const char* utf8_str)
 {
-	const int buffer_len = 8192;
+	const int buffer_len = 4096;
 	static WCHAR buffer[buffer_len];
-	if (!MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, buffer, buffer_len))
-		buffer[buffer_len - 1] = '\0';
+	memset(buffer, 0, sizeof(buffer));
+	MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, buffer, buffer_len - 1);
 	return buffer;
+}
+
+int utf8towcslen(const char* utf8_str, int utf8_len)
+{
+	return MultiByteToWideChar(CP_UTF8, 0, utf8_str, utf8_len, NULL, 0);
 }
 
 int expand_ibus_modifier(int m)
@@ -89,7 +94,8 @@ bool RimingWeaselHandler::_Respond(UINT sessionID, LPWSTR buffer)
 			if (ctx.composition.sel_start < ctx.composition.sel_end)
 			{
 				messages.push_back(boost::str(boost::format("ctx.preedit.cursor=%d,%d\n") % 
-					ctx.composition.sel_start % ctx.composition.sel_end));
+					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start) % 
+					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)));
 			}
 		}
 		if (ctx.menu.num_candidates)

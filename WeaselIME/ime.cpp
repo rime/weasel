@@ -58,12 +58,12 @@ LRESULT WINAPI ImeEscape(HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 
 BOOL WINAPI ImeProcessKey(HIMC hIMC, UINT vKey, LPARAM lKeyData, const LPBYTE lpbKeyState)
 {
-	BOOL bEaten = FALSE;
+	BOOL accepted = FALSE;
 	shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
     if (!p)
         return FALSE;
-	bEaten = p->ProcessKeyEvent(vKey, lKeyData, lpbKeyState);
-	return bEaten;
+	accepted = p->ProcessKeyEvent(vKey, lKeyData, lpbKeyState);
+	return accepted;
 }
 
 BOOL WINAPI ImeSelect(HIMC hIMC, BOOL fSelect)

@@ -5,8 +5,9 @@
 #include <ResponseParser.h>
 #include "WeaselIME.h"
 
-const WCHAR WEASEL[] = L"小狼毫";
-const WCHAR WEASEL_IME_FILE[] = L"weasel.ime";
+const WCHAR WEASEL[] = L"小狼毫 0.9";
+const WCHAR WEASEL_IME_FILE[] = L"weasel0.ime";
+const WCHAR WEASEL_REG_KEY[] = L"Software\\Rime\\Weasel0";
 
 HINSTANCE WeaselIME::s_hModule = 0;
 HIMCMap WeaselIME::s_instances;
@@ -82,7 +83,7 @@ LPCWSTR WeaselIME::GetIMEFileName()
 
 LPCWSTR WeaselIME::GetRegKey()
 {
-	return L"Software\\Rime\\Weasel";
+	return WEASEL_REG_KEY;
 }
 
 HINSTANCE WeaselIME::GetModuleInstance()
@@ -325,7 +326,7 @@ LRESULT WeaselIME::_OnIMENotify(LPINPUTCONTEXT lpIMC, WPARAM wp, LPARAM lp)
 
 BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeyState)
 {
-	bool taken = false;
+	bool accepted = false;
 
 #ifdef KEYCODE_VIEWER
 	{
@@ -362,16 +363,17 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 		return FALSE;
 	}
 
-	taken = m_client.ProcessKeyEvent(ke);
+	accepted = m_client.ProcessKeyEvent(ke);
 
 	wstring commit;
+	m_ctx.clear();
 	weasel::ResponseParser parser(commit, m_ctx, m_status);
 	bool ok = m_client.GetResponseData(boost::ref(parser));
 	if (!ok)
 	{
 		// may suffer loss of data...
-		m_ctx.aux.clear();
-		m_ctx.aux.str = L":(";
+		m_ctx.preedit.clear();
+		m_ctx.preedit.str = L"不好使了 :(";
 		//return TRUE;
 	}
 
@@ -404,7 +406,7 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 
 	_UpdateContext(m_ctx);
 
-	return (BOOL)taken;
+	return (BOOL)accepted;
 }
 
 HRESULT WeaselIME::_Initialize()
