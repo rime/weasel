@@ -5,9 +5,9 @@
 #include <ResponseParser.h>
 #include "WeaselIME.h"
 
-const WCHAR WEASEL[] = L"小狼毫 0.9";
-const WCHAR WEASEL_IME_FILE[] = L"weasel0.ime";
-const WCHAR WEASEL_REG_KEY[] = L"Software\\Rime\\Weasel0";
+const WCHAR WEASEL[] = L"【小狼毫】";
+const WCHAR WEASEL_IME_FILE[] = L"weasel.ime";
+const WCHAR WEASEL_REG_KEY[] = L"Software\\Rime\\Weasel";
 
 HINSTANCE WeaselIME::s_hModule = 0;
 HIMCMap WeaselIME::s_instances;
