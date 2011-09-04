@@ -4,7 +4,7 @@
 static LPCWSTR DEFAULT_FONT_FACE = L"Arial";
 static const int DEFAULT_FONT_POINT = 12;
 
-static const int MIN_WIDTH = 100;
+static const int MIN_WIDTH = 150;
 static const int MIN_HEIGHT = 0;
 static const int BORDER = 3;
 static const int MARGIN_X = 12;
@@ -15,6 +15,8 @@ static const int HIGHLIGHT_PADDING = 0;
 static const int ROUND_CORNER = 5;
 static const COLORREF HIGHLIGHTED_TEXT_COLOR = RGB(255, 255, 128);
 static const COLORREF HIGHLIGHTED_CAND_COLOR = RGB(0, 0, 0);
+
+static WCHAR CANDIDATE_PROMPT_PATTERN[] = L" %1%. %2% ";
 
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 

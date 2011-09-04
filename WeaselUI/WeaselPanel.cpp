@@ -51,7 +51,7 @@ void WeaselPanel::_ResizeWindow()
 	vector<Text> const& candidates = m_ctx.cinfo.candies;
 	for (size_t i = 0; i < candidates.size(); ++i, height += CAND_SPACING)
 	{
-		wstring cand = (boost::wformat(L"%1%. %2%") % (i + 1) % candidates[i].str).str();
+		wstring cand = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % (i + 1) % candidates[i].str).str();
 		dc.GetTextExtent(cand.c_str(), cand.length(), &sz);
 		width = max(width, sz.cx);
 		height += sz.cy;
@@ -146,7 +146,7 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 	{
 		if (y >= rc.bottom)
 			break;
-		wstring t = (boost::wformat(L" %1%. %2%") % (i + 1) % candies[i].str).str();
+		wstring t = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % (i + 1) % candies[i].str).str();
 		CSize szText;
 		dc.GetTextExtent(t.c_str(), t.length(), &szText);
 		CRect rcText(rc.left, y, rc.right, y + szText.cy);
