@@ -69,6 +69,8 @@ private:
 	HRESULT _StartComposition();
 	HRESULT _EndComposition(LPCWSTR composition);
 	HRESULT _AddIMEMessage(UINT msg, WPARAM wp, LPARAM lp);
+	void _SetCandidatePos(LPINPUTCONTEXT lpIMC);
+	void _SetCompositionWindow(LPINPUTCONTEXT lpIMC);
 	void _UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt);
 	void _UpdateContext(weasel::Context const& ctx);
 	weasel::UIStyle const GetUIStyleSettings();
@@ -77,7 +79,7 @@ private:
 	static HINSTANCE s_hModule;
 	static HIMCMap s_instances;
 	HIMC m_hIMC;
-	bool m_alwaysDetectCaretPos;
+	bool m_preferCandidatePos;
 	weasel::UI m_ui;
 	weasel::Client m_client;
 	weasel::Context m_ctx;

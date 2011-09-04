@@ -62,13 +62,13 @@ static bool launch_server()
 }
 
 WeaselIME::WeaselIME(HIMC hIMC) 
-	: m_hIMC(hIMC), m_alwaysDetectCaretPos(false)
+	: m_hIMC(hIMC), m_preferCandidatePos(false)
 {
 	WCHAR path[MAX_PATH];
 	GetModuleFileName(NULL, path, _countof(path));
 	wstring exe = wpath(path).filename();
 	if (boost::iequals(L"chrome.exe", exe))
-		m_alwaysDetectCaretPos = true;
+		m_preferCandidatePos = true;
 }
 
 LPCWSTR WeaselIME::GetIMEName()
@@ -277,9 +277,10 @@ LRESULT WeaselIME::OnUIMessage(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp)
 		break;
 	case WM_IME_SELECT:
 		{
-			// detect caret pos
-			POINT pt = {-1, -1};
-			this->_UpdateInputPosition(lpIMC, pt);
+			if (m_preferCandidatePos)
+				_SetCandidatePos(lpIMC);
+			else
+				_SetCompositionWindow(lpIMC);
 		}
 		break;
 	default:
@@ -300,28 +301,52 @@ LRESULT WeaselIME::_OnIMENotify(LPINPUTCONTEXT lpIMC, WPARAM wp, LPARAM lp)
 	{
 	case IMN_SETCANDIDATEPOS:
 		{
-			POINT pt = lpIMC->cfCandForm[0].ptCurrentPos;
-			_UpdateInputPosition(lpIMC, pt);
+			_SetCandidatePos(lpIMC);
 		}
 
 	case IMN_SETCOMPOSITIONWINDOW:
 		{
+			if (m_preferCandidatePos)
+				_SetCandidatePos(lpIMC);
+			else
+				_SetCompositionWindow(lpIMC);
+		}
+		break;
+	}
+
+	return 0;
+}
+
+void WeaselIME::_SetCandidatePos(LPINPUTCONTEXT lpIMC)
+{
+	POINT pt = lpIMC->cfCandForm[0].ptCurrentPos;
+	_UpdateInputPosition(lpIMC, pt);
+}
+
+void WeaselIME::_SetCompositionWindow(LPINPUTCONTEXT lpIMC)
+{
 			POINT pt = {-1, -1};
 			switch (lpIMC->cfCompForm.dwStyle)
 			{
 			case CFS_DEFAULT:
 				// require caret pos detection
 				break;
-			default:
+			case CFS_RECT:
+				//pt.x = lpIMC->cfCompForm.rcArea.left;
+				//pt.y = lpIMC->cfCompForm.rcArea.top;
+				break;
+			case CFS_POINT:
+			case CFS_FORCE_POSITION:
 				pt = lpIMC->cfCompForm.ptCurrentPos;
+				break;
+			case CFS_CANDIDATEPOS:
+				pt = lpIMC->cfCandForm[0].ptCurrentPos;
+				break;
+			default:
+				// require caret pos detection
 				break;
 			}
 			_UpdateInputPosition(lpIMC, pt);
-		}
-		break;
-	}
-
-	return 0;
 }
 
 BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeyState)
@@ -541,18 +566,10 @@ HRESULT WeaselIME::_AddIMEMessage(UINT msg, WPARAM wp, LPARAM lp)
 
 void WeaselIME::_UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt)
 {
-	if (m_alwaysDetectCaretPos || pt.x == -1 && pt.y == -1)
+	if (pt.x == -1 && pt.y == -1)
 	{
 		// caret pos detection required
-		GUITHREADINFO threadInfo;
-		threadInfo.cbSize = sizeof(GUITHREADINFO);
-		BOOL ret = GetGUIThreadInfo(GetCurrentThreadId(), &threadInfo);
-		if (ret && IsWindow(threadInfo.hwndCaret) && IsWindowVisible(threadInfo.hwndCaret))
-		{
-			pt.x = threadInfo.rcCaret.left;
-			pt.y = threadInfo.rcCaret.top;
-		}
-		else
+		if(!GetCaretPos(&pt))
 			pt.x = pt.y = 0;
 	}
 
