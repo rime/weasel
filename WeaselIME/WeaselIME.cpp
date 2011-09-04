@@ -5,7 +5,7 @@
 #include <ResponseParser.h>
 #include "WeaselIME.h"
 
-const WCHAR WEASEL[] = L"【小狼毫】";
+const WCHAR WEASEL[] = L"小狼毫";
 const WCHAR WEASEL_IME_FILE[] = L"weasel.ime";
 const WCHAR WEASEL_REG_KEY[] = L"Software\\Rime\\Weasel";
 
