@@ -162,7 +162,7 @@
 				AdditionalDependencies="imm32.lib librime.lib yaml-cpp.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(SolutionDir)\lib\python&quot;"
-				GenerateDebugInformation="true"
+				GenerateDebugInformation="false"
 				SubSystem="2"
 				TargetMachine="1"
 			/>

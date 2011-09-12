@@ -27,10 +27,10 @@ call env.bat
 
 :python_ok
 
-if exist "%UserProfile%\.ibus\zime\zime.db" goto db_ok
-
 echo stopping service.
 call stop_service.bat
+
+if exist "%UserProfile%\.ibus\zime\zime.db" goto db_ok
 
 rem echo creating database.
 rem call install_schema.bat
@@ -52,6 +52,6 @@ goto success
 
 :success
 
-start notepad README.txt
+rem start notepad README.txt
 
 :exit
