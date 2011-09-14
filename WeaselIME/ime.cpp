@@ -59,7 +59,7 @@ LRESULT WINAPI ImeEscape(HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 BOOL WINAPI ImeProcessKey(HIMC hIMC, UINT vKey, LPARAM lKeyData, const LPBYTE lpbKeyState)
 {
 	BOOL accepted = FALSE;
-	shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
+	boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
     if (!p)
         return FALSE;
 	accepted = p->ProcessKeyEvent(vKey, lKeyData, lpbKeyState);
@@ -68,7 +68,7 @@ BOOL WINAPI ImeProcessKey(HIMC hIMC, UINT vKey, LPARAM lKeyData, const LPBYTE lp
 
 BOOL WINAPI ImeSelect(HIMC hIMC, BOOL fSelect)
 {
-	shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
+	boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
     if (!p)
         return FALSE;
 	HRESULT hr = p->OnIMESelect(fSelect);
@@ -82,7 +82,7 @@ BOOL WINAPI ImeSetActiveContext(HIMC hIMC, BOOL fFocus)
 {
 	if (hIMC)
 	{	
-		shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
+		boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
         if (!p)
             return FALSE;
 		HRESULT hr = p->OnIMEFocus(fFocus);
