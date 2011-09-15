@@ -137,7 +137,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(SolutionDir)\include\python&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="2"
@@ -159,10 +158,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="imm32.lib librime.lib yaml-cpp.lib"
+				AdditionalDependencies="imm32.lib librime.lib libyaml-cppmd.lib"
+				OutputFile="$(SolutionDir)\output\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(SolutionDir)\lib\python&quot;"
-				GenerateDebugInformation="false"
+				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
 			/>

@@ -103,7 +103,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
+				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"

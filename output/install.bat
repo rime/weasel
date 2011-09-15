@@ -3,9 +3,6 @@
 set IME_FILE=weasels.ime
 if /i "%1" == "/t" set IME_FILE=weaselt.ime
 
-rem called by zip installer
-if exist "weasel\%IME_FILE%" cd weasel
-
 check_python
 call env.bat
 

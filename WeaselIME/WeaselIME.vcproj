@@ -143,7 +143,7 @@
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				ModuleDefinitionFile="weasel.def"
-				GenerateDebugInformation="false"
+				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -220,7 +220,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="imm32.lib"
-				OutputFile="&quot;$(OutDir)\weasel.ime&quot;"
+				OutputFile="&quot;$(SolutionDir)\output\weaselt.ime&quot;"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				ModuleDefinitionFile="weasel.def"
@@ -301,7 +301,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="imm32.lib"
-				OutputFile="&quot;$(OutDir)\weasel.ime&quot;"
+				OutputFile="&quot;$(SolutionDir)\output\weasels.ime&quot;"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\lib"
 				ModuleDefinitionFile="weasel.def"
