@@ -16,12 +16,11 @@ namespace weasel
 	{
 		std::map<std::wstring, boost::shared_ptr<Deserializer> > deserializers;
 
-		std::wstring& r_commit;
-		Context& r_context;
-		Status& r_status;
+		std::wstring* p_commit;
+		Context* p_context;
+		Status* p_status;
 
-		// 以引用做參數初始化, 以求直接更新目標數據對象, 不做無謂的對象拷貝!
-		ResponseParser(std::wstring& commit, Context& context, Status& status);
+		ResponseParser(std::wstring* commit, Context* context = 0, Status* status = 0);
 
 		// 重載函數調用運算符, 以扮做ResponseHandler
 		bool operator() (LPWSTR buffer, UINT length);

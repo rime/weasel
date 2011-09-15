@@ -41,18 +41,18 @@ void PyWeaselHandler::Finalize()
 	// Boost.Python doesn't support Py_Finalize yet, so don't call it!
 }
 
-UINT PyWeaselHandler::FindSession(UINT sessionID)
+UINT PyWeaselHandler::FindSession(UINT session_id)
 {
 	bool found = false;
 	try
 	{
-		found = python::extract<bool>(m_service.attr("has_session")(sessionID));
+		found = python::extract<bool>(m_service.attr("has_session")(session_id));
 	}
 	catch (python::error_already_set e)
 	{
 		return 0;
 	}
-	return found ? sessionID : 0;
+	return found ? session_id : 0;
 }
 
 UINT PyWeaselHandler::AddSession(LPWSTR buffer)
@@ -82,26 +82,26 @@ UINT PyWeaselHandler::AddSession(LPWSTR buffer)
 	return id;
 }
 
-UINT PyWeaselHandler::RemoveSession(UINT sessionID)
+UINT PyWeaselHandler::RemoveSession(UINT session_id)
 {
 	bool done = false;
 	try
 	{
-		done = python::extract<bool>(m_service.attr("destroy_session")(sessionID));
+		done = python::extract<bool>(m_service.attr("destroy_session")(session_id));
 	}
 	catch (python::error_already_set e)
 	{
 		return 0;
 	}
-	return done ? sessionID : 0;
+	return done ? session_id : 0;
 }
 
-BOOL PyWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sessionID, LPWSTR buffer)
+BOOL PyWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer)
 {
 	bool taken = false;
 	try
 	{
-		python::object session = m_service.attr("get_session")(sessionID);
+		python::object session = m_service.attr("get_session")(session_id);
 		if (session.is_none())
 		{
 			return FALSE;

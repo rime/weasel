@@ -82,7 +82,7 @@ void install(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 	
 	ExpandEnvironmentStrings(L"%SystemRoot%\\system32\\", path, _countof(path));
 	wpath destPath(path);
-	destPath /= WeaselIME::GetIMEFileName();
+	destPath /= WEASEL_IME_FILE;
 
 	// 复制 weasel.ime 到系统目录
 	if (!copy_file(srcPath.native_file_string(), destPath.native_file_string()))
@@ -93,11 +93,11 @@ void install(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 
 	// 写注册表
 	HKEY hKey;
-	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WeaselIME::GetRegKey(), 
+	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 
 		                         0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(hWnd, WeaselIME::GetRegKey(), L"安裝失敗", MB_ICONERROR | MB_OK);
+		MessageBox(hWnd, WEASEL_REG_KEY, L"安裝失敗", MB_ICONERROR | MB_OK);
 		return;
 	}
 
@@ -124,7 +124,7 @@ void install(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 	RegCloseKey(hKey);
 
 	// 注册输入法
-	HKL hKL = ImmInstallIME(destPath.native_file_string().c_str(), WeaselIME::GetIMEName());
+	HKL hKL = ImmInstallIME(destPath.native_file_string().c_str(), WEASEL_IME_NAME);
 	if (!hKL)
 	{
 		DWORD dwErr = GetLastError();
@@ -175,7 +175,7 @@ void uninstall(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 				continue;
 
 			// 小狼毫?
-			if (_wcsicmp(imeFile, WeaselIME::GetIMEFileName()) == 0)
+			if (_wcsicmp(imeFile, WEASEL_IME_FILE) == 0)
 			{
 				DWORD value;
 				swscanf_s(subKey, L"%x", &value);
@@ -228,13 +228,13 @@ void uninstall(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 	RegCloseKey(hKey);
 
 	// 清除注册信息
-	RegDeleteKey(HKEY_LOCAL_MACHINE, WeaselIME::GetRegKey());
+	RegDeleteKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY);
 
 	// 删除文件
 	WCHAR path[MAX_PATH];
 	ExpandEnvironmentStrings(L"%SystemRoot%\\system32\\", path, _countof(path));
 	wstring file = path;
-	file += WeaselIME::GetIMEFileName();
+	file += WEASEL_IME_FILE;
 	if (!delete_file(file))
 	{
 		MessageBox(hWnd, file.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);

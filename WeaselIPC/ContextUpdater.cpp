@@ -21,20 +21,21 @@ ContextUpdater::~ContextUpdater()
 
 void ContextUpdater::Store(Deserializer::KeyType const& k, wstring const& value)
 {
-	if(k.size() < 2)
+	if(!m_pTarget->p_context || k.size() < 2)
 		return;
 
 	if (k[1] == L"preedit")
 	{
-		_StoreText(m_pTarget->r_context.preedit, k, value);
+		_StoreText(m_pTarget->p_context->preedit, k, value);
 		return;
 	}
 
 	if (k[1] == L"aux")
 	{
-		_StoreText(m_pTarget->r_context.aux, k, value);
+		_StoreText(m_pTarget->p_context->aux, k, value);
 		return;
 	}
+
 	if (k[1] == L"cand")
 	{
 		_StoreCand(k, value);
@@ -72,7 +73,7 @@ void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, wstring c
 
 void ContextUpdater::_StoreCand(Deserializer::KeyType k, wstring const& value)
 {
-	CandidateInfo& cinfo = m_pTarget->r_context.cinfo;
+	CandidateInfo& cinfo = m_pTarget->p_context->cinfo;
 	if(k.size() < 3)
 		return;
 	if (k[2] == L"length")

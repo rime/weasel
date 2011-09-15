@@ -13,19 +13,22 @@ namespace weasel
 		bool Connect(ServerLauncher const& launcher);
 		void Disconnect();
 		void ShutdownServer();
-		bool ProcessKeyEvent(KeyEvent keyEvent);
 		void StartSession();
 		void EndSession();
 		bool Echo();
+		bool ProcessKeyEvent(KeyEvent const& keyEvent);
+		void UpdateInputPosition(RECT const& rc);
+		void FocusIn();
+		void FocusOut();
 		bool GetResponseData(ResponseHandler const& handler);
 
 	protected:
 		HWND _GetServerWindow(LPCWSTR windowClass);
 		bool _Connected() const { return serverWnd != NULL; }
-		bool _Active() const { return _Connected() && sessionID != 0; }
+		bool _Active() const { return _Connected() && session_id != 0; }
 
 	private:
-		UINT sessionID;
+		UINT session_id;
 		HWND serverWnd;
 	};
 

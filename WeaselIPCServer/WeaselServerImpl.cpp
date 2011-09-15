@@ -166,6 +166,37 @@ LRESULT ServerImpl::OnShutdownServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 	return 0;
 }
 
+LRESULT ServerImpl::OnFocusIn(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (!m_pHandler)
+		return 0;
+	m_pHandler->FocusIn(lParam);
+	return 0;
+}
+
+LRESULT ServerImpl::OnFocusOut(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (!m_pHandler)
+		return 0;
+	m_pHandler->FocusOut(lParam);
+	return 0;
+}
+
+LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (!m_pHandler)
+		return 0;
+	RECT rc;
+	rc.left = wParam & 0xfff;
+	rc.top = (wParam >> 12) & 0xfff;
+	const int width = 6;
+	int height = (wParam >> 24) & 0xff;
+	rc.right = rc.left + width;
+	rc.bottom = rc.top + height;
+	m_pHandler->UpdateInputPosition(rc, lParam);
+	return 0;
+}
+
 // weasel::Server
 
 Server::Server(RequestHandler* pHandler)

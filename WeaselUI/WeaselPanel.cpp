@@ -7,13 +7,13 @@ using namespace weasel;
 void WeaselPanel::SetContext(const weasel::Context &ctx)
 {
 	m_ctx = ctx;
-	_Refresh();
+	Refresh();
 }
 
 void WeaselPanel::SetStatus(const weasel::Status &status)
 {
 	m_status = status;
-	_Refresh();
+	Refresh();
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -73,7 +73,7 @@ void WeaselPanel::_ResizeWindow()
 }
 
 //更新界面
-void WeaselPanel::_Refresh()
+void WeaselPanel::Refresh()
 {
 	_ResizeWindow();
 	_RepositionWindow();
@@ -223,7 +223,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	_Refresh();
+	Refresh();
 	//CenterWindow();
 	GetWindowRect(&m_inputPos);
 	return TRUE;
@@ -241,9 +241,9 @@ void WeaselPanel::CloseDialog(int nVal)
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
-	const int offset = 6;
+	const int distance = 6;
 	m_inputPos = rc;
-	m_inputPos.InflateRect(0, offset);
+	m_inputPos.OffsetRect(0, distance);
 	_RepositionWindow();
 }
 

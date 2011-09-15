@@ -41,6 +41,8 @@ public:
 	void SetContext(const weasel::Context &ctx);
 	void SetStatus(const weasel::Status &status);
 	void MoveTo(RECT const& rc);
+	void Refresh();
+
 	void DoPaint(CDCHandle dc);
 
 	LPCWSTR GetFontFace() const { return m_fontFace.c_str(); }
@@ -49,7 +51,6 @@ public:
 	void SetFontPoint(int fontPoint) { m_fontPoint = fontPoint; }
 
 private:
-	void _Refresh();
 	void _ResizeWindow();
 	void _RepositionWindow();
 	bool _DrawText(weasel::Text const& text, CDCHandle dc, CRect const& rc, int& y);

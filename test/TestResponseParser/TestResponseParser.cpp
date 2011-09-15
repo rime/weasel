@@ -17,7 +17,7 @@ void test_1()
 	wstring commit;
 	weasel::Context ctx;
 	weasel::Status status;
-	weasel::ResponseParser parser(commit, ctx, status);
+	weasel::ResponseParser parser(&commit, &ctx, &status);
 	parser(resp, len);
 	BOOST_TEST(commit.empty());
 	BOOST_TEST(ctx.empty());
@@ -34,7 +34,7 @@ void test_2()
 	weasel::Context ctx;
 	weasel::Status status;
 	ctx.aux.str = L"從前的值";
-	weasel::ResponseParser parser(commit, ctx, status);
+	weasel::ResponseParser parser(&commit, &ctx, &status);
 	parser(resp, len);
 	BOOST_TEST(commit == L"教這句話上屏=3.14");
 	BOOST_TEST(ctx.preedit.empty());
@@ -53,7 +53,7 @@ void test_3()
 	wstring commit;
 	weasel::Context ctx;
 	weasel::Status status;
-	weasel::ResponseParser parser(commit, ctx, status);
+	weasel::ResponseParser parser(&commit, &ctx, &status);
 	parser(resp, len);
 	BOOST_TEST(commit.empty());
 	BOOST_TEST(ctx.preedit.str == L"寫作串=3.14");
@@ -77,7 +77,7 @@ void test_4()
 	wstring commit;
 	weasel::Context ctx;
 	weasel::Status status;
-	weasel::ResponseParser parser(commit, ctx, status);
+	weasel::ResponseParser parser(&commit, &ctx, &status);
 	parser(resp, len);
 	BOOST_TEST(commit.empty());
 	BOOST_TEST(ctx.preedit.str == L"候選乙=3.14");

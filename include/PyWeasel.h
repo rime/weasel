@@ -10,10 +10,10 @@ public:
 	virtual ~PyWeaselHandler();
 	virtual void Initialize();
 	virtual void Finalize();
-	virtual UINT FindSession(UINT sessionID);
+	virtual UINT FindSession(UINT session_id);
 	virtual UINT AddSession(LPWSTR buffer);
-	virtual UINT RemoveSession(UINT sessionID);
-	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sessionID, LPWSTR buffer);
+	virtual UINT RemoveSession(UINT session_id);
+	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer);
 
 private:
 	bool _Respond(LPWSTR buffer, std::wstring const& msg);

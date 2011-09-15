@@ -35,6 +35,9 @@ namespace weasel
 			MESSAGE_HANDLER(WEASEL_IPC_END_SESSION, OnEndSession)	
 			MESSAGE_HANDLER(WEASEL_IPC_PROCESS_KEY_EVENT, OnKeyEvent)	
 			MESSAGE_HANDLER(WEASEL_IPC_SHUTDOWN_SERVER, OnShutdownServer)	
+			MESSAGE_HANDLER(WEASEL_IPC_FOCUS_IN, OnFocusIn)	
+			MESSAGE_HANDLER(WEASEL_IPC_FOCUS_OUT, OnFocusOut)	
+			MESSAGE_HANDLER(WEASEL_IPC_UPDATE_INPUT_POS, OnUpdateInputPosition)	
 		END_MSG_MAP()
 
 		LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -45,6 +48,9 @@ namespace weasel
 		LRESULT OnEndSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnKeyEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnShutdownServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnFocusIn(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnFocusOut(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	public:
 		ServerImpl(RequestHandler* pHandler);

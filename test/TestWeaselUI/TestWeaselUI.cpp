@@ -171,7 +171,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				RECT rc;
 				SetRect(&rc, 1000, 680, 1005, 700);
 				ui.UpdateInputPosition(rc);
-				//ui.Hide();
 			}
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;

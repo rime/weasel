@@ -42,10 +42,6 @@ private:
 class WeaselIME
 {
 public:
-	static LPCWSTR GetIMEName();
-	static LPCWSTR GetIMEFileName();
-	static LPCWSTR GetRegKey();
-	static LPCWSTR GetRegValueName();
 	static HINSTANCE GetModuleInstance();
 	static void SetModuleInstance(HINSTANCE hModule);
 	static HRESULT RegisterUIClass();
@@ -72,16 +68,11 @@ private:
 	void _SetCandidatePos(LPINPUTCONTEXT lpIMC);
 	void _SetCompositionWindow(LPINPUTCONTEXT lpIMC);
 	void _UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt);
-	void _UpdateContext(weasel::Context const& ctx);
-	weasel::UIStyle const GetUIStyleSettings();
 
 private:
 	static HINSTANCE s_hModule;
 	static HIMCMap s_instances;
 	HIMC m_hIMC;
 	bool m_preferCandidatePos;
-	weasel::UI m_ui;
 	weasel::Client m_client;
-	weasel::Context m_ctx;
-	weasel::Status m_status;
 };

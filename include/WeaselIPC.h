@@ -18,7 +18,10 @@ enum WEASEL_IPC_COMMAND
 	WEASEL_IPC_START_SESSION,
 	WEASEL_IPC_END_SESSION,
 	WEASEL_IPC_PROCESS_KEY_EVENT,
-	WEASEL_IPC_SHUTDOWN_SERVER
+	WEASEL_IPC_SHUTDOWN_SERVER,
+	WEASEL_IPC_FOCUS_IN,
+	WEASEL_IPC_FOCUS_OUT,
+	WEASEL_IPC_UPDATE_INPUT_POS,
 };
 
 namespace weasel
@@ -54,10 +57,13 @@ namespace weasel
 		virtual ~RequestHandler() {}
 		virtual void Initialize() {}
 		virtual void Finalize() {}
-		virtual UINT FindSession(UINT sessionID) { return 0; }
+		virtual UINT FindSession(UINT session_id) { return 0; }
 		virtual UINT AddSession(LPWSTR buffer) { return 0; }
-		virtual UINT RemoveSession(UINT sessionID) { return 0; }
-		virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, UINT sessionID, LPWSTR buffer) { return FALSE; }
+		virtual UINT RemoveSession(UINT session_id) { return 0; }
+		virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, LPWSTR buffer) { return FALSE; }
+		virtual void FocusIn(UINT session_id) {}
+		virtual void FocusOut(UINT session_id) {}
+		virtual void UpdateInputPosition(RECT const& rc, UINT session_id) {}
 	};
 	
 	// 處理server端回應之物件
@@ -86,14 +92,20 @@ namespace weasel
 		void Disconnect();
 		// 终止服务
 		void ShutdownServer();
-		// 请求服务处理按键消息
-		bool ProcessKeyEvent(KeyEvent keyEvent);
 		// 發起會話
 		void StartSession();
 		// 結束會話
 		void EndSession();
 		// 测试连接
 		bool Echo();
+		// 请求服务处理按键消息
+		bool ProcessKeyEvent(KeyEvent const& keyEvent);
+		// 更新输入位置
+		void UpdateInputPosition(RECT const& rc);
+		// 输入窗口获得焦点
+		void FocusIn();
+		// 输入窗口失去焦点
+		void FocusOut();
 		// 读取server返回的数据
 		bool GetResponseData(ResponseHandler handler);
 

@@ -5,7 +5,7 @@ using namespace boost::interprocess;
 using namespace weasel;
 
 ClientImpl::ClientImpl()
-	: sessionID(0),
+	: session_id(0),
 	  serverWnd(NULL)
 {
 }
@@ -47,17 +47,38 @@ void ClientImpl::ShutdownServer()
 {
 	if (_Connected())
 	{
-		SendMessage( serverWnd, WEASEL_IPC_SHUTDOWN_SERVER, 0, 0 );
+		SendMessage(serverWnd, WEASEL_IPC_SHUTDOWN_SERVER, 0, 0);
 	}
 }
 
-bool ClientImpl::ProcessKeyEvent(KeyEvent keyEvent)
+bool ClientImpl::ProcessKeyEvent(KeyEvent const& keyEvent)
 {
 	if (!_Active())
 		return false;
 
-	LRESULT ret = SendMessage( serverWnd, WEASEL_IPC_PROCESS_KEY_EVENT, keyEvent, sessionID );
+	LRESULT ret = SendMessage(serverWnd, WEASEL_IPC_PROCESS_KEY_EVENT, keyEvent, session_id);
 	return ret != 0;
+}
+
+void ClientImpl::UpdateInputPosition(RECT const& rc)
+{
+	if (!_Active())
+		return;
+	int left = min(0xfff, rc.left);
+	int top = min(0xfff, rc.top);
+	int height = min(0xff, (rc.bottom - rc.top));
+	DWORD compressed_rect = ((height & 0xff) << 24) | ((top & 0xfff) << 12) | (left & 0xfff);
+	PostMessage(serverWnd, WEASEL_IPC_UPDATE_INPUT_POS, compressed_rect, session_id);
+}
+
+void ClientImpl::FocusIn()
+{
+	PostMessage(serverWnd, WEASEL_IPC_FOCUS_IN, 0, session_id);
+}
+
+void ClientImpl::FocusOut()
+{
+	PostMessage(serverWnd, WEASEL_IPC_FOCUS_OUT, 0, session_id);
 }
 
 void ClientImpl::StartSession()
@@ -68,15 +89,15 @@ void ClientImpl::StartSession()
 	if (_Active())
 		EndSession();
 
-	UINT ret = SendMessage( serverWnd, WEASEL_IPC_START_SESSION, 0, 0 );
-	sessionID = ret;
+	UINT ret = SendMessage(serverWnd, WEASEL_IPC_START_SESSION, 0, 0);
+	session_id = ret;
 }
 
 void ClientImpl::EndSession()
 {
 	if (_Connected())
-		PostMessage( serverWnd, WEASEL_IPC_END_SESSION, 0, sessionID );
-	sessionID = 0;
+		PostMessage(serverWnd, WEASEL_IPC_END_SESSION, 0, session_id);
+	session_id = 0;
 }
 
 bool ClientImpl::Echo()
@@ -84,8 +105,8 @@ bool ClientImpl::Echo()
 	if (!_Active())
 		return false;
 
-	UINT serverEcho = SendMessage( serverWnd, WEASEL_IPC_ECHO, 0, sessionID );
-	return (serverEcho == sessionID);
+	UINT serverEcho = SendMessage(serverWnd, WEASEL_IPC_ECHO, 0, session_id);
+	return (serverEcho == session_id);
 }
 
 bool ClientImpl::GetResponseData(ResponseHandler const& handler)
@@ -159,9 +180,24 @@ void Client::ShutdownServer()
 	m_pImpl->ShutdownServer();
 }
 
-bool Client::ProcessKeyEvent(KeyEvent keyEvent)
+bool Client::ProcessKeyEvent(KeyEvent const& keyEvent)
 {
 	return m_pImpl->ProcessKeyEvent(keyEvent);
+}
+
+void Client::UpdateInputPosition(RECT const& rc)
+{
+	m_pImpl->UpdateInputPosition(rc);
+}
+
+void Client::FocusIn()
+{
+	m_pImpl->FocusIn();
+}
+
+void Client::FocusOut()
+{
+	m_pImpl->FocusOut();
 }
 
 void Client::StartSession()

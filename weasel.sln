@@ -28,7 +28,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestWeaselUI", "test\TestWe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselIME", "WeaselIME\WeaselIME.vcproj", "{A958FE3D-9F6E-44CB-981E-F2AE181657B3}"
 	ProjectSection(ProjectDependencies) = postProject
-		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4} = {10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D} = {CE11A2DF-8D20-4B07-A935-4B0D03F0303D}
 	EndProjectSection
 EndProject
@@ -60,6 +59,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestResponseParser", "test\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RimingWeasel", "RimingWeasel\RimingWeasel.vcproj", "{1C497821-BD63-4F02-9094-32B185B62F23}"
+	ProjectSection(ProjectDependencies) = postProject
+		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4} = {10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -78,9 +80,7 @@ Global
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Release|Win32.ActiveCfg = Release|Win32
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Release|Win32.Build.0 = Release|Win32
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.ReleaseHans|Win32.ActiveCfg = ReleaseHans|Win32
-		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.ReleaseHans|Win32.Build.0 = ReleaseHans|Win32
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.ReleaseHant|Win32.ActiveCfg = ReleaseHant|Win32
-		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.ReleaseHant|Win32.Build.0 = ReleaseHant|Win32
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}.Debug|Win32.ActiveCfg = Debug|Win32
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}.Debug|Win32.Build.0 = Debug|Win32
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}.Release|Win32.ActiveCfg = Release|Win32

@@ -2,12 +2,9 @@
 //
 
 #include "stdafx.h"
+#include <WeaselCommon.h>
 #include <ResponseParser.h>
 #include "WeaselIME.h"
-
-const WCHAR WEASEL[] = L"小狼毫";
-const WCHAR WEASEL_IME_FILE[] = L"weasel.ime";
-const WCHAR WEASEL_REG_KEY[] = L"Software\\Rime\\Weasel";
 
 HINSTANCE WeaselIME::s_hModule = 0;
 HIMCMap WeaselIME::s_instances;
@@ -17,10 +14,10 @@ static bool launch_server()
 
   // 從註冊表取得server位置
   HKEY hKey;
-  LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, WeaselIME::GetRegKey(), &hKey);
+  LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, &hKey);
   if (ret != ERROR_SUCCESS)
   {
-    MessageBox(NULL, L"註冊表信息無影了", WEASEL, MB_ICONERROR | MB_OK);
+    MessageBox(NULL, L"註冊表信息無影了", WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
     return false;
   }
 
@@ -30,7 +27,7 @@ static bool launch_server()
   ret = RegQueryValueEx(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
   if (ret != ERROR_SUCCESS)
   {
-    MessageBox(NULL, L"未設置 WeaselRoot", WEASEL, MB_ICONERROR | MB_OK);
+    MessageBox(NULL, L"未設置 WeaselRoot", WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
     RegCloseKey(hKey);
     return false;
   }
@@ -41,7 +38,7 @@ static bool launch_server()
   ret = RegQueryValueEx(hKey, L"ServerExecutable", NULL, &type, (LPBYTE)value, &len);
   if (ret != ERROR_SUCCESS)
   {
-    MessageBox(NULL, L"未設置 ServerExecutable", WEASEL, MB_ICONERROR | MB_OK);
+    MessageBox(NULL, L"未設置 ServerExecutable", WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
     RegCloseKey(hKey);
     return false;
   }
@@ -55,7 +52,7 @@ static bool launch_server()
   int retCode = (int)ShellExecute(NULL, L"open", exe.c_str(), NULL, dir.c_str(), SW_HIDE);
   if (retCode <= 32)
   {
-    MessageBox(NULL, L"服務進程啓動不起來 :(", WEASEL, MB_ICONERROR | MB_OK);
+    MessageBox(NULL, L"服務進程啓動不起來 :(", WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
     return false;
   }
   return true;
@@ -69,21 +66,6 @@ WeaselIME::WeaselIME(HIMC hIMC)
   wstring exe = wpath(path).filename();
   if (boost::iequals(L"chrome.exe", exe))
     m_preferCandidatePos = true;
-}
-
-LPCWSTR WeaselIME::GetIMEName()
-{
-  return WEASEL;
-}
-
-LPCWSTR WeaselIME::GetIMEFileName()
-{
-  return WEASEL_IME_FILE;
-}
-
-LPCWSTR WeaselIME::GetRegKey()
-{
-  return WEASEL_REG_KEY;
 }
 
 HINSTANCE WeaselIME::GetModuleInstance()
@@ -208,30 +190,15 @@ LRESULT WeaselIME::OnIMESelect(BOOL fSelect)
 {
   if (fSelect)
   {
-    if (!m_ui.Create(NULL))
-      return 0;
-    
-    m_ui.SetStyle(GetUIStyleSettings());
-
     // initialize weasel client
     m_client.Connect(launch_server);
     m_client.StartSession();
 
-    wstring ignored;
-    m_ctx.clear();
-    m_status.reset();
-    weasel::ResponseParser parser(ignored, m_ctx, m_status);
-    m_client.GetResponseData(boost::ref(parser));
-
-    m_ui.UpdateContext(m_ctx);
-    //m_ui.UpdateStatus(m_status);
-    
     return _Initialize();
   }
   else
   {
     m_client.EndSession();
-    m_ui.Destroy();
 
     return _Finalize();
   }
@@ -239,28 +206,27 @@ LRESULT WeaselIME::OnIMESelect(BOOL fSelect)
 
 LRESULT WeaselIME::OnIMEFocus(BOOL fFocus)
 {
+  LPINPUTCONTEXT lpIMC = ImmLockIMC(m_hIMC);
+  if(!lpIMC)
+  {
+    return 0;
+  }
   if (fFocus)
   {
-    LPINPUTCONTEXT lpIMC = ImmLockIMC(m_hIMC);
-    if(lpIMC)
+    if(!(lpIMC->fdwInit & INIT_COMPFORM))
     {
-      if(!(lpIMC->fdwInit & INIT_COMPFORM))
-      {
-        lpIMC->cfCompForm.dwStyle = CFS_DEFAULT;
-        GetCursorPos(&lpIMC->cfCompForm.ptCurrentPos);
-        ScreenToClient(lpIMC->hWnd, &lpIMC->cfCompForm.ptCurrentPos);
-        lpIMC->fdwInit |= INIT_COMPFORM;
-      }
-      ImmUnlockIMC(m_hIMC);
+      lpIMC->cfCompForm.dwStyle = CFS_DEFAULT;
+      GetCursorPos(&lpIMC->cfCompForm.ptCurrentPos);
+      ScreenToClient(lpIMC->hWnd, &lpIMC->cfCompForm.ptCurrentPos);
+      lpIMC->fdwInit |= INIT_COMPFORM;
     }
-    
-    if (!m_ctx.empty())
-      m_ui.Show();
+	m_client.FocusIn();
   }
   else
   {
-    m_ui.Hide();
+	m_client.FocusOut();
   }
+  ImmUnlockIMC(m_hIMC);
 
   return 0;
 }
@@ -359,21 +325,21 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
     if (!ConvertKeyEvent(vKey, kinfo, lpbKeyState, ke))
     {
       // unknown key event
-      m_ctx.clear();
-      m_ctx.aux.str = (boost::wformat(L"unknown key event vKey: %x, scanCode: %x, isKeyUp: %u") % vKey % kinfo.scanCode % kinfo.isKeyUp).str();
+      //m_ctx.clear();
+      //m_ctx.aux.str = (boost::wformat(L"unknown key event vKey: %x, scanCode: %x, isKeyUp: %u") % vKey % kinfo.scanCode % kinfo.isKeyUp).str();
       return FALSE;
     }
-    m_ctx.aux.str = (boost::wformat(L"keycode: %x, mask: %x, isKeyUp: %u") % ke.keycode % ke.mask % kinfo.isKeyUp).str();
-    _UpdateContext(m_ctx);
+    //m_ctx.aux.str = (boost::wformat(L"keycode: %x, mask: %x, isKeyUp: %u") % ke.keycode % ke.mask % kinfo.isKeyUp).str();
+    //_UpdateContext(m_ctx);
     return FALSE;
   }
 #endif
 
-  // 要处理KEY_UP事件（宫保拼音用KEY_UP）
-  //if (kinfo.isKeyUp)
-  //{
-  //	return FALSE;
-  //}
+  // 要处理KEY_UP事件（宫保拼音等用到KEY_UP）
+  if (kinfo.isKeyUp)
+  {
+  	return FALSE;
+  }
 
   if (!m_client.Echo())
   {
@@ -390,46 +356,16 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 
   accepted = m_client.ProcessKeyEvent(ke);
 
+  // get commit string from server
   wstring commit;
-  m_ctx.clear();
-  weasel::ResponseParser parser(commit, m_ctx, m_status);
+  weasel::ResponseParser parser(&commit);
   bool ok = m_client.GetResponseData(boost::ref(parser));
-  if (!ok)
-  {
-    // may suffer loss of data...
-    m_ctx.preedit.clear();
-    m_ctx.preedit.str = L"不好使了 :(";
-    //return TRUE;
-  }
 
-  if (!commit.empty())
+  if (ok && !commit.empty())
   {
-    if (!m_status.composing)
-    {
-      _StartComposition();
-    }
+    _StartComposition();
     _EndComposition(commit.c_str());
-    m_status.composing = false;
   }
-
-  if (!m_ctx.preedit.empty())
-  {
-    if (!m_status.composing)
-    {
-      _StartComposition();
-      m_status.composing = true;
-    }
-  }
-  else
-  {
-    if (m_status.composing)
-    {
-      _EndComposition(L"");
-      m_status.composing = false;
-    }
-  }
-
-  _UpdateContext(m_ctx);
 
   return (BOOL)accepted;
 }
@@ -586,52 +522,5 @@ void WeaselIME::_UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt)
   const int width = 6;
   RECT rc;
   SetRect(&rc, pt.x, pt.y, pt.x + width, pt.y + height);
-  m_ui.UpdateInputPosition(rc);
-}
-
-void WeaselIME::_UpdateContext(weasel::Context const& ctx)
-{
-  if (!ctx.empty())
-  {
-    m_ui.UpdateContext(m_ctx);
-    m_ui.Show();
-  }
-  else
-  {
-    m_ui.Hide();
-    m_ui.UpdateContext(m_ctx);
-  }
-}
-
-weasel::UIStyle const WeaselIME::GetUIStyleSettings()
-{
-  weasel::UIStyle style;
-
-  HKEY hKey;
-  LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, WeaselIME::GetRegKey(), &hKey);
-  if (ret != ERROR_SUCCESS)
-  {
-    return style;
-  }
-
-  {
-    WCHAR value[100];
-    DWORD len = sizeof(value);
-    DWORD type = REG_SZ;
-    ret = RegQueryValueEx(hKey, L"FontFace", NULL, &type, (LPBYTE)value, &len);
-    if (ret == ERROR_SUCCESS)
-      style.fontFace = value;
-  }
-
-  {
-    DWORD dword = 0;
-    DWORD len = sizeof(dword);
-    DWORD type = REG_DWORD;
-    ret = RegQueryValueEx(hKey, L"FontPoint", NULL, &type, (LPBYTE)&dword, &len);
-    if (ret == ERROR_SUCCESS)
-      style.fontPoint = (int)dword;
-  }
-
-  RegCloseKey(hKey);
-  return style;
+  m_client.UpdateInputPosition(rc);
 }

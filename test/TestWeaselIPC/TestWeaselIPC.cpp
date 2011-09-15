@@ -151,23 +151,23 @@ public:
 	{
 		cerr << "handler dtor: " << m_counter << endl;
 	}
-	virtual UINT FindSession(UINT sessionID)
+	virtual UINT FindSession(UINT session_id)
 	{
-		cerr << "FindSession: " << sessionID << endl;
-		return (sessionID <= m_counter ? sessionID : 0);
+		cerr << "FindSession: " << session_id << endl;
+		return (session_id <= m_counter ? session_id : 0);
 	}
 	virtual UINT AddSession()
 	{
 		cerr << "AddSession: " << m_counter + 1 << endl;
 		return ++m_counter;
 	}
-	virtual UINT RemoveSession(UINT sessionID)
+	virtual UINT RemoveSession(UINT session_id)
 	{
-		cerr << "RemoveClient: " << sessionID << endl;
+		cerr << "RemoveClient: " << session_id << endl;
 		return 0;
 	}
-	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sessionID, LPWSTR buffer) {
-		cerr << "ProcessKeyEvent: " << sessionID 
+	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer) {
+		cerr << "ProcessKeyEvent: " << session_id 
 			  << " keycode: " << keyEvent.keycode 
 			  << " mask: " << keyEvent.mask 
 			  << endl;
