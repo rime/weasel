@@ -1,20 +1,26 @@
 #pragma once
 #include <WeaselCommon.h>
 
-static LPCWSTR DEFAULT_FONT_FACE = L"Arial";
-static const int DEFAULT_FONT_POINT = 12;
+static LPCWSTR DEFAULT_FONT_FACE = L"Microsoft YaHei";
+static const int DEFAULT_FONT_POINT = 16;
 
 static const int MIN_WIDTH = 150;
 static const int MIN_HEIGHT = 0;
 static const int BORDER = 3;
 static const int MARGIN_X = 12;
-static const int MARGIN_Y = 10;
+static const int MARGIN_Y = 12;
 static const int SPACING = 9;
-static const int CAND_SPACING = 3;
+static const int CAND_SPACING = 4;
 static const int HIGHLIGHT_PADDING = 0;
-static const int ROUND_CORNER = 5;
-static const COLORREF HIGHLIGHTED_TEXT_COLOR = RGB(255, 255, 128);
-static const COLORREF HIGHLIGHTED_CAND_COLOR = RGB(0, 0, 0);
+static const int ROUND_CORNER = 4;
+
+static const COLORREF TEXT_COLOR = 0xe8f3f6;
+static const COLORREF WINDOW_COLOR = 0x444444;
+static const COLORREF BORDER_COLOR = 0x444444;
+static const COLORREF HIGHLIGHTED_TEXT_COLOR = 0x82e6ca;
+static const COLORREF HIGHLIGHTED_BACK_COLOR = 0x111111;
+static const COLORREF HIGHLIGHTED_CAND_TEXT_COLOR = 0x000000;
+static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x82e6ca;
 
 static WCHAR CANDIDATE_PROMPT_PATTERN[] = L" %1%. %2% ";
 
@@ -55,7 +61,7 @@ private:
 	void _RepositionWindow();
 	bool _DrawText(weasel::Text const& text, CDCHandle dc, CRect const& rc, int& y);
 	bool _DrawCandidates(weasel::CandidateInfo const& cinfo, CDCHandle dc, CRect const& rc, int& y);
-	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, DWORD dwRop);
+	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
 
 	wstring m_fontFace;
 	int m_fontPoint;

@@ -80,27 +80,19 @@ void WeaselPanel::Refresh()
 	RedrawWindow();
 }
 
-void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, DWORD dwRop)
+void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 {
-	COLORREF crMask = 0xFFFFFF & ~color;
 	rc.InflateRect(0, HIGHLIGHT_PADDING);
-	CMemoryDC memDC(dc, rc);
 	CBrush brush;
-	brush.CreateSolidBrush(crMask);
-	CBrush oldBrush = memDC.SelectBrush(brush);
+	brush.CreateSolidBrush(color);
+	CBrush oldBrush = dc.SelectBrush(brush);
 	CPen pen;
-	pen.CreatePen(PS_SOLID, 0, crMask);
-	CPen oldPen = memDC.SelectPen(pen);
+	pen.CreatePen(PS_SOLID, 0, color);
+	CPen oldPen = dc.SelectPen(pen);
 	CPoint ptRoundCorner(ROUND_CORNER, ROUND_CORNER);
-	memDC.RoundRect(rc, ptRoundCorner);
-	memDC.SelectBrush(oldBrush);
-	memDC.SelectPen(oldPen);
-	memDC.BitBlt(
-		rc.left, rc.top,
-		rc.Width(), rc.Height(), 
-		dc,
-		rc.left, rc.top, 
-		dwRop);
+	dc.RoundRect(rc, ptRoundCorner);
+	dc.SelectBrush(oldBrush);
+	dc.SelectPen(oldPen);
 }
 
 bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int& y)
@@ -109,11 +101,11 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 	wstring const& t = text.str;
 	if (!t.empty())
 	{
-		vector<weasel::TextAttribute> const& attrs = text.attributes;
 		CSize szText;
 		dc.GetTextExtent(t.c_str(), t.length(), &szText);
 		CRect rcText(rc.left, y, rc.right, y + szText.cy);
 		dc.ExtTextOutW(rc.left, y, ETO_CLIPPED | ETO_OPAQUE, &rcText, t.c_str(), t.length(), 0);
+		vector<weasel::TextAttribute> const& attrs = text.attributes;
 		for (size_t j = 0; j < attrs.size(); ++j)
 		{
 			if (attrs[j].type == weasel::HIGHLIGHTED)
@@ -123,13 +115,14 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 				dc.GetTextExtent(t.c_str(), range.start, &selStart);
 				CSize selEnd;
 				dc.GetTextExtent(t.c_str(), range.end, &selEnd);
-				CRect rcHilited(
-					rc.left + selStart.cx, 
-					y, 
-					rc.left + selEnd.cx, 
-					y + szText.cy
-				);
-				_HighlightText(dc, rcHilited, HIGHLIGHTED_TEXT_COLOR, SRCERASE);
+				CRect rc_hi(rc.left + selStart.cx, y, rc.left + selEnd.cx, y + szText.cy);
+				_HighlightText(dc, rc_hi, HIGHLIGHTED_BACK_COLOR);
+				dc.SetTextColor(HIGHLIGHTED_TEXT_COLOR);
+				dc.SetBkColor(HIGHLIGHTED_BACK_COLOR);
+				std::wstring str_hi(t.substr(range.start, range.end));
+				dc.ExtTextOutW(rc_hi.left, y, ETO_CLIPPED, &rc_hi, str_hi.c_str(), str_hi.length(), 0);
+				dc.SetTextColor(TEXT_COLOR);
+				dc.SetBkColor(WINDOW_COLOR);
 			}
 		}
 		y += szText.cy;
@@ -150,10 +143,16 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 		CSize szText;
 		dc.GetTextExtent(t.c_str(), t.length(), &szText);
 		CRect rcText(rc.left, y, rc.right, y + szText.cy);
-		dc.ExtTextOutW(rc.left, y, ETO_CLIPPED | ETO_OPAQUE, &rcText, t.c_str(), t.length(), 0);
 		if (i == cinfo.highlighted)
 		{
-			_HighlightText(dc, rcText, HIGHLIGHTED_CAND_COLOR, SRCINVERT);
+			_HighlightText(dc, rcText, HIGHLIGHTED_CAND_BACK_COLOR);
+			dc.SetTextColor(HIGHLIGHTED_CAND_TEXT_COLOR);
+			dc.ExtTextOutW(rc.left, y, ETO_CLIPPED, &rcText, t.c_str(), t.length(), 0);
+			dc.SetTextColor(TEXT_COLOR);
+		}
+		else
+		{
+			dc.ExtTextOutW(rc.left, y, ETO_CLIPPED, &rcText, t.c_str(), t.length(), 0);
 		}
 		y += szText.cy;
 		drawn = true;
@@ -167,25 +166,21 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	CRect rc;
 	GetClientRect(&rc);
 
-	COLORREF bgColor = GetSysColor(COLOR_WINDOW);
-	COLORREF fgColor = GetSysColor(COLOR_WINDOWTEXT);
-
 	// background
 	{
 		CBrush brush;
+		brush.CreateSolidBrush(WINDOW_COLOR);
 		CRgn rgn;
-		brush.CreateSolidBrush(bgColor);
 		rgn.CreateRectRgnIndirect(&rc);
 		dc.FillRgn(rgn, brush);
-	}
 
-	// black border
-	{
 		CPen pen;
-		pen.CreatePen(PS_SOLID | PS_INSIDEFRAME, BORDER, fgColor);
+		pen.CreatePen(PS_SOLID | PS_INSIDEFRAME, BORDER, BORDER_COLOR);
 		CPenHandle oldPen = dc.SelectPen(pen);
+		CBrushHandle oldBrush = dc.SelectBrush(brush);
 		dc.Rectangle(&rc);
 		dc.SelectPen(oldPen);
+		dc.SelectBrush(oldBrush);
 	}
 
 	long height = -MulDiv(GetFontPoint(), dc.GetDeviceCaps(LOGPIXELSY), 72);
@@ -194,8 +189,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, GetFontFace());
 	CFontHandle oldFont = dc.SelectFont(font);
 
-	dc.SetTextColor(fgColor);
-	dc.SetBkColor(bgColor);
+	dc.SetTextColor(TEXT_COLOR);
+	dc.SetBkColor(WINDOW_COLOR);
+	dc.SetBkMode(TRANSPARENT);
 
 	rc.DeflateRect(MARGIN_X, MARGIN_Y);
 
