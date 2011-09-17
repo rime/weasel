@@ -1,49 +1,84 @@
-developer notice:
 
-build boost libraries with msvc toolset (see boost documentation);
+* Howto Rime with Weasel
 
-then
+** Preparation
 
-copy <boost home>\boost\* to $(SolutionDir)\include\boost;
-copy <boost home>\stage\lib\* to $(SolutionDir)\lib;
-copy X:\Python27\include\* to $(SolutionDir)\include\python;
-copy X:\Python27\libs\* to $(SolutionDir)\lib\python;
+Fetch svn, cmake executables.
+Fetch gtest, yaml-cpp, boost source.
 
-or, alternatively
+** Set environment variables
 
-add boost home path and Python include path to:
-Visual Studio Options > Projects and Solutions > VC++ Directories > Include files;
-add <boost home>\stage\lib and X:\Python27\libs to:
-Visual Studio Options > Projects and Solutions > VC++ Directories > Library files;
+Edit librime\env.bat.template, save it as librime\env.bat .
 
-voila! 
+** Start the shell with librime\shell.bat
 
-now, make a release build, and run $(SolutionDir)\release.bat.
-the product will be place in $(SolutionDir)\output.
+** Checkout source code
 
+svn checkout https://rimeime.googlecode.com/svn/trunk/librime --username YOUR_ACCOUNT@gmail.com
 
-usage:
+svn checkout https://rimeime.googlecode.com/svn/trunk/weasel --username YOUR_ACCOUNT@gmail.com
 
-0. before you go...
+** Build Boost
 
-install Python 2.7;
+cd \code\boost_1_47_0
+bjam toolset=msvc threading=multi link=static runtime-link=static stage --with-date_time --with-filesystem --with-regex --with-signals --with-system --with-thread
 
-set Python path in $(WeaselRoot)\env.bat;
-in this case, $(WeaselRoot) refers to the directory $(SolutionDir)\output\weasel.
+** Build GTest
 
-issue the command populate-db.bat in $(SolutionDir)\data
-in case you never had a database at %UserProfile%\.ibus\zime\zime.db.
-if you don't, you will be noticed a message "NO SCHEMA" (in Chinese) once the IME is activated.
+cd \code\gtest-1.6.0
+mkdir msbuild
+cd msbuild
+cmake ..
+start gtest.sln
 
-1. to install...
+Make a Release build.
 
-install.bat
+** Build Yaml-cpp
 
-2. to uninstall...
+cd \code\yaml-cpp
 
-uninstall.bat
+Edit CMakeLists.txt MSVC build option for linking with static runtime (/MT):
 
-stop_service.bat
-you may use this to terminate the service process.
+#option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" ON)
+option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" OFF)
 
+mkdir msbuild
+cd msbuild
+cmake ..
+start YAML_CPP.sln
+
+Make a release build.
+
+** Build librime
+
+xcopy /S /I \code\gtest-1.6.0\include\gtest \code\librime\thirdparty\include\gtest\
+copy \code\gtest-1.6.0\msbuild\Release\gtest*.lib \code\librime\thirdparty\lib\
+
+xcopy /S /I \code\yaml-cpp\include\yaml-cpp \code\librime\thirdparty\include\yaml-cpp\
+copy \code\yaml-cpp\msbuild\Release\libyaml-cppmt.lib \code\librime\thirdparty\lib\
+
+cd \code\librime
+msbuild.bat
+start msbuild\rime.sln
+
+Make a release build.
+
+** Build weasel
+
+Edit weasel\weasel.vsprops.template, save it to weasel\weasel.vsprops .
+
+copy \code\librime\include\rime_api.h \code\weasel\include\
+copy \code\librime\msbuild\lib\Release\librime.lib \code\weasel\lib\
+copy \code\yaml-cpp\msbuild\Release\libyaml-cppmt.lib \code\weasel\lib\
+
+start \code\weasel\weasel.sln
+
+Make a Release build for weasel\output\WeaselServer.exe
+Make a ReleaseHans build for weasel\output\weasels.ime
+Make a ReleaseHant build for weasel\output\weaselt.ime
+
+To run the input method, first register the IME from an admin console:
+
+cd \code\weasel\output
+rundll32 weasels.ime install
 

@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\weasel.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)\include"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +63,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(SolutionDir)\lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -94,6 +95,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\weasel.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -116,9 +118,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(SolutionDir)\include"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -136,7 +138,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)\lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -170,6 +172,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\weasel.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -192,7 +195,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(SolutionDir)\include"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -212,7 +215,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)\lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -246,6 +249,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\weasel.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -268,7 +272,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(SolutionDir)\include"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -288,7 +292,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)\lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VisualStudioPropertySheet
+    ProjectType="Visual C++"
+    Version="8.00"
+    Name="Weasel Project Properties">
+  <UserMacro
+      Name="BOOST_HOME"
+      Value="D:\code\boost_1_47_0"
+      InheritsFromParent="true"
+      Delimiter=";"
+      PerformEnvironmentSet="true" />
+  <UserMacro
+      Name="PYTHON_HOME"
+      Value="C:\Python27"
+      InheritsFromParent="true"
+      Delimiter=";"
+      PerformEnvironmentSet="true" />
+</VisualStudioPropertySheet>

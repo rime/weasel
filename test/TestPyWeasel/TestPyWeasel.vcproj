@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\weasel.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -41,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(SolutionDir)\include\python&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +63,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(SolutionDir)\lib\python&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -95,6 +96,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\weasel.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -117,9 +119,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(SolutionDir)\include\python&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;BOOST_PYTHON_STATIC_LIB"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -137,7 +139,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(SolutionDir)\lib\python&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -172,6 +174,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\weasel.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -194,7 +197,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(SolutionDir)\include\python&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -214,7 +217,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(SolutionDir)\lib\python&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -249,6 +252,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\weasel.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -271,7 +275,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(SolutionDir)\include\python&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -291,7 +295,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(SolutionDir)\lib\python&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"

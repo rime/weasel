@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
+			InheritedPropertySheets="..\weasel.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -41,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(SolutionDir)\include\python&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -83,6 +84,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
+			InheritedPropertySheets="..\weasel.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -105,9 +107,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(SolutionDir)\include\python&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;BOOST_PYTHON_STATIC_LIB"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -146,6 +148,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
+			InheritedPropertySheets="..\weasel.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -168,7 +171,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(SolutionDir)\include\python&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -209,6 +212,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
+			InheritedPropertySheets="..\weasel.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -231,7 +235,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(SolutionDir)\include\python&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
