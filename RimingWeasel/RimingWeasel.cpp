@@ -65,7 +65,9 @@ UINT RimingWeaselHandler::AddSession(LPWSTR buffer)
 
 UINT RimingWeaselHandler::RemoveSession(UINT session_id)
 {
+	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
+	m_ui.Hide();
 	active_session = 0;
 	return 0;
 }
