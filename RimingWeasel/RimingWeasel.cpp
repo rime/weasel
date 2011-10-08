@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <RimingWeasel.h>
 #include <rime_api.h>
+#include <windows.h>
 #include <list>
 #include <set>
 #include <string>
@@ -27,6 +28,21 @@ int expand_ibus_modifier(int m)
 	return (m & 0xff) | ((m & 0xff00) << 16);
 }
 
+static const char* weasel_shared_data_dir() {
+	static char path[MAX_PATH] = {0};
+	GetModuleFileNameA(NULL, path, _countof(path));
+	std::string str_path(path);
+	size_t k = str_path.find_last_of("/\\");
+	strcpy(path + k + 1, "data");
+	return path;
+}
+
+static const char* weasel_user_data_dir() {
+	static char path[MAX_PATH] = {0};
+	ExpandEnvironmentStringsA("%AppData%\\Rime", path, _countof(path));
+	return path;
+}
+
 RimingWeaselHandler::RimingWeaselHandler()
 	: active_session(0)
 {
@@ -38,13 +54,16 @@ RimingWeaselHandler::~RimingWeaselHandler()
 
 void RimingWeaselHandler::Initialize()
 {
-	RimeInitialize();
-    m_ui.Create(NULL);
+	RimeTraits weasel_traits;
+	weasel_traits.shared_data_dir = weasel_shared_data_dir();
+	weasel_traits.user_data_dir = weasel_user_data_dir();
+	RimeInitialize(&weasel_traits);
+	m_ui.Create(NULL);
 }
 
 void RimingWeaselHandler::Finalize()
 {
-    m_ui.Destroy();
+	m_ui.Destroy();
 	RimeFinalize();
 }
 
@@ -58,7 +77,7 @@ UINT RimingWeaselHandler::AddSession(LPWSTR buffer)
 {
 	UINT session_id = RimeCreateSession();
 	// show session's welcome message :-) if any
-    _UpdateUI(session_id);
+	_UpdateUI(session_id);
 	active_session = session_id;
 	return session_id;
 }
@@ -89,7 +108,7 @@ void RimingWeaselHandler::FocusIn(UINT session_id)
 
 void RimingWeaselHandler::FocusOut(UINT session_id)
 {
-    m_ui.Hide();
+	m_ui.Hide();
 	active_session = 0;
 }
 
