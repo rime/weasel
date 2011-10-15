@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include <RimingWeasel.h>
-#include <rime_api.h>
 #include <windows.h>
 #include <list>
 #include <set>
@@ -8,6 +7,25 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+
+#pragma warning(disable: 4005)
+#include <rime_api.h>
+#pragma warning(default: 4005)
+
+static const std::string WeaselLogFilePath()
+{
+	char path[MAX_PATH] = {0};
+	ExpandEnvironmentStringsA("%AppData%\\Rime\\weasel.log", path, _countof(path));
+	return path;
+}
+
+#define EZLOGGER_OUTPUT_FILENAME WeaselLogFilePath()
+#define EZLOGGER_REPLACE_EXISTING_LOGFILE_
+#pragma warning(disable: 4995)
+#pragma warning(disable: 4996)
+#include <ezlogger/ezlogger_headers.hpp>
+#pragma warning(default: 4996)
+#pragma warning(default: 4995)
 
 const WCHAR* utf8towcs(const char* utf8_str)
 {
@@ -54,6 +72,7 @@ RimingWeaselHandler::~RimingWeaselHandler()
 
 void RimingWeaselHandler::Initialize()
 {
+	EZDBGONLYLOGGERPRINT("Initializing la rime.");
 	RimeTraits weasel_traits;
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
@@ -63,6 +82,7 @@ void RimingWeaselHandler::Initialize()
 
 void RimingWeaselHandler::Finalize()
 {
+	EZDBGONLYLOGGERPRINT("Finalizing la rime.");
 	m_ui.Destroy();
 	RimeFinalize();
 }
@@ -70,12 +90,14 @@ void RimingWeaselHandler::Finalize()
 UINT RimingWeaselHandler::FindSession(UINT session_id)
 {
 	bool found = RimeFindSession(session_id);
+	EZDBGONLYLOGGERPRINT("Find session: session_id = 0x%x, found = %d", session_id, found);
 	return found ? session_id : 0;
 }
 
 UINT RimingWeaselHandler::AddSession(LPWSTR buffer)
 {
 	UINT session_id = RimeCreateSession();
+	EZDBGONLYLOGGERPRINT("Add session: created session_id = 0x%x", session_id);
 	// show session's welcome message :-) if any
 	_UpdateUI(session_id);
 	active_session = session_id;
@@ -84,6 +106,7 @@ UINT RimingWeaselHandler::AddSession(LPWSTR buffer)
 
 UINT RimingWeaselHandler::RemoveSession(UINT session_id)
 {
+	EZDBGONLYLOGGERPRINT("Remove session: session_id = 0x%x", session_id);
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
 	m_ui.Hide();
@@ -93,6 +116,8 @@ UINT RimingWeaselHandler::RemoveSession(UINT session_id)
 
 BOOL RimingWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer)
 {
+	EZDBGONLYLOGGERPRINT("Process key event: keycode = 0x%x, mask = 0x%x, session_id = 0x%x", 
+		keyEvent.keycode, keyEvent.mask, session_id);
 	bool taken = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask)); 
 	_UpdateUI(session_id);
 	_Respond(session_id, buffer);
@@ -102,18 +127,22 @@ BOOL RimingWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sessio
 
 void RimingWeaselHandler::FocusIn(UINT session_id)
 {
+	EZDBGONLYLOGGERPRINT("Focus in: session_id = 0x%x", session_id);
 	_UpdateUI(session_id);
 	active_session = session_id;
 }
 
 void RimingWeaselHandler::FocusOut(UINT session_id)
 {
+	EZDBGONLYLOGGERPRINT("Focus out: session_id = 0x%x", session_id);
 	m_ui.Hide();
 	active_session = 0;
 }
 
 void RimingWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 {
+	EZDBGONLYLOGGERPRINT("Update input position: (%d, %d), session_id = 0x%x, active_session = 0x%x", 
+		rc.left, rc.top, session_id, active_session);
 	m_ui.UpdateInputPosition(rc);
 	if (active_session != session_id)
 	{

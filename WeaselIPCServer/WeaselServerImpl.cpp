@@ -42,15 +42,6 @@ LRESULT ServerImpl::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 {
 	// not neccessary...
 	::SetWindowText(m_hWnd, WEASEL_IPC_WINDOW); 
-
-	// notify clients that we are ready serving
-	HANDLE hEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, WEASEL_IPC_READY_EVENT);
-	if (hEvent != INVALID_HANDLE_VALUE)
-	{
-		SetEvent(hEvent);
-		CloseHandle(hEvent);
-	}
-
 	return 0;
 }
 

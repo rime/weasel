@@ -4,7 +4,6 @@
 #include <boost/function.hpp>
 
 #define WEASEL_IPC_WINDOW L"WeaselIPCWindow_0.9"
-#define WEASEL_IPC_READY_EVENT L"Local\\WeaselIPCReadyEvent_0.9"
 #define WEASEL_IPC_SHARED_MEMORY "WeaselIPCSharedMemory_0.9"
 
 #define WEASEL_IPC_METADATA_SIZE 1024

@@ -21,16 +21,12 @@ bool ClientImpl::Connect(ServerLauncher const& launcher)
 	serverWnd = _GetServerWindow(WEASEL_IPC_WINDOW);
 	if ( !serverWnd && !launcher.empty() )
 	{
-		HANDLE hEvent = CreateEvent( NULL, TRUE, FALSE, WEASEL_IPC_READY_EVENT );
 		// 启动服务进程
 		if (!launcher())
 		{
-			CloseHandle(hEvent);
 			serverWnd = NULL;
 			return false;
 		}
-		WaitForSingleObject( hEvent, 2000 );
-		CloseHandle(hEvent);
 		serverWnd = _GetServerWindow(WEASEL_IPC_WINDOW);
 	}
 	return _Connected();
@@ -86,8 +82,8 @@ void ClientImpl::StartSession()
 	if (!_Connected())
 		return;
 
-	if (_Active())
-		EndSession();
+	if (_Active() && Echo())
+		return;
 
 	UINT ret = SendMessage(serverWnd, WEASEL_IPC_START_SESSION, 0, 0);
 	session_id = ret;
