@@ -76,7 +76,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="imm32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\..\librime\msbuild\lib\Debug&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\..\librime\vcbuild\lib\Debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -160,10 +160,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="imm32.lib librime.lib libyaml-cppmt.lib"
+				AdditionalDependencies="imm32.lib librime.lib libyaml-cppmt.lib kyotocabinet.lib"
 				OutputFile="$(SolutionDir)\output\$(ProjectName).exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\..\librime\msbuild\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\..\librime\vcbuild\lib\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
