@@ -1,7 +1,9 @@
 
-* Howto Rime with Weasel
+* How to Rime with Weasel
 
 ** Preparation
+
+Assume we already have a default installation of Visual Studio 2008.
 
 Fetch svn, cmake executables.
 Fetch gtest, yaml-cpp, boost source.
@@ -10,7 +12,7 @@ Fetch gtest, yaml-cpp, boost source.
 
 Edit librime\env.bat.template, save it as librime\env.bat .
 
-** Start the shell with librime\shell.bat
+** Start VC command line tools from librime\shell.bat .
 
 ** Checkout source code
 
@@ -26,12 +28,10 @@ bjam toolset=msvc threading=multi link=static runtime-link=static stage --with-d
 ** Build GTest
 
 cd \code\gtest-1.6.0
-mkdir msbuild
-cd msbuild
+mkdir vcbuild
+cd vcbuild
 cmake ..
-start gtest.sln
-
-Make a Release build.
+devenv gtest.sln /Build Release
 
 ** Build Yaml-cpp
 
@@ -42,43 +42,64 @@ Edit CMakeLists.txt MSVC build option for linking with static runtime (/MT):
 #option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" ON)
 option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" OFF)
 
-mkdir msbuild
-cd msbuild
+mkdir vcbuild
+cd vcbuild
 cmake ..
-start YAML_CPP.sln
+devenv YAML_CPP.sln /Build Release
 
-Make a release build.
+** Build Kyoto Cabinet
+
+TODO: We have to apply a patch in order to build version 1.2.70 of kyotocabinet with V.S. 2008.
+
+Checkout patch files:
+
+cd \code
+svn checkout http://rimeime.googlecode.com/svn/trunk/misc/kyotocabinet-1.2.70-vs2008-patch
+
+Then, copy them to kyotocabinet source folder, and proceed with building the library.
+
+copy \code\kyotocabinet-1.2.70-vs2008-patch\* \code\kyotocabinet-1.2.70\
+
+cd \code\kyotocabinet-1.2.70
+nmake -f VC9makefile
 
 ** Build librime
 
 xcopy /S /I \code\gtest-1.6.0\include\gtest \code\librime\thirdparty\include\gtest\
-copy \code\gtest-1.6.0\msbuild\Release\gtest*.lib \code\librime\thirdparty\lib\
+copy \code\gtest-1.6.0\vcbuild\Release\gtest*.lib \code\librime\thirdparty\lib\
 
 xcopy /S /I \code\yaml-cpp\include\yaml-cpp \code\librime\thirdparty\include\yaml-cpp\
-copy \code\yaml-cpp\msbuild\Release\libyaml-cppmt.lib \code\librime\thirdparty\lib\
+copy \code\yaml-cpp\vcbuild\Release\libyaml-cppmt.lib \code\librime\thirdparty\lib\
+
+copy \code\kyotocabinet-1.2.70\kc*.h \code\librime\thirdparty\include\
+copy \code\kyotocabinet-1.2.70\kyotocabinet.lib \code\librime\thirdparty\lib\
 
 cd \code\librime
-msbuild.bat
-start msbuild\rime.sln
+vcbuild.bat
 
-Make a release build.
+That will make a release build for librime.
 
 ** Build weasel
 
 Edit weasel\weasel.vsprops.template, save it to weasel\weasel.vsprops .
 
-copy \code\librime\include\rime_api.h \code\weasel\include\
-copy \code\librime\msbuild\lib\Release\librime.lib \code\weasel\lib\
-copy \code\yaml-cpp\msbuild\Release\libyaml-cppmt.lib \code\weasel\lib\
+copy \code\yaml-cpp\vcbuild\Release\libyaml-cppmt.lib \code\weasel\lib\
+copy \code\kyotocabinet-1.2.70\kyotocabinet.lib \code\weasel\lib\
 
-start \code\weasel\weasel.sln
+cd \code\weasel
 
-Make a Release build for weasel\output\WeaselServer.exe
-Make a ReleaseHans build for weasel\output\weasels.ime
-Make a ReleaseHant build for weasel\output\weaselt.ime
+rem  for weasel\output\WeaselServer.exe
+devenv weasel.sln /Build Release
 
-To run the input method, first register the IME from an admin console:
+rem  for weasel\output\weasels.ime
+devenv weasel.sln /Build ReleaseHans
+
+rem  for weasel\output\weasels.ime
+devenv weasel.sln /Build ReleaseHant
+
+Voila.
+
+To try the input method, first register the IME from an administrator command window:
 
 cd \code\weasel\output
 rundll32 weasels.ime install
-
