@@ -177,11 +177,24 @@ LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lPara
 {
 	if (!m_pHandler)
 		return 0;
+	/*
+	移位标志 = 1bit == 0
+	height:0~127 = 7bit
+	top:-2048~2047 = 12bit（有符号）
+	left:-2048~2047 = 12bit（有符号）
+
+	高解析度下：
+	移位标志 = 1bit == 1
+	height:0~254 = 7bit（舍弃低1位）
+	top:-4096~4094 = 12bit（有符号，舍弃低1位）
+	left:-4096~4094 = 12bit（有符号，舍弃低1位）
+	*/
 	RECT rc;
-	rc.left = wParam & 0xfff;
-	rc.top = (wParam >> 12) & 0xfff;
+	int hi_res = (wParam >> 31) & 0x01;
+	rc.left = ((wParam & 0x7ff) - (wParam & 0x800)) << hi_res;
+	rc.top = (((wParam >> 12) & 0x7ff) - ((wParam >> 12) & 0x800)) << hi_res;
 	const int width = 6;
-	int height = (wParam >> 24) & 0xff;
+	int height = ((wParam >> 24) & 0x7f) << hi_res;
 	rc.right = rc.left + width;
 	rc.bottom = rc.top + height;
 	m_pHandler->UpdateInputPosition(rc, lParam);

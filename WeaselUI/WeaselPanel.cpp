@@ -246,7 +246,18 @@ void WeaselPanel::MoveTo(RECT const& rc)
 void WeaselPanel::_RepositionWindow()
 {
 	RECT rcWorkArea;
-	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
+	//SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
+	memset(&rcWorkArea, 0, sizeof(rcWorkArea));
+	HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+	if (hMonitor)
+	{
+		MONITORINFO info;
+		info.cbSize = sizeof(MONITORINFO);
+		if (GetMonitorInfo(hMonitor, &info))
+		{
+			rcWorkArea = info.rcWork;
+		}
+	}
 	RECT rcWindow;
 	GetWindowRect(&rcWindow);
 	int width = (rcWindow.right - rcWindow.left);
