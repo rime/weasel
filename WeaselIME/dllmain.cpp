@@ -75,26 +75,45 @@ BOOL delete_file(const wstring& file)
 extern "C" __declspec(dllexport)
 void install(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 {
-	WCHAR path[MAX_PATH];
+	wpath srcPath;
+	wpath destPath;
+	wpath wow64Path;
 
+	WCHAR path[MAX_PATH];
 	GetModuleFileName(WeaselIME::GetModuleInstance(), path, _countof(path));
-	wpath srcPath(path);
+	srcPath = path;
 	
-	ExpandEnvironmentStrings(L"%SystemRoot%\\system32\\", path, _countof(path));
-	wpath destPath(path);
+	GetSystemDirectory(path, _countof(path));
+	destPath = path;
 	destPath /= WEASEL_IME_FILE;
 
-	// 复制 weasel.ime 到系统目录
+	if (GetSystemWow64Directory(path, _countof(path)))
+	{
+		wow64Path = path;
+		wow64Path /= WEASEL_IME_FILE;
+	}
+
+	// 复制 .ime 到系统目录
 	if (!copy_file(srcPath.native_file_string(), destPath.native_file_string()))
 	{
 		MessageBox(hWnd, destPath.native_file_string().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
 		return;
 	}
+	if (!wow64Path.empty())
+	{
+		wstring x86 = srcPath.native_file_string();
+		boost::algorithm::ireplace_last(x86, L"x64.ime", L".ime");
+		if (!copy_file(x86, wow64Path.native_file_string()))
+		{
+			MessageBox(hWnd, wow64Path.native_file_string().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+			return;
+		}
+	}
 
 	// 写注册表
 	HKEY hKey;
 	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 
-		                         0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
+		                         0, NULL, 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
 		MessageBox(hWnd, WEASEL_REG_KEY, L"安裝失敗", MB_ICONERROR | MB_OK);
@@ -134,7 +153,7 @@ void install(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 		return;
 	}
 
-	MessageBox(hWnd, L"小狼毫 :)", L"安裝完成", MB_OK);
+	MessageBox(hWnd, L"小狼毫 :)", L"安裝完成", MB_ICONINFORMATION | MB_OK);
 }
 
 extern "C" __declspec(dllexport)
@@ -229,17 +248,28 @@ void uninstall(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 
 	// 清除注册信息
 	RegDeleteKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY);
+	RegDeleteKey(HKEY_LOCAL_MACHINE, RIME_REG_KEY);
 
 	// 删除文件
 	WCHAR path[MAX_PATH];
-	ExpandEnvironmentStrings(L"%SystemRoot%\\system32\\", path, _countof(path));
-	wstring file = path;
-	file += WEASEL_IME_FILE;
-	if (!delete_file(file))
+	GetSystemDirectory(path, _countof(path));
+	wpath imePath = path;
+	imePath /= WEASEL_IME_FILE;
+	if (!delete_file(imePath.native_file_string()))
 	{
-		MessageBox(hWnd, file.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+		MessageBox(hWnd, imePath.native_file_string().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
 		return;
 	}
+	if (GetSystemWow64Directory(path, _countof(path)))
+	{
+		wpath imePath = path;
+		imePath /= WEASEL_IME_FILE;
+		if (!delete_file(imePath.native_file_string()))
+		{
+			MessageBox(hWnd, imePath.native_file_string().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+			return;
+		}
+	}
 
-	MessageBox(hWnd, L"小狼毫 :)", L"卸載完成", MB_OK);
+	MessageBox(hWnd, L"小狼毫 :)", L"卸載完成", MB_ICONINFORMATION | MB_OK);
 }
