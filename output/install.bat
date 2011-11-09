@@ -21,11 +21,11 @@ if errorlevel 2 goto win7_x64_install
 if errorlevel 1 goto xp_install
 
 :win7_install
-wscript elevate rundll32 "%CD%\%WEASEL_IME%.ime" install
+wscript elevate.js rundll32 "%CD%\%WEASEL_IME%.ime" install
 if %ERRORLEVEL% EQU 0 goto success
 
 :win7_x64_install
-wscript elevate rundll32 "%CD%\%WEASEL_IME%x64.ime" install
+wscript elevate.js rundll32 "%CD%\%WEASEL_IME%x64.ime" install
 if %ERRORLEVEL% EQU 0 goto success
 
 :xp_install
