@@ -3,15 +3,20 @@ call stop_service.bat
 
 echo uninstalling Weasel ime.
 
-check_windows_version.js
-if errorlevel 1 goto xp_install
+wscript check_windows_version.js
+if errorlevel 2 goto win7_x64_uninstall
+if errorlevel 1 goto xp_uninstall
 
 :win7_uninstall
-elevate rundll32 "%CD%\weasels.ime" uninstall
+wscript elevate rundll32 "%CD%\weasel.ime" uninstall
+goto exit
+
+:win7_x64_uninstall
+wscript elevate rundll32 "%CD%\weaselx64.ime" uninstall
 goto exit
 
 :xp_uninstall
-rundll32 "%CD%\weasels.ime" uninstall
+rundll32 "%CD%\weasel.ime" uninstall
 goto exit
 
 :exit
