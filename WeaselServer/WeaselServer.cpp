@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include <WeaselIPC.h>
 #include <RimingWeasel.h>
+#include <winsparkle.h>
 
 CAppModule _Module;
 
@@ -39,6 +40,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 			return 0;
 	}
 
+	//win_sparkle_set_appcast_url("http://localhost:8000/weasel/update/appcast.xml");
+	win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
+	win_sparkle_init();
+
 	int nRet = 0;
 	try
 	{
@@ -52,6 +57,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		// bad luck...
 		nRet = -1;
 	}
+
+	win_sparkle_cleanup();
 
 	_Module.Term();
 	::CoUninitialize();
