@@ -1,7 +1,7 @@
 #pragma once
 #include <WeaselCommon.h>
 
-static LPCWSTR DEFAULT_FONT_FACE = L"Microsoft YaHei";
+static LPCWSTR DEFAULT_FONT_FACE = L"";
 static const int DEFAULT_FONT_POINT = 16;
 
 static const int MIN_WIDTH = 160;
@@ -9,9 +9,10 @@ static const int MIN_HEIGHT = 0;
 static const int BORDER = 3;
 static const int MARGIN_X = 12;
 static const int MARGIN_Y = 12;
-static const int SPACING = 9;
-static const int CAND_SPACING = 4;
-static const int HIGHLIGHT_PADDING = 0;
+static const int SPACING = 10;
+static const int CAND_SPACING = 5;
+static const int HIGHLIGHT_SPACING = 4;
+static const int HIGHLIGHT_PADDING = 2;
 static const int ROUND_CORNER = 4;
 
 static const COLORREF TEXT_COLOR                  = 0xe8f3f6 /*0x000000*/;
@@ -22,7 +23,7 @@ static const COLORREF HIGHLIGHTED_BACK_COLOR      = 0x111111 /*0x7fefff*/;
 static const COLORREF HIGHLIGHTED_CAND_TEXT_COLOR = 0x000000 /*0xffffff*/;
 static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x82e6ca /*0x000000*/;
 
-static WCHAR CANDIDATE_PROMPT_PATTERN[] = L" %1%. %2% ";
+static WCHAR CANDIDATE_PROMPT_PATTERN[] = L"%1%. %2%";
 
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 

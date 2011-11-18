@@ -31,9 +31,28 @@ void WeaselPanel::_ResizeWindow()
 
 	// draw preedit string
 	wstring const& preedit = m_ctx.preedit.str;
+	vector<weasel::TextAttribute> const& attrs = m_ctx.preedit.attributes;
 	if (!preedit.empty())
 	{
 		dc.GetTextExtent(preedit.c_str(), preedit.length(), &sz);
+		for (size_t j = 0; j < attrs.size(); ++j)
+		{
+			if (attrs[j].type == weasel::HIGHLIGHTED)
+			{
+				const weasel::TextRange &range = attrs[j].range;
+				if (range.start < range.end)
+				{
+					if (range.start > 0)
+						sz.cx += HIGHLIGHT_SPACING;
+					else
+						sz.cx += HIGHLIGHT_PADDING;
+					if (range.end < static_cast<int>(preedit.length()))
+						sz.cx += HIGHLIGHT_SPACING;
+					else
+						sz.cx += HIGHLIGHT_PADDING;
+				}
+			}
+		}
 		width = max(width, sz.cx);
 		height += sz.cy + SPACING;
 	}
@@ -82,7 +101,7 @@ void WeaselPanel::Refresh()
 
 void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 {
-	rc.InflateRect(0, HIGHLIGHT_PADDING);
+	rc.InflateRect(HIGHLIGHT_PADDING, HIGHLIGHT_PADDING);
 	CBrush brush;
 	brush.CreateSolidBrush(color);
 	CBrush oldBrush = dc.SelectBrush(brush);
@@ -103,29 +122,68 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 	{
 		CSize szText;
 		dc.GetTextExtent(t.c_str(), t.length(), &szText);
-		CRect rcText(rc.left, y, rc.right, y + szText.cy);
-		dc.ExtTextOutW(rc.left, y, ETO_CLIPPED | ETO_OPAQUE, &rcText, t.c_str(), t.length(), 0);
+		weasel::TextRange range;
 		vector<weasel::TextAttribute> const& attrs = text.attributes;
 		for (size_t j = 0; j < attrs.size(); ++j)
 		{
 			if (attrs[j].type == weasel::HIGHLIGHTED)
 			{
-				weasel::TextRange const& range = attrs[j].range;
-				CSize selStart;
-				dc.GetTextExtent(t.c_str(), range.start, &selStart);
-				CSize selEnd;
-				dc.GetTextExtent(t.c_str(), range.end, &selEnd);
-				CRect rc_hi(rc.left + selStart.cx, y, rc.left + selEnd.cx, y + szText.cy);
+				range = attrs[j].range;
+			}
+		}
+		if (range.start < range.end)
+		{
+			CSize selStart;
+			dc.GetTextExtent(t.c_str(), range.start, &selStart);
+			CSize selEnd;
+			dc.GetTextExtent(t.c_str(), range.end, &selEnd);
+			int x = rc.left;
+			if (range.start > 0)
+			{
+				// zzz
+				std::wstring str_before(t.substr(0, range.start));
+				CRect rc_before(x, y, x + selStart.cx, y + szText.cy);
+				dc.ExtTextOutW(x, y, ETO_CLIPPED | ETO_OPAQUE, &rc_before, str_before.c_str(), str_before.length(), 0);
+				x += selStart.cx + HIGHLIGHT_SPACING;
+			}
+			else
+			{
+				x += HIGHLIGHT_PADDING;
+			}
+			{
+				// zzz[yyy]
+				std::wstring str_hi(t.substr(range.start, range.end - range.start));
+				CRect rc_hi(x, y, x + (selEnd.cx - selStart.cx), y + szText.cy);
 				_HighlightText(dc, rc_hi, HIGHLIGHTED_BACK_COLOR);
 				dc.SetTextColor(HIGHLIGHTED_TEXT_COLOR);
 				dc.SetBkColor(HIGHLIGHTED_BACK_COLOR);
-				std::wstring str_hi(t.substr(range.start, range.end));
-				dc.ExtTextOutW(rc_hi.left, y, ETO_CLIPPED, &rc_hi, str_hi.c_str(), str_hi.length(), 0);
+				dc.ExtTextOutW(x, y, ETO_CLIPPED, &rc_hi, str_hi.c_str(), str_hi.length(), 0);
 				dc.SetTextColor(TEXT_COLOR);
 				dc.SetBkColor(WINDOW_COLOR);
+				x += (selEnd.cx - selStart.cx);
 			}
+			if (range.end < static_cast<int>(t.length()))
+			{
+				// zzz[yyy]xxx
+				x += HIGHLIGHT_SPACING;
+				std::wstring str_after(t.substr(range.end));
+				CRect rc_after(x, y, x + (szText.cx - selEnd.cx), y + szText.cy);
+				dc.ExtTextOutW(x, y, ETO_CLIPPED | ETO_OPAQUE, &rc_after, str_after.c_str(), str_after.length(), 0);
+				x += (szText.cx - selEnd.cx);
+			}
+			else
+			{
+				x += HIGHLIGHT_PADDING;;
+			}
+			// done
+			y += szText.cy;
 		}
-		y += szText.cy;
+		else
+		{
+			CRect rcText(rc.left, y, rc.right, y + szText.cy);
+			dc.ExtTextOutW(rc.left, y, ETO_CLIPPED | ETO_OPAQUE, &rcText, t.c_str(), t.length(), 0);
+			y += szText.cy;
+		}
 		drawn = true;
 	}
 	return drawn;
@@ -142,17 +200,17 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 		wstring t = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % (i + 1) % candies[i].str).str();
 		CSize szText;
 		dc.GetTextExtent(t.c_str(), t.length(), &szText);
-		CRect rcText(rc.left, y, rc.right, y + szText.cy);
+		CRect rcText(rc.left + HIGHLIGHT_PADDING, y, rc.right - HIGHLIGHT_PADDING, y + szText.cy);
 		if (i == cinfo.highlighted)
 		{
 			_HighlightText(dc, rcText, HIGHLIGHTED_CAND_BACK_COLOR);
 			dc.SetTextColor(HIGHLIGHTED_CAND_TEXT_COLOR);
-			dc.ExtTextOutW(rc.left, y, ETO_CLIPPED, &rcText, t.c_str(), t.length(), 0);
+			dc.ExtTextOutW(rcText.left, y, ETO_CLIPPED, &rcText, t.c_str(), t.length(), 0);
 			dc.SetTextColor(TEXT_COLOR);
 		}
 		else
 		{
-			dc.ExtTextOutW(rc.left, y, ETO_CLIPPED, &rcText, t.c_str(), t.length(), 0);
+			dc.ExtTextOutW(rcText.left, y, ETO_CLIPPED, &rcText, t.c_str(), t.length(), 0);
 		}
 		y += szText.cy;
 		drawn = true;
