@@ -1,14 +1,14 @@
 ========================================================================
-    STATIC LIBRARY : RimingWeasel Project Overview
+    STATIC LIBRARY : RimeWithWeasel Project Overview
 ========================================================================
 
-AppWizard has created this RimingWeasel library project for you.
+AppWizard has created this RimeWithWeasel library project for you.
 
 This file contains a summary of what you will find in each of the files that
-make up your RimingWeasel application.
+make up your RimeWithWeasel application.
 
 
-RimingWeasel.vcproj
+RimeWithWeasel.vcproj
     This is the main project file for VC++ projects generated using an Application Wizard.
     It contains information about the version of Visual C++ that generated the file, and
     information about the platforms, configurations, and project features selected with the
@@ -19,7 +19,7 @@ RimingWeasel.vcproj
 
 StdAfx.h, StdAfx.cpp
     These files are used to build a precompiled header (PCH) file
-    named RimingWeasel.pch and a precompiled types file named StdAfx.obj.
+    named RimeWithWeasel.pch and a precompiled types file named StdAfx.obj.
 
 /////////////////////////////////////////////////////////////////////////////
 Other notes:

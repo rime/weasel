@@ -15,7 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		include\PyWeasel.h = include\PyWeasel.h
 		include\ResponseParser.h = include\ResponseParser.h
-		include\RimingWeasel.h = include\RimingWeasel.h
+		include\RimeWithWeasel.h = include\RimeWithWeasel.h
 		include\WeaselCommon.h = include\WeaselCommon.h
 		include\WeaselIPC.h = include\WeaselIPC.h
 		include\WeaselUI.h = include\WeaselUI.h
@@ -58,7 +58,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestResponseParser", "test\
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D} = {CE11A2DF-8D20-4B07-A935-4B0D03F0303D}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RimingWeasel", "RimingWeasel\RimingWeasel.vcproj", "{1C497821-BD63-4F02-9094-32B185B62F23}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RimeWithWeasel", "RimeWithWeasel\RimeWithWeasel.vcproj", "{1C497821-BD63-4F02-9094-32B185B62F23}"
 	ProjectSection(ProjectDependencies) = postProject
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4} = {10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}
 	EndProjectSection

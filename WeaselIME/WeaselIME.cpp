@@ -20,11 +20,16 @@ static const std::string WeaselLogFilePath()
 
 #define EZLOGGER_OUTPUT_FILENAME WeaselLogFilePath()
 #define EZLOGGER_REPLACE_EXISTING_LOGFILE_
-#pragma warning(disable: 4995)
-#pragma warning(disable: 4996)
-#include <ezlogger/ezlogger_headers.hpp>
-#pragma warning(default: 4996)
-#pragma warning(default: 4995)
+
+// logging disabled
+#define EZDBGONLYLOGGERPRINT(...)
+#define EZDBGONLYLOGGERFUNCTRACKER
+
+//#pragma warning(disable: 4995)
+//#pragma warning(disable: 4996)
+//#include <ezlogger/ezlogger_headers.hpp>
+//#pragma warning(default: 4996)
+//#pragma warning(default: 4995)
 
 
 HINSTANCE WeaselIME::s_hModule = 0;

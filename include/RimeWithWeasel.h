@@ -2,12 +2,12 @@
 #include <WeaselIPC.h>
 #include <WeaselUI.h>
 
-class RimingWeaselHandler :
+class RimeWithWeaselHandler :
 	public weasel::RequestHandler
 {
 public:
-	RimingWeaselHandler();
-	virtual ~RimingWeaselHandler();
+	RimeWithWeaselHandler();
+	virtual ~RimeWithWeaselHandler();
 	virtual void Initialize();
 	virtual void Finalize();
 	virtual UINT FindSession(UINT session_id);

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include <RimingWeasel.h>
+#include <RimeWithWeasel.h>
 #include <windows.h>
 #include <list>
 #include <set>
@@ -21,11 +21,17 @@ static const std::string WeaselLogFilePath()
 
 #define EZLOGGER_OUTPUT_FILENAME WeaselLogFilePath()
 #define EZLOGGER_REPLACE_EXISTING_LOGFILE_
+
+// logging enabled
+//#define EZDBGONLYLOGGERPRINT(...)
+//#define EZDBGONLYLOGGERFUNCTRACKER
+
 #pragma warning(disable: 4995)
 #pragma warning(disable: 4996)
 #include <ezlogger/ezlogger_headers.hpp>
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
+
 
 const WCHAR* utf8towcs(const char* utf8_str)
 {
@@ -61,16 +67,16 @@ static const char* weasel_user_data_dir() {
 	return path;
 }
 
-RimingWeaselHandler::RimingWeaselHandler()
+RimeWithWeaselHandler::RimeWithWeaselHandler()
 	: active_session(0)
 {
 }
 
-RimingWeaselHandler::~RimingWeaselHandler()
+RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
 }
 
-void RimingWeaselHandler::Initialize()
+void RimeWithWeaselHandler::Initialize()
 {
 	EZDBGONLYLOGGERPRINT("Initializing la rime.");
 	RimeTraits weasel_traits;
@@ -80,21 +86,21 @@ void RimingWeaselHandler::Initialize()
 	m_ui.Create(NULL);
 }
 
-void RimingWeaselHandler::Finalize()
+void RimeWithWeaselHandler::Finalize()
 {
 	EZDBGONLYLOGGERPRINT("Finalizing la rime.");
 	m_ui.Destroy();
 	RimeFinalize();
 }
 
-UINT RimingWeaselHandler::FindSession(UINT session_id)
+UINT RimeWithWeaselHandler::FindSession(UINT session_id)
 {
 	bool found = RimeFindSession(session_id);
 	EZDBGONLYLOGGERPRINT("Find session: session_id = 0x%x, found = %d", session_id, found);
 	return found ? session_id : 0;
 }
 
-UINT RimingWeaselHandler::AddSession(LPWSTR buffer)
+UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 {
 	UINT session_id = RimeCreateSession();
 	EZDBGONLYLOGGERPRINT("Add session: created session_id = 0x%x", session_id);
@@ -104,7 +110,7 @@ UINT RimingWeaselHandler::AddSession(LPWSTR buffer)
 	return session_id;
 }
 
-UINT RimingWeaselHandler::RemoveSession(UINT session_id)
+UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 {
 	EZDBGONLYLOGGERPRINT("Remove session: session_id = 0x%x", session_id);
 	// TODO: force committing? otherwise current composition would be lost
@@ -114,7 +120,7 @@ UINT RimingWeaselHandler::RemoveSession(UINT session_id)
 	return 0;
 }
 
-BOOL RimingWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer)
+BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer)
 {
 	EZDBGONLYLOGGERPRINT("Process key event: keycode = 0x%x, mask = 0x%x, session_id = 0x%x", 
 		keyEvent.keycode, keyEvent.mask, session_id);
@@ -125,21 +131,21 @@ BOOL RimingWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sessio
 	return (BOOL)taken;
 }
 
-void RimingWeaselHandler::FocusIn(UINT session_id)
+void RimeWithWeaselHandler::FocusIn(UINT session_id)
 {
 	EZDBGONLYLOGGERPRINT("Focus in: session_id = 0x%x", session_id);
 	_UpdateUI(session_id);
 	active_session = session_id;
 }
 
-void RimingWeaselHandler::FocusOut(UINT session_id)
+void RimeWithWeaselHandler::FocusOut(UINT session_id)
 {
 	EZDBGONLYLOGGERPRINT("Focus out: session_id = 0x%x", session_id);
 	m_ui.Hide();
 	active_session = 0;
 }
 
-void RimingWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
+void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 {
 	EZDBGONLYLOGGERPRINT("Update input position: (%d, %d), session_id = 0x%x, active_session = 0x%x", 
 		rc.left, rc.top, session_id, active_session);
@@ -151,7 +157,7 @@ void RimingWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 	}
 }
 
-void RimingWeaselHandler::_UpdateUI(UINT session_id)
+void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 {
 	weasel::Context weasel_context;
 	RimeContext ctx;
@@ -201,7 +207,7 @@ void RimingWeaselHandler::_UpdateUI(UINT session_id)
 	}
 }
 
-bool RimingWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
+bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 {
 	std::set<std::string> actions;
 	std::list<std::string> messages;
