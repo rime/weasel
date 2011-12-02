@@ -1,6 +1,16 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselTSF", "WeaselTSF\WeaselTSF.vcproj", "{FF9B3625-BBD6-4972-8F23-7BA57F3127E8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4} = {10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}
+		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D} = {CE11A2DF-8D20-4B07-A935-4B0D03F0303D}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselUI", "WeaselUI\WeaselUI.vcproj", "{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselIPC", "WeaselIPC\WeaselIPC.vcproj", "{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{53F79A24-5390-4640-84B5-19984EB3353B}"
 	ProjectSection(SolutionItems) = preProject
 		include\PyWeasel.h = include\PyWeasel.h
@@ -11,29 +21,47 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		include\WeaselUI.h = include\WeaselUI.h
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselTSF", "WeaselTSF\WeaselTSF.vcxproj", "{FF9B3625-BBD6-4972-8F23-7BA57F3127E8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestWeaselUI", "test\TestWeaselUI\TestWeaselUI.vcproj", "{AEDC8606-6C10-4549-817D-5B6533F33E1E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4} = {10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselUI", "WeaselUI\WeaselUI.vcxproj", "{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselIME", "WeaselIME\WeaselIME.vcproj", "{A958FE3D-9F6E-44CB-981E-F2AE181657B3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D} = {CE11A2DF-8D20-4B07-A935-4B0D03F0303D}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselIPC", "WeaselIPC\WeaselIPC.vcxproj", "{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselServer", "WeaselServer\WeaselServer.vcproj", "{A68C2A5C-D74D-4CB2-9E22-A4D2FC256A2D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1C497821-BD63-4F02-9094-32B185B62F23} = {1C497821-BD63-4F02-9094-32B185B62F23}
+		{26930622-CFA2-43DF-A9F3-4AA4A313B2A4} = {26930622-CFA2-43DF-A9F3-4AA4A313B2A4}
+		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D} = {CE11A2DF-8D20-4B07-A935-4B0D03F0303D}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestWeaselUI", "test\TestWeaselUI\TestWeaselUI.vcxproj", "{AEDC8606-6C10-4549-817D-5B6533F33E1E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestWeaselIPC", "test\TestWeaselIPC\TestWeaselIPC.vcproj", "{9C1CC4BA-18FF-4890-908E-E545881C5586}"
+	ProjectSection(ProjectDependencies) = postProject
+		{26930622-CFA2-43DF-A9F3-4AA4A313B2A4} = {26930622-CFA2-43DF-A9F3-4AA4A313B2A4}
+		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D} = {CE11A2DF-8D20-4B07-A935-4B0D03F0303D}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselIME", "WeaselIME\WeaselIME.vcxproj", "{A958FE3D-9F6E-44CB-981E-F2AE181657B3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestPyWeasel", "test\TestPyWeasel\TestPyWeasel.vcproj", "{F75130DA-B785-42A7-B90B-571EAD9EDBE0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B} = {8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselServer", "WeaselServer\WeaselServer.vcxproj", "{A68C2A5C-D74D-4CB2-9E22-A4D2FC256A2D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselIPCServer", "WeaselIPCServer\WeaselIPCServer.vcproj", "{26930622-CFA2-43DF-A9F3-4AA4A313B2A4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestWeaselIPC", "test\TestWeaselIPC\TestWeaselIPC.vcxproj", "{9C1CC4BA-18FF-4890-908E-E545881C5586}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PyWeasel", "PyWeasel\PyWeasel.vcproj", "{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestPyWeasel", "test\TestPyWeasel\TestPyWeasel.vcxproj", "{F75130DA-B785-42A7-B90B-571EAD9EDBE0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestResponseParser", "test\TestResponseParser\TestResponseParser.vcproj", "{CC642427-64D7-44D9-8543-8CBBF981FAE7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D} = {CE11A2DF-8D20-4B07-A935-4B0D03F0303D}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselIPCServer", "WeaselIPCServer\WeaselIPCServer.vcxproj", "{26930622-CFA2-43DF-A9F3-4AA4A313B2A4}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PyWeasel", "PyWeasel\PyWeasel.vcxproj", "{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestResponseParser", "test\TestResponseParser\TestResponseParser.vcxproj", "{CC642427-64D7-44D9-8543-8CBBF981FAE7}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RimeWithWeasel", "RimeWithWeasel\RimeWithWeasel.vcxproj", "{1C497821-BD63-4F02-9094-32B185B62F23}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RimeWithWeasel", "RimeWithWeasel\RimeWithWeasel.vcproj", "{1C497821-BD63-4F02-9094-32B185B62F23}"
+	ProjectSection(ProjectDependencies) = postProject
+		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4} = {10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

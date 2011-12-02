@@ -3,10 +3,11 @@
 
 ** Preparation
 
-Assume we already have a default installation of Visual Studio 2008.
+Assume we already have a default installation of Visual Studio 2010.
+If you are building Weasel with Visual Studio 2008, extra changes to some script files are needed.
 
-Fetch svn, cmake executables.
-Fetch gtest, yaml-cpp, boost source.
+Install tools: svn, cmake.
+Fetch source packages: boost(1.47.0), gtest(1.6.0), yaml-cpp(0.2.6), kyotocabinet(1.2.70)
 
 ** Set environment variables
 
@@ -23,7 +24,8 @@ svn checkout https://rimeime.googlecode.com/svn/trunk/weasel --username YOUR_ACC
 ** Build Boost
 
 cd \code\boost_1_47_0
-bjam toolset=msvc threading=multi link=static runtime-link=static stage --with-date_time --with-filesystem --with-regex --with-signals --with-system --with-thread
+bjam toolset=msvc-10.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+bjam toolset=msvc-10.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
 
 ** Build GTest
 
@@ -49,16 +51,16 @@ devenv YAML_CPP.sln /Build Release
 
 ** Build Kyoto Cabinet
 
-TODO: We have to apply a patch in order to build version 1.2.70 of kyotocabinet with V.S. 2008.
+TODO: We have to apply a patch in order to build kyotocabinet with zlib support under windows.
 
 Checkout patch files (including zlib 1.2.3):
 
 cd \code
-svn checkout http://rimeime.googlecode.com/svn/trunk/misc/kyotocabinet-1.2.70-vs2008-patch
+svn checkout http://rimeime.googlecode.com/svn/trunk/misc/kyotocabinet-1.2.70-vs2010-patch
 
 Then, copy them to kyotocabinet source folder, and proceed with building the library.
 
-copy \code\kyotocabinet-1.2.70-vs2008-patch\* \code\kyotocabinet-1.2.70\
+copy \code\kyotocabinet-1.2.70-vs2010-patch\* \code\kyotocabinet-1.2.70\
 
 cd \code\kyotocabinet-1.2.70
 nmake -f VCmakefile
@@ -90,18 +92,14 @@ copy \code\kcwin32\lib\*.lib \code\weasel\lib\
 
 cd \code\weasel
 
-rem  for weasel\output\WeaselServer.exe
-devenv weasel.sln /Build Release
-
-rem  for weasel\output\weasels.ime
-devenv weasel.sln /Build ReleaseHans
-
-rem  for weasel\output\weasels.ime
-devenv weasel.sln /Build ReleaseHant
+devenv weasel.sln /Build "Release"
+devenv weasel.sln /Build "ReleaseHant"
+devenv weasel.sln /Build "Release|x64"
+devenv weasel.sln /Build "ReleaseHant|x64"
 
 Voila.
 
-To try the input method, first register the IME from an administrator command window:
+To install the built input method:
 
 cd \code\weasel\output
-rundll32 weasels.ime install
+install.bat
