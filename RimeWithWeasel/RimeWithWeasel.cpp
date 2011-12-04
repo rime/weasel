@@ -32,7 +32,6 @@ static const std::string WeaselLogFilePath()
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
 
-
 const WCHAR* utf8towcs(const char* utf8_str)
 {
 	const int buffer_len = 4096;
@@ -82,6 +81,13 @@ void RimeWithWeaselHandler::Initialize()
 	RimeTraits weasel_traits;
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
+	const int len = 20;
+	char utf8_str[len];
+	memset(utf8_str, 0, sizeof(utf8_str));
+	WideCharToMultiByte(CP_UTF8, 0, WEASEL_IME_NAME, -1, utf8_str, len - 1, NULL, NULL);
+	weasel_traits.distribution_name = utf8_str;
+	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
+	weasel_traits.distribution_version = WEASEL_VERSION;
 	RimeInitialize(&weasel_traits);
 	m_ui.Create(NULL);
 }
