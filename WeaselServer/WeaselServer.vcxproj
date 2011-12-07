@@ -244,7 +244,7 @@
       <AdditionalDependencies>imm32.lib;librime.lib;libyaml-cppmt.lib;kyotocabinet.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(SolutionDir)\output\$(ProjectName).exe</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage\lib;$(PYTHON_HOME)\libs;$(SolutionDir)\..\librime\vcbuild\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
@@ -284,7 +284,7 @@
       <AdditionalDependencies>imm32.lib;librime.lib;libyaml-cppmt.lib;kyotocabinet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(SolutionDir)\output\$(ProjectName).exe</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage\lib;$(PYTHON_HOME)\libs;$(SolutionDir)\..\librime\vcbuild\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
