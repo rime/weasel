@@ -21,6 +21,7 @@ public:
 private:
 	void _UpdateUI(UINT session_id);
 	bool _Respond(UINT session_id, LPWSTR buffer);
+	void _UpdateUIStyle(weasel::UIStyle *style);
 	
 	weasel::UI m_ui;
 	UINT active_session;

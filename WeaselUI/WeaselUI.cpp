@@ -15,7 +15,6 @@ bool UI::Create(HWND parent)
 	if (!pimpl_)
 		return false;
 
-	SetStyle(GetUIStyleSettings());
 	pimpl_->Create(parent);
 	return true;
 }
@@ -43,15 +42,13 @@ void UI::Hide()
 
 }
 
-void UI::SetStyle(UIStyle const& style)
+UIStyle* UI::GetStyle() const
 {
 	if (pimpl_)
 	{
-		if (!style.fontFace.empty())
-			pimpl_->SetFontFace(style.fontFace);
-		if (style.fontPoint > 0)
-			pimpl_->SetFontPoint(style.fontPoint);
+		return pimpl_->GetStyle();
 	}
+	return NULL;
 }
 
 void UI::UpdateInputPosition(RECT const& rc)
@@ -84,37 +81,4 @@ void UI::UpdateStatus(const weasel::Status &status)
 	{
 		pimpl_->SetStatus(status);
 	}
-}
-
-UIStyle const UI::GetUIStyleSettings()
-{
-  UIStyle style;
-
-  HKEY hKey;
-  LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, &hKey);
-  if (ret != ERROR_SUCCESS)
-  {
-    return style;
-  }
-
-  {
-    WCHAR value[100];
-    DWORD len = sizeof(value);
-    DWORD type = REG_SZ;
-    ret = RegQueryValueEx(hKey, L"FontFace", NULL, &type, (LPBYTE)value, &len);
-    if (ret == ERROR_SUCCESS)
-      style.fontFace = value;
-  }
-
-  {
-    DWORD dword = 0;
-    DWORD len = sizeof(dword);
-    DWORD type = REG_DWORD;
-    ret = RegQueryValueEx(hKey, L"FontPoint", NULL, &type, (LPBYTE)&dword, &len);
-    if (ret == ERROR_SUCCESS)
-      style.fontPoint = (int)dword;
-  }
-
-  RegCloseKey(hKey);
-  return style;
 }

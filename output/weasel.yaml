@@ -1,0 +1,54 @@
+# Weasel settings
+# vim: set sw=2 sts=2 et:
+# encoding: utf-8
+
+style:
+  color_scheme: luna
+  font_face: Microsoft YaHei
+  font_point: 16
+  layout:
+    min_width: 160
+    min_height: 0
+    border_width: 3
+    margin_x: 12
+    margin_y: 12
+    spacing: 10
+    candidate_spacing: 5
+    hilite_spacing: 4
+    hilite_padding: 2
+    round_corner: 4
+
+preset_color_schemes:
+  azure:
+    name: 青天／Azure
+    author: 佛振 <chen.sst@gmail.com>
+    text_color: 0x000000
+    back_color: 0xeceeee
+    border_color: 0xe0e0e0
+    hilited_text_color: 0x000000
+    hilited_back_color: 0xd4d4d4
+    hilited_candidate_text_color: 0xffffff
+    hilited_candidate_back_color: 0xfa3a0a
+
+  luna:
+    name: 明月／Luna
+    author: 佛振 <chen.sst@gmail.com>
+    text_color: 0x000000
+    back_color: 0xffffff
+    border_color: 0x000000
+    hilited_text_color: 0x000000
+    hilited_back_color: 0x7fffff
+    hilited_candidate_text_color: 0xffffff
+    hilited_candidate_back_color: 0x000000
+
+  lost_temple:
+    name: 孤寺／Lost Temple
+    author: 佛振 <chen.sst@gmail.com>, based on ir_black
+    text_color: 0xe8f3f6
+    back_color: 0x444444
+    border_color: 0x444444
+    hilited_text_color: 0x82e6ca
+    hilited_back_color: 0x111111
+    hilited_candidate_text_color: 0x000000
+    hilited_candidate_back_color: 0x82e6ca
+

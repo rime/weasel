@@ -90,6 +90,7 @@ void RimeWithWeaselHandler::Initialize()
 	weasel_traits.distribution_version = WEASEL_VERSION;
 	RimeInitialize(&weasel_traits);
 	m_ui.Create(NULL);
+	_UpdateUIStyle(m_ui.GetStyle());
 }
 
 void RimeWithWeaselHandler::Finalize()
@@ -257,4 +258,46 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	}
 
 	return true;
+}
+
+void RimeWithWeaselHandler::_UpdateUIStyle(weasel::UIStyle *style)
+{
+	if (!style) return;
+	RimeConfig config = { NULL };
+	if (RimeConfigOpen("weasel", &config))
+	{
+		const int BUF_SIZE = 99;
+		char buffer[BUF_SIZE + 1];
+		memset(buffer, '\0', sizeof(buffer));
+		if (RimeConfigGetString(&config, "style/font_face", buffer, BUF_SIZE))
+		{
+			style->font_face = utf8towcs(buffer);
+		}
+		RimeConfigGetInt(&config, "style/font_point", &style->font_point);
+		// layout
+		RimeConfigGetInt(&config, "style/layout/min_width", &style->min_width);
+		RimeConfigGetInt(&config, "style/layout/min_height", &style->min_height);
+		RimeConfigGetInt(&config, "style/layout/border", &style->border);
+		RimeConfigGetInt(&config, "style/layout/margin_x", &style->margin_x);
+		RimeConfigGetInt(&config, "style/layout/margin_y", &style->margin_y);
+		RimeConfigGetInt(&config, "style/layout/spacing", &style->spacing);
+		RimeConfigGetInt(&config, "style/layout/candidate_spacing", &style->candidate_spacing);
+		RimeConfigGetInt(&config, "style/layout/hilite_spacing", &style->hilite_spacing);
+		RimeConfigGetInt(&config, "style/layout/hilite_padding", &style->hilite_padding);
+		RimeConfigGetInt(&config, "style/layout/round_corner", &style->round_corner);
+		// color scheme
+		if (RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
+		{
+			std::string prefix("preset_color_schemes/");
+			prefix += buffer;
+			RimeConfigGetInt(&config, (prefix + "/text_color").c_str(), &style->text_color);
+			RimeConfigGetInt(&config, (prefix + "/back_color").c_str(), &style->back_color);
+			RimeConfigGetInt(&config, (prefix + "/border_color").c_str(), &style->border_color);
+			RimeConfigGetInt(&config, (prefix + "/hilited_text_color").c_str(), &style->hilited_text_color);
+			RimeConfigGetInt(&config, (prefix + "/hilited_back_color").c_str(), &style->hilited_back_color);
+			RimeConfigGetInt(&config, (prefix + "/hilited_candidate_text_color").c_str(), &style->hilited_candidate_text_color);
+			RimeConfigGetInt(&config, (prefix + "/hilited_candidate_back_color").c_str(), &style->hilited_candidate_back_color);
+		}
+		RimeConfigClose(&config);
+	}
 }

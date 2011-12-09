@@ -1,5 +1,6 @@
 #pragma once
 #include <WeaselCommon.h>
+#include <WeaselUI.h>
 
 static LPCWSTR DEFAULT_FONT_FACE = L"";
 static const int DEFAULT_FONT_POINT = 16;
@@ -15,13 +16,13 @@ static const int HIGHLIGHT_SPACING = 4;
 static const int HIGHLIGHT_PADDING = 2;
 static const int ROUND_CORNER = 4;
 
-static const COLORREF TEXT_COLOR                  = 0xe8f3f6 /*0x000000*/;
-static const COLORREF WINDOW_COLOR                = 0x444444 /*0xffffff*/;
-static const COLORREF BORDER_COLOR                = 0x444444 /*0x000000*/;
-static const COLORREF HIGHLIGHTED_TEXT_COLOR      = 0x82e6ca /*0x000000*/;
-static const COLORREF HIGHLIGHTED_BACK_COLOR      = 0x111111 /*0x7fefff*/;
-static const COLORREF HIGHLIGHTED_CAND_TEXT_COLOR = 0x000000 /*0xffffff*/;
-static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x82e6ca /*0x000000*/;
+static const COLORREF TEXT_COLOR                  = 0x000000;
+static const COLORREF BACK_COLOR                  = 0xffffff;
+static const COLORREF BORDER_COLOR                = 0x000000;
+static const COLORREF HIGHLIGHTED_TEXT_COLOR      = 0x000000;
+static const COLORREF HIGHLIGHTED_BACK_COLOR      = 0x7fffff;
+static const COLORREF HIGHLIGHTED_CAND_TEXT_COLOR = 0xffffff;
+static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x000000;
 
 static WCHAR CANDIDATE_PROMPT_PATTERN[] = L"%1%. %2%";
 
@@ -43,8 +44,7 @@ public:
 	LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	void CloseDialog(int nVal);
 
-	WeaselPanel() : m_fontFace(DEFAULT_FONT_FACE), m_fontPoint(DEFAULT_FONT_POINT) {}
-	~WeaselPanel() {}
+	WeaselPanel();
 	void SetContext(const weasel::Context &ctx);
 	void SetStatus(const weasel::Status &status);
 	void MoveTo(RECT const& rc);
@@ -52,10 +52,7 @@ public:
 
 	void DoPaint(CDCHandle dc);
 
-	LPCWSTR GetFontFace() const { return m_fontFace.c_str(); }
-	void SetFontFace(wstring const& fontFace) { m_fontFace = fontFace; }
-	int GetFontPoint() const { return m_fontPoint; }
-	void SetFontPoint(int fontPoint) { m_fontPoint = fontPoint; }
+	weasel::UIStyle* GetStyle() { return &m_style; }
 
 private:
 	void _ResizeWindow();
@@ -69,4 +66,5 @@ private:
 	CRect m_inputPos;
 	weasel::Context m_ctx;
 	weasel::Status m_status;
+	weasel::UIStyle m_style;
 };
