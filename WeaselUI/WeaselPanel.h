@@ -17,6 +17,7 @@ static const int HIGHLIGHT_PADDING = 2;
 static const int ROUND_CORNER = 4;
 
 static const COLORREF TEXT_COLOR                  = 0x000000;
+static const COLORREF CAND_TEXT_COLOR             = 0x000000;
 static const COLORREF BACK_COLOR                  = 0xffffff;
 static const COLORREF BORDER_COLOR                = 0x000000;
 static const COLORREF HIGHLIGHTED_TEXT_COLOR      = 0x000000;

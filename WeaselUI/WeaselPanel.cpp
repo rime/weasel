@@ -20,6 +20,7 @@ WeaselPanel::WeaselPanel()
 	m_style.round_corner = ROUND_CORNER;
 
 	m_style.text_color = TEXT_COLOR;
+	m_style.candidate_text_color = CAND_TEXT_COLOR;
 	m_style.back_color = BACK_COLOR;
 	m_style.border_color = BORDER_COLOR;
 	m_style.hilited_text_color = HIGHLIGHTED_TEXT_COLOR;
@@ -216,6 +217,7 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRect const& rc, int& y)
 {
 	bool drawn = false;
+	dc.SetTextColor(m_style.candidate_text_color);
 	vector<Text> const& candies = cinfo.candies;
 	for (size_t i = 0; i < candies.size(); ++i, y += m_style.candidate_spacing)
 	{
@@ -230,7 +232,7 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 			_HighlightText(dc, rcText, m_style.hilited_candidate_back_color);
 			dc.SetTextColor(m_style.hilited_candidate_text_color);
 			dc.ExtTextOutW(rcText.left, y, ETO_CLIPPED, &rcText, t.c_str(), t.length(), 0);
-			dc.SetTextColor(m_style.text_color);
+			dc.SetTextColor(m_style.candidate_text_color);
 		}
 		else
 		{
@@ -239,6 +241,7 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 		y += szText.cy;
 		drawn = true;
 	}
+	dc.SetTextColor(m_style.text_color);
 	return drawn;
 }
 

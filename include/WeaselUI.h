@@ -22,6 +22,7 @@ namespace weasel
 		int round_corner;
 		// color scheme
 		int text_color;
+		int candidate_text_color;
 		int back_color;
 		int border_color;
 		int hilited_text_color;
@@ -42,6 +43,7 @@ namespace weasel
 					hilite_padding(0),
 					round_corner(0),
 					text_color(0),
+					candidate_text_color(0),
 					back_color(0),
 					border_color(0),
 					hilited_text_color(0),

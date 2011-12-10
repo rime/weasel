@@ -291,12 +291,31 @@ void RimeWithWeaselHandler::_UpdateUIStyle(weasel::UIStyle *style)
 			std::string prefix("preset_color_schemes/");
 			prefix += buffer;
 			RimeConfigGetInt(&config, (prefix + "/text_color").c_str(), &style->text_color);
+			if (!RimeConfigGetInt(&config, (prefix + "/candidate_text_color").c_str(), &style->candidate_text_color))
+			{
+				style->candidate_text_color = style->text_color;
+			}
 			RimeConfigGetInt(&config, (prefix + "/back_color").c_str(), &style->back_color);
-			RimeConfigGetInt(&config, (prefix + "/border_color").c_str(), &style->border_color);
-			RimeConfigGetInt(&config, (prefix + "/hilited_text_color").c_str(), &style->hilited_text_color);
-			RimeConfigGetInt(&config, (prefix + "/hilited_back_color").c_str(), &style->hilited_back_color);
-			RimeConfigGetInt(&config, (prefix + "/hilited_candidate_text_color").c_str(), &style->hilited_candidate_text_color);
-			RimeConfigGetInt(&config, (prefix + "/hilited_candidate_back_color").c_str(), &style->hilited_candidate_back_color);
+			if (!RimeConfigGetInt(&config, (prefix + "/border_color").c_str(), &style->border_color))
+			{
+				style->border_color = style->text_color;
+			}
+			if (!RimeConfigGetInt(&config, (prefix + "/hilited_text_color").c_str(), &style->hilited_text_color))
+			{
+				style->hilited_text_color = style->text_color;
+			}
+			if (!RimeConfigGetInt(&config, (prefix + "/hilited_back_color").c_str(), &style->hilited_back_color))
+			{
+				style->hilited_back_color = style->back_color;
+			}
+			if (!RimeConfigGetInt(&config, (prefix + "/hilited_candidate_text_color").c_str(), &style->hilited_candidate_text_color))
+			{
+				style->hilited_candidate_text_color = style->hilited_text_color;
+			}
+			if (!RimeConfigGetInt(&config, (prefix + "/hilited_candidate_back_color").c_str(), &style->hilited_candidate_back_color))
+			{
+				style->hilited_candidate_back_color = style->hilited_back_color;
+			}
 		}
 		RimeConfigClose(&config);
 	}
