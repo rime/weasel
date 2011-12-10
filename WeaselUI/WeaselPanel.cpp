@@ -54,7 +54,7 @@ void WeaselPanel::_ResizeWindow()
 	long height = 0;
 	CSize sz;
 
-	// draw preedit string
+	// measure preedit string
 	wstring const& preedit = m_ctx.preedit.str;
 	vector<weasel::TextAttribute> const& attrs = m_ctx.preedit.attributes;
 	if (!preedit.empty())
@@ -82,7 +82,7 @@ void WeaselPanel::_ResizeWindow()
 		height += sz.cy + m_style.spacing;
 	}
 
-	// draw aux string
+	// measure aux string
 	wstring const& aux = m_ctx.aux.str;
 	if (!aux.empty())
 	{
@@ -91,13 +91,13 @@ void WeaselPanel::_ResizeWindow()
 		height += sz.cy + m_style.spacing;
 	}
 
-	// draw candidates
+	// measure candidates
 	vector<Text> const& candidates = m_ctx.cinfo.candies;
 	for (size_t i = 0; i < candidates.size(); ++i, height += m_style.candidate_spacing)
 	{
 		wstring cand = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % (i + 1) % candidates[i].str).str();
 		dc.GetTextExtent(cand.c_str(), cand.length(), &sz);
-		width = max(width, sz.cx);
+		width = max(width, sz.cx + 2 * m_style.hilite_padding);
 		height += sz.cy;
 	}
 	if (!candidates.empty())
