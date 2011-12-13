@@ -7,14 +7,13 @@ if /i "%1" == "/t" set WEASEL_IME=weaselt
 rem for zip installer
 if exist "weasel\%WEASEL_IME%.ime" cd weasel
 
-echo stopping service.
+echo stopping service from an older version.
 call stop_service.bat
 
-echo copying data files.
-if not exist "%AppData%\Rime" mkdir "%AppData%\Rime"
-copy /y data\*.* "%AppData%\Rime"
+echo configuring preset input schemas...
+weaseldeployer.exe
 
-echo registering Weasel ime.
+echo registering Weasel IME to your system.
 
 wscript check_windows_version.js
 if errorlevel 2 goto win7_x64_install

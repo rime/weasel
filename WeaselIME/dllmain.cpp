@@ -136,7 +136,7 @@ void install(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 						(executable.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(hWnd, L"無法寫入 ServerExecutable", L"安裝失敗", MB_ICONERROR | MB_OK);
+		MessageBox(hWnd, L"無法寫入註冊表鍵值 ServerExecutable", L"安裝失敗", MB_ICONERROR | MB_OK);
 		return;
 	}
 
@@ -148,12 +148,12 @@ void install(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 	{
 		DWORD dwErr = GetLastError();
 		WCHAR msg[100];
-		wsprintf(msg, L"ImmInstallIME: HKL=%x Err=%x", hKL, dwErr);
+		wsprintf(msg, L"註冊輸入法錯誤 ImmInstallIME: HKL=%x Err=%x", hKL, dwErr);
 		MessageBox(hWnd, msg, L"安裝失敗", MB_ICONERROR | MB_OK);
 		return;
 	}
 
-	//MessageBox(hWnd, L"小狼毫 :)", L"安裝完成", MB_ICONINFORMATION | MB_OK);
+	MessageBox(hWnd, L"可以使【小狼毫】寫字了 :)", L"安裝完成", MB_ICONINFORMATION | MB_OK);
 }
 
 extern "C" __declspec(dllexport)
