@@ -1,4 +1,6 @@
 @echo off
+
+cd "%~dp0"
 call stop_service.bat
 
 echo uninstalling Weasel ime.

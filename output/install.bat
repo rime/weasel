@@ -4,8 +4,7 @@ rem argument 1: [ /s | /t ] register ime as zh_CN | zh_TW keyboard layout
 set WEASEL_IME=weasel
 if /i "%1" == "/t" set WEASEL_IME=weaselt
 
-rem for zip installer
-if exist "weasel\%WEASEL_IME%.ime" cd weasel
+cd "%~dp0"
 
 echo stopping service from an older version.
 call stop_service.bat
