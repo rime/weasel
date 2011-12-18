@@ -2,7 +2,7 @@
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.9"
+config_version: "0.9.2"
 
 style:
   color_scheme: azure
@@ -72,7 +72,7 @@ preset_color_schemes:
     candidate_text_color: 0xd8e3e6
     back_color: 0x222222
     border_color: 0x222222
-    hilited_text_color: 0xfecb96
+    hilited_text_color: 0xffcf9a
     hilited_back_color: 0x222222
     hilited_candidate_text_color: 0x92f6da
     hilited_candidate_back_color: 0x333333

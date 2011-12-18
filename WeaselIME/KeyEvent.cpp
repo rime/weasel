@@ -6,7 +6,7 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 {
 	const BYTE KEY_DOWN = 0x80;
 	const BYTE TOGGLED = 0x01;
-	ibus::Keycode TranslateKeycode(UINT vkey);
+	ibus::Keycode TranslateKeycode(UINT vkey, KeyInfo kinfo);
 
 	// set mask
 	result.mask = ibus::NULL_MASK;
@@ -27,7 +27,7 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 		result.mask |= ibus::RELEASE_MASK;
 
 	// set keycode
-	ibus::Keycode code = TranslateKeycode(vkey);
+	ibus::Keycode code = TranslateKeycode(vkey, kinfo);
 	if (code)
 	{
 		result.keycode = code;
@@ -52,7 +52,7 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 	return false;
 }
 
-ibus::Keycode TranslateKeycode(UINT vkey)
+ibus::Keycode TranslateKeycode(UINT vkey, KeyInfo kinfo)
 {
 	switch (vkey)
 	{
@@ -61,8 +61,20 @@ ibus::Keycode TranslateKeycode(UINT vkey)
 	case VK_CLEAR:	return ibus::Clear;
 	case VK_RETURN:	return ibus::Return;
 
-	case VK_SHIFT:	return ibus::Shift_L;
-	case VK_CONTROL:	return ibus::Control_L;
+	case VK_SHIFT:	
+	{
+		if (kinfo.scanCode == 0x36)
+			return ibus::Shift_R;
+		else
+			return ibus::Shift_L;
+	}
+	case VK_CONTROL:
+	{
+		if (kinfo.isExtended == 1)
+			return ibus::Control_R;
+		else
+			return ibus::Control_L;
+	}
 	case VK_MENU:	return ibus::Alt_L;
 	case VK_PAUSE:	return ibus::Pause;
 	case VK_CAPITAL:	return ibus::Caps_Lock;

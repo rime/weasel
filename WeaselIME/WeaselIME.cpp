@@ -25,6 +25,7 @@ static const std::string WeaselLogFilePath()
 #define EZDBGONLYLOGGERPRINT(...)
 #define EZDBGONLYLOGGERFUNCTRACKER
 
+//#define EZLOGGER_IMPLEMENT_DEBUGLOGGING
 //#pragma warning(disable: 4995)
 //#pragma warning(disable: 4996)
 //#include <ezlogger/ezlogger_headers.hpp>
@@ -367,28 +368,6 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 {
 	EZDBGONLYLOGGERPRINT("Process key event: vKey = 0x%x, kinfo = 0x%x, HIMC = 0x%x", vKey, UINT32(kinfo), m_hIMC);  
 	bool accepted = false;
-
-#ifdef KEYCODE_VIEWER
-	{
-		weasel::KeyEvent ke;
-		if (!ConvertKeyEvent(vKey, kinfo, lpbKeyState, ke))
-		{
-			// unknown key event
-			//m_ctx.clear();
-			//m_ctx.aux.str = (boost::wformat(L"unknown key event vKey: %x, scanCode: %x, isKeyUp: %u") % vKey % kinfo.scanCode % kinfo.isKeyUp).str();
-			return FALSE;
-		}
-		//m_ctx.aux.str = (boost::wformat(L"keycode: %x, mask: %x, isKeyUp: %u") % ke.keycode % ke.mask % kinfo.isKeyUp).str();
-		//_UpdateContext(m_ctx);
-		return FALSE;
-	}
-#endif
-
-	// 要处理KEY_UP事件（宫保拼音等用到KEY_UP）
-	if (kinfo.isKeyUp)
-	{
-		return FALSE;
-	}
 
 	if (!m_client.Echo())
 	{
