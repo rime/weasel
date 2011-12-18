@@ -170,7 +170,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	RimeContext ctx;
 	if (RimeGetContext(session_id, &ctx))
 	{
-		if (ctx.composition.is_composing)
+		if (ctx.composition.length > 0)
 		{
 			weasel_context.preedit.str = utf8towcs(ctx.composition.preedit);
 			if (ctx.composition.sel_start < ctx.composition.sel_end)
