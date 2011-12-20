@@ -67,18 +67,12 @@ void UI::Refresh()
 	}
 }
 
-void UI::UpdateContext(const weasel::Context &ctx)
+void UI::Update(const weasel::Context &ctx, const weasel::Status &status)
 {
 	if (pimpl_)
 	{
 		pimpl_->SetContext(ctx);		
-	}
-}
-
-void UI::UpdateStatus(const weasel::Status &status)
-{
-	if (pimpl_)
-	{
 		pimpl_->SetStatus(status);
+		pimpl_->Refresh();
 	}
 }

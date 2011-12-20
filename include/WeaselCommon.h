@@ -101,15 +101,18 @@ namespace weasel
 	// 由ime管理
 	struct Status
 	{
-		Status() : zh_mode(false), composing(false) {}
+		Status() : ascii_mode(false), composing(false), disabled(false) {}
 		void reset()
 		{
-			zh_mode = true;
+			ascii_mode = false;
 			composing = false;
+			disabled = false;
 		}
-		// 中文轉換開關
-		bool zh_mode;
+		// 轉換開關
+		bool ascii_mode;
 		// 寫作狀態
 		bool composing;
+		// 維護模式（暫停輸入功能）
+		bool disabled;
 	};
 }

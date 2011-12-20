@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Chinese (P.R.C.) resources
+// Chinese (Simplified, PRC) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
-#ifdef _WIN32
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 #pragma code_page(936)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -88,7 +86,17 @@ BEGIN
     END
 END
 
-#endif    // Chinese (P.R.C.) resources
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ZHUNG               ICON                    "..\\resource\\zhung.ico"
+IDI_ALPHA               ICON                    "..\\resource\\alpha.ico"
+#endif    // Chinese (Simplified, PRC) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

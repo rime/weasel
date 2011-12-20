@@ -90,10 +90,7 @@ namespace weasel
 		void Refresh();
 
 		// 更新界面显示内容
-		void UpdateContext(weasel::Context const& ctx);
-
-		// 更新输入法状态
-		void UpdateStatus(weasel::Status const& status);
+		void Update(weasel::Context const& ctx, weasel::Status const& status);
 
 	private:
 		UIImpl* pimpl_;

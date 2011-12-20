@@ -166,7 +166,17 @@ void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 
 void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 {
+	weasel::Status weasel_status;
 	weasel::Context weasel_context;
+
+	RimeStatus status;
+	if (RimeGetStatus(session_id, &status))
+	{
+		weasel_status.ascii_mode = status.is_ascii_mode;
+		weasel_status.composing = status.is_composing;
+		weasel_status.disabled = status.is_disabled;
+	}
+
 	RimeContext ctx;
 	if (RimeGetContext(session_id, &ctx))
 	{
@@ -196,21 +206,16 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		}
 	}
 
-	RimeStatus status;
-	if (RimeGetStatus(session_id, &status))
+	if (weasel_status.composing && !weasel_context.empty() ||
+		!weasel_status.composing && (weasel_status.ascii_mode || weasel_status.disabled))
 	{
-		// not interesting for now...
-	}
-
-	if (!weasel_context.empty())
-	{
-		m_ui.UpdateContext(weasel_context);
+		m_ui.Update(weasel_context, weasel_status);
 		m_ui.Show();
 	}
 	else
 	{
 		m_ui.Hide();
-		m_ui.UpdateContext(weasel_context);
+		m_ui.Update(weasel_context, weasel_status);
 	}
 }
 

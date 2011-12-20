@@ -2,7 +2,38 @@
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
 
+// for IDI_ZHUNG, IDI_ALPHA
+#include "../WeaselServer/resource.h"
+
 using namespace weasel;
+
+static LPCWSTR DEFAULT_FONT_FACE = L"";
+static const int DEFAULT_FONT_POINT = 16;
+
+static const int MIN_WIDTH = 160;
+static const int MIN_HEIGHT = 0;
+static const int BORDER = 3;
+static const int MARGIN_X = 12;
+static const int MARGIN_Y = 12;
+static const int SPACING = 10;
+static const int CAND_SPACING = 5;
+static const int HIGHLIGHT_SPACING = 4;
+static const int HIGHLIGHT_PADDING = 2;
+static const int ROUND_CORNER = 4;
+
+static const COLORREF TEXT_COLOR                  = 0x000000;
+static const COLORREF CAND_TEXT_COLOR             = 0x000000;
+static const COLORREF BACK_COLOR                  = 0xffffff;
+static const COLORREF BORDER_COLOR                = 0x000000;
+static const COLORREF HIGHLIGHTED_TEXT_COLOR      = 0x000000;
+static const COLORREF HIGHLIGHTED_BACK_COLOR      = 0x7fffff;
+static const COLORREF HIGHLIGHTED_CAND_TEXT_COLOR = 0xffffff;
+static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x000000;
+
+static const int STATUS_ICON_SIZE = 16;
+
+static WCHAR CANDIDATE_PROMPT_PATTERN[] = L"%1%. %2%";
+
 
 WeaselPanel::WeaselPanel()
 {
@@ -27,22 +58,29 @@ WeaselPanel::WeaselPanel()
 	m_style.hilited_back_color = HIGHLIGHTED_BACK_COLOR;
 	m_style.hilited_candidate_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 	m_style.hilited_candidate_back_color = HIGHLIGHTED_CAND_BACK_COLOR;
+
+	m_iconZhung.LoadIconW(IDI_ZHUNG, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	m_iconAlpha.LoadIconW(IDI_ALPHA, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 }
 
 void WeaselPanel::SetContext(const weasel::Context &ctx)
 {
 	m_ctx = ctx;
-	Refresh();
 }
 
 void WeaselPanel::SetStatus(const weasel::Status &status)
 {
 	m_status = status;
-	Refresh();
 }
 
 void WeaselPanel::_ResizeWindow()
 {
+	if (!m_status.composing)
+	{
+		SetWindowPos( NULL, 0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE, SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOZORDER);
+		return;
+	}
+
 	CDC dc = GetDC();
 	long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 
@@ -250,6 +288,15 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 {
 	CRect rc;
 	GetClientRect(&rc);
+
+	if (!m_status.composing)
+	{
+		if (m_status.ascii_mode)
+			dc.DrawIconEx(0, 0, m_iconAlpha, 0, 0);
+		else
+			dc.DrawIconEx(0, 0, m_iconZhung, 0, 0); 
+		return;
+	}
 
 	// background
 	{
