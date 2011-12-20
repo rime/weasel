@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,1,0
- PRODUCTVERSION 0,9,1,0
+ FILEVERSION 0,9,2,0
+ PRODUCTVERSION 0,9,2,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -71,23 +71,23 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "中州式恕堂"
             VALUE "FileDescription", "小狼毫輸入法"
-            VALUE "FileVersion", "0.9.1"
+            VALUE "FileVersion", "0.9.2"
             VALUE "InternalName", "Weasel"
             VALUE "LegalCopyright", "版權所無 中州式恕堂 2011"
             VALUE "OriginalFilename", "weasel.ime"
             VALUE "ProductName", "小狼毫"
-            VALUE "ProductVersion", "0.9.1"
+            VALUE "ProductVersion", "0.9.2"
         END
         BLOCK "080404b0"
         BEGIN
             VALUE "CompanyName", "中州式恕堂"
             VALUE "FileDescription", "小狼毫輸入法"
-            VALUE "FileVersion", "0.9.1"
+            VALUE "FileVersion", "0.9.2"
             VALUE "InternalName", "Weasel"
             VALUE "LegalCopyright", "版權所無 中州式恕堂 2011"
             VALUE "OriginalFilename", "weasel.ime"
             VALUE "ProductName", "小狼毫"
-            VALUE "ProductVersion", "0.9.1"
+            VALUE "ProductVersion", "0.9.2"
         END
     END
     BLOCK "VarFileInfo"

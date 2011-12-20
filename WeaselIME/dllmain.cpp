@@ -153,7 +153,7 @@ void install(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 		return;
 	}
 
-	MessageBox(hWnd, L"可以使【小狼毫】寫字了 :)", L"安裝完成", MB_ICONINFORMATION | MB_OK);
+	//MessageBox(hWnd, L"可以使【小狼毫】寫字了 :)", L"安裝完成", MB_ICONINFORMATION | MB_OK);
 }
 
 extern "C" __declspec(dllexport)

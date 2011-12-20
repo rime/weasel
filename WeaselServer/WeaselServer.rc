@@ -53,8 +53,8 @@ FeedURL APPCAST {"http://rimeime.googlecode.com/svn/trunk/weasel/update/appcast.
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,1,0
- PRODUCTVERSION 0,9,1,0
+ FILEVERSION 0,9,2,0
+ PRODUCTVERSION 0,9,2,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -72,12 +72,12 @@ BEGIN
             VALUE "Comments", "Powered by RIME | 中州韻輸入法引擎"
             VALUE "CompanyName", "中州式恕堂"
             VALUE "FileDescription", "小狼毫算法服務"
-            VALUE "FileVersion", "0.9.1"
+            VALUE "FileVersion", "0.9.2"
             VALUE "InternalName", "WeaselServer"
             VALUE "LegalCopyright", "版權所無 中州式恕堂 2011"
             VALUE "OriginalFilename", "WeaselServer.exe"
             VALUE "ProductName", "小狼毫"
-            VALUE "ProductVersion", "0.9.1"
+            VALUE "ProductVersion", "0.9.2"
         END
     END
     BLOCK "VarFileInfo"
@@ -96,6 +96,27 @@ END
 // remains consistent on all systems.
 IDI_ZHUNG               ICON                    "..\\resource\\zhung.ico"
 IDI_ALPHA               ICON                    "..\\resource\\alpha.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_POPUP MENU
+BEGIN
+    POPUP "WeaselTray"
+    BEGIN
+        MENUITEM "打開用戶設定 (&U)",               ID_WEASELTRAY_USERCONFIG
+        MENUITEM "打開安裝目錄 (&I)",               ID_WEASELTRAY_INSTALLDIR
+        MENUITEM "造訪RIME主頁 (&H)",               ID_WEASELTRAY_HOMEPAGE
+        MENUITEM "檢查新版本 (&C)",                 ID_WEASELTRAY_CHECKUPDATE
+        MENUITEM SEPARATOR
+        MENUITEM "部署方案 (&D)",                   ID_WEASELTRAY_DEPLOY
+        MENUITEM "重新載入 (&R)",                   ID_WEASELTRAY_RELOAD
+        MENUITEM "退出 (&Q)",                       ID_WEASELTRAY_QUIT
+    END
+END
+
 #endif    // Chinese (Simplified, PRC) resources
 /////////////////////////////////////////////////////////////////////////////
 

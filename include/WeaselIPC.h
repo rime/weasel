@@ -21,6 +21,7 @@ enum WEASEL_IPC_COMMAND
 	WEASEL_IPC_FOCUS_IN,
 	WEASEL_IPC_FOCUS_OUT,
 	WEASEL_IPC_UPDATE_INPUT_POS,
+	WEASEL_IPC_LAST_COMMAND
 };
 
 namespace weasel
@@ -68,8 +69,12 @@ namespace weasel
 	// 處理server端回應之物件
 	typedef boost::function<bool (LPWSTR buffer, UINT length)> ResponseHandler;
 	
+	// 事件處理函數
+	typedef boost::function<bool ()> CommandHandler;
+
 	// 啟動服務進程之物件
-	typedef boost::function<bool ()> ServerLauncher;
+	typedef CommandHandler ServerLauncher;
+
 
 	// IPC實現類聲明
 
@@ -124,6 +129,9 @@ namespace weasel
 		int Stop();
 		// 消息循环
 		int Run();
+
+		void AddMenuHandler(UINT uID, CommandHandler handler);
+		HWND GetHWnd();
 
 	private:
 		ServerImpl* m_pImpl;

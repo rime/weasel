@@ -1,6 +1,7 @@
 #pragma once
 #include <WeaselIPC.h>
 #include <boost/smart_ptr.hpp>
+#include <map>
 
 namespace weasel
 {
@@ -30,6 +31,7 @@ namespace weasel
 			MESSAGE_HANDLER(WM_CREATE, OnCreate)
 			MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 			MESSAGE_HANDLER(WM_CLOSE, OnClose)
+			MESSAGE_HANDLER(WM_COMMAND, OnCommand)
 			MESSAGE_HANDLER(WEASEL_IPC_ECHO, OnEcho)
 			MESSAGE_HANDLER(WEASEL_IPC_START_SESSION, OnStartSession)			  
 			MESSAGE_HANDLER(WEASEL_IPC_END_SESSION, OnEndSession)	
@@ -43,6 +45,7 @@ namespace weasel
 		LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnEcho(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnStartSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnEndSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -59,11 +62,16 @@ namespace weasel
 		int Start();
 		int Stop();
 		int Run();
-		void RegisterRequestHandler(RequestHandler handler);
+
+		void AddMenuHandler(UINT uID, CommandHandler &handler)
+		{
+			m_MenuHandlers[uID] = handler;
+		}
 
 	private:
 		boost::shared_ptr<RequestHandler> m_pHandler;
 		boost::shared_ptr<SharedMemory> m_pSharedMemory;
+		std::map<UINT, CommandHandler> m_MenuHandlers;
 	};
 
 }

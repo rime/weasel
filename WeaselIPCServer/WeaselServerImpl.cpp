@@ -57,6 +57,19 @@ LRESULT ServerImpl::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return 1;
 }
 
+LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	UINT uID = LOWORD(wParam);
+	std::map<UINT, CommandHandler>::iterator it = m_MenuHandlers.find(uID);
+	if (it == m_MenuHandlers.end())
+	{
+		bHandled = FALSE;
+		return 0;
+	}
+	it->second();  // execute command
+	return 0;
+}
+
 int ServerImpl::Start()
 {
 	// assure single instance
@@ -226,4 +239,14 @@ int Server::Stop()
 int Server::Run()
 {
 	return m_pImpl->Run();
+}
+
+void Server::AddMenuHandler(UINT uID, CommandHandler handler)
+{
+	m_pImpl->AddMenuHandler(uID, handler);
+}
+
+HWND Server::GetHWnd()
+{
+	return m_pImpl->m_hWnd;
 }
