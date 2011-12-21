@@ -113,7 +113,7 @@ void install(HWND hWnd, HINSTANCE hInstance, LPWSTR lpszCmdLine, int nCmdShow)
 	// 写注册表
 	HKEY hKey;
 	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 
-		                         0, NULL, 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, 0, &hKey, NULL);
+		                         0, NULL, 0, KEY_ALL_ACCESS | KEY_WOW64_32KEY, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
 		MessageBox(hWnd, WEASEL_REG_KEY, L"安裝失敗", MB_ICONERROR | MB_OK);

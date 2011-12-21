@@ -42,7 +42,7 @@ static bool launch_server()
 
 	// 從註冊表取得server位置
 	HKEY hKey;
-	LSTATUS ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 0, KEY_READ | KEY_WOW64_64KEY, &hKey);
+	LSTATUS ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 0, KEY_READ | KEY_WOW64_32KEY, &hKey);
 	if (ret != ERROR_SUCCESS)
 	{
 		MessageBox(NULL, L"註冊表信息無影了", WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
@@ -89,7 +89,7 @@ static bool launch_server()
 		return false;
 	}
 
-	if (!WaitForInputIdle(process_info.hProcess, 2000))
+	if (!WaitForInputIdle(process_info.hProcess, 1500))
 	{
 		EZDBGONLYLOGGERPRINT("WARNING: WaitForInputIdle() timed out; succeeding IPC messages might not be delivered.");
 	}
