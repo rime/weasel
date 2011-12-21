@@ -45,7 +45,7 @@ static void setup_menu_handlers(weasel::Server &server)
 	install_dir.resize(pos);
 	server.AddMenuHandler(ID_WEASELTRAY_QUIT, boost::lambda::bind(&weasel::Server::Stop, boost::ref(server)) == 0);
 	server.AddMenuHandler(ID_WEASELTRAY_RELOAD, boost::lambda::bind(&execute, std::wstring(exe_path), std::wstring(L"/restart")));
-	server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeploy.exe", std::wstring()));
+	server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring()));
 	server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, boost::lambda::bind(&open, L"http://code.google.com/p/rimeime/"));
 	server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);
 	server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, boost::lambda::bind(&explore, install_dir));

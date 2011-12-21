@@ -94,6 +94,12 @@
   <ItemGroup>
     <ResourceCompile Include="WeaselDeployer.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WeaselIPC\WeaselIPC.vcxproj">
+      <Project>{ce11a2df-8d20-4b07-a935-4b0d03f0303d}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

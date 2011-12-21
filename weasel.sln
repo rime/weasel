@@ -159,7 +159,6 @@ Global
 		{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}.Release|Win32.Build.0 = Release|Win32
 		{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}.Release|x64.ActiveCfg = Release|Win32
 		{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}.ReleaseHant|Win32.ActiveCfg = Release|Win32
-		{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}.ReleaseHant|Win32.Build.0 = Release|Win32
 		{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}.ReleaseHant|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution

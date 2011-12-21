@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "WeaselDeployer.h"
 #include <WeaselCommon.h>
+#include <WeaselIPC.h>
 #include <rime_api.h>
 #include <string>
 
@@ -30,6 +31,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
+
+	weasel::Client client;
+	if (client.Connect())
+		client.ShutdownServer();
 
 	RimeTraits weasel_traits;
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
