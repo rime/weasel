@@ -53,8 +53,8 @@ FeedURL APPCAST {"http://rimeime.googlecode.com/svn/trunk/weasel/update/appcast.
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,2,0
- PRODUCTVERSION 0,9,2,0
+ FILEVERSION 0,9,2,1
+ PRODUCTVERSION 0,9,2,1
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -72,12 +72,12 @@ BEGIN
             VALUE "Comments", "Powered by RIME | 中州韻輸入法引擎"
             VALUE "CompanyName", "中州式恕堂"
             VALUE "FileDescription", "小狼毫算法服務"
-            VALUE "FileVersion", "0.9.2"
+            VALUE "FileVersion", "0.9.2.1"
             VALUE "InternalName", "WeaselServer"
             VALUE "LegalCopyright", "版權所無 中州式恕堂 2011"
             VALUE "OriginalFilename", "WeaselServer.exe"
             VALUE "ProductName", "小狼毫"
-            VALUE "ProductVersion", "0.9.2"
+            VALUE "ProductVersion", "0.9.2.1"
         END
     END
     BLOCK "VarFileInfo"
