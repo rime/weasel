@@ -203,6 +203,20 @@ LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
+LRESULT ServerImpl::OnStartMaintenance(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (m_pRequestHandler)
+		m_pRequestHandler->StartMaintenance();
+	return 0;
+}
+
+LRESULT ServerImpl::OnEndMaintenance(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (m_pRequestHandler)
+		m_pRequestHandler->EndMaintenance();
+	return 0;
+}
+
 // weasel::Server
 
 Server::Server()

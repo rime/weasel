@@ -15,6 +15,8 @@ namespace weasel
 		void ShutdownServer();
 		void StartSession();
 		void EndSession();
+		void StartMaintenance();
+		void EndMaintenance();
 		bool Echo();
 		bool ProcessKeyEvent(KeyEvent const& keyEvent);
 		void UpdateInputPosition(RECT const& rc);

@@ -17,12 +17,16 @@ public:
 	virtual void FocusIn(UINT session_id);
 	virtual void FocusOut(UINT session_id);
 	virtual void UpdateInputPosition(RECT const& rc, UINT session_id);
+	virtual void StartMaintenance();
+	virtual void EndMaintenance();
 
 private:
+	bool _IsDeployerRunning();
 	void _UpdateUI(UINT session_id);
 	bool _Respond(UINT session_id, LPWSTR buffer);
 	void _UpdateUIStyle();
 	
 	weasel::UI *m_ui;  // reference
-	UINT active_session;
+	UINT m_active_session;
+	bool m_disabled;
 };

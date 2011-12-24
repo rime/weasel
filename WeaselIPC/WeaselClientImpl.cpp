@@ -111,6 +111,20 @@ void ClientImpl::EndSession()
 	session_id = 0;
 }
 
+void ClientImpl::StartMaintenance()
+{
+	if (_Connected())
+		SendMessage(serverWnd, WEASEL_IPC_START_MAINTENANCE, 0, 0);
+	session_id = 0;
+}
+
+void ClientImpl::EndMaintenance()
+{
+	if (_Connected())
+		SendMessage(serverWnd, WEASEL_IPC_END_MAINTENANCE, 0, 0);
+	session_id = 0;
+}
+
 bool ClientImpl::Echo()
 {
 	if (!_Active())
@@ -219,6 +233,16 @@ void Client::StartSession()
 void Client::EndSession()
 {
 	m_pImpl->EndSession();
+}
+
+void Client::StartMaintenance()
+{
+	m_pImpl->StartMaintenance();
+}
+
+void Client::EndMaintenance()
+{
+	m_pImpl->EndMaintenance();
 }
 
 bool Client::Echo()

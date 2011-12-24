@@ -67,7 +67,7 @@ static const char* weasel_user_data_dir() {
 }
 
 RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
-	: m_ui(ui), active_session(0)
+	: m_ui(ui), m_active_session(0), m_disabled(true)
 {
 }
 
@@ -77,6 +77,11 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 
 void RimeWithWeaselHandler::Initialize()
 {
+	m_disabled = _IsDeployerRunning();
+	if (m_disabled)
+	{
+		 return;
+	}
 	EZDBGONLYLOGGERPRINT("Initializing la rime.");
 	RimeTraits weasel_traits;
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
@@ -97,12 +102,16 @@ void RimeWithWeaselHandler::Initialize()
 
 void RimeWithWeaselHandler::Finalize()
 {
+	if (m_disabled) return;
+	m_active_session = 0;
+	m_disabled = true;
 	EZDBGONLYLOGGERPRINT("Finalizing la rime.");
 	RimeFinalize();
 }
 
 UINT RimeWithWeaselHandler::FindSession(UINT session_id)
 {
+	if (m_disabled) return 0;
 	bool found = RimeFindSession(session_id);
 	EZDBGONLYLOGGERPRINT("Find session: session_id = 0x%x, found = %d", session_id, found);
 	return found ? session_id : 0;
@@ -110,21 +119,28 @@ UINT RimeWithWeaselHandler::FindSession(UINT session_id)
 
 UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 {
+	if (m_disabled)
+	{
+		EZDBGONLYLOGGERPRINT("Trying to resume service.");
+		EndMaintenance();
+		if (m_disabled) return 0;
+	}
 	UINT session_id = RimeCreateSession();
 	EZDBGONLYLOGGERPRINT("Add session: created session_id = 0x%x", session_id);
 	// show session's welcome message :-) if any
 	_UpdateUI(session_id);
-	active_session = session_id;
+	m_active_session = session_id;
 	return session_id;
 }
 
 UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 {
+	if (m_disabled) return 0;
 	EZDBGONLYLOGGERPRINT("Remove session: session_id = 0x%x", session_id);
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
 	if (m_ui) m_ui->Hide();
-	active_session = 0;
+	m_active_session = 0;
 	return 0;
 }
 
@@ -132,43 +148,75 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 {
 	EZDBGONLYLOGGERPRINT("Process key event: keycode = 0x%x, mask = 0x%x, session_id = 0x%x", 
 		keyEvent.keycode, keyEvent.mask, session_id);
+	if (m_disabled) return FALSE;
 	bool taken = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask)); 
 	_UpdateUI(session_id);
 	_Respond(session_id, buffer);
-	active_session = session_id;
+	m_active_session = session_id;
 	return (BOOL)taken;
 }
 
 void RimeWithWeaselHandler::FocusIn(UINT session_id)
 {
 	EZDBGONLYLOGGERPRINT("Focus in: session_id = 0x%x", session_id);
+	if (m_disabled) return;
 	_UpdateUI(session_id);
-	active_session = session_id;
+	m_active_session = session_id;
 }
 
 void RimeWithWeaselHandler::FocusOut(UINT session_id)
 {
 	EZDBGONLYLOGGERPRINT("Focus out: session_id = 0x%x", session_id);
+	if (m_disabled) return;
 	if (m_ui) m_ui->Hide();
-	active_session = 0;
+	m_active_session = 0;
 }
 
 void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 {
-	EZDBGONLYLOGGERPRINT("Update input position: (%d, %d), session_id = 0x%x, active_session = 0x%x", 
-		rc.left, rc.top, session_id, active_session);
+	EZDBGONLYLOGGERPRINT("Update input position: (%d, %d), session_id = 0x%x, m_active_session = 0x%x", 
+		rc.left, rc.top, session_id, m_active_session);
+	if (m_disabled) return;
 	if (m_ui) m_ui->UpdateInputPosition(rc);
-	if (active_session != session_id)
+	if (m_active_session != session_id)
 	{
 		_UpdateUI(session_id);
-		active_session = session_id;
+		m_active_session = session_id;
 	}
+}
+
+void RimeWithWeaselHandler::StartMaintenance()
+{
+	Finalize();
+	_UpdateUI(0);
+}
+
+void RimeWithWeaselHandler::EndMaintenance()
+{
+	if (m_disabled)
+	{
+		Initialize();
+		_UpdateUI(0);
+	}
+}
+
+bool RimeWithWeaselHandler::_IsDeployerRunning()
+{
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
+	bool deployer_detected = hMutex && GetLastError() == ERROR_ALREADY_EXISTS;
+	if (hMutex)
+	{
+		CloseHandle(hMutex);
+	}
+	return deployer_detected;
 }
 
 void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 {
 	weasel::Status weasel_status;
 	weasel::Context weasel_context;
+	if (session_id == 0)
+		weasel_status.disabled = m_disabled;
 
 	RimeStatus status;
 	if (RimeGetStatus(session_id, &status))
@@ -208,8 +256,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	}
 
 	if (!m_ui) return;
-	if (weasel_status.composing && !weasel_context.empty() ||
-		!weasel_status.composing && (weasel_status.ascii_mode || weasel_status.disabled))
+	if (weasel_status.composing || weasel_status.ascii_mode)
 	{
 		m_ui->Update(weasel_context, weasel_status);
 		m_ui->Show();

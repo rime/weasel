@@ -21,6 +21,8 @@ enum WEASEL_IPC_COMMAND
 	WEASEL_IPC_FOCUS_IN,
 	WEASEL_IPC_FOCUS_OUT,
 	WEASEL_IPC_UPDATE_INPUT_POS,
+	WEASEL_IPC_START_MAINTENANCE,
+	WEASEL_IPC_END_MAINTENANCE,
 	WEASEL_IPC_LAST_COMMAND
 };
 
@@ -64,6 +66,8 @@ namespace weasel
 		virtual void FocusIn(UINT session_id) {}
 		virtual void FocusOut(UINT session_id) {}
 		virtual void UpdateInputPosition(RECT const& rc, UINT session_id) {}
+		virtual void StartMaintenance() {}
+		virtual void EndMaintenance() {}
 	};
 	
 	// 處理server端回應之物件
@@ -100,6 +104,10 @@ namespace weasel
 		void StartSession();
 		// 結束會話
 		void EndSession();
+		// 進入維護模式
+		void StartMaintenance();
+		// 退出維護模式
+		void EndMaintenance();
 		// 测试连接
 		bool Echo();
 		// 请求服务处理按键消息
