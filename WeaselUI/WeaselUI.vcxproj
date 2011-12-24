@@ -262,15 +262,19 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SystemTraySDK.cpp" />
     <ClCompile Include="WeaselPanel.cpp" />
+    <ClCompile Include="WeaselTrayIcon.cpp" />
     <ClCompile Include="WeaselUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="SystemTraySDK.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="..\include\WeaselCommon.h" />
     <ClInclude Include="WeaselPanel.h" />
     <ClInclude Include="..\include\WeaselUI.h" />
+    <ClInclude Include="WeaselTrayIcon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

@@ -6,6 +6,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/interprocess/streams/bufferstream.hpp>
+#include <boost/scoped_ptr.hpp>
 using namespace boost::interprocess;
 
 #include <iostream>
@@ -183,7 +184,9 @@ int server_main()
 	HRESULT hRes = _Module.Init(NULL, GetModuleHandle(NULL));
 	ATLASSERT(SUCCEEDED(hRes));
 
-	weasel::Server server(new TestRequestHandler());
+	weasel::Server server;
+	boost::scoped_ptr<weasel::RequestHandler> handler(new TestRequestHandler);
+	server.SetRequestHandler(handler.get());
 	if (!server.Start())
 		return -4;
 	cerr << "server running." << endl;

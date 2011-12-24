@@ -6,7 +6,7 @@ class RimeWithWeaselHandler :
 	public weasel::RequestHandler
 {
 public:
-	RimeWithWeaselHandler();
+	RimeWithWeaselHandler(weasel::UI *ui);
 	virtual ~RimeWithWeaselHandler();
 	virtual void Initialize();
 	virtual void Finalize();
@@ -21,8 +21,8 @@ public:
 private:
 	void _UpdateUI(UINT session_id);
 	bool _Respond(UINT session_id, LPWSTR buffer);
-	void _UpdateUIStyle(weasel::UIStyle *style);
+	void _UpdateUIStyle();
 	
-	weasel::UI m_ui;
+	weasel::UI *m_ui;  // reference
 	UINT active_session;
 };

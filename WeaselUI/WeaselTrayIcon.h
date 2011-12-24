@@ -1,4 +1,5 @@
 #pragma once
+#include <WeaselUI.h>
 #include <WeaselIPC.h>
 #include "SystemTraySDK.h"
 
@@ -8,11 +9,19 @@
 class WeaselTrayIcon : public CSystemTray
 {
 public:
-	WeaselTrayIcon();
+	enum WeaselTrayMode {
+		ZHUNG, ASCII, DISABLED,
+	};
 
-	void AttachTo(weasel::Server &server);
+	WeaselTrayIcon(weasel::UI &ui);
+
+	BOOL Create(HWND hTargetWnd);
+	void Refresh();
 
 protected:
 	virtual void CustomizeMenu(HMENU hMenu);
+
+	weasel::Status &m_status;
+	WeaselTrayMode m_mode;
 };
 

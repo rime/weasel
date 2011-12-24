@@ -1,6 +1,6 @@
 #pragma once
 #include <WeaselIPC.h>
-#include <boost/smart_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <map>
 
 namespace weasel
@@ -56,22 +56,26 @@ namespace weasel
 		LRESULT OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	public:
-		ServerImpl(RequestHandler* pHandler);
+		ServerImpl();
 		~ServerImpl();
 
 		int Start();
 		int Stop();
 		int Run();
 
+		void SetRequestHandler(RequestHandler* pHandler)
+		{
+			m_pRequestHandler = pHandler;
+		}
 		void AddMenuHandler(UINT uID, CommandHandler &handler)
 		{
 			m_MenuHandlers[uID] = handler;
 		}
 
 	private:
-		boost::shared_ptr<RequestHandler> m_pHandler;
-		boost::shared_ptr<SharedMemory> m_pSharedMemory;
+		RequestHandler *m_pRequestHandler;  // reference
 		std::map<UINT, CommandHandler> m_MenuHandlers;
+		boost::scoped_ptr<SharedMemory> m_pSharedMemory;
 	};
 
 }

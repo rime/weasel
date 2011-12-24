@@ -20,15 +20,12 @@ public:
 	LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	void CloseDialog(int nVal);
 
-	WeaselPanel();
-	void SetContext(const weasel::Context &ctx);
-	void SetStatus(const weasel::Status &status);
+	WeaselPanel(weasel::UI &ui);
+
 	void MoveTo(RECT const& rc);
 	void Refresh();
 
 	void DoPaint(CDCHandle dc);
-
-	weasel::UIStyle* GetStyle() { return &m_style; }
 
 private:
 	void _ResizeWindow();
@@ -37,11 +34,11 @@ private:
 	bool _DrawCandidates(weasel::CandidateInfo const& cinfo, CDCHandle dc, CRect const& rc, int& y);
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
 
-	CRect m_inputPos;
-	weasel::Context m_ctx;
-	weasel::Status m_status;
-	weasel::UIStyle m_style;
+	weasel::Context &m_ctx;
+	weasel::Status &m_status;
+	weasel::UIStyle &m_style;
 
+	CRect m_inputPos;
 	CIcon m_iconZhung;
 	CIcon m_iconAlpha;
 };

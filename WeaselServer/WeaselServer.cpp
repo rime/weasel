@@ -4,37 +4,85 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include "WeaselTrayIcon.h"
 #include <WeaselIPC.h>
+#include <WeaselUI.h>
 #include <RimeWithWeasel.h>
 #include <winsparkle.h>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/scoped_ptr.hpp>
 
 CAppModule _Module;
 
-static bool execute(const std::wstring &cmd, const std::wstring &args)
+
+class WeaselServerApp {
+public:
+	static bool execute(const std::wstring &cmd, const std::wstring &args)
+	{
+		return (int)ShellExecuteW(NULL, NULL, cmd.c_str(), args.c_str(), NULL, SW_HIDE) > 32;
+	}
+
+	static bool explore(const std::wstring &path)
+	{
+		return (int)ShellExecuteW(NULL, L"explore", path.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32;
+	}
+
+	static bool open(const std::wstring &path)
+	{
+		return (int)ShellExecuteW(NULL, L"open", path.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32;
+	}
+
+	static bool check_update()
+	{
+		win_sparkle_check_update_with_ui();
+		return true;
+	}
+
+public:
+	WeaselServerApp();
+	~WeaselServerApp();
+	int Run();
+
+protected:
+	void SetupMenuHandlers();
+
+	weasel::Server m_server;
+	weasel::UI m_ui;
+	boost::scoped_ptr<RimeWithWeaselHandler> m_handler;
+};
+
+WeaselServerApp::WeaselServerApp()
 {
-	return (int)ShellExecuteW(NULL, NULL, cmd.c_str(), args.c_str(), NULL, SW_HIDE) > 32;
+	m_handler.reset(new RimeWithWeaselHandler(&m_ui));
+	m_server.SetRequestHandler(m_handler.get());
+	SetupMenuHandlers();
 }
 
-static bool explore(const std::wstring &path)
+WeaselServerApp::~WeaselServerApp()
 {
-	return (int)ShellExecuteW(NULL, L"explore", path.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32;
 }
 
-static bool open(const std::wstring &path)
+int WeaselServerApp::Run()
 {
-	return (int)ShellExecuteW(NULL, L"open", path.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32;
+	if (!m_server.Start())
+		return -1;
+
+	//win_sparkle_set_appcast_url("http://localhost:8000/weasel/update/appcast.xml");
+	win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
+	win_sparkle_init();
+	m_ui.Create(m_server.GetHWnd());
+	m_handler->Initialize();
+
+	int ret = m_server.Run();
+
+	m_handler->Finalize();
+	m_ui.Destroy();
+	win_sparkle_cleanup();
+
+	return ret;
 }
 
-static bool check_update()
-{
-	win_sparkle_check_update_with_ui();
-	return true;
-}
-
-static void setup_menu_handlers(weasel::Server &server)
+void WeaselServerApp::SetupMenuHandlers()
 {
 	WCHAR exe_path[MAX_PATH] = {0};
 	WCHAR user_config_path[MAX_PATH] = {0};
@@ -43,14 +91,15 @@ static void setup_menu_handlers(weasel::Server &server)
 	std::wstring install_dir(exe_path);
 	size_t pos = install_dir.find_last_of(L"\\");
 	install_dir.resize(pos);
-	server.AddMenuHandler(ID_WEASELTRAY_QUIT, boost::lambda::bind(&weasel::Server::Stop, boost::ref(server)) == 0);
-	server.AddMenuHandler(ID_WEASELTRAY_RELOAD, boost::lambda::bind(&execute, std::wstring(exe_path), std::wstring(L"/restart")));
-	server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring()));
-	server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, boost::lambda::bind(&open, L"http://code.google.com/p/rimeime/"));
-	server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);
-	server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, boost::lambda::bind(&explore, install_dir));
-	server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, boost::lambda::bind(&explore, std::wstring(user_config_path)));
+	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, boost::lambda::bind(&weasel::Server::Stop, boost::ref(m_server)) == 0);
+	m_server.AddMenuHandler(ID_WEASELTRAY_RELOAD, boost::lambda::bind(&execute, std::wstring(exe_path), std::wstring(L"/restart")));
+	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring()));
+	m_server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, boost::lambda::bind(&open, L"http://code.google.com/p/rimeime/"));
+	m_server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);
+	m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, boost::lambda::bind(&explore, install_dir));
+	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, boost::lambda::bind(&explore, std::wstring(user_config_path)));
 }
+
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
@@ -86,29 +135,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	int nRet = 0;
 	try
 	{
-		weasel::Server server(new RimeWithWeaselHandler);
-		if (!server.Start())
-			return -1;
-
-		//win_sparkle_set_appcast_url("http://localhost:8000/weasel/update/appcast.xml");
-		win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
-		win_sparkle_init();
-
-		WeaselTrayIcon tray_icon;
-		tray_icon.AttachTo(server);
-		setup_menu_handlers(server);
-
-		nRet = server.Run();
-
-		tray_icon.RemoveIcon();
+		WeaselServerApp app;
+		nRet = app.Run();
 	}
 	catch (...)
 	{
 		// bad luck...
 		nRet = -1;
 	}
-
-	win_sparkle_cleanup();
 
 	_Module.Term();
 	::CoUninitialize();

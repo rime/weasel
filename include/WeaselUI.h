@@ -80,20 +80,25 @@ namespace weasel
 		void Show();
 		void Hide();
 		
-		// 界面样式
-		UIStyle* GetStyle() const;
+		// 重绘界面
+		void Refresh();
 
 		// 置输入焦点位置（光标跟随时移动候选窗）但不重绘
 		void UpdateInputPosition(RECT const& rc);
 
-		// 重绘
-		void Refresh();
-
 		// 更新界面显示内容
-		void Update(weasel::Context const& ctx, weasel::Status const& status);
+		void Update(Context const& ctx, Status const& status);
+
+		Context& ctx() { return ctx_; } 
+		Status& status() { return status_; } 
+		UIStyle& style() { return style_; } 
 
 	private:
 		UIImpl* pimpl_;
+
+		Context ctx_;
+		Status status_;
+		UIStyle style_;
 	};
 
 }

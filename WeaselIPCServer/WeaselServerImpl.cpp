@@ -29,8 +29,8 @@ LPWSTR SharedMemory::GetBuffer()
 	return reinterpret_cast<LPWSTR>((char*)m_pRegion->get_address() + WEASEL_IPC_METADATA_SIZE);
 }
 
-ServerImpl::ServerImpl(RequestHandler* pHandler)
-: m_pHandler(pHandler), m_pSharedMemory()
+ServerImpl::ServerImpl()
+: m_pRequestHandler(NULL), m_pSharedMemory()
 {
 }
 
@@ -97,24 +97,15 @@ int ServerImpl::Start()
 		return 0;
 	}
 
-	if (m_pHandler)
-		m_pHandler->Initialize();
-
 	return (int)hwnd;
 }
 
 int ServerImpl::Stop()
 {
-	if (m_pHandler)
-	{
-		m_pHandler->Finalize();
-		m_pHandler.reset();
-	}
 	if (m_pSharedMemory)
 	{
 		m_pSharedMemory.reset();
 	}
-
 	if (!IsWindow())
 	{
 		return 0;
@@ -129,39 +120,37 @@ int ServerImpl::Run()
 {
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
-	
 	int nRet = theLoop.Run();
-
 	_Module.RemoveMessageLoop();
 	return nRet;
 }
 
 LRESULT ServerImpl::OnEcho(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (!m_pHandler)
+	if (!m_pRequestHandler)
 		return 0;
-	return m_pHandler->FindSession(lParam);
+	return m_pRequestHandler->FindSession(lParam);
 }
 
 LRESULT ServerImpl::OnStartSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (!m_pHandler)
+	if (!m_pRequestHandler)
 		return 0;
-	return m_pHandler->AddSession(m_pSharedMemory->GetBuffer());
+	return m_pRequestHandler->AddSession(m_pSharedMemory->GetBuffer());
 }
 
 LRESULT ServerImpl::OnEndSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (!m_pHandler)
+	if (!m_pRequestHandler)
 		return 0;
-	return m_pHandler->RemoveSession(lParam);
+	return m_pRequestHandler->RemoveSession(lParam);
 }
 
 LRESULT ServerImpl::OnKeyEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (!m_pHandler || !m_pSharedMemory)
+	if (!m_pRequestHandler || !m_pSharedMemory)
 		return 0;
-	return m_pHandler->ProcessKeyEvent(KeyEvent(wParam), lParam, m_pSharedMemory->GetBuffer());
+	return m_pRequestHandler->ProcessKeyEvent(KeyEvent(wParam), lParam, m_pSharedMemory->GetBuffer());
 }
 
 LRESULT ServerImpl::OnShutdownServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -172,23 +161,23 @@ LRESULT ServerImpl::OnShutdownServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT ServerImpl::OnFocusIn(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (!m_pHandler)
+	if (!m_pRequestHandler)
 		return 0;
-	m_pHandler->FocusIn(lParam);
+	m_pRequestHandler->FocusIn(lParam);
 	return 0;
 }
 
 LRESULT ServerImpl::OnFocusOut(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (!m_pHandler)
+	if (!m_pRequestHandler)
 		return 0;
-	m_pHandler->FocusOut(lParam);
+	m_pRequestHandler->FocusOut(lParam);
 	return 0;
 }
 
 LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (!m_pHandler)
+	if (!m_pRequestHandler)
 		return 0;
 	/*
 	ÒÆÎ»±êÖ¾ = 1bit == 0
@@ -210,14 +199,14 @@ LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lPara
 	int height = ((wParam >> 24) & 0x7f) << hi_res;
 	rc.right = rc.left + width;
 	rc.bottom = rc.top + height;
-	m_pHandler->UpdateInputPosition(rc, lParam);
+	m_pRequestHandler->UpdateInputPosition(rc, lParam);
 	return 0;
 }
 
 // weasel::Server
 
-Server::Server(RequestHandler* pHandler)
-	: m_pImpl(new ServerImpl(pHandler))
+Server::Server()
+	: m_pImpl(new ServerImpl)
 {}
 
 Server::~Server()
@@ -239,6 +228,11 @@ int Server::Stop()
 int Server::Run()
 {
 	return m_pImpl->Run();
+}
+
+void Server::SetRequestHandler(RequestHandler* pHandler)
+{
+	m_pImpl->SetRequestHandler(pHandler);
 }
 
 void Server::AddMenuHandler(UINT uID, CommandHandler handler)

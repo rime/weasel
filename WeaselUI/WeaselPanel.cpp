@@ -35,7 +35,8 @@ static const int STATUS_ICON_SIZE = 16;
 static WCHAR CANDIDATE_PROMPT_PATTERN[] = L"%1%. %2%";
 
 
-WeaselPanel::WeaselPanel()
+WeaselPanel::WeaselPanel(weasel::UI &ui)
+	: m_ctx(ui.ctx()), m_status(ui.status()), m_style(ui.style())
 {
 	m_style.font_face = DEFAULT_FONT_FACE;
 	m_style.font_point = DEFAULT_FONT_POINT;
@@ -61,16 +62,6 @@ WeaselPanel::WeaselPanel()
 
 	m_iconZhung.LoadIconW(IDI_ZHUNG, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconAlpha.LoadIconW(IDI_ALPHA, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
-}
-
-void WeaselPanel::SetContext(const weasel::Context &ctx)
-{
-	m_ctx = ctx;
-}
-
-void WeaselPanel::SetStatus(const weasel::Status &status)
-{
-	m_status = status;
 }
 
 void WeaselPanel::_ResizeWindow()

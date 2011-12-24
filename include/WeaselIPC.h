@@ -120,7 +120,7 @@ namespace weasel
 	class Server
 	{
 	public:
-		Server(RequestHandler* pHandler = 0);
+		Server();
 		virtual ~Server();
 
 		// 初始化服务
@@ -130,6 +130,7 @@ namespace weasel
 		// 消息循环
 		int Run();
 
+		void SetRequestHandler(RequestHandler* pHandler);
 		void AddMenuHandler(UINT uID, CommandHandler handler);
 		HWND GetHWnd();
 
