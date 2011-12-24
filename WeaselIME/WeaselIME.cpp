@@ -36,6 +36,17 @@ static const std::string WeaselLogFilePath()
 HINSTANCE WeaselIME::s_hModule = 0;
 HIMCMap WeaselIME::s_instances;
 
+static void error_message(const WCHAR *msg)
+{
+	static DWORD next_tick = 0;
+	DWORD now = GetTickCount();
+	if (now > next_tick)
+	{
+		next_tick = now + 10000;  // (ms)
+		MessageBox(NULL, msg, WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
+	}
+}
+
 static bool launch_server()
 {
 	EZDBGONLYLOGGERPRINT("Launching weasel server.");
@@ -45,7 +56,7 @@ static bool launch_server()
 	LSTATUS ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 0, KEY_READ | KEY_WOW64_32KEY, &hKey);
 	if (ret != ERROR_SUCCESS)
 	{
-		MessageBox(NULL, L"註冊表信息無影了", WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
+		error_message(L"註冊表信息無影了");
 		return false;
 	}
 
@@ -55,7 +66,7 @@ static bool launch_server()
 	ret = RegQueryValueEx(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
 	if (ret != ERROR_SUCCESS)
 	{
-		MessageBox(NULL, L"未設置 WeaselRoot", WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
+		error_message(L"未設置 WeaselRoot");
 		RegCloseKey(hKey);
 		return false;
 	}
@@ -66,7 +77,7 @@ static bool launch_server()
 	ret = RegQueryValueEx(hKey, L"ServerExecutable", NULL, &type, (LPBYTE)value, &len);
 	if (ret != ERROR_SUCCESS)
 	{
-		MessageBox(NULL, L"未設置 ServerExecutable", WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
+		error_message(L"未設置 ServerExecutable");
 		RegCloseKey(hKey);
 		return false;
 	}
@@ -85,7 +96,7 @@ static bool launch_server()
 	if (!CreateProcess(exe.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, dir.c_str(), &startup_info, &process_info))
 	{
 		EZDBGONLYLOGGERPRINT("ERROR: failed to launch weasel server.");
-		MessageBox(NULL, L"服務進程啓動不起來 :(", WEASEL_IME_NAME, MB_ICONERROR | MB_OK);
+		error_message(L"服務進程啓動不起來 :(");
 		return false;
 	}
 

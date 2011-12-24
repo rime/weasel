@@ -111,6 +111,12 @@ void WeaselPanel::_ResizeWindow()
 		height += sz.cy + m_style.spacing;
 	}
 
+	// ascii mode icon
+	if (m_status.ascii_mode && width > 0)
+	{
+		width += m_style.spacing + STATUS_ICON_SIZE;
+	}
+
 	// measure aux string
 	wstring const& aux = m_ctx.aux.str;
 	if (!aux.empty())
@@ -323,6 +329,14 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// draw preedit string
 	if (_DrawText(m_ctx.preedit, dc, rc, y))
 		y += m_style.spacing;
+
+	// ascii mode icon
+	if (m_status.ascii_mode && y > rc.top)
+	{
+		int icon_x = rc.right - STATUS_ICON_SIZE;
+		int icon_y = (rc.top + y - m_style.spacing - STATUS_ICON_SIZE) / 2;
+		dc.DrawIconEx(icon_x, icon_y, m_iconAlpha, 0, 0);
+	}
 
 	// draw aux string
 	if (_DrawText(m_ctx.aux, dc, rc, y))
