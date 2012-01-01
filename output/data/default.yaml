@@ -1,0 +1,114 @@
+# Rime default settings
+# vim: set sw=2 sts=2 et:
+# encoding: utf-8
+
+config_version: "0.9.3"
+
+schema_list:
+  - schema: luna_pinyin
+  - schema: cangjie5
+  - schema: wubi86
+  - schema: luna_pinyin_tw
+
+switcher:
+  caption: 方案選單
+  hotkeys:
+    - Control+grave
+    - F4
+
+punctuator:
+  full_shape:
+    " " : { commit: "　" }
+    "," : { commit: ， }
+    "." : { commit: 。 }
+    "<" : [ 《, 〈, «, ‹ ]
+    ">" : [ 》, 〉, », › ]
+    "/" : [ ／, "/", ÷ ]
+    "?" : { commit: ？ }
+    ";" : { commit: ； }
+    ":" : ：
+    "'" : { pair: [ "‘", "’" ] }
+    "\"" : { pair: [ "“", "”" ] }
+    "\\" : [ 、, ＼, "\\" ]
+    "|" : [ ·, ｜, "|" ]
+    "`" : [ ｀, "`" ]
+    "~" : [ ～, "~" ]
+    "!" : { commit: ！ }
+    "@" : [ ＠, "@", ☯ ]
+    "#" : [ ＃, "#", ⌘ ]
+    "%" : [ ％, "%", "°", "℃" ]
+    "$" : [ ￥, "$", "€", "£", "¥", "¢", "¤" ]
+    "^" : { commit: …… }
+    "&" : [ ＆, "&" ]
+    "*" : [ ＊, "*", ·, ×, ※, ❂ ]
+    "(" : （
+    ")" : ）
+    "-" : [ －, "-" ]
+    "_" : ——
+    "+" : [ ＋, "+" ]
+    "=" : [ ＝, "=" ]
+    "[" : [ 「, 【, 〔, ［ ]
+    "]" : [ 」, 】, 〕, ］ ]
+    "{" : [ 『, 〖, ｛ ]
+    "}" : [ 』, 〗, ｝ ]
+  half_shape:
+    "," : { commit: ， }
+    "." : { commit: 。 }
+    "<" : [ 《, 〈, «, ‹ ]
+    ">" : [ 》, 〉, », › ]
+    "/" : [ "/", ／, ÷ ]
+    "?" : { commit: ？ }
+    ";" : { commit: ； }
+    ":" : ：
+    "'" : { pair: [ "‘", "’" ] }
+    "\"" : { pair: [ "“", "”" ] }
+    "\\" : [ 、, "\\", ＼ ]
+    "|" : [ ·, "|", ｜, "§", "¦" ]
+    "`" : "`"
+    "~" : "~"
+    "!" : { commit: ！ }
+    "@" : [ "@", ＠, ☯ ]
+    "#" : [ "#", ＃, ⌘ ]
+    "%" : [ "%", ％, "°", "℃" ]
+    "$" : [ ￥, "$", "€", "£", "¥", "¢", "¤" ]
+    "^" : { commit: …… }
+    "&" : [ "&", ＆ ]
+    "*" : [ "*", ＊, ·, ×, ※, ❂ ]
+    "(" : （
+    ")" : ）
+    "-" : [ "-", － ]
+    "_" : ——
+    "+" : [ "+", ＋ ]
+    "=" : [ "=", ＝ ]
+    "[" : [ 「, 【, 〔, ［ ]
+    "]" : [ 」, 】, 〕,  ］ ]
+    "{" : [ 『, 〖, ｛ ]
+    "}" : [ 』, 〗, ｝ ]
+
+key_binder:
+  bindings:
+    # Emacs style
+    - { when: composing, accept: Control+p, send: Up }
+    - { when: composing, accept: Control+n, send: Down }
+    - { when: composing, accept: Control+b, send: Left }
+    - { when: composing, accept: Control+f, send: Right }
+    - { when: composing, accept: Control+a, send: Home }
+    - { when: composing, accept: Control+e, send: End }
+    - { when: composing, accept: Control+d, send: Delete }
+    - { when: composing, accept: Control+g, send: Escape }
+    - { when: composing, accept: Alt+v, send: Page_Up }
+    - { when: composing, accept: Control+v, send: Page_Down }
+    # commonly used paging keys
+    - { when: composing, accept: ISO_Left_Tab, send: Page_Up }
+    - { when: composing, accept: Shift+Tab, send: Page_Up }
+    - { when: composing, accept: Tab, send: Page_Down }
+    - { when: paging, accept: minus, send: Page_Up }
+    - { when: has_menu, accept: equal, send: Page_Down }
+    - { when: paging, accept: comma, send: Page_Up }
+    - { when: has_menu, accept: period, send: Page_Down }
+
+recognizer:
+  patterns:
+    number: "[-+]?[0-9][.0-9]*[%]?"
+    url: "^(www[.]|https?:|ftp:|mailto:).*$|^[a-z]+[.].+$"
+    email: "^[a-z][-_.0-9a-z]*@.*$"
