@@ -62,6 +62,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		return 1;
 	}
 
+	{
+		WCHAR path[MAX_PATH] = {0};
+		ExpandEnvironmentStrings(L"%AppData%\\Rime", path, _countof(path));
+		CreateDirectory(path, NULL);
+	}
+
 	EZLOGGERPRINT("WeaselDeployer reporting.");
 
 	weasel::Client client;
