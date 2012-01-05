@@ -177,7 +177,8 @@ BOOL CSystemTray::Create(HINSTANCE hInst, HWND hParent, UINT uCallbackMessage,
                             hInst, 0);
 
     // load up the NOTIFYICONDATA structure
-    m_tnd.cbSize = sizeof(NOTIFYICONDATA);
+    //m_tnd.cbSize = sizeof(NOTIFYICONDATA);
+    m_tnd.cbSize = NOTIFYICONDATA_V2_SIZE;  // 2012-01-05 GONG Chen, XP compatibility
     m_tnd.hWnd   = (hParent)? hParent : m_hWnd;
     m_tnd.uID    = uID;
     m_tnd.hIcon  = icon;
