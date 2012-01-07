@@ -34,9 +34,15 @@ engine:
     - echo_translator
     - punct_translator
     - table_translator
+    - reverse_lookup_translator
 
 translator:
   dictionary: cangjie5
+
+reverse_lookup:
+  dictionary: luna_pinyin
+  prefix: "`"
+  tips: 〔拼音〕
 
 punctuator:
   import_preset: default
@@ -46,3 +52,5 @@ key_binder:
 
 recognizer:
   import_preset: default
+  patterns:
+    reverse_lookup: "`[a-z]*$"

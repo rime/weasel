@@ -2,7 +2,7 @@
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.9.3"
+config_version: "0.9.4"
 
 schema_list:
   - schema: luna_pinyin
@@ -11,7 +11,7 @@ schema_list:
   - schema: luna_pinyin_tw
 
 switcher:
-  caption: 方案選單
+  caption: 〔方案選單〕
   hotkeys:
     - Control+grave
     - F4
@@ -109,6 +109,6 @@ key_binder:
 
 recognizer:
   patterns:
-    number: "[-+]?[0-9][.0-9]*[%]?"
+    number: "^[-+]?[0-9][.0-9]*[%]?$"
     url: "^(www[.]|https?:|ftp:|mailto:).*$|^[a-z]+[.].+$"
     email: "^[a-z][-_.0-9a-z]*@.*$"

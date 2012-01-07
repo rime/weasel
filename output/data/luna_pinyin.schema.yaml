@@ -45,6 +45,7 @@ engine:
     - echo_translator
     - punct_translator
     - r10n_translator
+    - reverse_lookup_translator
   filters:
     - simplifier
     - unifier
@@ -56,6 +57,11 @@ speller:
 translator:
   dictionary: luna_pinyin
 
+reverse_lookup:
+  dictionary: cangjie5
+  prefix: "`"
+  tips: 〔倉頡〕
+
 punctuator:
   import_preset: default
 
@@ -64,3 +70,7 @@ key_binder:
 
 recognizer:
   import_preset: default
+  patterns:
+    uppercase: "[A-Z][-'A-Za-z]*$"
+    cplusplus: "C[+#]+$"
+    reverse_lookup: "`[a-z]*$"
