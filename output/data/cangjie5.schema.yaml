@@ -5,7 +5,7 @@
 schema:
   schema_id: cangjie5
   name: 倉頡五代
-  version: "0.9.3"
+  version: "0.9.4"
 
 switches:
   - name: ascii_mode
