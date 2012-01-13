@@ -2,10 +2,10 @@
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.9.2"
+config_version: "0.9.5"
 
 style:
-  color_scheme: azure
+  color_scheme: aqua
   font_face: Microsoft YaHei
   font_point: 14
   layout:
@@ -21,8 +21,8 @@ style:
     round_corner: 4
 
 preset_color_schemes:
-  azure:
-    name: 青天／Azure
+  aqua:
+    name: 碧水／Aqua
     author: 佛振 <chen.sst@gmail.com>
     text_color: 0x000000
     back_color: 0xeceeee
@@ -31,6 +31,18 @@ preset_color_schemes:
     hilited_back_color: 0xd4d4d4
     hilited_candidate_text_color: 0xffffff
     hilited_candidate_back_color: 0xfa3a0a
+
+  azure:
+    name: 青天／Azure
+    author: 佛振 <chen.sst@gmail.com>
+    text_color: 0xffe8ca
+    candidate_text_color: 0xfff8ee
+    back_color: 0xa95e01
+    border_color: 0xa95e01
+    hilited_text_color: 0xfff8ee
+    hilited_back_color: 0xba6701
+    hilited_candidate_text_color: 0xffffff
+    hilited_candidate_back_color: 0x8b4e01
 
   luna:
     name: 明月／Luna
