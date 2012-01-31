@@ -2,13 +2,14 @@
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.9.4"
+config_version: "0.9.5"
 
 schema_list:
   - schema: luna_pinyin
   - schema: cangjie5
   - schema: wubi86
   - schema: luna_pinyin_tw
+  - schema: luna_pinyin_simp
 
 switcher:
   caption: 〔方案選單〕

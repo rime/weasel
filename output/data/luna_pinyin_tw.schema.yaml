@@ -5,7 +5,7 @@
 schema:
   schema_id: luna_pinyin_tw
   name: 臺灣正體
-  version: "0.9.3"
+  version: "0.9.5"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -43,14 +43,26 @@ engine:
     - r10n_translator
   filters:
     - simplifier
-    - unifier
+    - uniquifier
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba
   delimiter: "'"
+  algebra:
+    - "abbrev/^([a-z]).+$/$1/"
+    - "abbrev/^([zcs]h).+$/$1/"
+    - "derive/^([nl])ve$/$1ue/"
+    - "derive/ui$/uei/"
+    - "derive/iu$/iou/"
+    - "derive/([aeiou])ng$/$1gn/"
+    - "derive/ong$/on/"
+    - "derive/ao$/oa/"
+    - "derive/([iu])a(o|ng?)$/a$1$2/"
 
 translator:
   dictionary: luna_pinyin
+  preedit_format:
+   - "xform/([nl])v/$1ü/"
 
 simplifier:
   opencc_config: zht2zhtw_v.ini
@@ -64,3 +76,6 @@ key_binder:
 
 recognizer:
   import_preset: default
+  patterns:
+    uppercase: "[A-Z][-'A-Za-z]*$"
+    cplusplus: "C[+#]+$"

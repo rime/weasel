@@ -1,11 +1,15 @@
-# Rime schema settings
+# Rime schema
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
 schema:
-  schema_id: cangjie5
-  name: 倉頡五代
+  schema_id: luna_pinyin_simp
+  name: 简化字
   version: "0.9.5"
+  author:
+    - 佛振 <chen.sst@gmail.com>
+  description: |
+    Luna Pinyin in simplfied Chinese script.
 
 switches:
   - name: ascii_mode
@@ -13,6 +17,9 @@ switches:
     states: [ 中文, 西文 ]
   - name: full_shape
     states: [ 半角, 全角 ]
+  - name: simplification
+    reset: 1
+    states: [ 漢字, 汉字 ]
 
 engine:
   processors:
@@ -33,22 +40,29 @@ engine:
   translators:
     - echo_translator
     - punct_translator
-    - table_translator
-    - reverse_lookup_translator
+    - r10n_translator
+  filters:
+    - simplifier
+    - uniquifier
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba
-  delimiter: ";'"
+  delimiter: "'"
+  algebra:
+    - "abbrev/^([a-z]).+$/$1/"
+    - "abbrev/^([zcs]h).+$/$1/"
+    - "derive/^([nl])ve$/$1ue/"
+    - "derive/ui$/uei/"
+    - "derive/iu$/iou/"
+    - "derive/([aeiou])ng$/$1gn/"
+    - "derive/ong$/on/"
+    - "derive/ao$/oa/"
+    - "derive/([iu])a(o|ng?)$/a$1$2/"
 
 translator:
-  dictionary: cangjie5
-  preedit_format:
-    - "xlit|abcdefghijklmnopqrstuvwxyz;'|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符··|"
-
-reverse_lookup:
   dictionary: luna_pinyin
-  prefix: "`"
-  tips: 〔拼音〕
+  preedit_format:
+   - "xform/([nl])v/$1ü/"
 
 punctuator:
   import_preset: default
@@ -61,4 +75,3 @@ recognizer:
   patterns:
     uppercase: "[A-Z][-'A-Za-z]*$"
     cplusplus: "C[+#]+$"
-    reverse_lookup: "`[a-z]*$"

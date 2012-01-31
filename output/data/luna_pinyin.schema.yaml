@@ -5,7 +5,7 @@
 schema:
   schema_id: luna_pinyin
   name: 朙月拼音
-  version: "0.9.4"
+  version: "0.9.5"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -48,19 +48,33 @@ engine:
     - reverse_lookup_translator
   filters:
     - simplifier
-    - unifier
+    - uniquifier
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba
   delimiter: "'"
+  algebra:
+    - "abbrev/^([a-z]).+$/$1/"
+    - "abbrev/^([zcs]h).+$/$1/"
+    - "derive/^([nl])ve$/$1ue/"
+    - "derive/ui$/uei/"
+    - "derive/iu$/iou/"
+    - "derive/([aeiou])ng$/$1gn/"
+    - "derive/ong$/on/"
+    - "derive/ao$/oa/"
+    - "derive/([iu])a(o|ng?)$/a$1$2/"
 
 translator:
   dictionary: luna_pinyin
+  preedit_format:
+   - "xform/([nl])v/$1ü/"
 
 reverse_lookup:
   dictionary: cangjie5
   prefix: "`"
   tips: 〔倉頡〕
+  preedit_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
 
 punctuator:
   import_preset: default
