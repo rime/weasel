@@ -26,7 +26,7 @@
 
 ---
 name: luna_pinyin
-version: "0.9.1"
+version: "0.9.5"
 sort: by_weight
 use_preset_vocabulary: true
 ...
@@ -3404,8 +3404,8 @@ use_preset_vocabulary: true
 呯	ping
 呰	zi
 呱	gu	5%
-呱	gua 100%
-呱	wa  0%
+呱	gua	100%
+呱	wa	0%
 呱呱	gua gua
 呲	ci
 呲	yi
@@ -3416,7 +3416,7 @@ use_preset_vocabulary: true
 呴	xu
 呵	a	8.96%
 呵	he	91.04%
-呵	o   0%
+呵	o	0%
 呵呵	he he
 呵呵呵	he he he
 呵斥	he chi
