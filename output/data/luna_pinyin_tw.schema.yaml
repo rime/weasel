@@ -5,7 +5,7 @@
 schema:
   schema_id: luna_pinyin_tw
   name: 臺灣正體
-  version: "0.9.5"
+  version: "0.9.5.1"
   author:
     - 佛振 <chen.sst@gmail.com>
   description: |
@@ -49,6 +49,7 @@ speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba
   delimiter: "'"
   algebra:
+    - "xform/^xx$/uu/"
     - "abbrev/^([a-z]).+$/$1/"
     - "abbrev/^([zcs]h).+$/$1/"
     - "derive/^([nl])ve$/$1ue/"
@@ -61,6 +62,7 @@ speller:
 
 translator:
   dictionary: luna_pinyin
+  prism: luna_pinyin_tw
   preedit_format:
    - "xform/([nl])v/$1ü/"
 
