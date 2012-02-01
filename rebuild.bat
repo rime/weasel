@@ -11,6 +11,9 @@ devenv weasel.sln /Rebuild "Release|x64"
 if errorlevel 1 goto error
 devenv weasel.sln /Rebuild "Release|Win32"
 if errorlevel 1 goto error
+copy %work%\..\brise\essay.kct output\data\
+copy %work%\..\brise\default.yaml output\data\
+copy %work%\..\brise\preset\*.yaml output\data\
 goto end
 :error
 echo error building weasel...

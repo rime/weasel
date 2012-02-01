@@ -17,6 +17,8 @@ Edit librime\env.bat.template, save it as librime\env.bat .
 
 ** Checkout source code
 
+svn checkout https://rimeime.googlecode.com/svn/trunk/brise --username YOUR_ACCOUNT@gmail.com
+
 svn checkout https://rimeime.googlecode.com/svn/trunk/librime --username YOUR_ACCOUNT@gmail.com
 
 svn checkout https://rimeime.googlecode.com/svn/trunk/weasel --username YOUR_ACCOUNT@gmail.com
@@ -96,6 +98,12 @@ devenv weasel.sln /Build "Release"
 devenv weasel.sln /Build "ReleaseHant"
 devenv weasel.sln /Build "Release|x64"
 devenv weasel.sln /Build "ReleaseHant|x64"
+
+** Copy preset schema and dictionary files
+
+copy \code\brise\essay.kct \code\weasel\output\data\
+copy \code\brise\default.yaml \code\weasel\output\data\
+copy \code\brise\preset\*.yaml \code\weasel\output\data\
 
 Voila.
 
