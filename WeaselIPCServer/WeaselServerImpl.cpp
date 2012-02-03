@@ -57,6 +57,20 @@ LRESULT ServerImpl::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return 1;
 }
 
+LRESULT ServerImpl::OnQueryEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	return TRUE;
+}
+
+LRESULT ServerImpl::OnEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (m_pRequestHandler)
+    {
+        m_pRequestHandler->Finalize();
+    }
+	return 0;
+}
+
 LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	UINT uID = LOWORD(wParam);

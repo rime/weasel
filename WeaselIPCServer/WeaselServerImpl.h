@@ -31,6 +31,8 @@ namespace weasel
 			MESSAGE_HANDLER(WM_CREATE, OnCreate)
 			MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 			MESSAGE_HANDLER(WM_CLOSE, OnClose)
+			MESSAGE_HANDLER(WM_QUERYENDSESSION, OnQueryEndSystemSession)
+			MESSAGE_HANDLER(WM_ENDSESSION, OnEndSystemSession)
 			MESSAGE_HANDLER(WM_COMMAND, OnCommand)
 			MESSAGE_HANDLER(WEASEL_IPC_ECHO, OnEcho)
 			MESSAGE_HANDLER(WEASEL_IPC_START_SESSION, OnStartSession)
@@ -47,6 +49,8 @@ namespace weasel
 		LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnQueryEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnEcho(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnStartSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

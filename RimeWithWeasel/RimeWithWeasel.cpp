@@ -15,7 +15,7 @@
 static const std::string WeaselLogFilePath()
 {
 	char path[MAX_PATH] = {0};
-	ExpandEnvironmentStringsA("%AppData%\\Rime\\weasel.log", path, _countof(path));
+	ExpandEnvironmentStringsA("%AppData%\\Rime\\rime.log", path, _countof(path));
 	return path;
 }
 
@@ -82,7 +82,7 @@ void RimeWithWeaselHandler::Initialize()
 	{
 		 return;
 	}
-	EZDBGONLYLOGGERPRINT("Initializing la rime.");
+	EZLOGGERPRINT("Initializing la rime.");
 	RimeTraits weasel_traits;
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
@@ -105,7 +105,7 @@ void RimeWithWeaselHandler::Finalize()
 	if (m_disabled) return;
 	m_active_session = 0;
 	m_disabled = true;
-	EZDBGONLYLOGGERPRINT("Finalizing la rime.");
+	EZLOGGERPRINT("Finalizing la rime.");
 	RimeFinalize();
 }
 
