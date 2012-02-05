@@ -94,6 +94,10 @@ void RimeWithWeaselHandler::Initialize()
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
 	RimeInitialize(&weasel_traits);
+	if (RimeIsMaintenancing())
+	{
+		m_disabled = true;
+	}
 	if (m_ui)
 	{
 		_UpdateUIStyle();
@@ -102,7 +106,6 @@ void RimeWithWeaselHandler::Initialize()
 
 void RimeWithWeaselHandler::Finalize()
 {
-	if (m_disabled) return;
 	m_active_session = 0;
 	m_disabled = true;
 	EZLOGGERPRINT("Finalizing la rime.");

@@ -88,7 +88,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
 	// initialize default config, preset schemas
-	RimeDeployInitialize(&weasel_traits);
+	RimeDeployWorkspace(&weasel_traits);
 	// initialize weasel config
 	RimeDeployConfigFile("weasel.yaml", "config_version");
 	
