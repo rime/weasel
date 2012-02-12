@@ -6,9 +6,9 @@
 #define IDI_ALPHA                       102
 #define IDR_MENU_POPUP                  103
 #define ID_WEASELTRAY_QUIT              40001
-#define ID_WEASELTRAY_RELOAD            40002
-#define ID_WEASELTRAY_DEPLOY            40003
-#define ID_WEASELTRAY_CHECKUPDATE       40004
+#define ID_WEASELTRAY_DEPLOY            40002
+#define ID_WEASELTRAY_CHECKUPDATE       40003
+#define ID_WEASELTRAY_FORUM             40004
 #define ID_WEASELTRAY_HOMEPAGE          40005
 #define ID_WEASELTRAY_INSTALLDIR        40006
 #define ID_WEASELTRAY_USERCONFIG        40007

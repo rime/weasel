@@ -6,6 +6,7 @@ output\weaselserver /q
 copy %work%\..\brise\essay.kct output\data\
 copy %work%\..\brise\default.yaml output\data\
 copy %work%\..\brise\preset\*.yaml output\data\
+copy %work%\..\brise\supplement\*.yaml output\data\
 rem devenv weasel.sln /Build "ReleaseHant|x64"
 rem if errorlevel 1 goto error
 rem devenv weasel.sln /Build "ReleaseHant|Win32"
