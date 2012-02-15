@@ -138,11 +138,11 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 
 UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 {
+	if (m_ui) m_ui->Hide();
 	if (m_disabled) return 0;
 	EZDBGONLYLOGGERPRINT("Remove session: session_id = 0x%x", session_id);
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
-	if (m_ui) m_ui->Hide();
 	m_active_session = 0;
 	return 0;
 }
@@ -170,7 +170,6 @@ void RimeWithWeaselHandler::FocusIn(UINT session_id)
 void RimeWithWeaselHandler::FocusOut(UINT session_id)
 {
 	EZDBGONLYLOGGERPRINT("Focus out: session_id = 0x%x", session_id);
-	if (m_disabled) return;
 	if (m_ui) m_ui->Hide();
 	m_active_session = 0;
 }
@@ -179,8 +178,8 @@ void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 {
 	EZDBGONLYLOGGERPRINT("Update input position: (%d, %d), session_id = 0x%x, m_active_session = 0x%x", 
 		rc.left, rc.top, session_id, m_active_session);
-	if (m_disabled) return;
 	if (m_ui) m_ui->UpdateInputPosition(rc);
+	if (m_disabled) return;
 	if (m_active_session != session_id)
 	{
 		_UpdateUI(session_id);
@@ -259,7 +258,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	}
 
 	if (!m_ui) return;
-	if (weasel_status.composing || weasel_status.ascii_mode)
+	if (weasel_status.composing)
 	{
 		m_ui->Update(weasel_context, weasel_status);
 		m_ui->Show();
