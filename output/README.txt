@@ -4,11 +4,14 @@
 【小狼毫】輸入法 0.9.7
 
 基於 中州韻輸入法引擎／Rime Input Method Engine 及開源技術
+式恕堂 版權所無 Copyleft 2012
 
 授權條款：GPL v3
 項目主頁：http://code.google.com/p/rimeime/
 
-式恕堂 版權所無 Copyleft 2012
+您可能還需要 RIME 用於其他操作系統的發行版：
+  * 【中州韻】用於 Linux + IBus 輸入法框架
+  * 【鼠鬚管】用於 Mac OS X 10.6 以上版本的64位系統
 
 ----------------------------------------------------------
 安裝輸入法
@@ -23,7 +26,7 @@
 ----------------------------------------------------------
 使用輸入法
 
-選取輸入法通知區的【中】字樣圖標，開始用小狼毫寫字。
+選取輸入法指示器菜單裏的【中】字樣圖標，開始用小狼毫寫字。
 通過快捷鍵 Ctrl+` 或 F4 呼出方案選單、切換輸入方式。
 
 ----------------------------------------------------------
@@ -97,7 +100,7 @@ http://code.google.com/p/rimeime/w/list
   * 中州式恕堂
 
 輸入方案設計：
-  * 【朙月拼音】
+  * 【朙月拼音】系列
     感謝 CEDICT、Android 拼音、新酷音、opencc 等開源項目
   * 【倉頡五代】
     發明人 朱邦復先生
@@ -106,23 +109,25 @@ http://code.google.com/p/rimeime/w/list
     發明人 王永民先生
     碼表源自 ibus-table
   * 【粵拼】
-    採用 香港語言學學會粵語拼音方案
+    採用《香港語言學學會粵語拼音方案》
+    http://www.lshk.org/cantonese.php
     碼表源自 ibus-table
   * 【吳語】
-    採用 吳語拉丁式注音法
+    採用《吳語拉丁式注音法》
+    http://input.foruto.com/wu/method.html
     作者 上海閒話abc、吳語越音
 
 程序設計：
   * 佛振 <chen.sst@gmail.com>
   * 鄒旭 <zouivex@gmail.com>
 
-本品引用的開源程序庫：
+感謝以下開源程序庫的強力支持：
   * Boost C++ Libraries
   * darts-clone
   * EzLogger
   * Google Test
   * Kyoto Cabinet
-  * opencc
+  * opencc / 開放中文轉換
   * UTF8-CPP
   * Windows Template Library
   * yaml-cpp
@@ -134,17 +139,18 @@ http://code.google.com/p/rimeime/w/list
 http://code.google.com/p/rimeime/issues/list
 
 已知問題
-  * 不支持設置為系統默認鍵盤佈局
-  * 不支持嵌入到命令行和全屏遊戲的內置輸入法介面
-  * 在某些應用程序內輸入法窗口不能及時定位到輸入點
+  * 不支持設為系統默認鍵盤佈局
+  * 不支持嵌入到命令行和全屏遊戲
+  * 在某些應用程序內，輸入法窗口不能及時定位到輸入點
 
 ----------------------------------------------------------
 聯繫方式
 
-技術交流請寄Rime開發者郵件組 <rime-devel@googlegroups.com>
-或寫信給 佛振 <chen.sst@gmail.com>
+技術交流請寄 Rime 開發者郵件組 <rime-devel@googlegroups.com>
+或登錄 網上論壇：
+http://groups.google.com/group/rime-devel
 
-討論輸入法用法或其他相關話題，請登錄 Rime 貼吧：
+討論RIME輸入法的用法或其他相關話題，也可來訪 Rime 貼吧：
 http://tieba.baidu.com/f?kw=rime
 
 謝謝！
