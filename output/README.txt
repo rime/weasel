@@ -130,6 +130,7 @@ http://code.google.com/p/rimeime/w/list
   * opencc / 開放中文轉換
   * UTF8-CPP
   * Windows Template Library
+  * WinSparkle
   * yaml-cpp
 
 ----------------------------------------------------------
