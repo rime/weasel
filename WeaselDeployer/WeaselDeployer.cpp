@@ -113,11 +113,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		reconfigured = configurator.Run();
 		if (!reconfigured)
 		{
-			EZLOGGERPRINT("User cancelled the operation.");
-			CloseHandle(hMutex);
-			_Module.Term();
-			::CoUninitialize();
-			return 0;
+			EZLOGGERPRINT("User cancelled reconfiguration.");
 		}
 	}
 
