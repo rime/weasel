@@ -10,12 +10,16 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
+#include <ShellAPI.h>
 
-// C RunTime Header Files
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
+#pragma warning(disable : 4996)
 
+#include <atlbase.h>
+#include <atlwin.h>
 
-// TODO: reference additional headers your program requires here
+#include <wtl/atlapp.h>
+#include <wtl/atlctrls.h>
+#include <wtl/atlctrlx.h>
+#include <wtl/atlmisc.h>
+
+#pragma warning(default: 4996)

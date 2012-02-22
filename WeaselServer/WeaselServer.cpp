@@ -19,7 +19,7 @@ class WeaselServerApp {
 public:
 	static bool execute(const std::wstring &cmd, const std::wstring &args)
 	{
-		return (int)ShellExecuteW(NULL, NULL, cmd.c_str(), args.c_str(), NULL, SW_HIDE) > 32;
+		return (int)ShellExecuteW(NULL, NULL, cmd.c_str(), args.c_str(), NULL, SW_SHOWNORMAL) > 32;
 	}
 
 	static bool explore(const std::wstring &path)
@@ -92,7 +92,8 @@ void WeaselServerApp::SetupMenuHandlers()
 	size_t pos = install_dir.find_last_of(L"\\");
 	install_dir.resize(pos);
 	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, boost::lambda::bind(&weasel::Server::Stop, boost::ref(m_server)) == 0);
-	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring()));
+	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
+	m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring()));
 	m_server.AddMenuHandler(ID_WEASELTRAY_FORUM, boost::lambda::bind(&open, L"http://tieba.baidu.com/f?kw=rime"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, boost::lambda::bind(&open, L"http://code.google.com/p/rimeime/"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);

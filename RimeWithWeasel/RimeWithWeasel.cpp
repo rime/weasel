@@ -94,7 +94,7 @@ void RimeWithWeaselHandler::Initialize()
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
 	RimeInitialize(&weasel_traits);
-	if (RimeIsMaintenancing())
+	if (RimeStartMaintenanceOnWorkspaceChange())
 	{
 		m_disabled = true;
 	}
