@@ -18,3 +18,5 @@ protected:
 	bool ConfigureSwitcher(rime::SwitcherSettings* settings);
 	bool ConfigureUI(UIStyleSettings* settings);
 };
+
+const WCHAR* utf8towcs(const char* utf8_str);

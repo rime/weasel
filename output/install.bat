@@ -10,7 +10,7 @@ echo stopping service from an older version.
 call stop_service.bat
 
 echo configuring preset input schemas...
-weaseldeployer.exe
+weaseldeployer.exe /install
 
 echo registering Weasel IME to your system.
 

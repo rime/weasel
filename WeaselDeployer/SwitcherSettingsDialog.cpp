@@ -1,19 +1,11 @@
 #include "stdafx.h"
 #include "SwitcherSettingsDialog.h"
-#include <rime/expl/switcher_settings.h>
+#include "Configurator.h"
 #include <algorithm>
 #include <set>
 #include <boost/foreach.hpp>
+#include <rime/expl/switcher_settings.h>
 
-
-static const WCHAR* utf8towcs(const char* utf8_str)
-{
-	const int buffer_len = 1024;
-	static WCHAR buffer[buffer_len];
-	memset(buffer, 0, sizeof(buffer));
-	MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, buffer, buffer_len - 1);
-	return buffer;
-}
 
 SwitcherSettingsDialog::SwitcherSettingsDialog(rime::SwitcherSettings* settings)
 	: settings_(settings), loaded_(false), modified_(false)
@@ -73,7 +65,7 @@ LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	schema_list_.SubclassWindow(GetDlgItem(IDC_SCHEMA_LIST));
 	schema_list_.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 	schema_list_.AddColumn(L"·½°¸Ãû·Q", 0);
-	CRect rc;
+	WTL::CRect rc;
 	schema_list_.GetClientRect(&rc);
 	schema_list_.SetColumnWidth(0, rc.Width() - 20);
 

@@ -16,6 +16,7 @@
 
 #include <atlbase.h>
 #include <atlwin.h>
+#include <atlimage.h>
 
 #include <wtl/atlapp.h>
 #include <wtl/atlctrls.h>

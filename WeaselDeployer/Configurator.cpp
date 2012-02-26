@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Configurator.h"
 #include "SwitcherSettingsDialog.h"
+#include "UIStyleSettings.h"
+#include "UIStyleSettingsDialog.h"
 #include <WeaselIPC.h>
 #pragma warning(disable: 4005)
 #pragma warning(disable: 4995)
@@ -9,20 +11,19 @@
 #include <rime/deployer.h>
 #include <rime/service.h>
 #include <rime/expl/switcher_settings.h>
-#include <rime/expl/custom_settings.h>
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
 #pragma warning(default: 4005)
 
 
-class UIStyleSettings : public rime::CustomSettings {
-public:
-	UIStyleSettings(rime::Deployer* deployer)
-		: rime::CustomSettings(deployer, "weasel", "Weasel::UIStyleSettings")
-	{
-	}
-};
-
+const WCHAR* utf8towcs(const char* utf8_str)
+{
+	const int buffer_len = 1024;
+	static WCHAR buffer[buffer_len];
+	memset(buffer, 0, sizeof(buffer));
+	MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, buffer, buffer_len - 1);
+	return buffer;
+}
 
 Configurator::Configurator()
 {
@@ -64,7 +65,14 @@ bool Configurator::ConfigureSwitcher(rime::SwitcherSettings* settings)
 }
 
 bool Configurator::ConfigureUI(UIStyleSettings* settings) {
-	return false;
+    if (!settings->Load())
+        return false;
+	bool reconfigured = false;
+	UIStyleSettingsDialog dialog(settings);
+	if (dialog.DoModal() == IDOK) {
+		reconfigured = settings->Save();
+	}
+	return reconfigured;
 }
 
 int Configurator::UpdateWorkspace(bool report_errors) {

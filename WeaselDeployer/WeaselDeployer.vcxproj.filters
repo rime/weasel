@@ -33,6 +33,12 @@
     <ClInclude Include="SwitcherSettingsDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UIStyleSettingsDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UIStyleSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -45,6 +51,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SwitcherSettingsDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UIStyleSettingsDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UIStyleSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
 #include "resource.h"
 
 namespace rime {
@@ -20,7 +19,7 @@ public:
 protected:
 	BEGIN_MSG_MAP(SwitcherSettingsDialog)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-		MESSAGE_HANDLER(WM_CLOSE, OnClose);
+		MESSAGE_HANDLER(WM_CLOSE, OnClose)
 		COMMAND_ID_HANDLER(IDOK, OnOK)
 		NOTIFY_HANDLER(IDC_SCHEMA_LIST, LVN_ITEMCHANGED, OnSchemaListItemChanged)
 	END_MSG_MAP()
@@ -28,7 +27,6 @@ protected:
 	LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&);
 	LRESULT OnClose(UINT, WPARAM, LPARAM, BOOL&);
 	LRESULT OnOK(WORD, WORD code, HWND, BOOL&);
-	LRESULT OnSchemaListItemActivate(int, LPNMHDR, BOOL&);
 	LRESULT OnSchemaListItemChanged(int, LPNMHDR, BOOL&);
 
 	void Populate();
