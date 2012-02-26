@@ -5,14 +5,10 @@
 #include "Configurator.h"
 #include <string>
 #include <WeaselCommon.h>
-#include <WeaselIPC.h>
 
 #pragma warning(disable: 4005)
 #include <rime_api.h>
 #pragma warning(default: 4005)
-
-
-CAppModule _Module;
 
 static const std::string WeaselDeployerLogFilePath()
 {
@@ -30,6 +26,7 @@ static const std::string WeaselDeployerLogFilePath()
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
 
+CAppModule _Module;
 
 static const char* weasel_shared_data_dir() {
 	static char path[MAX_PATH] = {0};
@@ -88,7 +85,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	}
 	RimeDeployerInitialize(&weasel_traits);
 
-	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerProcessMutex");
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerExclusiveMutex");
 	if (!hMutex)
 	{
 		EZLOGGERPRINT("Error creating mutex.");
@@ -105,63 +102,21 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	EZLOGGERPRINT("WeaselDeployer reporting.");
         
+	int ret = 0;
+	Configurator configurator;
+
 	bool deployment_scheduled = !wcscmp(L"/deploy", lpCmdLine);
-	bool reconfigured = false;
-	if (!deployment_scheduled)
-	{
-		Configurator configurator;
-		reconfigured = configurator.Run();
-		if (!reconfigured)
-		{
-			EZLOGGERPRINT("User cancelled reconfiguration.");
-		}
+	if (deployment_scheduled) {
+		ret = configurator.UpdateWorkspace();
+	}
+	else {
+		bool installing = !wcscmp(L"/install", lpCmdLine);
+		ret = configurator.Run(installing);
 	}
 
-	HANDLE hDeployerMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
-	if (!hDeployerMutex)
-	{
-		EZLOGGERPRINT("Error creating WeaselDeployerMutex.");
-		return 1;
-	}
-	if (GetLastError() == ERROR_ALREADY_EXISTS)
-	{
-		EZLOGGERPRINT("Warning: another deployer process is running; aborting operation.");
-		CloseHandle(hDeployerMutex);
-		CloseHandle(hMutex);
-		if (reconfigured)
-		{
-			MessageBox(NULL, L"正在執行另一項部署任務，方纔所做的修改將在輸入法再次啓動後生效。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
-		}
-		_Module.Term();
-		::CoUninitialize();
-		return 1;
-	}
-
-	weasel::Client client;
-	if (client.Connect())
-	{
-		EZLOGGERPRINT("Turning WeaselServer into maintenance mode.");
-		client.StartMaintenance();
-	}
-
-	{
-		// initialize default config, preset schemas
-		RimeDeployWorkspace();
-		// initialize weasel config
-		RimeDeployConfigFile("weasel.yaml", "config_version");
-	}
-
-	CloseHandle(hDeployerMutex);  // should be closed before resuming service.
 	CloseHandle(hMutex);
-
-	if (client.Connect())
-	{
-		EZLOGGERPRINT("Resuming service.");
-		client.EndMaintenance();
-	}
-
 	_Module.Term();
 	::CoUninitialize();
 
-	return 0;
+	return ret;
 }
