@@ -21,11 +21,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		include\WeaselUI.h = include\WeaselUI.h
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestWeaselUI", "test\TestWeaselUI\TestWeaselUI.vcproj", "{AEDC8606-6C10-4549-817D-5B6533F33E1E}"
-	ProjectSection(ProjectDependencies) = postProject
-		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4} = {10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselIME", "WeaselIME\WeaselIME.vcproj", "{A958FE3D-9F6E-44CB-981E-F2AE181657B3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D} = {CE11A2DF-8D20-4B07-A935-4B0D03F0303D}
@@ -100,15 +95,6 @@ Global
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}.ReleaseHant|Win32.Build.0 = ReleaseHant|Win32
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}.ReleaseHant|x64.ActiveCfg = ReleaseHant|x64
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}.ReleaseHant|x64.Build.0 = ReleaseHant|x64
-		{AEDC8606-6C10-4549-817D-5B6533F33E1E}.Debug|Win32.ActiveCfg = Debug|Win32
-		{AEDC8606-6C10-4549-817D-5B6533F33E1E}.Debug|Win32.Build.0 = Debug|Win32
-		{AEDC8606-6C10-4549-817D-5B6533F33E1E}.Debug|x64.ActiveCfg = Debug|x64
-		{AEDC8606-6C10-4549-817D-5B6533F33E1E}.Debug|x64.Build.0 = Debug|x64
-		{AEDC8606-6C10-4549-817D-5B6533F33E1E}.Release|Win32.ActiveCfg = Release|Win32
-		{AEDC8606-6C10-4549-817D-5B6533F33E1E}.Release|Win32.Build.0 = Release|Win32
-		{AEDC8606-6C10-4549-817D-5B6533F33E1E}.Release|x64.ActiveCfg = Release|x64
-		{AEDC8606-6C10-4549-817D-5B6533F33E1E}.ReleaseHant|Win32.ActiveCfg = ReleaseHant|Win32
-		{AEDC8606-6C10-4549-817D-5B6533F33E1E}.ReleaseHant|x64.ActiveCfg = ReleaseHant|x64
 		{A958FE3D-9F6E-44CB-981E-F2AE181657B3}.Debug|Win32.ActiveCfg = Debug|Win32
 		{A958FE3D-9F6E-44CB-981E-F2AE181657B3}.Debug|Win32.Build.0 = Debug|Win32
 		{A958FE3D-9F6E-44CB-981E-F2AE181657B3}.Debug|x64.ActiveCfg = Debug|x64
