@@ -11,6 +11,7 @@ class Configurator
 public:
 	explicit Configurator();
 
+	void Initialize();
 	int Run(bool installing);
 	int UpdateWorkspace(bool report_errors = false);
 
