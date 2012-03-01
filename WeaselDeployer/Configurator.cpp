@@ -88,7 +88,8 @@ bool Configurator::ConfigureSwitcher(rime::SwitcherSettings* settings, bool* rec
         return false;
 	SwitcherSettingsDialog dialog(settings);
 	if (dialog.DoModal() == IDOK) {
-		*reconfigured = settings->Save();
+		if (settings->Save())
+			*reconfigured = true;
 		return true;
 	}
 	return false;
@@ -99,7 +100,8 @@ bool Configurator::ConfigureUI(UIStyleSettings* settings, bool* reconfigured) {
         return false;
 	UIStyleSettingsDialog dialog(settings);
 	if (dialog.DoModal() == IDOK) {
-		*reconfigured = settings->Save();
+		if (settings->Save())
+			*reconfigured = true;
 		return true;
 	}
 	return false;
