@@ -69,6 +69,7 @@ namespace weasel
 			totalPages = 0;
 			highlighted = 0;
 			candies.clear();
+			labels.clear();
 		}
 		bool empty() const
 		{
@@ -78,6 +79,7 @@ namespace weasel
 		int totalPages;
 		int highlighted;
 		std::vector<Text> candies;
+		std::string labels;
 	};
 
 	struct Context

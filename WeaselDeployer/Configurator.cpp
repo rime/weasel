@@ -68,16 +68,13 @@ int Configurator::Run(bool installing)
 	bool reconfigured = false;
 
 	rime::SwitcherSettings switcher_settings(&deployer);
-	if (!installing || switcher_settings.IsFirstRun()) {
-		if (ConfigureSwitcher(&switcher_settings))
-			reconfigured = true;
-	}
-
 	UIStyleSettings ui_style_settings(&deployer);
-	if (!installing || ui_style_settings.IsFirstRun()) {
-		if (ConfigureUI(&ui_style_settings))
-			reconfigured = true;
-	}
+
+	bool skip_switcher_settings = installing && !switcher_settings.IsFirstRun();
+	bool skip_ui_style_settings = installing && !ui_style_settings.IsFirstRun();
+	
+	(skip_switcher_settings || ConfigureSwitcher(&switcher_settings, &reconfigured)) &&
+		(skip_ui_style_settings || ConfigureUI(&ui_style_settings, &reconfigured));
 
 	if (installing || reconfigured) {
 		return UpdateWorkspace(reconfigured);
@@ -85,27 +82,27 @@ int Configurator::Run(bool installing)
 	return 0;
 }
 
-bool Configurator::ConfigureSwitcher(rime::SwitcherSettings* settings)
+bool Configurator::ConfigureSwitcher(rime::SwitcherSettings* settings, bool* reconfigured)
 {
     if (!settings->Load())
         return false;
-	bool reconfigured = false;
 	SwitcherSettingsDialog dialog(settings);
 	if (dialog.DoModal() == IDOK) {
-		reconfigured = settings->Save();
+		*reconfigured = settings->Save();
+		return true;
 	}
-	return reconfigured;
+	return false;
 }
 
-bool Configurator::ConfigureUI(UIStyleSettings* settings) {
+bool Configurator::ConfigureUI(UIStyleSettings* settings, bool* reconfigured) {
     if (!settings->Load())
         return false;
-	bool reconfigured = false;
 	UIStyleSettingsDialog dialog(settings);
 	if (dialog.DoModal() == IDOK) {
-		reconfigured = settings->Save();
+		*reconfigured = settings->Save();
+		return true;
 	}
-	return reconfigured;
+	return false;
 }
 
 int Configurator::UpdateWorkspace(bool report_errors) {

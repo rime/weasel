@@ -254,6 +254,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 			}
 			cinfo.highlighted = ctx.menu.highlighted_candidate_index;
 			cinfo.currentPage = ctx.menu.page_no;
+			cinfo.labels = ctx.menu.select_keys;
 		}
 	}
 

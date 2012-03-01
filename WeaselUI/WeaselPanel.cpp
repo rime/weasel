@@ -127,10 +127,15 @@ void WeaselPanel::_ResizeWindow()
 	}
 
 	// measure candidates
-	vector<Text> const& candidates = m_ctx.cinfo.candies;
+	vector<Text> const& candidates(m_ctx.cinfo.candies);
+	std::string const& labels(m_ctx.cinfo.labels);
 	for (size_t i = 0; i < candidates.size(); ++i, height += m_style.candidate_spacing)
 	{
-		wstring cand = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % (i + 1) % candidates[i].str).str();
+		wstring cand;
+		if (i < labels.size())
+			cand = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % labels[i] % candidates[i].str).str();
+		else
+			cand = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % ((i + 1) % 10) % candidates[i].str).str();
 		dc.GetTextExtent(cand.c_str(), cand.length(), &sz);
 		width = max(width, sz.cx + 2 * m_style.hilite_padding);
 		height += sz.cy;
@@ -253,12 +258,17 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 {
 	bool drawn = false;
 	dc.SetTextColor(m_style.candidate_text_color);
-	vector<Text> const& candies = cinfo.candies;
+	vector<Text> const& candies(cinfo.candies);
+	std::string const& labels(cinfo.labels);
 	for (size_t i = 0; i < candies.size(); ++i, y += m_style.candidate_spacing)
 	{
 		if (y >= rc.bottom)
 			break;
-		wstring t = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % (i + 1) % candies[i].str).str();
+		wstring t;
+		if (i < labels.size())
+			t = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % labels[i] % candies[i].str).str();
+		else
+			t = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % ((i + 1) % 10) % candies[i].str).str();
 		CSize szText;
 		dc.GetTextExtent(t.c_str(), t.length(), &szText);
 		CRect rcText(rc.left + m_style.hilite_padding, y, rc.right - m_style.hilite_padding, y + szText.cy);
