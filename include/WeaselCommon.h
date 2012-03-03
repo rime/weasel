@@ -4,7 +4,7 @@
 #include <vector>
 
 #define WEASEL_CODE_NAME "Weasel"
-#define WEASEL_VERSION "0.9.8"
+#define WEASEL_VERSION "0.9.9"
 
 #define WEASEL_IME_NAME L"Ð¡ÀÇºÁ"
 #define WEASEL_IME_FILE L"weasel.ime"
