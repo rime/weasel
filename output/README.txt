@@ -123,6 +123,8 @@ http://code.google.com/p/rimeime/w/list
   * 【五笔86】
     發明人 王永民先生
     碼表源自 ibus-table
+  * 【注音／地球拼音】
+    作者 佛振
   * 【粵拼】
     採用《香港語言學學會粵語拼音方案》
     http://www.lshk.org/cantonese.php
