@@ -14,6 +14,7 @@ public:
 	void Initialize();
 	int Run(bool installing);
 	int UpdateWorkspace(bool report_errors = false);
+	int DictManagement();
 
 protected:
 	bool ConfigureSwitcher(rime::SwitcherSettings* settings, bool* reconfigured);

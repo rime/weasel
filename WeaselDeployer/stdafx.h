@@ -22,5 +22,6 @@
 #include <wtl/atlctrls.h>
 #include <wtl/atlctrlx.h>
 #include <wtl/atlmisc.h>
+#include <wtl/atldlgs.h>
 
 #pragma warning(default: 4996)

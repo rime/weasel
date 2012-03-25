@@ -81,6 +81,12 @@ static int Run(LPTSTR lpCmdLine)
 		return configurator.UpdateWorkspace();
 	}
 
+	bool dict_management = !wcscmp(L"/dict", lpCmdLine);
+	if (dict_management)
+	{
+		return configurator.DictManagement();
+	}
+
 	bool installing = !wcscmp(L"/install", lpCmdLine);
 	return configurator.Run(installing);
 }

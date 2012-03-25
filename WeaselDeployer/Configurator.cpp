@@ -4,6 +4,7 @@
 #include "SwitcherSettingsDialog.h"
 #include "UIStyleSettings.h"
 #include "UIStyleSettingsDialog.h"
+#include "DictManagementDialog.h"
 #include <WeaselCommon.h>
 #include <WeaselIPC.h>
 #pragma warning(disable: 4005)
@@ -137,6 +138,44 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 		RimeDeployWorkspace();
 		// initialize weasel config
 		RimeDeployConfigFile("weasel.yaml", "config_version");
+	}
+
+	CloseHandle(hMutex);  // should be closed before resuming service.
+
+	if (client.Connect())
+	{
+		EZLOGGERPRINT("Resuming service.");
+		client.EndMaintenance();
+	}
+	return 0;
+}
+
+int Configurator::DictManagement() {
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
+	if (!hMutex)
+	{
+		EZLOGGERPRINT("Error creating WeaselDeployerMutex.");
+		return 1;
+	}
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		EZLOGGERPRINT("Warning: another deployer process is running; aborting operation.");
+		CloseHandle(hMutex);
+		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+		return 1;
+	}
+
+	weasel::Client client;
+	if (client.Connect())
+	{
+		EZLOGGERPRINT("Turning WeaselServer into maintenance mode.");
+		client.StartMaintenance();
+	}
+
+	{
+		rime::Deployer& deployer(rime::Service::instance().deployer());
+		DictManagementDialog dlg(&deployer);
+		dlg.DoModal();
 	}
 
 	CloseHandle(hMutex);  // should be closed before resuming service.
