@@ -5,6 +5,7 @@ ReleaseHant/
 /output/*.ime
 /output/data/*.kct
 /output/data/*.yaml
+/output/archives
 /lib/*.lib
 /ipch
 weasel.props
