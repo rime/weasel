@@ -94,6 +94,7 @@ void WeaselServerApp::SetupMenuHandlers()
 	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, boost::lambda::bind(&weasel::Server::Stop, boost::ref(m_server)) == 0);
 	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
 	m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring()));
+	m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring(L"/dict")));
 	m_server.AddMenuHandler(ID_WEASELTRAY_FORUM, boost::lambda::bind(&open, L"http://tieba.baidu.com/f?kw=rime"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, boost::lambda::bind(&open, L"http://code.google.com/p/rimeime/"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_ISSUE_REPORT, boost::lambda::bind(&open, L"http://code.google.com/p/rimeime/issues/list"));
