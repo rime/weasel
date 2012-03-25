@@ -1,0 +1,12 @@
+Debug/
+Release/
+ReleaseHant/
+output/*.exe
+output/*.ime
+output/data/*.kct
+output/data/*.yaml
+lib/*.lib
+weasel.props
+*.user
+*~
+.*.swp
