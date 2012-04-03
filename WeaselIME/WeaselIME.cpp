@@ -553,6 +553,12 @@ void WeaselIME::_UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt)
 	}
 
 	ClientToScreen(lpIMC->hWnd, &pt);
+	if (pt.x < -4096 || pt.x >= 4096 || pt.y < -4096 || pt.y >= 4096)
+	{
+		EZDBGONLYLOGGERPRINT("Input position out of range, possibly invalid.");
+		return;
+	}
+
 	int height = abs(lpIMC->lfFont.W.lfHeight);
 	if (height == 0)
 	{
