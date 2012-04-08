@@ -8,12 +8,12 @@
 #define ID_WEASELTRAY_QUIT              40001
 #define ID_WEASELTRAY_DEPLOY            40002
 #define ID_WEASELTRAY_CHECKUPDATE       40003
-#define ID_WEASELTRAY_WIKI              40004
+#define ID_WEASELTRAY_FORUM             40004
 #define ID_WEASELTRAY_HOMEPAGE          40005
 #define ID_WEASELTRAY_INSTALLDIR        40006
 #define ID_WEASELTRAY_USERCONFIG        40007
 #define ID_WEASELTRAY_SETTINGS          40008
-#define ID_WEASELTRAY_ISSUE_REPORT      40009
+#define ID_WEASELTRAY_WIKI              40009
 #define ID_WEASELTRAY_DICT_MANAGEMENT   40010
 
 // Next default values for new objects

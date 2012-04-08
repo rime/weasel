@@ -110,7 +110,8 @@ BEGIN
         MENUITEM "查看配置文件 (&C)",               ID_WEASELTRAY_USERCONFIG
         MENUITEM "用戶詞典管理 (&D)",               ID_WEASELTRAY_DICT_MANAGEMENT
         MENUITEM "在線文檔 (&W)",                   ID_WEASELTRAY_WIKI
-        MENUITEM "RIME主頁 (&H)",                   ID_WEASELTRAY_HOMEPAGE
+        MENUITEM "Rime主頁 (&H)",                   ID_WEASELTRAY_HOMEPAGE
+        MENUITEM "Rime貼吧 (&T)",                   ID_WEASELTRAY_FORUM
         MENUITEM "檢查新版本 (&U)",                 ID_WEASELTRAY_CHECKUPDATE
         MENUITEM SEPARATOR
         MENUITEM "重新部署 (&R)",                   ID_WEASELTRAY_DEPLOY
