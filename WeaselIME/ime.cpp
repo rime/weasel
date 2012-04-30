@@ -3,6 +3,8 @@
 
 #pragma warning(disable: 4996)
 
+static BOOL g_is_winlogon = FALSE;
+
 //
 // IME export functions
 //
@@ -14,8 +16,8 @@ BOOL WINAPI ImeInquire(IMEINFO* lpIMEInfo, LPWSTR lpszUIClass, DWORD dwSystemInf
 
 	if (dwSystemInfoFlags & IME_SYSINFO_WINLOGON)
 	{
-		// TODO: disable input method in winlogon.exe (not tested)
-		return FALSE;
+		// disable input method in winlogon.exe
+		g_is_winlogon = TRUE;
 	}
 
 	wcscpy(lpszUIClass, WeaselIME::GetUIClassName());
@@ -33,6 +35,8 @@ BOOL WINAPI ImeInquire(IMEINFO* lpIMEInfo, LPWSTR lpszUIClass, DWORD dwSystemInf
 
 BOOL WINAPI ImeConfigure(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 {
+	if (g_is_winlogon) return TRUE;
+
 	// TODO:
 	MessageBox(hWnd, L"本品無設定介面 :)", L"輸入法設定", MB_OK);
 	return TRUE;
@@ -58,6 +62,8 @@ LRESULT WINAPI ImeEscape(HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 
 BOOL WINAPI ImeProcessKey(HIMC hIMC, UINT vKey, LPARAM lKeyData, const LPBYTE lpbKeyState)
 {
+	if (g_is_winlogon) return FALSE;
+
 	BOOL accepted = FALSE;
 	boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
     if (!p)
@@ -68,6 +74,8 @@ BOOL WINAPI ImeProcessKey(HIMC hIMC, UINT vKey, LPARAM lKeyData, const LPBYTE lp
 
 BOOL WINAPI ImeSelect(HIMC hIMC, BOOL fSelect)
 {
+	if (g_is_winlogon) return TRUE;
+
 	boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
     if (!p)
         return FALSE;
@@ -80,6 +88,8 @@ BOOL WINAPI ImeSelect(HIMC hIMC, BOOL fSelect)
 
 BOOL WINAPI ImeSetActiveContext(HIMC hIMC, BOOL fFocus)
 {
+	if (g_is_winlogon) return TRUE;
+
 	if (hIMC)
 	{	
 		boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
