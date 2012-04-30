@@ -4,11 +4,12 @@
 
 using namespace weasel;
 
+// ContextUpdater
+
 Deserializer::Ptr ContextUpdater::Create(ResponseParser* pTarget)
 {
 	return Deserializer::Ptr(new ContextUpdater(pTarget));
 }
-
 
 ContextUpdater::ContextUpdater(ResponseParser* pTarget)
 : Deserializer(pTarget)
@@ -106,4 +107,46 @@ void ContextUpdater::_StoreCand(Deserializer::KeyType k, wstring const& value)
 	if (idx >= cinfo.candies.size())
 		return;
 	cinfo.candies[idx].str = value;
+}
+
+// StatusUpdater
+
+Deserializer::Ptr StatusUpdater::Create(ResponseParser* pTarget)
+{
+	return Deserializer::Ptr(new StatusUpdater(pTarget));
+}
+
+StatusUpdater::StatusUpdater(ResponseParser* pTarget)
+: Deserializer(pTarget)
+{
+}
+
+StatusUpdater::~StatusUpdater()
+{
+}
+
+void StatusUpdater::Store(Deserializer::KeyType const& k, wstring const& value)
+{
+	if(!m_pTarget->p_status || k.size() < 2)
+		return;
+
+	bool bool_value = (!value.empty() && value != L"0");
+
+	if (k[1] == L"ascii_mode")
+	{
+		m_pTarget->p_status->ascii_mode = bool_value;
+		return;
+	}
+
+	if (k[1] == L"composing")
+	{
+		m_pTarget->p_status->composing = bool_value;
+		return;
+	}
+
+	if (k[1] == L"disabled")
+	{
+		m_pTarget->p_status->disabled = bool_value;
+		return;
+	}
 }

@@ -72,6 +72,7 @@ private:
 	static HINSTANCE s_hModule;
 	static HIMCMap s_instances;
 	HIMC m_hIMC;
+	bool m_composing;
 	bool m_preferCandidatePos;
 	weasel::Client m_client;
 };

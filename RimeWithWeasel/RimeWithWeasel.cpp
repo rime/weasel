@@ -153,8 +153,8 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 		keyEvent.keycode, keyEvent.mask, session_id);
 	if (m_disabled) return FALSE;
 	bool taken = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask)); 
-	_UpdateUI(session_id);
 	_Respond(session_id, buffer);
+	_UpdateUI(session_id);
 	m_active_session = session_id;
 	return (BOOL)taken;
 }
@@ -283,6 +283,15 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	{
 		actions.insert("commit");
 		messages.push_back(boost::str(boost::format("commit=%s\n") % commit.text));
+	}
+
+	RimeStatus status;
+	if (RimeGetStatus(session_id, &status))
+	{
+		actions.insert("status");
+		messages.push_back(boost::str(boost::format("status.ascii_mode=%d\n") % status.is_ascii_mode));
+		messages.push_back(boost::str(boost::format("status.composing=%d\n") % status.is_composing));
+		messages.push_back(boost::str(boost::format("status.disabled=%d\n") % status.is_disabled));
 	}
 
 	// summarize

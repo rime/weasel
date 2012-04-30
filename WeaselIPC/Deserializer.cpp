@@ -19,6 +19,7 @@ void Deserializer::Initialize(ResponseParser* pTarget)
 		Define(L"action", ActionLoader::Create);
 		Define(L"commit", Committer::Create);
 		Define(L"ctx", ContextUpdater::Create);
+		Define(L"status", StatusUpdater::Create);
 	}
 
 	// loaded by default
