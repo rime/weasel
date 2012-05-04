@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include <WeaselVersion.h>
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -53,8 +54,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,11,0
- PRODUCTVERSION 0,9,11,0
+ FILEVERSION WEASEL_VERSION_NUM
+ PRODUCTVERSION WEASEL_VERSION_NUM
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -71,23 +72,23 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "式恕堂"
             VALUE "FileDescription", "小狼毫輸入法"
-            VALUE "FileVersion", "0.9.11.0"
+            VALUE "FileVersion", WEASEL_VERSION_STR
             VALUE "InternalName", "Weasel"
             VALUE "LegalCopyright", "版權所無 式恕堂 2012"
             VALUE "OriginalFilename", "weasel.ime"
             VALUE "ProductName", "小狼毫"
-            VALUE "ProductVersion", "0.9.11.0"
+            VALUE "ProductVersion", WEASEL_VERSION_STR
         END
         BLOCK "080404b0"
         BEGIN
             VALUE "CompanyName", "式恕堂"
             VALUE "FileDescription", "小狼毫輸入法"
-            VALUE "FileVersion", "0.9.11.0"
+            VALUE "FileVersion", WEASEL_VERSION_STR
             VALUE "InternalName", "Weasel"
             VALUE "LegalCopyright", "版權所無 式恕堂 2012"
             VALUE "OriginalFilename", "weasel.ime"
             VALUE "ProductName", "小狼毫"
-            VALUE "ProductVersion", "0.9.11.0"
+            VALUE "ProductVersion", WEASEL_VERSION_STR
         END
     END
     BLOCK "VarFileInfo"

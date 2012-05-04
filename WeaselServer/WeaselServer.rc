@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include <WeaselVersion.h>
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -53,8 +54,8 @@ FeedURL APPCAST {"http://rimeime.googlecode.com/svn/trunk/weasel/update/appcast.
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,11,0
- PRODUCTVERSION 0,9,11,0
+ FILEVERSION WEASEL_VERSION_NUM
+ PRODUCTVERSION WEASEL_VERSION_NUM
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -72,12 +73,12 @@ BEGIN
             VALUE "Comments", "Powered by RIME | 中州韻輸入法引擎"
             VALUE "CompanyName", "式恕堂"
             VALUE "FileDescription", "小狼毫算法服務"
-            VALUE "FileVersion", "0.9.11.0"
+            VALUE "FileVersion", WEASEL_VERSION_STR
             VALUE "InternalName", "WeaselServer"
             VALUE "LegalCopyright", "版權所無 式恕堂 2012"
             VALUE "OriginalFilename", "WeaselServer.exe"
             VALUE "ProductName", "小狼毫"
-            VALUE "ProductVersion", "0.9.11.0"
+            VALUE "ProductVersion", WEASEL_VERSION_STR
         END
     END
     BLOCK "VarFileInfo"

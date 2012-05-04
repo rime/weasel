@@ -7,6 +7,7 @@
 #include "DictManagementDialog.h"
 #include <WeaselCommon.h>
 #include <WeaselIPC.h>
+#include <WeaselVersion.h>
 #pragma warning(disable: 4005)
 #pragma warning(disable: 4995)
 #pragma warning(disable: 4996)

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <RimeWithWeasel.h>
+#include <WeaselVersion.h>
 #include <windows.h>
 #include <list>
 #include <set>
