@@ -5,7 +5,7 @@
 #include "../WeaselServer/resource.h"
 
 static UINT mode_icon[] = { IDI_ZHUNG, IDI_ALPHA, IDI_DISABLED };
-static const WCHAR *mode_label[] = { L"中文", L"西文", L"維護中" };
+static const WCHAR *mode_label[] = { /*L"中文"*/ NULL, /*L"西文"*/ NULL, L"維護中" };
 
 WeaselTrayIcon::WeaselTrayIcon(weasel::UI &ui)
 	: m_status(ui.status()), m_mode(ZHUNG)
@@ -39,6 +39,9 @@ void WeaselTrayIcon::Refresh()
 	{
 		m_mode = mode;
 		SetIcon(mode_icon[mode]);
-		ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
+		if (mode_label[mode])
+		{
+			ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
+		}
 	}
 }
