@@ -221,15 +221,18 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	if (session_id == 0)
 		weasel_status.disabled = m_disabled;
 
-	RimeStatus status;
+	RimeStatus status = {0};
+	RIME_STRUCT_INIT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
 		weasel_status.ascii_mode = status.is_ascii_mode;
 		weasel_status.composing = status.is_composing;
 		weasel_status.disabled = status.is_disabled;
+		RimeFreeStatus(&status);
 	}
 
-	RimeContext ctx;
+	RimeContext ctx = {0};
+	RIME_STRUCT_INIT(RimeContext, ctx);
 	if (RimeGetContext(session_id, &ctx))
 	{
 		if (ctx.composition.length > 0)
@@ -251,12 +254,18 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 			cinfo.candies.resize(ctx.menu.num_candidates);
 			for (int i = 0; i < ctx.menu.num_candidates; ++i)
 			{
-				cinfo.candies[i].str = utf8towcs(ctx.menu.candidates[i]);
+				std::string text(ctx.menu.candidates[i].text);
+				if (ctx.menu.candidates[i].comment)
+				{
+					(text += "  ") += ctx.menu.candidates[i].comment;
+				}
+				cinfo.candies[i].str = utf8towcs(text.c_str());
 			}
 			cinfo.highlighted = ctx.menu.highlighted_candidate_index;
 			cinfo.currentPage = ctx.menu.page_no;
 			cinfo.labels = ctx.menu.select_keys;
 		}
+		RimeFreeContext(&ctx);
 	}
 
 	if (!m_ui) return;
@@ -279,20 +288,23 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 
 	// extract information
 
-	RimeCommit commit;
+	RimeCommit commit = {0};
 	if (RimeGetCommit(session_id, &commit))
 	{
 		actions.insert("commit");
 		messages.push_back(boost::str(boost::format("commit=%s\n") % commit.text));
+		RimeFreeCommit(&commit);
 	}
 
-	RimeStatus status;
+	RimeStatus status = {0};
+	RIME_STRUCT_INIT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
 		actions.insert("status");
 		messages.push_back(boost::str(boost::format("status.ascii_mode=%d\n") % status.is_ascii_mode));
 		messages.push_back(boost::str(boost::format("status.composing=%d\n") % status.is_composing));
 		messages.push_back(boost::str(boost::format("status.disabled=%d\n") % status.is_disabled));
+		RimeFreeStatus(&status);
 	}
 
 	// summarize
