@@ -252,14 +252,14 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		{
 			weasel::CandidateInfo &cinfo(weasel_context.cinfo);
 			cinfo.candies.resize(ctx.menu.num_candidates);
+			cinfo.comments.resize(ctx.menu.num_candidates);
 			for (int i = 0; i < ctx.menu.num_candidates; ++i)
 			{
-				std::string text(ctx.menu.candidates[i].text);
+				cinfo.candies[i].str = utf8towcs(ctx.menu.candidates[i].text);
 				if (ctx.menu.candidates[i].comment)
 				{
-					(text += "  ") += ctx.menu.candidates[i].comment;
+					cinfo.comments[i].str = utf8towcs(ctx.menu.candidates[i].comment);
 				}
-				cinfo.candies[i].str = utf8towcs(text.c_str());
 			}
 			cinfo.highlighted = ctx.menu.highlighted_candidate_index;
 			cinfo.currentPage = ctx.menu.page_no;

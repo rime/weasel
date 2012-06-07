@@ -75,6 +75,7 @@ namespace weasel
 		int totalPages;
 		int highlighted;
 		std::vector<Text> candies;
+		std::vector<Text> comments;
 		std::string labels;
 	};
 

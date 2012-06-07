@@ -32,8 +32,7 @@ static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x000000;
 
 static const int STATUS_ICON_SIZE = 16;
 
-static WCHAR CANDIDATE_PROMPT_PATTERN[] = L"%1%. %2%";
-
+static WCHAR LABEL_PATTERN[] = L"%1%. ";
 
 WeaselPanel::WeaselPanel(weasel::UI &ui)
 	: m_ctx(ui.ctx()), m_status(ui.status()), m_style(ui.style())
@@ -127,20 +126,33 @@ void WeaselPanel::_ResizeWindow()
 	}
 
 	// measure candidates
-	vector<Text> const& candidates(m_ctx.cinfo.candies);
+	vector<Text> const& candies(m_ctx.cinfo.candies);
+	vector<Text> const& comments(m_ctx.cinfo.comments);
 	std::string const& labels(m_ctx.cinfo.labels);
-	for (size_t i = 0; i < candidates.size(); ++i, height += m_style.candidate_spacing)
+	long label_width = 0;
+	long cand_width = 0;
+	for (size_t i = 0; i < candies.size(); ++i, height += m_style.candidate_spacing)
 	{
-		wstring cand;
+		wstring label_text;
 		if (i < labels.size())
-			cand = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % labels[i] % candidates[i].str).str();
+			label_text = (boost::wformat(LABEL_PATTERN) % labels[i]).str();
 		else
-			cand = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % ((i + 1) % 10) % candidates[i].str).str();
+			label_text = (boost::wformat(LABEL_PATTERN) % ((i + 1) % 10)).str();
+		dc.GetTextExtent(label_text.c_str(), label_text.length(), &sz);
+		label_width = max(label_width, sz.cx);
+
+		wstring cand = candies[i].str;
+		if (!comments[i].str.empty())
+		{
+			cand += L" " + comments[i].str;
+		}
 		dc.GetTextExtent(cand.c_str(), cand.length(), &sz);
-		width = max(width, sz.cx + 2 * m_style.hilite_padding);
+		cand_width = max(cand_width, sz.cx);
+
 		height += sz.cy;
 	}
-	if (!candidates.empty())
+	width = max(width, label_width + cand_width + 2 * m_style.hilite_padding);
+	if (!candies.empty())
 		height += m_style.spacing;
 
 	//trim the last spacing
@@ -254,36 +266,94 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 	return drawn;
 }
 
+static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
+{
+	return RGB(
+		(GetRValue(fcolor) * 3 + GetRValue(bcolor)) / 4,
+		(GetGValue(fcolor) * 3 + GetGValue(bcolor)) / 4,
+		(GetBValue(fcolor) * 3 + GetBValue(bcolor)) / 4
+		);
+}
+
 bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRect const& rc, int& y)
 {
+	COLORREF gray_color = blend_colors(m_style.candidate_text_color, m_style.back_color);
+	COLORREF hilited_gray_color = blend_colors(m_style.hilited_candidate_text_color, m_style.hilited_candidate_back_color);
+
 	bool drawn = false;
-	dc.SetTextColor(m_style.candidate_text_color);
+	CSize sz;
 	vector<Text> const& candies(cinfo.candies);
+	vector<Text> const& comments(cinfo.comments);
 	std::string const& labels(cinfo.labels);
+	vector<wstring> label_text;
+	long label_width = 0;
+	long comment_shift_width = 0;
+	long line_height = 0;
+	for (size_t i = 0; i < candies.size(); ++i)
+	{
+		if (i < labels.size())
+			label_text.push_back((boost::wformat(LABEL_PATTERN) % labels[i]).str());
+		else
+			label_text.push_back((boost::wformat(LABEL_PATTERN) % ((i + 1) % 10)).str());
+		dc.GetTextExtent(label_text.back().c_str(), label_text.back().length(), &sz);
+		label_width = max(label_width, sz.cx);
+		line_height = max(line_height, sz.cy);
+		wstring cand_text = candies[i].str;
+		wstring comment_text;
+		dc.GetTextExtent(cand_text.c_str(), cand_text.length(), &sz);
+		long cand_width = sz.cx;
+		line_height = max(line_height, sz.cy);
+		if (!comments[i].str.empty())
+		{
+			comment_text = L" " + comments[i].str;
+			comment_shift_width = max(comment_shift_width, cand_width);
+		}
+		dc.GetTextExtent(comment_text.c_str(), comment_text.length(), &sz);
+		line_height = max(line_height, sz.cy);
+	}
 	for (size_t i = 0; i < candies.size(); ++i, y += m_style.candidate_spacing)
 	{
 		if (y >= rc.bottom)
 			break;
-		wstring t;
-		if (i < labels.size())
-			t = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % labels[i] % candies[i].str).str();
-		else
-			t = (boost::wformat(CANDIDATE_PROMPT_PATTERN) % ((i + 1) % 10) % candies[i].str).str();
-		CSize szText;
-		dc.GetTextExtent(t.c_str(), t.length(), &szText);
-		CRect rcText(rc.left + m_style.hilite_padding, y, rc.right - m_style.hilite_padding, y + szText.cy);
+		wstring cand_text = candies[i].str;
+		wstring comment_text;
+		if (!comments[i].str.empty())
+		{
+			comment_text = L" " + comments[i].str;
+		}
+		CRect rc_out(rc.left + m_style.hilite_padding, y, rc.right - m_style.hilite_padding, y + line_height);
 		if (i == cinfo.highlighted)
 		{
-			_HighlightText(dc, rcText, m_style.hilited_candidate_back_color);
-			dc.SetTextColor(m_style.hilited_candidate_text_color);
-			dc.ExtTextOutW(rcText.left, y, ETO_CLIPPED, &rcText, t.c_str(), t.length(), 0);
-			dc.SetTextColor(m_style.candidate_text_color);
+			_HighlightText(dc, rc_out, m_style.hilited_candidate_back_color);
+			dc.SetTextColor(hilited_gray_color);
 		}
 		else
 		{
-			dc.ExtTextOutW(rcText.left, y, ETO_CLIPPED, &rcText, t.c_str(), t.length(), 0);
+			dc.SetTextColor(gray_color);
 		}
-		y += szText.cy;
+		// draw label
+		dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, label_text[i].c_str(), label_text[i].length(), 0);
+		rc_out.DeflateRect(label_width, 0, 0, 0);
+		// draw candidate text
+		if (i == cinfo.highlighted)
+		{
+			dc.SetTextColor(m_style.hilited_candidate_text_color);
+			dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, cand_text.c_str(), cand_text.length(), 0);
+			dc.SetTextColor(hilited_gray_color);
+		}
+		else
+		{
+			dc.SetTextColor(m_style.candidate_text_color);
+			dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, cand_text.c_str(), cand_text.length(), 0);
+			dc.SetTextColor(gray_color);
+		}
+		// draw comment text
+		if (!comment_text.empty())
+		{
+			rc_out.DeflateRect(comment_shift_width, 0, 0, 0);
+			dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, comment_text.c_str(), comment_text.length(), 0);
+		}
+		y += line_height;
 		drawn = true;
 	}
 	dc.SetTextColor(m_style.text_color);
