@@ -52,12 +52,16 @@ WeaselPanel::WeaselPanel(weasel::UI &ui)
 
 	m_style.text_color = TEXT_COLOR;
 	m_style.candidate_text_color = CAND_TEXT_COLOR;
+	m_style.label_text_color = CAND_TEXT_COLOR;
+	m_style.comment_text_color = CAND_TEXT_COLOR;
 	m_style.back_color = BACK_COLOR;
 	m_style.border_color = BORDER_COLOR;
 	m_style.hilited_text_color = HIGHLIGHTED_TEXT_COLOR;
 	m_style.hilited_back_color = HIGHLIGHTED_BACK_COLOR;
 	m_style.hilited_candidate_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 	m_style.hilited_candidate_back_color = HIGHLIGHTED_CAND_BACK_COLOR;
+	m_style.hilited_label_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
+	m_style.hilited_comment_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 
 	m_iconZhung.LoadIconW(IDI_ZHUNG, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconAlpha.LoadIconW(IDI_ALPHA, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -266,20 +270,8 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 	return drawn;
 }
 
-static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
-{
-	return RGB(
-		(GetRValue(fcolor) * 3 + GetRValue(bcolor)) / 4,
-		(GetGValue(fcolor) * 3 + GetGValue(bcolor)) / 4,
-		(GetBValue(fcolor) * 3 + GetBValue(bcolor)) / 4
-		);
-}
-
 bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRect const& rc, int& y)
 {
-	COLORREF gray_color = blend_colors(m_style.candidate_text_color, m_style.back_color);
-	COLORREF hilited_gray_color = blend_colors(m_style.hilited_candidate_text_color, m_style.hilited_candidate_back_color);
-
 	bool drawn = false;
 	CSize sz;
 	vector<Text> const& candies(cinfo.candies);
@@ -325,11 +317,11 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 		if (i == cinfo.highlighted)
 		{
 			_HighlightText(dc, rc_out, m_style.hilited_candidate_back_color);
-			dc.SetTextColor(hilited_gray_color);
+			dc.SetTextColor(m_style.hilited_label_text_color);
 		}
 		else
 		{
-			dc.SetTextColor(gray_color);
+			dc.SetTextColor(m_style.label_text_color);
 		}
 		// draw label
 		dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, label_text[i].c_str(), label_text[i].length(), 0);
@@ -339,13 +331,13 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 		{
 			dc.SetTextColor(m_style.hilited_candidate_text_color);
 			dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, cand_text.c_str(), cand_text.length(), 0);
-			dc.SetTextColor(hilited_gray_color);
+			dc.SetTextColor(m_style.hilited_comment_text_color);
 		}
 		else
 		{
 			dc.SetTextColor(m_style.candidate_text_color);
 			dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, cand_text.c_str(), cand_text.length(), 0);
-			dc.SetTextColor(gray_color);
+			dc.SetTextColor(m_style.comment_text_color);
 		}
 		// draw comment text
 		if (!comment_text.empty())

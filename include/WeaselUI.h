@@ -23,12 +23,16 @@ namespace weasel
 		// color scheme
 		int text_color;
 		int candidate_text_color;
+		int label_text_color;
+		int comment_text_color;
 		int back_color;
 		int border_color;
 		int hilited_text_color;
 		int hilited_back_color;
 		int hilited_candidate_text_color;
 		int hilited_candidate_back_color;
+		int hilited_label_text_color;
+		int hilited_comment_text_color;
 
 		UIStyle() : font_face(), 
 			        font_point(0),
@@ -44,12 +48,16 @@ namespace weasel
 					round_corner(0),
 					text_color(0),
 					candidate_text_color(0),
+					label_text_color(0),
+					comment_text_color(0),
 					back_color(0),
 					border_color(0),
 					hilited_text_color(0),
 					hilited_back_color(0),
 					hilited_candidate_text_color(0),
-					hilited_candidate_back_color(0) {}
+					hilited_candidate_back_color(0),
+					hilited_label_text_color(0),
+					hilited_comment_text_color(0) {}
 	};
 
 	class UIImpl;

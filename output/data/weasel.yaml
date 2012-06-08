@@ -2,7 +2,7 @@
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.9.9"
+config_version: "0.10"
 
 style:
   color_scheme: aqua
@@ -43,6 +43,7 @@ preset_color_schemes:
     hilited_back_color: 0x8b4e01
     hilited_candidate_text_color: 0x7ffeff
     hilited_candidate_back_color: 0xa95e01
+    comment_text_color: 0xc69664
 
   luna:
     name: 明月／Luna
@@ -88,6 +89,7 @@ preset_color_schemes:
     hilited_back_color: 0x222222
     hilited_candidate_text_color: 0x92f6da
     hilited_candidate_back_color: 0x333333
+    comment_text_color: 0x606cff
 
   starcraft:
     name: 星際我爭霸／StarCraft

@@ -339,6 +339,15 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	return true;
 }
 
+static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
+{
+	return RGB(
+		(GetRValue(fcolor) * 2 + GetRValue(bcolor)) / 3,
+		(GetGValue(fcolor) * 2 + GetGValue(bcolor)) / 3,
+		(GetBValue(fcolor) * 2 + GetBValue(bcolor)) / 3
+		);
+}
+
 void RimeWithWeaselHandler::_UpdateUIStyle()
 {
 	if (!m_ui) return;
@@ -399,6 +408,15 @@ void RimeWithWeaselHandler::_UpdateUIStyle()
 		{
 			style.hilited_candidate_back_color = style.hilited_back_color;
 		}
+		style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);
+		style.hilited_label_text_color = blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color);
+		style.comment_text_color = style.label_text_color;
+		style.hilited_comment_text_color = style.hilited_label_text_color;
+		if (RimeConfigGetInt(&config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color))
+		{
+			style.hilited_comment_text_color = style.comment_text_color;
+		}
+		RimeConfigGetInt(&config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
 	}
 	RimeConfigClose(&config);
 }
