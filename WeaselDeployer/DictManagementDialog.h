@@ -45,6 +45,6 @@ protected:
 	CButton import_;
 
 	rime::UserDictManager mgr_;
-	rime::UserDictManager::UserDictList dicts_;
+	rime::UserDictList dicts_;
 };
 
