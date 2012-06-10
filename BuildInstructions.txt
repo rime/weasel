@@ -104,6 +104,7 @@ devenv weasel.sln /Build "ReleaseHant|x64"
 copy \code\brise\essay.kct \code\weasel\output\data\
 copy \code\brise\default.yaml \code\weasel\output\data\
 copy \code\brise\preset\*.yaml \code\weasel\output\data\
+copy \code\brise\supplement\*.yaml \code\weasel\output\data\
 
 Voila.
 
