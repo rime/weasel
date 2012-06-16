@@ -436,7 +436,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="weasel.def" />
-    <None Include="..\resource\alpha.ico" />
     <None Include="..\resource\zhung.ico" />
     <None Include="ReadMe.txt" />
   </ItemGroup>

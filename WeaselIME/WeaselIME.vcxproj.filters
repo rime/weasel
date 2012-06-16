@@ -35,9 +35,6 @@
     <None Include="weasel.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\resource\alpha.ico">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="..\resource\zhung.ico">
       <Filter>Resource Files</Filter>
     </None>

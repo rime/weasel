@@ -4,8 +4,9 @@
 //
 #define IDI_ZHUNG                       101
 #define IDI_ALPHA                       102
-#define IDI_DISABLED                    103
-#define IDR_MENU_POPUP                  104
+#define IDI_ENABLED                     103
+#define IDI_DISABLED                    104
+#define IDR_MENU_POPUP                  105
 #define ID_WEASELTRAY_QUIT              40001
 #define ID_WEASELTRAY_DEPLOY            40002
 #define ID_WEASELTRAY_CHECKUPDATE       40003
@@ -21,7 +22,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        105
+#define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40011
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101

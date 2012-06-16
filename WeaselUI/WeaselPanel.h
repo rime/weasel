@@ -39,6 +39,6 @@ private:
 	weasel::UIStyle &m_style;
 
 	CRect m_inputPos;
-	CIcon m_iconZhung;
+	CIcon m_iconEnabled;
 	CIcon m_iconAlpha;
 };

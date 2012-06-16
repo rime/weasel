@@ -4,7 +4,7 @@
 // nasty
 #include "../WeaselServer/resource.h"
 
-static UINT mode_icon[] = { IDI_ZHUNG, IDI_ALPHA, IDI_DISABLED };
+static UINT mode_icon[] = { IDI_ENABLED, IDI_ALPHA, IDI_DISABLED };
 static const WCHAR *mode_label[] = { /*L"中文"*/ NULL, /*L"西文"*/ NULL, L"維護中" };
 
 WeaselTrayIcon::WeaselTrayIcon(weasel::UI &ui)
@@ -20,7 +20,7 @@ BOOL WeaselTrayIcon::Create(HWND hTargetWnd)
 {
 	HMODULE hModule = GetModuleHandle(NULL);
 	CIcon icon;
-	icon.LoadIconW(IDI_ZHUNG);
+	icon.LoadIconW(IDI_ENABLED);
 	BOOL bRet = CSystemTray::Create(hModule, NULL, WM_WEASEL_TRAY_NOTIFY, 
 		WEASEL_IME_NAME, icon, IDR_MENU_POPUP);
 	if (hTargetWnd)

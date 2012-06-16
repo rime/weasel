@@ -2,7 +2,7 @@
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
 
-// for IDI_ZHUNG, IDI_ALPHA
+// for IDI_ENABLED, IDI_ALPHA
 #include "../WeaselServer/resource.h"
 
 using namespace weasel;
@@ -63,7 +63,7 @@ WeaselPanel::WeaselPanel(weasel::UI &ui)
 	m_style.hilited_label_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 	m_style.hilited_comment_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 
-	m_iconZhung.LoadIconW(IDI_ZHUNG, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	m_iconEnabled.LoadIconW(IDI_ENABLED, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconAlpha.LoadIconW(IDI_ALPHA, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 }
 
@@ -363,7 +363,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		if (m_status.ascii_mode)
 			dc.DrawIconEx(0, 0, m_iconAlpha, 0, 0);
 		else
-			dc.DrawIconEx(0, 0, m_iconZhung, 0, 0); 
+			dc.DrawIconEx(0, 0, m_iconEnabled, 0, 0); 
 		return;
 	}
 

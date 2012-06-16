@@ -110,7 +110,6 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_ZHUNG               ICON                    "..\\resource\\zhung.ico"
-IDI_ALPHA               ICON                    "..\\resource\\alpha.ico"
 #endif    // Chinese (P.R.C.) resources
 /////////////////////////////////////////////////////////////////////////////
 
