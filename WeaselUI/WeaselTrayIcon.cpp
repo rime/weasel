@@ -4,11 +4,11 @@
 // nasty
 #include "../WeaselServer/resource.h"
 
-static UINT mode_icon[] = { IDI_ENABLED, IDI_ALPHA, IDI_DISABLED };
-static const WCHAR *mode_label[] = { /*L"中文"*/ NULL, /*L"西文"*/ NULL, L"維護中" };
+static UINT mode_icon[] = { IDI_ENABLED, IDI_ENABLED, IDI_ALPHA, IDI_DISABLED };
+static const WCHAR *mode_label[] = { NULL, /*L"中文"*/ NULL, /*L"西文"*/ NULL, L"維護中" };
 
 WeaselTrayIcon::WeaselTrayIcon(weasel::UI &ui)
-	: m_status(ui.status()), m_mode(ZHUNG)
+	: m_status(ui.status()), m_mode(INITIAL)
 {
 }
 

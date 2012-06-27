@@ -10,7 +10,7 @@ class WeaselTrayIcon : public CSystemTray
 {
 public:
 	enum WeaselTrayMode {
-		ZHUNG, ASCII, DISABLED,
+		INITIAL, ZHUNG, ASCII, DISABLED,
 	};
 
 	WeaselTrayIcon(weasel::UI &ui);
