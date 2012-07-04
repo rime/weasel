@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
+#include <Usp10.h>
 
 // for IDI_ENABLED, IDI_ALPHA
 #include "../WeaselServer/resource.h"
@@ -224,7 +225,7 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 				// zzz
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, y, x + selStart.cx, y + szText.cy);
-				dc.ExtTextOutW(x, y, ETO_CLIPPED | ETO_OPAQUE, &rc_before, str_before.c_str(), str_before.length(), 0);
+				_TextOut(dc, x, y, rc_before, str_before.c_str(), str_before.length());
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			else
@@ -238,7 +239,7 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color);
 				dc.SetTextColor(m_style.hilited_text_color);
 				dc.SetBkColor(m_style.hilited_back_color);
-				dc.ExtTextOutW(x, y, ETO_CLIPPED, &rc_hi, str_hi.c_str(), str_hi.length(), 0);
+				_TextOut(dc, x, y, rc_hi, str_hi.c_str(), str_hi.length());
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
 				x += (selEnd.cx - selStart.cx);
@@ -249,7 +250,7 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, y, x + (szText.cx - selEnd.cx), y + szText.cy);
-				dc.ExtTextOutW(x, y, ETO_CLIPPED | ETO_OPAQUE, &rc_after, str_after.c_str(), str_after.length(), 0);
+				_TextOut(dc, x, y, rc_after, str_after.c_str(), str_after.length());
 				x += (szText.cx - selEnd.cx);
 			}
 			else
@@ -262,7 +263,7 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 		else
 		{
 			CRect rcText(rc.left, y, rc.right, y + szText.cy);
-			dc.ExtTextOutW(rc.left, y, ETO_CLIPPED | ETO_OPAQUE, &rcText, t.c_str(), t.length(), 0);
+			_TextOut(dc, rc.left, y, rcText, t.c_str(), t.length());
 			y += szText.cy;
 		}
 		drawn = true;
@@ -324,26 +325,26 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 			dc.SetTextColor(m_style.label_text_color);
 		}
 		// draw label
-		dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, label_text[i].c_str(), label_text[i].length(), 0);
+		_TextOut(dc, rc_out.left, y, rc_out, label_text[i].c_str(), label_text[i].length());
 		rc_out.DeflateRect(label_width, 0, 0, 0);
 		// draw candidate text
 		if (i == cinfo.highlighted)
 		{
 			dc.SetTextColor(m_style.hilited_candidate_text_color);
-			dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, cand_text.c_str(), cand_text.length(), 0);
+			_TextOut(dc, rc_out.left, y, rc_out, cand_text.c_str(), cand_text.length());
 			dc.SetTextColor(m_style.hilited_comment_text_color);
 		}
 		else
 		{
 			dc.SetTextColor(m_style.candidate_text_color);
-			dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, cand_text.c_str(), cand_text.length(), 0);
+			_TextOut(dc, rc_out.left, y, &rc_out, cand_text.c_str(), cand_text.length());
 			dc.SetTextColor(m_style.comment_text_color);
 		}
 		// draw comment text
 		if (!comment_text.empty())
 		{
 			rc_out.DeflateRect(comment_shift_width, 0, 0, 0);
-			dc.ExtTextOutW(rc_out.left, y, ETO_CLIPPED, &rc_out, comment_text.c_str(), comment_text.length(), 0);
+			_TextOut(dc, rc_out.left, y, rc_out, comment_text.c_str(), comment_text.length());
 		}
 		y += line_height;
 		drawn = true;
@@ -490,4 +491,42 @@ void WeaselPanel::_RepositionWindow()
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
+}
+
+static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
+{
+    SCRIPT_STRING_ANALYSIS ssa;
+    HRESULT hr;
+
+    hr = ScriptStringAnalyse(
+        dc,
+        psz, cch,
+        2 * cch + 16,
+        -1,
+        SSA_GLYPHS|SSA_FALLBACK|SSA_LINK,
+        0,
+        NULL, // control
+        NULL, // state
+        NULL, // piDx
+        NULL,
+        NULL, // pbInClass
+        &ssa);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = ScriptStringOut(
+            ssa, x, y, 0,
+            &rc,
+            0, 0, FALSE);
+    }
+
+	ScriptStringFree(&ssa);
+	return hr;
+}
+
+void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
+{
+	if (FAILED(_TextOutWithFallback(dc, x, y, rc, psz, cch))) {
+		dc.TextOutW(x, y, psz, cch);
+	}
 }
