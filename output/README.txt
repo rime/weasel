@@ -50,8 +50,8 @@ http://code.google.com/p/rimeime/w/list
   * 新特性：碼表方案支持與反查碼混合輸入，無需切換或引導鍵
   * 新特性：碼表方案可在選單中使用字符集過濾開關
   * 新方案：【五筆86】衍生的【五筆・拼音】混合輸入
-　* 新方案：《廣韻》音系的中古漢語全拼、三拼輸入法
-　* 新方案：X-SAMPA 國際音標輸入法
+  * 新方案：《廣韻》音系的中古漢語全拼、三拼輸入法
+  * 新方案：X-SAMPA 國際音標輸入法
   * 更新：【吳語】碼表，審定一些字詞的讀音，統一字形
   * 更新：【朙月拼音】碼表，修正多音字
   * 改進：當前設定的字體缺字時，使用系統後備字體顯示文字
@@ -190,14 +190,14 @@ http://code.google.com/p/rimeime/w/list
     http://input.foruto.com/wu/method.html
     作者 上海閒話abc、吳語越音
   * 【中古全拼／三拼】
-  　採用《廣韻》音系的中古漢語拼音，亦稱「古韻羅馬字」。
+    採用《廣韻》音系的中古漢語拼音，亦稱「古韻羅馬字」。
     韻典網・廣韻 http://ytenx.org/kyonh/
     http://zh.wikipedia.org/wiki/User:Polyhedron/中古漢語拼音
-  　作者 Polyhedron
+    作者 Polyhedron
   * 【X-SAMPA】
     國際音標輸入法
     http://zh.wikipedia.org/wiki/X-SAMPA
-  　作者 Patrick Tschang、佛振
+    作者 Patrick Tschang、佛振
 
 程序設計：
   * 佛振 <chen.sst@gmail.com>
