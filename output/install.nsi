@@ -4,7 +4,7 @@
 !include x64.nsh
 
 !define WEASEL_VERSION 0.9.14
-!define WEASEL_BUILD ${WEASEL_VERSION}.0
+!define WEASEL_BUILD ${WEASEL_VERSION}.1
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
 
