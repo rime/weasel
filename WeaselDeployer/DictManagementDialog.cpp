@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "DictManagementDialog.h"
 #include "Configurator.h"
+#include <WeaselUtility.h>
 #include <boost/format.hpp>
+#include <boost/filesystem.hpp>
 
 DictManagementDialog::DictManagementDialog(rime::Deployer* deployer)
 	: mgr_(deployer)
@@ -53,15 +55,15 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 		MessageBox(L"不知哪裏出錯了，未能完成操作。", L":-(", MB_OK | MB_ICONERROR);
 	}
 	else {
-		WCHAR path[MAX_PATH] = {0};
-		ExpandEnvironmentStrings(L"%AppData%\\Rime\\", path, _countof(path));
-		MultiByteToWideChar(CP_ACP, 0, dicts_[sel].c_str(), -1, path + wcslen(path), _countof(path) - wcslen(path));
-		wcscpy(path + wcslen(path), L".userdb.kct.snapshot");
-		if (_waccess(path, 0) != 0) {
+		boost::filesystem::wpath path(WeaselUserDataPath());
+		WCHAR dict_name[100] = {0};
+		MultiByteToWideChar(CP_ACP, 0, dicts_[sel].c_str(), -1, dict_name, _countof(dict_name));
+		path /= std::wstring(dict_name) + L".userdb.kct.snapshot";
+		if (_waccess(path.wstring().c_str(), 0) != 0) {
 			MessageBox(L"咦，輸出的快照文件找不着了。", L":-(", MB_OK | MB_ICONERROR);
 		}
 		else {
-			std::wstring param = L"/select, \"" + std::wstring(path) + L"\"";
+			std::wstring param = L"/select, \"" + path.wstring() + L"\"";
 			ShellExecute(NULL, L"open", L"explorer.exe", param.c_str(), NULL, SW_SHOWNORMAL);
 		}
 	}

@@ -11,7 +11,7 @@
 static const std::string WeaselLogFilePath()
 {
 	char path[MAX_PATH] = {0};
-	ExpandEnvironmentStringsA("%AppData%\\Rime\\", path, _countof(path));
+	ExpandEnvironmentStringsA("%TEMP%\\", path, _countof(path));
 	size_t len = 0;
 	StringCchLengthA(path, _countof(path), &len);
 	StringCchPrintfA(path + len, _countof(path) - len, "weasel-ime.log");

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include <RimeWithWeasel.h>
+#include <WeaselUtility.h>
 #include <WeaselVersion.h>
-#include <windows.h>
 #include <list>
 #include <set>
 #include <string>
@@ -16,7 +16,7 @@
 static const std::string WeaselLogFilePath()
 {
 	char path[MAX_PATH] = {0};
-	ExpandEnvironmentStringsA("%AppData%\\Rime\\rime.log", path, _countof(path));
+	ExpandEnvironmentStringsA("%TEMP%\\rime.log", path, _countof(path));
 	return path;
 }
 
@@ -33,38 +33,9 @@ static const std::string WeaselLogFilePath()
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
 
-const WCHAR* utf8towcs(const char* utf8_str)
-{
-	const int buffer_len = 4096;
-	static WCHAR buffer[buffer_len];
-	memset(buffer, 0, sizeof(buffer));
-	MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, buffer, buffer_len - 1);
-	return buffer;
-}
-
-int utf8towcslen(const char* utf8_str, int utf8_len)
-{
-	return MultiByteToWideChar(CP_UTF8, 0, utf8_str, utf8_len, NULL, 0);
-}
-
 int expand_ibus_modifier(int m)
 {
 	return (m & 0xff) | ((m & 0xff00) << 16);
-}
-
-static const char* weasel_shared_data_dir() {
-	static char path[MAX_PATH] = {0};
-	GetModuleFileNameA(NULL, path, _countof(path));
-	std::string str_path(path);
-	size_t k = str_path.find_last_of("/\\");
-	strcpy(path + k + 1, "data");
-	return path;
-}
-
-static const char* weasel_user_data_dir() {
-	static char path[MAX_PATH] = {0};
-	ExpandEnvironmentStringsA("%AppData%\\Rime", path, _countof(path));
-	return path;
 }
 
 RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)

@@ -7,6 +7,7 @@
 #include "DictManagementDialog.h"
 #include <WeaselCommon.h>
 #include <WeaselIPC.h>
+#include <WeaselUtility.h>
 #include <WeaselVersion.h>
 #pragma warning(disable: 4005)
 #pragma warning(disable: 4995)
@@ -18,31 +19,6 @@
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
 #pragma warning(default: 4005)
-
-
-const WCHAR* utf8towcs(const char* utf8_str)
-{
-	const int buffer_len = 1024;
-	static WCHAR buffer[buffer_len];
-	memset(buffer, 0, sizeof(buffer));
-	MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, buffer, buffer_len - 1);
-	return buffer;
-}
-
-static const char* weasel_shared_data_dir() {
-	static char path[MAX_PATH] = {0};
-	GetModuleFileNameA(NULL, path, _countof(path));
-	std::string str_path(path);
-	size_t k = str_path.find_last_of("/\\");
-	strcpy(path + k + 1, "data");
-	return path;
-}
-
-static const char* weasel_user_data_dir() {
-	static char path[MAX_PATH] = {0};
-	ExpandEnvironmentStringsA("%AppData%\\Rime", path, _countof(path));
-	return path;
-}
 
 
 Configurator::Configurator()

@@ -7,6 +7,7 @@
 #include <WeaselIPC.h>
 #include <WeaselUI.h>
 #include <RimeWithWeasel.h>
+#include <WeaselUtility.h>
 #include <winsparkle.h>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -85,9 +86,7 @@ int WeaselServerApp::Run()
 void WeaselServerApp::SetupMenuHandlers()
 {
 	WCHAR exe_path[MAX_PATH] = {0};
-	WCHAR user_config_path[MAX_PATH] = {0};
 	GetModuleFileNameW(GetModuleHandle(NULL), exe_path, _countof(exe_path));
-	ExpandEnvironmentStringsW(L"%AppData%\\Rime", user_config_path, _countof(user_config_path));
 	std::wstring install_dir(exe_path);
 	size_t pos = install_dir.find_last_of(L"\\");
 	install_dir.resize(pos);
@@ -100,9 +99,8 @@ void WeaselServerApp::SetupMenuHandlers()
 	m_server.AddMenuHandler(ID_WEASELTRAY_FORUM, boost::lambda::bind(&open, L"http://tieba.baidu.com/f?kw=rime"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);
 	m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, boost::lambda::bind(&explore, install_dir));
-	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, boost::lambda::bind(&explore, std::wstring(user_config_path)));
+	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, boost::lambda::bind(&explore, WeaselUserDataPath()));
 }
-
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {

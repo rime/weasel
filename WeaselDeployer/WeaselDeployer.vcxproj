@@ -90,6 +90,7 @@
     <ClInclude Include="WeaselDeployer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\RimeWithWeasel\WeaselUtility.cpp" />
     <ClCompile Include="Configurator.cpp" />
     <ClCompile Include="DictManagementDialog.cpp" />
     <ClCompile Include="stdafx.cpp">

@@ -65,6 +65,9 @@
     <ClCompile Include="DictManagementDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\RimeWithWeasel\WeaselUtility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WeaselDeployer.rc">

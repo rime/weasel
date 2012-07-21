@@ -1,13 +1,14 @@
 // WeaselDeployer.cpp : Defines the entry point for the application.
 //
 #include "stdafx.h"
+#include <WeaselUtility.h>
 #include "WeaselDeployer.h"
 #include "Configurator.h"
 
 const std::string WeaselDeployerLogFilePath()
 {
 	char path[MAX_PATH] = {0};
-	ExpandEnvironmentStringsA("%AppData%\\Rime\\deployer.log", path, _countof(path));
+	ExpandEnvironmentStringsA("%TEMP%\\deployer.log", path, _countof(path));
 	return path;
 }
 
@@ -37,11 +38,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	ATLASSERT(SUCCEEDED(hRes));
 
 	// this should be done before any logging
-	{
-		WCHAR path[MAX_PATH] = {0};
-		ExpandEnvironmentStrings(L"%AppData%\\Rime", path, _countof(path));
-		CreateDirectory(path, NULL);
-	}
+	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 
 	int ret = 0;
 	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerExclusiveMutex");
