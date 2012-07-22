@@ -10,15 +10,15 @@ if errorlevel 2 goto win7_x64_uninstall
 if errorlevel 1 goto xp_uninstall
 
 :win7_uninstall
-wscript elevate.js rundll32 "%CD%\weasel.ime" uninstall
+wscript elevate.js WeaselSetup.exe /u
 goto exit
 
 :win7_x64_uninstall
-wscript elevate.js rundll32 "%CD%\weaselx64.ime" uninstall
+wscript elevate.js WeaselSetupx64.exe /u
 goto exit
 
 :xp_uninstall
-rundll32 "%CD%\weasel.ime" uninstall
+WeaselSetup.exe /u
 goto exit
 
 :exit

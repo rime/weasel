@@ -3,8 +3,8 @@
 !include LogicLib.nsh
 !include x64.nsh
 
-!define WEASEL_VERSION 0.9.14
-!define WEASEL_BUILD ${WEASEL_VERSION}.2
+!define WEASEL_VERSION 0.9.15
+!define WEASEL_BUILD ${WEASEL_VERSION}.0
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
 
@@ -93,6 +93,8 @@ Section "Weasel"
   File "weaseltx64.ime"
   File "WeaselDeployer.exe"
   File "WeaselServer.exe"
+  File "WeaselSetup.exe"
+  File "WeaselSetupx64.exe"
   File "opencc.dll"
   File "WinSparkle.dll"
   File "zlib1.dll"
@@ -115,17 +117,17 @@ Section "Weasel"
   SetOutPath $INSTDIR
   
   ; test /T flag for zh_TW locale
-  StrCpy $R2  "weasel"
+  StrCpy $R2  "/s"
   ${GetParameters} $R0
   ClearErrors
   ${GetOptions} $R0 "/T" $R1
   IfErrors +2 0
-  StrCpy $R2 "weaselt"
+  StrCpy $R2 "/t"
 
   ${If} ${RunningX64}
-    ExecWait 'rundll32 "$INSTDIR\$R2x64.ime" install'
+    ExecWait '"$INSTDIR\WeaselSetupx64.exe" $R2'
   ${Else}
-    ExecWait 'rundll32 "$INSTDIR\$R2.ime" install'
+    ExecWait '"$INSTDIR\WeaselSetup.exe" $R2'
   ${EndIf}
 
   ; run as user...
@@ -161,9 +163,9 @@ Section "Uninstall"
   ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
 
   ${If} ${RunningX64}
-    ExecWait 'rundll32 "$INSTDIR\weaselx64.ime" uninstall'
+    ExecWait '"$INSTDIR\WeaselSetupx64.exe" /u'
   ${Else}
-    ExecWait 'rundll32 "$INSTDIR\weasel.ime" uninstall'
+    ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
   ${EndIf}
 
   ; Remove registry keys
