@@ -123,8 +123,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	// command line option /q stops the running server
 	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);
-	bool restart = !wcscmp(L"/restart", lpstrCmdLine);
-	if (quit || restart)
+	//bool restart = !wcscmp(L"/restart", lpstrCmdLine);
+	//if (quit || restart)
 	{
 		weasel::Client client;
 		if (client.Connect())

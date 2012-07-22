@@ -1,7 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
-#include <WeaselVersion.h>
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -45,8 +44,20 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-// Get updates from this appcast feed:
-FeedURL APPCAST {"http://rimeime.googlecode.com/svn/trunk/weasel/update/appcast.xml"}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// APPCAST
+//
+
+FEEDURL APPCAST 
+BEGIN
+    0x7468, 0x7074, 0x2f3a, 0x722f, 0x6d69, 0x6965, 0x656d, 0x672e, 0x6f6f, 
+    0x6c67, 0x6365, 0x646f, 0x2e65, 0x6f63, 0x2f6d, 0x7673, 0x2f6e, 0x7274, 
+    0x6e75, 0x2f6b, 0x6577, 0x7361, 0x6c65, 0x752f, 0x6470, 0x7461, 0x2f65, 
+    0x7061, 0x6370, 0x7361, 0x2e74, 0x6d78, "\154" 
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -54,8 +65,8 @@ FeedURL APPCAST {"http://rimeime.googlecode.com/svn/trunk/weasel/update/appcast.
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION WEASEL_VERSION_NUM
- PRODUCTVERSION WEASEL_VERSION_NUM
+ FILEVERSION 0,9,14,2
+ PRODUCTVERSION 0,9,14,2
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -73,12 +84,12 @@ BEGIN
             VALUE "Comments", "Powered by RIME | 中州韻輸入法引擎"
             VALUE "CompanyName", "式恕堂"
             VALUE "FileDescription", "小狼毫算法服務"
-            VALUE "FileVersion", WEASEL_VERSION_STR
+            VALUE "FileVersion", "0.9.14.2"
             VALUE "InternalName", "WeaselServer"
             VALUE "LegalCopyright", "版權所無 式恕堂 2012"
             VALUE "OriginalFilename", "WeaselServer.exe"
             VALUE "ProductName", "小狼毫"
-            VALUE "ProductVersion", WEASEL_VERSION_STR
+            VALUE "ProductVersion", "0.9.14.2"
         END
     END
     BLOCK "VarFileInfo"
@@ -109,16 +120,18 @@ IDR_MENU_POPUP MENU
 BEGIN
     POPUP "WeaselTray"
     BEGIN
-        MENUITEM "輸入法設定 (&S)",                 ID_WEASELTRAY_SETTINGS
-        MENUITEM "查看配置文件 (&C)",               ID_WEASELTRAY_USERCONFIG
-        MENUITEM "用戶詞典管理 (&D)",               ID_WEASELTRAY_DICT_MANAGEMENT
-        MENUITEM "在線文檔 (&W)",                   ID_WEASELTRAY_WIKI
-        MENUITEM "Rime主頁 (&H)",                   ID_WEASELTRAY_HOMEPAGE
-        MENUITEM "Rime貼吧 (&T)",                   ID_WEASELTRAY_FORUM
-        MENUITEM "檢查新版本 (&U)",                 ID_WEASELTRAY_CHECKUPDATE
+        MENUITEM "輸入法設定 (&S)",                  ID_WEASELTRAY_SETTINGS
+        MENUITEM "用戶詞典管理 (&D)",                 ID_WEASELTRAY_DICT_MANAGEMENT
         MENUITEM SEPARATOR
+        MENUITEM "用戶文件夾 (&C)",                  ID_WEASELTRAY_USERCONFIG
+        MENUITEM "程序文件夾 (&P)",                  ID_WEASELTRAY_INSTALLDIR
+        MENUITEM SEPARATOR
+        MENUITEM "幫助文檔 (&H)",                   ID_WEASELTRAY_WIKI
+        MENUITEM "Rime貼吧 (&T)",                 ID_WEASELTRAY_FORUM
+        MENUITEM SEPARATOR
+        MENUITEM "檢查新版本 (&U)",                  ID_WEASELTRAY_CHECKUPDATE
         MENUITEM "重新部署 (&R)",                   ID_WEASELTRAY_DEPLOY
-        MENUITEM "退出 (&Q)",                       ID_WEASELTRAY_QUIT
+        MENUITEM "退出 (&Q)",                     ID_WEASELTRAY_QUIT
     END
 END
 
