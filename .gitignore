@@ -2,11 +2,13 @@ Debug/
 Release/
 ReleaseHant/
 /output/*.exe
+/output/*.dll
 /output/*.ime
 /output/data/*.kct
 /output/data/*.yaml
 /output/archives
 /lib/*.lib
+/include/glog
 /ipch
 weasel.props
 *.user

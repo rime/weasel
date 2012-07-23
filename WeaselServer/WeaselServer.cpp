@@ -13,6 +13,11 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/scoped_ptr.hpp>
 
+#define GLOG_NO_ABBREVIATED_SEVERITIES
+#pragma warning(disable : 4244)
+#include <glog/logging.h>
+#pragma warning(default : 4244)
+
 CAppModule _Module;
 
 
@@ -120,6 +125,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
+
+	google::InitGoogleLogging("weasel.log");
 
 	// command line option /q stops the running server
 	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);

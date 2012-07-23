@@ -89,12 +89,12 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
 	if (!hMutex)
 	{
-		EZLOGGERPRINT("Error creating WeaselDeployerMutex.");
+		LOG(ERROR) << "Error creating WeaselDeployerMutex.";
 		return 1;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		EZLOGGERPRINT("Warning: another deployer process is running; aborting operation.");
+		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
 		if (report_errors)
 		{
@@ -106,7 +106,7 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 	weasel::Client client;
 	if (client.Connect())
 	{
-		EZLOGGERPRINT("Turning WeaselServer into maintenance mode.");
+		LOG(INFO) << "Turning WeaselServer into maintenance mode.";
 		client.StartMaintenance();
 	}
 
@@ -121,7 +121,7 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 
 	if (client.Connect())
 	{
-		EZLOGGERPRINT("Resuming service.");
+		LOG(INFO) << "Resuming service.";
 		client.EndMaintenance();
 	}
 	return 0;
@@ -131,12 +131,12 @@ int Configurator::DictManagement() {
 	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
 	if (!hMutex)
 	{
-		EZLOGGERPRINT("Error creating WeaselDeployerMutex.");
+		LOG(ERROR) << "Error creating WeaselDeployerMutex.";
 		return 1;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		EZLOGGERPRINT("Warning: another deployer process is running; aborting operation.");
+		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
 		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
 		return 1;
@@ -145,7 +145,7 @@ int Configurator::DictManagement() {
 	weasel::Client client;
 	if (client.Connect())
 	{
-		EZLOGGERPRINT("Turning WeaselServer into maintenance mode.");
+		LOG(INFO) << "Turning WeaselServer into maintenance mode.";
 		client.StartMaintenance();
 	}
 
@@ -159,7 +159,7 @@ int Configurator::DictManagement() {
 
 	if (client.Connect())
 	{
-		EZLOGGERPRINT("Resuming service.");
+		LOG(INFO) << "Resuming service.";
 		client.EndMaintenance();
 	}
 	return 0;

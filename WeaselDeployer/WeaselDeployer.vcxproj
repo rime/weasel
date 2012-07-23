@@ -73,7 +73,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>librime.lib;libyaml-cppmt.lib;kyotocabinet.lib;zlib.lib;opencc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>librime.lib;libglog.lib;libyaml-cppmt.lib;kyotocabinet.lib;zlib.lib;opencc.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage\lib;$(SolutionDir)\..\librime\vcbuild\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(SolutionDir)\output\$(ProjectName).exe</OutputFile>
     </Link>

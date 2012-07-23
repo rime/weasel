@@ -7,32 +7,10 @@
 #include <ResponseParser.h>
 #include "WeaselIME.h"
 
-
-static const std::string WeaselLogFilePath()
-{
-	char path[MAX_PATH] = {0};
-	ExpandEnvironmentStringsA("%TEMP%\\", path, _countof(path));
-	size_t len = 0;
-	StringCchLengthA(path, _countof(path), &len);
-	StringCchPrintfA(path + len, _countof(path) - len, "weasel-ime.log");
-	return path;
-}
-
-#define EZLOGGER_OUTPUT_FILENAME WeaselLogFilePath()
-#define EZLOGGER_REPLACE_EXISTING_LOGFILE_
-
 // logging disabled
 #define EZDBGONLYLOGGERVAR(...)
 #define EZDBGONLYLOGGERPRINT(...)
 #define EZDBGONLYLOGGERFUNCTRACKER
-
-//#define EZLOGGER_IMPLEMENT_DEBUGLOGGING
-//#pragma warning(disable: 4995)
-//#pragma warning(disable: 4996)
-//#include <ezlogger/ezlogger_headers.hpp>
-//#pragma warning(default: 4996)
-//#pragma warning(default: 4995)
-
 
 HINSTANCE WeaselIME::s_hModule = 0;
 HIMCMap WeaselIME::s_instances;

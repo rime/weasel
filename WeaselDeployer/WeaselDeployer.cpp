@@ -37,7 +37,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
 
-	// this should be done before any logging
+	google::InitGoogleLogging("weasel.log");
+
 	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 
 	int ret = 0;
@@ -67,7 +68,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 static int Run(LPTSTR lpCmdLine)
 {
-	EZLOGGERPRINT("WeaselDeployer reporting.");
+	LOG(INFO) << "WeaselDeployer reporting.";
 
 	Configurator configurator;
 	configurator.Initialize();

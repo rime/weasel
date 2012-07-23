@@ -9,29 +9,14 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 
+#define GLOG_NO_ABBREVIATED_SEVERITIES
+#pragma warning(disable : 4244)
+#include <glog/logging.h>
+#pragma warning(default : 4244)
+
 #pragma warning(disable: 4005)
 #include <rime_api.h>
 #pragma warning(default: 4005)
-
-static const std::string WeaselLogFilePath()
-{
-	char path[MAX_PATH] = {0};
-	ExpandEnvironmentStringsA("%TEMP%\\rime.log", path, _countof(path));
-	return path;
-}
-
-#define EZLOGGER_OUTPUT_FILENAME WeaselLogFilePath()
-#define EZLOGGER_REPLACE_EXISTING_LOGFILE_
-
-// logging enabled
-//#define EZDBGONLYLOGGERPRINT(...)
-//#define EZDBGONLYLOGGERFUNCTRACKER
-
-#pragma warning(disable: 4995)
-#pragma warning(disable: 4996)
-#include <ezlogger/ezlogger_headers.hpp>
-#pragma warning(default: 4996)
-#pragma warning(default: 4995)
 
 int expand_ibus_modifier(int m)
 {
@@ -54,7 +39,7 @@ void RimeWithWeaselHandler::Initialize()
 	{
 		 return;
 	}
-	EZLOGGERPRINT("Initializing la rime.");
+	LOG(INFO) << "Initializing la rime.";
 	RimeTraits weasel_traits;
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
@@ -80,7 +65,7 @@ void RimeWithWeaselHandler::Finalize()
 {
 	m_active_session = 0;
 	m_disabled = true;
-	EZLOGGERPRINT("Finalizing la rime.");
+	LOG(INFO) << "Finalizing la rime.";
 	RimeFinalize();
 }
 
@@ -88,7 +73,7 @@ UINT RimeWithWeaselHandler::FindSession(UINT session_id)
 {
 	if (m_disabled) return 0;
 	bool found = RimeFindSession(session_id);
-	EZDBGONLYLOGGERPRINT("Find session: session_id = 0x%x, found = %d", session_id, found);
+	DLOG(INFO) << "Find session: session_id = " << session_id << ", found = " << found;
 	return found ? session_id : 0;
 }
 
@@ -96,12 +81,12 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 {
 	if (m_disabled)
 	{
-		EZDBGONLYLOGGERPRINT("Trying to resume service.");
+		DLOG(INFO) << "Trying to resume service.";
 		EndMaintenance();
 		if (m_disabled) return 0;
 	}
 	UINT session_id = RimeCreateSession();
-	EZDBGONLYLOGGERPRINT("Add session: created session_id = 0x%x", session_id);
+	DLOG(INFO) << "Add session: created session_id = 0x%x" << session_id;
 	// show session's welcome message :-) if any
 	_UpdateUI(session_id);
 	m_active_session = session_id;
@@ -112,7 +97,7 @@ UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 {
 	if (m_ui) m_ui->Hide();
 	if (m_disabled) return 0;
-	EZDBGONLYLOGGERPRINT("Remove session: session_id = 0x%x", session_id);
+	DLOG(INFO) << "Remove session: session_id = 0x%x" << session_id;
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
 	m_active_session = 0;
@@ -121,8 +106,8 @@ UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 
 BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer)
 {
-	EZDBGONLYLOGGERPRINT("Process key event: keycode = 0x%x, mask = 0x%x, session_id = 0x%x", 
-		keyEvent.keycode, keyEvent.mask, session_id);
+	DLOG(INFO) << "Process key event: keycode = " << keyEvent.keycode << ", mask = " << keyEvent.mask
+		 << ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
 	bool taken = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask)); 
 	_Respond(session_id, buffer);
@@ -133,7 +118,7 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 
 void RimeWithWeaselHandler::FocusIn(UINT session_id)
 {
-	EZDBGONLYLOGGERPRINT("Focus in: session_id = 0x%x", session_id);
+	DLOG(INFO) << "Focus in: session_id = 0x%x" << session_id;
 	if (m_disabled) return;
 	_UpdateUI(session_id);
 	m_active_session = session_id;
@@ -141,15 +126,15 @@ void RimeWithWeaselHandler::FocusIn(UINT session_id)
 
 void RimeWithWeaselHandler::FocusOut(UINT session_id)
 {
-	EZDBGONLYLOGGERPRINT("Focus out: session_id = 0x%x", session_id);
+	DLOG(INFO) << "Focus out: session_id = 0x%x" << session_id;
 	if (m_ui) m_ui->Hide();
 	m_active_session = 0;
 }
 
 void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 {
-	EZDBGONLYLOGGERPRINT("Update input position: (%d, %d), session_id = 0x%x, m_active_session = 0x%x", 
-		rc.left, rc.top, session_id, m_active_session);
+	DLOG(INFO) << "Update input position: (" << rc.left << ", " << rc.top
+		<< "), session_id = " << session_id << ", m_active_session = " << m_active_session;
 	if (m_ui) m_ui->UpdateInputPosition(rc);
 	if (m_disabled) return;
 	if (m_active_session != session_id)

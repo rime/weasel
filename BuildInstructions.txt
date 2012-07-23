@@ -4,10 +4,9 @@
 ** Preparation
 
 Assume we already have a default installation of Visual Studio 2010.
-If you are building Weasel with Visual Studio 2008, extra changes to some script files are needed.
 
 Install tools: svn, cmake.
-Fetch source packages: boost(1.47.0), gtest(1.6.0), yaml-cpp(0.2.6), kyotocabinet(1.2.70)
+Fetch source packages: boost(1.47.0), glog(0.3.2) ,gtest(1.6.0), yaml-cpp(0.2.6), kyotocabinet(1.2.70)
 
 ** Set environment variables
 
@@ -28,6 +27,11 @@ svn checkout https://rimeime.googlecode.com/svn/trunk/weasel --username YOUR_ACC
 cd \code\boost_1_47_0
 bjam toolset=msvc-10.0 variant=release link=static threading=multi runtime-link=static stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
 bjam toolset=msvc-10.0 variant=release link=static threading=multi runtime-link=static address-model=64 --stagedir=stage_x64 stage --with-date_time --with-filesystem --with-system --with-regex --with-signals --with-thread
+
+** Build google-glog
+
+cd \code\glog-0.3.2
+devenv google-glog.sln /Build Release
 
 ** Build GTest
 
@@ -71,6 +75,9 @@ move kcwin32 \code\
 
 ** Build librime
 
+xcopy /S /I \code\glog-0.3.2\src\windows\glog \code\librime\thirdparty\include\glog\
+copy \code\glog-0.3.2\Release\libglog.lib \code\librime\thirdparty\lib\
+
 xcopy /S /I \code\gtest-1.6.0\include\gtest \code\librime\thirdparty\include\gtest\
 copy \code\gtest-1.6.0\vcbuild\Release\gtest*.lib \code\librime\thirdparty\lib\
 
@@ -88,6 +95,10 @@ That will make a release build for librime.
 ** Build weasel
 
 Edit weasel\weasel.vsprops.template, save it to weasel\weasel.vsprops .
+
+xcopy /S /I \code\glog-0.3.2\src\windows\glog \code\weasel\include\glog\
+copy \code\glog-0.3.2\Release\libglog.lib \code\weasel\lib\
+copy \code\glog-0.3.2\Release\libglog.dll \code\weasel\output\
 
 copy \code\yaml-cpp\vcbuild\Release\libyaml-cppmt.lib \code\weasel\lib\
 copy \code\kcwin32\lib\*.lib \code\weasel\lib\
