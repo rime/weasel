@@ -4,13 +4,7 @@
 #include <WeaselUtility.h>
 #include "WeaselDeployer.h"
 #include "Configurator.h"
-
-const std::string WeaselDeployerLogFilePath()
-{
-	char path[MAX_PATH] = {0};
-	ExpandEnvironmentStringsA("%TEMP%\\deployer.log", path, _countof(path));
-	return path;
-}
+#include <rime_api.h>
 
 CAppModule _Module;
 
@@ -37,7 +31,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
 
-	google::InitGoogleLogging("weasel.log");
+	RimeSetupLogging("rime.weasel");
 
 	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 
