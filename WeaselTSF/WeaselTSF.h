@@ -1,22 +1,83 @@
-// The following ifdef block is the standard way of creating macros which make exporting 
-// from a DLL simpler. All files within this DLL are compiled with the WEASELTSF_EXPORTS
-// symbol defined on the command line. this symbol should not be defined on any project
-// that uses this DLL. This way any other project whose source files include this file see 
-// WEASELTSF_API functions as being imported from a DLL, whereas this DLL sees symbols
-// defined with this macro as being exported.
-#ifdef WEASELTSF_EXPORTS
-#define WEASELTSF_API __declspec(dllexport)
-#else
-#define WEASELTSF_API __declspec(dllimport)
-#endif
+#pragma once
 
-// This class is exported from the WeaselTSF.dll
-class WEASELTSF_API CWeaselTSF {
+#include "Globals.h"
+#include "WeaselIPC.h"
+
+class WeaselTSF:
+	public ITfTextInputProcessor,
+	public ITfThreadMgrEventSink,
+	public ITfTextEditSink,
+	public ITfKeyEventSink,
+	public ITfEditSession
+{
 public:
-	CWeaselTSF(void);
-	// TODO: add your methods here.
+	WeaselTSF();
+	~WeaselTSF();
+
+	/* IUnknown */
+	STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+	STDMETHODIMP_(ULONG) AddRef();
+	STDMETHODIMP_(ULONG) Release();
+
+	/* ITfTextInputProcessor */
+	STDMETHODIMP Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId);
+	STDMETHODIMP Deactivate();
+
+	/* ITfThreadMgrEventSink */
+	STDMETHODIMP OnInitDocumentMgr(ITfDocumentMgr *pDocMgr);
+	STDMETHODIMP OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr);
+	STDMETHODIMP OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus);
+	STDMETHODIMP OnPushContext(ITfContext *pContext);
+	STDMETHODIMP OnPopContext(ITfContext *pContext);
+
+	/* ITfTextEditSink */
+	STDMETHODIMP OnEndEdit(ITfContext *pic, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord);
+
+	/* ITfKeyEventSink */
+	STDMETHODIMP OnSetFocus(BOOL fForeground);
+	STDMETHODIMP OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParm, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten);
+
+	/* ITfEditSession */
+	STDMETHODIMP DoEditSession(TfEditCookie ec);
+	
+	// Compartment
+    BOOL _IsKeyboardDisabled();
+    BOOL _IsKeyboardOpen();
+    HRESULT _SetKeyboardOpen(BOOL fOpen);
+
+private:
+	/* TSF Related */
+	BOOL _InitThreadMgrEventSink();
+	void _UninitThreadMgrEventSink();
+
+	BOOL _InitTextEditSink(ITfDocumentMgr *pDocMgr);
+
+	BOOL _InitKeyEventSink();
+	void _UninitKeyEventSink();
+
+	BOOL _InitPreservedKey();
+	void _UninitPreservedKey();
+	
+	BOOL _InsertText(ITfContext *pContext, const WCHAR *pchText, ULONG cchText);
+	BOOL _IsKeyEaten(WPARAM wParam);
+
+	ITfThreadMgr *_pThreadMgr;
+	TfClientId _tfClientId;
+	DWORD _dwThreadMgrEventSinkCookie;
+
+	ITfContext *_pTextEditSinkContext;
+	DWORD _dwTextEditSinkCookie;
+
+	ITfContext *_pEditSessionContext;
+	const WCHAR *_pEditSessionText;
+	ULONG _cEditSessionText;
+
+	LONG _cRef;	// COM ref count
+
+	/* Weasel Related */
+	weasel::Client m_client;
 };
-
-extern WEASELTSF_API int nWeaselTSF;
-
-WEASELTSF_API int fnWeaselTSF(void);

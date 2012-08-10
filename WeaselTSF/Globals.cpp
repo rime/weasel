@@ -1,0 +1,16 @@
+#include "stdafx.h"
+#include "Globals.h"
+
+HINSTANCE g_hInst;
+
+LONG g_cRefDll = -1;
+
+CRITICAL_SECTION g_cs;
+
+// {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
+static const GUID c_clsidTextService = 
+{ 0xa3f4cded, 0xb1e9, 0x41ee, { 0x9c, 0xa6, 0x7b, 0x4d, 0xd, 0xe6, 0xcb, 0xa } };
+
+// {3D02CAB6-2B8E-4781-BA20-1C9267529467}
+static const GUID c_guidProfile = 
+{ 0x3d02cab6, 0x2b8e, 0x4781, { 0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67 } };
