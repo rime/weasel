@@ -335,6 +335,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Compartment.cpp" />
+    <ClCompile Include="Composition.cpp" />
     <ClCompile Include="dllmain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </PrecompiledHeader>
@@ -382,6 +383,7 @@
     <ClCompile Include="WeaselTSF.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EditSession.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="KeyEvent.h" />
     <ClInclude Include="Register.h" />

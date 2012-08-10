@@ -7,6 +7,7 @@ class WeaselTSF:
 	public ITfTextInputProcessor,
 	public ITfThreadMgrEventSink,
 	public ITfTextEditSink,
+	public ITfTextLayoutSink,
 	public ITfKeyEventSink,
 	public ITfEditSession
 {
@@ -33,6 +34,9 @@ public:
 	/* ITfTextEditSink */
 	STDMETHODIMP OnEndEdit(ITfContext *pic, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord);
 
+	/* ITfTextLayoutSink */
+	STDMETHODIMP OnLayoutChange(ITfContext *pContext, TfLayoutCode lcode, ITfContextView *pContextView);
+
 	/* ITfKeyEventSink */
 	STDMETHODIMP OnSetFocus(BOOL fForeground);
 	STDMETHODIMP OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
@@ -48,6 +52,11 @@ public:
     BOOL _IsKeyboardDisabled();
     BOOL _IsKeyboardOpen();
     HRESULT _SetKeyboardOpen(BOOL fOpen);
+
+	BOOL _IsComposing();
+	void _SetComposition(ITfComposition *pComposition);
+	void _SetCompositionPosition(LONG lLeft, LONG lTop);
+	BOOL _UpdateCompositionWindow(ITfContext *pContext);
 
 private:
 	/* TSF Related */
@@ -70,11 +79,13 @@ private:
 	DWORD _dwThreadMgrEventSinkCookie;
 
 	ITfContext *_pTextEditSinkContext;
-	DWORD _dwTextEditSinkCookie;
+	DWORD _dwTextEditSinkCookie, _dwTextLayoutSinkCookie;
 
 	ITfContext *_pEditSessionContext;
 	const WCHAR *_pEditSessionText;
 	ULONG _cEditSessionText;
+
+	BOOL _bCompositing;
 
 	LONG _cRef;	// COM ref count
 

@@ -20,6 +20,10 @@ BOOL WeaselTSF::_IsKeyEaten(WPARAM wParam)
 
 STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 {
+	if (fForeground)
+		m_client.FocusIn();
+	else
+		m_client.FocusOut();
 	return S_OK;
 }
 
@@ -52,6 +56,13 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lPar
 
 	if (ok && !commit.empty())
 		_InsertText(pContext, commit.c_str(), commit.length());
+	if (!status.composing)
+		_bCompositing = FALSE;
+	else if (status.composing && !_bCompositing)
+	{
+		_bCompositing = TRUE;
+		_UpdateCompositionWindow(pContext);
+	}
 
 	*pfEaten = (BOOL) accepted;
 
