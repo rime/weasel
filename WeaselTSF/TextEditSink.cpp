@@ -1,6 +1,17 @@
 #include "stdafx.h"
 #include "WeaselTSF.h"
 
+static BOOL IsRangeCovered(TfEditCookie ec, ITfRange *pRangeTest, ITfRange *pRangeCover)
+{
+	LONG lResult;
+
+	if (pRangeCover->CompareStart(ec, pRangeTest, TF_ANCHOR_START, &lResult) != S_OK || lResult > 0)
+		return FALSE;
+	if (pRangeCover->CompareEnd(ec, pRangeTest, TF_ANCHOR_END, &lResult) != S_OK || lResult < 0)
+		return FALSE;
+	return TRUE;
+}
+
 STDAPI WeaselTSF::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord)
 {
 	BOOL fSelectionChanged;
@@ -10,6 +21,23 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEd
 	/* did the selection change? */
 	if (pEditRecord->GetSelectionStatus(&fSelectionChanged) == S_OK && fSelectionChanged)
 	{
+		if (_IsComposing())
+		{
+			/* if the caret moves out of composition range, stop the composition */
+			TF_SELECTION tfSelection;
+			ULONG cFetched;
+
+			if (pContext->GetSelection(ecReadOnly, TF_DEFAULT_SELECTION, 1, &tfSelection, &cFetched) == S_OK && cFetched == 1)
+			{
+				ITfRange *pRangeComposition;
+				if (_pComposition->GetRange(&pRangeComposition) == S_OK)
+				{
+					if (!IsRangeCovered(ecReadOnly, tfSelection.range, pRangeComposition))
+						_EndComposition(pContext);
+					pRangeComposition->Release();
+				}
+			}
+		}
 	}
 
 	/* text modification? */
@@ -26,6 +54,9 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEd
 
 STDAPI WeaselTSF::OnLayoutChange(ITfContext *pContext, TfLayoutCode lcode, ITfContextView *pContextView)
 {
+	if (!_IsComposing())
+		return S_OK;
+
 	if (pContext != _pTextEditSinkContext)
 		return S_OK;
 

@@ -43,7 +43,8 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lPar
 	if (!ConvertKeyEvent(wParam, lParam, lpbKeyState, ke))
 	{
 		// unknown key event
-		return FALSE;
+		*pfEaten = FALSE;
+		return S_OK;
 	}
 
 	accepted = m_client.ProcessKeyEvent(ke);
@@ -54,16 +55,28 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lPar
 	weasel::ResponseParser parser(&commit, NULL, &status);
 	bool ok = m_client.GetResponseData(boost::ref(parser));
 
-	if (ok && !commit.empty())
-		_InsertText(pContext, commit.c_str(), commit.length());
-	if (!status.composing)
-		_bCompositing = FALSE;
-	else if (status.composing && !_bCompositing)
+	if (ok)
 	{
-		_bCompositing = TRUE;
-		_UpdateCompositionWindow(pContext);
+		if (status.composing && !_IsComposing())
+		{
+			if (!_fCUASWorkaroundTested)
+			{
+				/* Test if we need to apply the workaround */
+				_UpdateCompositionWindow(pContext);
+			}
+			else if (!_fCUASWorkaroundEnabled)
+			{
+				/* Workaround not applied, update candidate window position at this point. */
+				_UpdateCompositionWindow(pContext);
+			}
+			_StartComposition(pContext);
+		}
+		else if (!status.composing && _IsComposing())
+			_EndComposition(pContext);
+		if (!commit.empty())
+			_InsertText(pContext, commit.c_str(), commit.length());
 	}
-
+	
 	*pfEaten = (BOOL) accepted;
 
 	return S_OK;
@@ -73,7 +86,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
 {
 	*pfEaten = TRUE;
 	return S_OK;
-}
+} 
 
 STDAPI WeaselTSF::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {

@@ -87,7 +87,9 @@ WeaselTSF::WeaselTSF()
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 
-	_bCompositing = FALSE;
+	_pComposition = NULL;
+
+	_fCUASWorkaroundTested = _fCUASWorkaroundEnabled = FALSE;
 
 	DllAddRef();
 }
@@ -114,6 +116,8 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void **ppvObject)
 		*ppvObject = (ITfTextLayoutSink *) this;
 	else if (IsEqualIID(riid, IID_ITfKeyEventSink))
 		*ppvObject = (ITfKeyEventSink *) this;
+	else if (IsEqualIID(riid, IID_ITfCompositionSink))
+		*ppvObject = (ITfCompositionSink *) this;
 	else if (IsEqualIID(riid, IID_ITfEditSession))
 		*ppvObject = (ITfEditSession *) this;
 

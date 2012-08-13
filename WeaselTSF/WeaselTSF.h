@@ -9,6 +9,7 @@ class WeaselTSF:
 	public ITfTextEditSink,
 	public ITfTextLayoutSink,
 	public ITfKeyEventSink,
+	public ITfCompositionSink,
 	public ITfEditSession
 {
 public:
@@ -45,17 +46,23 @@ public:
 	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParm, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten);
 
+	/* ITfCompositionSink */
+	STDMETHODIMP OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition);
+
 	/* ITfEditSession */
 	STDMETHODIMP DoEditSession(TfEditCookie ec);
 	
-	// Compartment
+	/* Compartments */
     BOOL _IsKeyboardDisabled();
     BOOL _IsKeyboardOpen();
     HRESULT _SetKeyboardOpen(BOOL fOpen);
 
+	/* Composition */
+	void _StartComposition(ITfContext *pContext);
+	void _EndComposition(ITfContext *pContext);
 	BOOL _IsComposing();
 	void _SetComposition(ITfComposition *pComposition);
-	void _SetCompositionPosition(LONG lLeft, LONG lTop);
+	void _SetCompositionPosition(const RECT &rc);
 	BOOL _UpdateCompositionWindow(ITfContext *pContext);
 
 private:
@@ -85,9 +92,12 @@ private:
 	const WCHAR *_pEditSessionText;
 	ULONG _cEditSessionText;
 
-	BOOL _bCompositing;
+	ITfComposition *_pComposition;
 
 	LONG _cRef;	// COM ref count
+
+	/* CUAS Candidate Window Position Workaround */
+	BOOL _fCUASWorkaroundTested, _fCUASWorkaroundEnabled;
 
 	/* Weasel Related */
 	weasel::Client m_client;

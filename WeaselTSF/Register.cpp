@@ -20,7 +20,7 @@ BOOL RegisterProfiles()
 		IID_ITfInputProcessorProfiles, (void **) &pInputProcessProfiles);
 	if (FAILED(hr))
 		return E_FAIL;
-
+	
 	hr = pInputProcessProfiles->Register(c_clsidTextService);
 	if (FAILED(hr))
 		goto Exit;
