@@ -65,6 +65,9 @@ public:
 	void _SetCompositionPosition(const RECT &rc);
 	BOOL _UpdateCompositionWindow(ITfContext *pContext);
 
+	/* IPC */
+	void _EnsureServerConnected();
+
 private:
 	/* TSF Related */
 	BOOL _InitThreadMgrEventSink();
@@ -87,6 +90,7 @@ private:
 
 	ITfContext *_pTextEditSinkContext;
 	DWORD _dwTextEditSinkCookie, _dwTextLayoutSinkCookie;
+	BOOL _fTestKeyDownPending;
 
 	ITfContext *_pEditSessionContext;
 	const WCHAR *_pEditSessionText;

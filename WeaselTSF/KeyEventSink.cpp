@@ -27,16 +27,23 @@ STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 	return S_OK;
 }
 
+/* Some apps sends strange OnTestKeyDown/OnKeyDown combinations:
+ *  Some sends OnKeyDown() only. (QQ2012)
+ *  Some sends multiple OnTestKeyDown() for a single key event. (MS WORD 2010 x64)
+ *
+ * We assume every key event will eventually cause a OnKeyDown() call.
+ * We use _fTestKeyDownPending to omit multiple OnTestKeyDown() calls,
+ *  and for OnKeyDown() to check if the key has already been sent to the server.
+ */
+
 STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	bool accepted = false;
-
-	/*if (!m_client.Echo())
+	if (_fTestKeyDownPending)
 	{
-		m_client.Connect(launch_server);
-		m_client.StartSession();
-	}*/
-
+		*pfEaten = TRUE;
+		return S_OK;
+	}
+	_EnsureServerConnected();
 	weasel::KeyEvent ke;
 	/* TODO : Optimize this */
 	GetKeyboardState(lpbKeyState);
@@ -47,7 +54,34 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lPar
 		return S_OK;
 	}
 
-	accepted = m_client.ProcessKeyEvent(ke);
+	*pfEaten = (BOOL) m_client.ProcessKeyEvent(ke);
+	if (*pfEaten)
+		_fTestKeyDownPending = TRUE;
+	return S_OK;
+}
+
+STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+	_EnsureServerConnected();
+	if (_fTestKeyDownPending)
+		_fTestKeyDownPending = FALSE;
+	else
+	{
+		weasel::KeyEvent ke;
+		/* TODO : Optimize this */
+		GetKeyboardState(lpbKeyState);
+		if (!ConvertKeyEvent(wParam, lParam, lpbKeyState, ke))
+		{
+			// unknown key event
+			*pfEaten = FALSE;
+			return S_OK;
+		}
+		if (!m_client.ProcessKeyEvent(ke))
+		{
+			*pfEaten = FALSE;
+			return S_OK;
+		}
+	}
 
 	// get commit string from server
 	wstring commit;
@@ -76,14 +110,7 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lPar
 		if (!commit.empty())
 			_InsertText(pContext, commit.c_str(), commit.length());
 	}
-	
-	*pfEaten = (BOOL) accepted;
 
-	return S_OK;
-}
-
-STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
-{
 	*pfEaten = TRUE;
 	return S_OK;
 } 
@@ -102,6 +129,7 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BO
 
 STDAPI WeaselTSF::OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten)
 {
+	*pfEaten = FALSE;
 	return S_OK;
 }
 

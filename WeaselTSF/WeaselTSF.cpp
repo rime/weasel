@@ -86,6 +86,7 @@ WeaselTSF::WeaselTSF()
 	_pTextEditSinkContext = NULL;
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
+	_fTestKeyDownPending = FALSE;
 
 	_pComposition = NULL;
 
@@ -148,8 +149,7 @@ STDAPI_(ULONG) WeaselTSF::Release()
 
 STDAPI WeaselTSF::Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId)
 {
-	m_client.Connect(launch_server);
-	m_client.StartSession();
+	_EnsureServerConnected();
 
 	_pThreadMgr = pThreadMgr;
 	_pThreadMgr->AddRef();
@@ -200,3 +200,11 @@ STDAPI WeaselTSF::Deactivate()
 	return S_OK;
 }
 
+void WeaselTSF::_EnsureServerConnected()
+{
+	if (!m_client.Echo())
+	{
+		m_client.Connect(launch_server);
+		m_client.StartSession();
+	}
+}
