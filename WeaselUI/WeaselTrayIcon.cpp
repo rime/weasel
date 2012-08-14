@@ -34,14 +34,18 @@ void WeaselTrayIcon::Refresh()
 {
 	WeaselTrayMode mode = m_status.disabled ? DISABLED : 
 		m_status.ascii_mode ? ASCII : ZHUNG;
-
 	if (mode != m_mode)
 	{
 		m_mode = mode;
 		SetIcon(mode_icon[mode]);
+		ShowIcon();
 		if (mode_label[mode])
 		{
 			ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
 		}
+	}
+	else if (!Visible())
+	{
+	ShowIcon();
 	}
 }
