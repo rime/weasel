@@ -7,29 +7,38 @@ static const char c_szInfoKeyPrefix[] = "CLSID\\";
 static const char c_szInProcSvr32[] = "InprocServer32";
 static const char c_szModelName[] = "ThreadingModel";
 
+static BOOL IsWindows8OrHigher()
+{
+	OSVERSIONINFO osvi;
+	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx(&osvi);
+	return (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion >= 2) || osvi.dwMajorVersion > 6;
+}
+
 BOOL RegisterProfiles()
 {
-	ITfInputProcessorProfiles *pInputProcessProfiles;
 	WCHAR achIconFile[MAX_PATH];
 	char achFileNameA[MAX_PATH];
 	DWORD cchA;
 	int cchIconFile;
 	HRESULT hr;
-
-	hr = CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER,
-		IID_ITfInputProcessorProfiles, (void **) &pInputProcessProfiles);
-	if (FAILED(hr))
-		return E_FAIL;
 	
-	hr = pInputProcessProfiles->Register(c_clsidTextService);
-	if (FAILED(hr))
-		goto Exit;
-
 	cchA = GetModuleFileNameA(g_hInst, achFileNameA, ARRAYSIZE(achFileNameA));
 	cchIconFile = MultiByteToWideChar(CP_ACP, 0, achFileNameA, cchA, achIconFile, ARRAYSIZE(achIconFile) - 1);
 	achIconFile[cchIconFile] = '\0';
+	
+	ITfInputProcessorProfiles *pInputProcessorProfiles;
+	hr = CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER,
+		IID_ITfInputProcessorProfiles, (void **) &pInputProcessorProfiles);
+	if (hr != S_OK)
+		return E_FAIL;
 
-	hr = pInputProcessProfiles->AddLanguageProfile(
+	hr = pInputProcessorProfiles->Register(c_clsidTextService);
+	if (hr != S_OK)
+		goto Exit;
+
+	hr = pInputProcessorProfiles->AddLanguageProfile(
 		c_clsidTextService,
 		TEXTSERVICE_LANGID,
 		c_guidProfile,
@@ -40,7 +49,7 @@ BOOL RegisterProfiles()
 		TEXTSERVICE_ICON_INDEX);
 
 Exit:
-	pInputProcessProfiles->Release();
+	pInputProcessorProfiles->Release();
 	return (hr == S_OK);
 }
 
@@ -64,10 +73,23 @@ BOOL RegisterCategories()
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void **) &pCategoryMgr);
-	if (FAILED(hr))
+	if (hr != S_OK)
 		return FALSE;
 	
 	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIP_KEYBOARD, c_clsidTextService);
+	if (hr != S_OK)
+		goto Exit;
+
+	if (IsWindows8OrHigher())
+	{
+		hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
+		if (hr != S_OK)
+			goto Exit;
+
+		hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
+	}
+
+Exit:
 	pCategoryMgr->Release();
 	return (hr == S_OK);
 }
