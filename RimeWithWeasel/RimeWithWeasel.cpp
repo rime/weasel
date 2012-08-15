@@ -273,7 +273,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 		{
 			actions.insert("ctx");
 			messages.push_back(boost::str(boost::format("ctx.preedit=%s\n") % ctx.composition.preedit));
-			if (ctx.composition.sel_start < ctx.composition.sel_end)
+			if (ctx.composition.sel_start <= ctx.composition.sel_end)
 			{
 				messages.push_back(boost::str(boost::format("ctx.preedit.cursor=%d,%d\n") %
 					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start) %

@@ -216,15 +216,33 @@ private:
 
 STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 {
+	/* TODO: This is a dirty trick to remove the pre-existing caret */
+	std::wstring preedit = _context.preedit.str;
+	std::wstring::size_type caret_pos = preedit.find(L"\x203a");
+	preedit.erase(caret_pos, 1);
+
 	ITfRange *pRangeComposition = NULL;
 	if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
 		goto Exit;
 
-	if ((pRangeComposition->SetText(ec, 0, _context.preedit.str.c_str(), _context.preedit.str.length())) != S_OK)
+	if ((pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length())) != S_OK)
 		goto Exit;
 
+	int sel_start = 0, sel_end = 0; /* TODO: Check the availability and correctness of these values */
+	for (int i = 0; i < _context.preedit.attributes.size(); i++)
+		if (_context.preedit.attributes.at(i).type == weasel::HIGHLIGHTED)
+		{
+			sel_start = _context.preedit.attributes.at(i).range.start;
+			sel_end = _context.preedit.attributes.at(i).range.end;
+			break;
+		}
+
+	/* Set caret */
+	LONG cch;
 	TF_SELECTION tfSelection;
-	pRangeComposition->Collapse(ec, TF_ANCHOR_END);
+	pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+	pRangeComposition->ShiftEnd(ec, sel_end, &cch, NULL);
+	pRangeComposition->ShiftStart(ec, sel_end, &cch, NULL);
 	tfSelection.range = pRangeComposition;
 	tfSelection.style.ase = TF_AE_NONE;
 	tfSelection.style.fInterimChar = FALSE;

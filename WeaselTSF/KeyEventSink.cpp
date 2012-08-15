@@ -83,7 +83,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
 	{
 		if (_fInlinePreedit)
 		{
-			/* No workaround is needed if we are using embedded composition */
+			/* No workaround is needed if we are using inline preedit */
 			_fCUASWorkaroundTested = TRUE;
 			_fCUASWorkaroundEnabled = FALSE;
 		}
