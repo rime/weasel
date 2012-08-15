@@ -7,17 +7,6 @@
 /* TODO */
 static BYTE lpbKeyState[256];
 
-BOOL WeaselTSF::_IsKeyEaten(WPARAM wParam)
-{
-	if (_IsKeyboardDisabled())
-		return FALSE;
-
-	if (!_IsKeyboardOpen())
-		return FALSE;
-	
-	return (wParam >= 'A') && (wParam <= 'Z');
-}
-
 STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 {
 	if (fForeground)
@@ -86,11 +75,18 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
 	// get commit string from server
 	wstring commit;
 	weasel::Status status;
-	weasel::ResponseParser parser(&commit, NULL, &status);
+	weasel::Context context;
+	weasel::ResponseParser parser(&commit, &context, &status);
 	bool ok = m_client.GetResponseData(boost::ref(parser));
 
 	if (ok)
 	{
+		if (_fEmbeddedComposition)
+		{
+			/* No workaround is needed if we are using embedded composition */
+			_fCUASWorkaroundTested = TRUE;
+			_fCUASWorkaroundEnabled = FALSE;
+		}
 		if (status.composing && !_IsComposing())
 		{
 			if (!_fCUASWorkaroundTested)
@@ -107,6 +103,8 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
 		}
 		else if (!status.composing && _IsComposing())
 			_EndComposition(pContext);
+		if (_IsComposing() && _fEmbeddedComposition)
+			_EmbeddedComposition(pContext, context);
 		if (!commit.empty())
 			_InsertText(pContext, commit.c_str(), commit.length());
 	}

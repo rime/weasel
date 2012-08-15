@@ -60,6 +60,7 @@ public:
 	/* Composition */
 	void _StartComposition(ITfContext *pContext);
 	void _EndComposition(ITfContext *pContext);
+	BOOL _EmbeddedComposition(ITfContext *pContext, const weasel::Context &context);
 	BOOL _IsComposing();
 	void _SetComposition(ITfComposition *pComposition);
 	void _SetCompositionPosition(const RECT &rc);
@@ -82,7 +83,6 @@ private:
 	void _UninitPreservedKey();
 	
 	BOOL _InsertText(ITfContext *pContext, const WCHAR *pchText, ULONG cchText);
-	BOOL _IsKeyEaten(WPARAM wParam);
 
 	ITfThreadMgr *_pThreadMgr;
 	TfClientId _tfClientId;
@@ -104,5 +104,6 @@ private:
 	BOOL _fCUASWorkaroundTested, _fCUASWorkaroundEnabled;
 
 	/* Weasel Related */
+	BOOL _fEmbeddedComposition;
 	weasel::Client m_client;
 };

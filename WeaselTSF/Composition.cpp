@@ -72,7 +72,7 @@ void WeaselTSF::_StartComposition(ITfContext *pContext)
 	if ((pStartCompositionEditSession = new CStartCompositionEditSession(this, pContext, _fCUASWorkaroundEnabled)) != NULL)
 	{
 		HRESULT hr;
-		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_SYNC | TF_ES_READWRITE, &hr);
+		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 		pStartCompositionEditSession->Release();
 	}
 }
@@ -195,6 +195,57 @@ void WeaselTSF::_SetCompositionPosition(const RECT &rc)
 	_rc.left = _rc.right = rc.left;
 	_rc.top = _rc.bottom = rc.bottom;
 	m_client.UpdateInputPosition(rc);
+}
+
+/* Embedded Composition */
+class CEmbeddedCompositionEditSession: public CEditSession
+{
+public:
+	CEmbeddedCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, const weasel::Context &context)
+		: CEditSession(pTextService, pContext), _pComposition(pComposition), _context(context)
+	{
+	}
+
+	/* ITfEditSession */
+	STDMETHODIMP DoEditSession(TfEditCookie ec);
+
+private:
+	ITfComposition *_pComposition;
+	const weasel::Context &_context;
+};
+
+STDAPI CEmbeddedCompositionEditSession::DoEditSession(TfEditCookie ec)
+{
+	ITfRange *pRangeComposition = NULL;
+	if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
+		goto Exit;
+
+	if ((pRangeComposition->SetText(ec, 0, _context.preedit.str.c_str(), _context.preedit.str.length())) != S_OK)
+		goto Exit;
+
+	TF_SELECTION tfSelection;
+	pRangeComposition->Collapse(ec, TF_ANCHOR_END);
+	tfSelection.range = pRangeComposition;
+	tfSelection.style.ase = TF_AE_NONE;
+	tfSelection.style.fInterimChar = FALSE;
+	_pContext->SetSelection(ec, 1, &tfSelection);
+
+Exit:
+	if (pRangeComposition != NULL)
+		pRangeComposition->Release();
+	return S_OK;
+}
+
+BOOL WeaselTSF::_EmbeddedComposition(ITfContext *pContext, const weasel::Context &context)
+{
+	CEmbeddedCompositionEditSession *pEditSession;
+	if ((pEditSession = new CEmbeddedCompositionEditSession(this, pContext, _pComposition, context)) != NULL)
+	{
+		HRESULT hr;
+		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+		pEditSession->Release();
+	}
+	return TRUE;
 }
 
 /* Composition State */

@@ -251,16 +251,36 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 		messages.push_back(boost::str(boost::format("commit=%s\n") % commit.text));
 		RimeFreeCommit(&commit);
 	}
-
+	
+	bool is_composing;
 	RimeStatus status = {0};
 	RIME_STRUCT_INIT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
+		is_composing = status.is_composing;
 		actions.insert("status");
 		messages.push_back(boost::str(boost::format("status.ascii_mode=%d\n") % status.is_ascii_mode));
 		messages.push_back(boost::str(boost::format("status.composing=%d\n") % status.is_composing));
 		messages.push_back(boost::str(boost::format("status.disabled=%d\n") % status.is_disabled));
 		RimeFreeStatus(&status);
+	}
+	
+	RimeContext ctx = {0};
+	RIME_STRUCT_INIT(RimeContext, ctx);
+	if (RimeGetContext(session_id, &ctx))
+	{
+		if (is_composing)
+		{
+			actions.insert("ctx");
+			messages.push_back(boost::str(boost::format("ctx.preedit=%s\n") % ctx.composition.preedit));
+			if (ctx.composition.sel_start < ctx.composition.sel_end)
+			{
+				messages.push_back(boost::str(boost::format("ctx.preedit.cursor=%d,%d\n") %
+					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start) %
+					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)));
+			}
+		}
+		RimeFreeContext(&ctx);
 	}
 
 	// summarize

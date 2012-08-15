@@ -92,6 +92,8 @@ WeaselTSF::WeaselTSF()
 
 	_fCUASWorkaroundTested = _fCUASWorkaroundEnabled = FALSE;
 
+	_fEmbeddedComposition = TRUE; /* TODO: FIXME */
+
 	DllAddRef();
 }
 
