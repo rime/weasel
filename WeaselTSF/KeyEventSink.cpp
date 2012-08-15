@@ -81,7 +81,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
 
 	if (ok)
 	{
-		if (_fEmbeddedComposition)
+		if (_fInlinePreedit)
 		{
 			/* No workaround is needed if we are using embedded composition */
 			_fCUASWorkaroundTested = TRUE;
@@ -103,8 +103,8 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
 		}
 		else if (!status.composing && _IsComposing())
 			_EndComposition(pContext);
-		if (_IsComposing() && _fEmbeddedComposition)
-			_EmbeddedComposition(pContext, context);
+		if (_IsComposing() && _fInlinePreedit)
+			_ShowInlinePreedit(pContext, context);
 		if (!commit.empty())
 			_InsertText(pContext, commit.c_str(), commit.length());
 	}

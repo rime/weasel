@@ -197,11 +197,11 @@ void WeaselTSF::_SetCompositionPosition(const RECT &rc)
 	m_client.UpdateInputPosition(rc);
 }
 
-/* Embedded Composition */
-class CEmbeddedCompositionEditSession: public CEditSession
+/* Inline Preedit */
+class CInlinePreeditEditSession: public CEditSession
 {
 public:
-	CEmbeddedCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, const weasel::Context &context)
+	CInlinePreeditEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, const weasel::Context &context)
 		: CEditSession(pTextService, pContext), _pComposition(pComposition), _context(context)
 	{
 	}
@@ -214,7 +214,7 @@ private:
 	const weasel::Context &_context;
 };
 
-STDAPI CEmbeddedCompositionEditSession::DoEditSession(TfEditCookie ec)
+STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 {
 	ITfRange *pRangeComposition = NULL;
 	if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
@@ -236,10 +236,10 @@ Exit:
 	return S_OK;
 }
 
-BOOL WeaselTSF::_EmbeddedComposition(ITfContext *pContext, const weasel::Context &context)
+BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const weasel::Context &context)
 {
-	CEmbeddedCompositionEditSession *pEditSession;
-	if ((pEditSession = new CEmbeddedCompositionEditSession(this, pContext, _pComposition, context)) != NULL)
+	CInlinePreeditEditSession *pEditSession;
+	if ((pEditSession = new CInlinePreeditEditSession(this, pContext, _pComposition, context)) != NULL)
 	{
 		HRESULT hr;
 		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
