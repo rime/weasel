@@ -61,6 +61,7 @@ public:
 	void _StartComposition(ITfContext *pContext);
 	void _EndComposition(ITfContext *pContext);
 	BOOL _ShowInlinePreedit(ITfContext *pContext, const weasel::Context &context);
+	void _UpdateComposition(ITfContext *pContext);
 	BOOL _IsComposing();
 	void _SetComposition(ITfComposition *pComposition);
 	void _SetCompositionPosition(const RECT &rc);
@@ -78,6 +79,7 @@ private:
 
 	BOOL _InitKeyEventSink();
 	void _UninitKeyEventSink();
+	void _ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
 
 	BOOL _InitPreservedKey();
 	void _UninitPreservedKey();
@@ -90,7 +92,8 @@ private:
 
 	ITfContext *_pTextEditSinkContext;
 	DWORD _dwTextEditSinkCookie, _dwTextLayoutSinkCookie;
-	BOOL _fTestKeyDownPending;
+	BYTE _lpbKeyState[256];
+	BOOL _fTestKeyDownPending, _fTestKeyUpPending;
 
 	ITfContext *_pEditSessionContext;
 	const WCHAR *_pEditSessionText;

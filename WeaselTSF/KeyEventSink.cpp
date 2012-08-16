@@ -2,10 +2,19 @@
 #include "WeaselIPC.h"
 #include "WeaselTSF.h"
 #include "KeyEvent.h"
-#include "ResponseParser.h"
 
-/* TODO */
-static BYTE lpbKeyState[256];
+void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
+{
+	weasel::KeyEvent ke;
+	GetKeyboardState(_lpbKeyState);
+	if (!ConvertKeyEvent(wParam, lParam, _lpbKeyState, ke))
+	{
+		/* Unknown key event */
+		*pfEaten = FALSE;
+	}
+	else
+		*pfEaten = (BOOL) m_client.ProcessKeyEvent(ke);
+}
 
 STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 {
@@ -33,17 +42,7 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lPar
 		return S_OK;
 	}
 	_EnsureServerConnected();
-	weasel::KeyEvent ke;
-	/* TODO : Optimize this */
-	GetKeyboardState(lpbKeyState);
-	if (!ConvertKeyEvent(wParam, lParam, lpbKeyState, ke))
-	{
-		// unknown key event
-		*pfEaten = FALSE;
-		return S_OK;
-	}
-
-	*pfEaten = (BOOL) m_client.ProcessKeyEvent(ke);
+	_ProcessKeyEvent(wParam, lParam, pfEaten);
 	if (*pfEaten)
 		_fTestKeyDownPending = TRUE;
 	return S_OK;
@@ -55,59 +54,9 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
 	if (_fTestKeyDownPending)
 		_fTestKeyDownPending = FALSE;
 	else
-	{
-		weasel::KeyEvent ke;
-		/* TODO : Optimize this */
-		GetKeyboardState(lpbKeyState);
-		if (!ConvertKeyEvent(wParam, lParam, lpbKeyState, ke))
-		{
-			// unknown key event
-			*pfEaten = FALSE;
-			return S_OK;
-		}
-		if (!m_client.ProcessKeyEvent(ke))
-		{
-			*pfEaten = FALSE;
-			return S_OK;
-		}
-	}
+		_ProcessKeyEvent(wParam, lParam, pfEaten);
 
-	// get commit string from server
-	wstring commit;
-	weasel::Status status;
-	weasel::Context context;
-	weasel::ResponseParser parser(&commit, &context, &status);
-	bool ok = m_client.GetResponseData(boost::ref(parser));
-
-	if (ok)
-	{
-		if (_fInlinePreedit)
-		{
-			/* No workaround is needed if we are using inline preedit */
-			_fCUASWorkaroundTested = TRUE;
-			_fCUASWorkaroundEnabled = FALSE;
-		}
-		if (status.composing && !_IsComposing())
-		{
-			if (!_fCUASWorkaroundTested)
-			{
-				/* Test if we need to apply the workaround */
-				_UpdateCompositionWindow(pContext);
-			}
-			else if (!_fCUASWorkaroundEnabled)
-			{
-				/* Workaround not applied, update candidate window position at this point. */
-				_UpdateCompositionWindow(pContext);
-			}
-			_StartComposition(pContext);
-		}
-		else if (!status.composing && _IsComposing())
-			_EndComposition(pContext);
-		if (_IsComposing() && _fInlinePreedit)
-			_ShowInlinePreedit(pContext, context);
-		if (!commit.empty())
-			_InsertText(pContext, commit.c_str(), commit.length());
-	}
+	_UpdateComposition(pContext);
 
 	*pfEaten = TRUE;
 	return S_OK;
@@ -115,13 +64,30 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
 
 STDAPI WeaselTSF::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	*pfEaten = FALSE;
+	if (_fTestKeyUpPending)
+	{
+		*pfEaten = TRUE;
+		return S_OK;
+	}
+	_EnsureServerConnected();
+	_ProcessKeyEvent(wParam, lParam, pfEaten);
+	if (*pfEaten)
+		_fTestKeyUpPending = TRUE;
 	return S_OK;
 }
 
 STDAPI WeaselTSF::OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	*pfEaten = FALSE;
+	_EnsureServerConnected();
+	if (_fTestKeyUpPending)
+		_fTestKeyUpPending = FALSE;
+	else
+		_ProcessKeyEvent(wParam, lParam, pfEaten);
+
+	_UpdateComposition(pContext);
+
+	*pfEaten = TRUE;
+	return S_OK;
 	return S_OK;
 }
 

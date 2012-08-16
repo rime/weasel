@@ -87,13 +87,14 @@ WeaselTSF::WeaselTSF()
 	_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 	_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 	_fTestKeyDownPending = FALSE;
+	_fTestKeyUpPending = FALSE;
 
 	_pComposition = NULL;
 
 	_fCUASWorkaroundTested = _fCUASWorkaroundEnabled = FALSE;
 
 	_fInlinePreedit = TRUE; /* TODO: FIXME */
-
+	
 	DllAddRef();
 }
 

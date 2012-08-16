@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "WeaselTSF.h"
 #include "EditSession.h"
+#include "ResponseParser.h"
 
 /* Start Composition */
 class CStartCompositionEditSession: public CEditSession
@@ -264,6 +265,47 @@ BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const weasel::Context &
 		pEditSession->Release();
 	}
 	return TRUE;
+}
+
+/* Update Composition */
+void WeaselTSF::_UpdateComposition(ITfContext *pContext)
+{
+	// get commit string from server
+	wstring commit;
+	weasel::Status status;
+	weasel::Context context;
+	weasel::ResponseParser parser(&commit, &context, &status);
+	bool ok = m_client.GetResponseData(boost::ref(parser));
+
+	if (ok)
+	{
+		if (_fInlinePreedit)
+		{
+			/* No workaround is needed if we are using inline preedit */
+			_fCUASWorkaroundTested = TRUE;
+			_fCUASWorkaroundEnabled = FALSE;
+		}
+		if (status.composing && !_IsComposing())
+		{
+			if (!_fCUASWorkaroundTested)
+			{
+				/* Test if we need to apply the workaround */
+				_UpdateCompositionWindow(pContext);
+			}
+			else if (!_fCUASWorkaroundEnabled)
+			{
+				/* Workaround not applied, update candidate window position at this point. */
+				_UpdateCompositionWindow(pContext);
+			}
+			_StartComposition(pContext);
+		}
+		else if (!status.composing && _IsComposing())
+			_EndComposition(pContext);
+		if (_IsComposing() && _fInlinePreedit)
+			_ShowInlinePreedit(pContext, context);
+		if (!commit.empty())
+			_InsertText(pContext, commit.c_str(), commit.length());
+	}
 }
 
 /* Composition State */
