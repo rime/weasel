@@ -114,4 +114,15 @@ namespace weasel
 		// 維護模式（暫停輸入功能）
 		bool disabled;
 	};
+
+	// 用於向前端告知設置信息
+	struct Config
+	{
+		Config() : inline_preedit(false) {}
+		void reset()
+		{
+			inline_preedit = false;
+		}
+		bool inline_preedit;
+	};
 }

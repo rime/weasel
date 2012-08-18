@@ -8,6 +8,7 @@ style:
   color_scheme: aqua
   font_face: Microsoft YaHei
   font_point: 14
+  inline_preedit: false
   layout:
     type: vertical
     min_width: 160

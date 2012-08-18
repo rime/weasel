@@ -15,12 +15,16 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 	const std::string &labels(_context.cinfo.labels);
 
 	int width = 0, height = _style.margin_y;
+	CSize size;
 
 	/* Preedit */
-	CSize size = GetPreeditSize(dc);
-	_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
-	width = max(width, _style.margin_x + size.cx + _style.margin_x);
-	height += size.cy + _style.spacing;
+	if (!_style.inline_preedit)
+	{
+		size = GetPreeditSize(dc);
+		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		width = max(width, _style.margin_x + size.cx + _style.margin_x);
+		height += size.cy + _style.spacing;
+	}
 
 	/* Auxiliary */
 	if (!_context.aux.str.empty())

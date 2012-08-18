@@ -67,10 +67,10 @@ Exit:
 	return hr;
 }
 
-void WeaselTSF::_StartComposition(ITfContext *pContext)
+void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnabled)
 {
 	CStartCompositionEditSession *pStartCompositionEditSession;
-	if ((pStartCompositionEditSession = new CStartCompositionEditSession(this, pContext, _fCUASWorkaroundEnabled)) != NULL)
+	if ((pStartCompositionEditSession = new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled)) != NULL)
 	{
 		HRESULT hr;
 		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
@@ -274,17 +274,12 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 	wstring commit;
 	weasel::Status status;
 	weasel::Context context;
-	weasel::ResponseParser parser(&commit, &context, &status);
+	weasel::Config config;
+	weasel::ResponseParser parser(&commit, &context, &status, &config);
 	bool ok = m_client.GetResponseData(boost::ref(parser));
 
 	if (ok)
 	{
-		if (_fInlinePreedit)
-		{
-			/* No workaround is needed if we are using inline preedit */
-			_fCUASWorkaroundTested = TRUE;
-			_fCUASWorkaroundEnabled = FALSE;
-		}
 		if (status.composing && !_IsComposing())
 		{
 			if (!_fCUASWorkaroundTested)
@@ -292,16 +287,16 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 				/* Test if we need to apply the workaround */
 				_UpdateCompositionWindow(pContext);
 			}
-			else if (!_fCUASWorkaroundEnabled)
+			else if (!_fCUASWorkaroundEnabled || config.inline_preedit)
 			{
 				/* Workaround not applied, update candidate window position at this point. */
 				_UpdateCompositionWindow(pContext);
 			}
-			_StartComposition(pContext);
+			_StartComposition(pContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 		}
 		else if (!status.composing && _IsComposing())
 			_EndComposition(pContext);
-		if (_IsComposing() && _fInlinePreedit)
+		if (_IsComposing() && config.inline_preedit)
 			_ShowInlinePreedit(pContext, context);
 		if (!commit.empty())
 			_InsertText(pContext, commit.c_str(), commit.length());

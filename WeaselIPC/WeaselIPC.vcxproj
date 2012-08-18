@@ -250,6 +250,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Configurator.cpp" />
     <ClCompile Include="Deserializer.cpp" />
     <ClCompile Include="ResponseParser.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -268,6 +269,7 @@
     <ClCompile Include="ContextUpdater.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Configurator.h" />
     <ClInclude Include="Deserializer.h" />
     <ClInclude Include="..\include\ResponseParser.h" />
     <ClInclude Include="stdafx.h" />

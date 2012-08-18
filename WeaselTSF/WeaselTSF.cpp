@@ -93,8 +93,6 @@ WeaselTSF::WeaselTSF()
 
 	_fCUASWorkaroundTested = _fCUASWorkaroundEnabled = FALSE;
 
-	_fInlinePreedit = TRUE; /* TODO: FIXME */
-	
 	DllAddRef();
 }
 

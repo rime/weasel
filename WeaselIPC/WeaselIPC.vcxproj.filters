@@ -42,6 +42,9 @@
     <ClCompile Include="ContextUpdater.cpp">
       <Filter>Source Files\Deserializer</Filter>
     </ClCompile>
+    <ClCompile Include="Configurator.cpp">
+      <Filter>Source Files\Deserializer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Deserializer.h">
@@ -69,6 +72,9 @@
       <Filter>Header Files\Deserializer</Filter>
     </ClInclude>
     <ClInclude Include="ContextUpdater.h">
+      <Filter>Header Files\Deserializer</Filter>
+    </ClInclude>
+    <ClInclude Include="Configurator.h">
       <Filter>Header Files\Deserializer</Filter>
     </ClInclude>
   </ItemGroup>

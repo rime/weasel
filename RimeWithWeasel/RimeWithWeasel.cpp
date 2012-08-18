@@ -283,6 +283,10 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 		RimeFreeContext(&ctx);
 	}
 
+	// configuration information
+	actions.insert("config");
+	messages.push_back(boost::str(boost::format("config.inline_preedit=%d\n") % (int) m_ui->style().inline_preedit));
+
 	// summarize
 
 	if (actions.empty())
@@ -342,6 +346,9 @@ void RimeWithWeaselHandler::_UpdateUIStyle()
 		style.font_face = utf8towcs(buffer);
 	}
 	RimeConfigGetInt(&config, "style/font_point", &style.font_point);
+	Bool b;
+	RimeConfigGetBool(&config, "style/inline_preedit", &b);
+	style.inline_preedit = b;
 	// layout
 	char layout_type[256];
 	RimeConfigGetString(&config, "style/layout/type", layout_type, 255);

@@ -15,6 +15,7 @@ namespace weasel
 	{
 		std::wstring font_face;
 		int font_point;
+		bool inline_preedit;
 		// layout
 		LayoutType layout_type;
 		int min_width;

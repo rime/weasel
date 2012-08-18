@@ -285,10 +285,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	dc.SetTextColor(m_style.text_color);
 	dc.SetBkColor(m_style.back_color);
 	dc.SetBkMode(TRANSPARENT);
+	
+	bool drawn = false;
 
 	// draw preedit string
-	_DrawPreedit(m_ctx.preedit, dc, m_layout->GetPreeditRect());
-
+	if (!m_style.inline_preedit)
+		drawn |= _DrawPreedit(m_ctx.preedit, dc, m_layout->GetPreeditRect());
+	
 	/* FIXME: What's this?
 	// ascii mode icon
 	if (m_status.ascii_mode && y > rc.top)
@@ -300,10 +303,14 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 	/* TODO: Deprecated? */
 	// draw auxiliary string
-	_DrawPreedit(m_ctx.aux, dc, m_layout->GetAuxiliaryRect());
+	drawn |= _DrawPreedit(m_ctx.aux, dc, m_layout->GetAuxiliaryRect());
 
 	// draw candidates
-	_DrawCandidates(dc);
+	drawn |= _DrawCandidates(dc);
+
+	/* Nothing drawn, hide candidate window */
+	if (!drawn)
+		ShowWindow(SW_HIDE);
 
 	dc.SelectFont(oldFont);	
 }

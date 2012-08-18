@@ -19,8 +19,9 @@ namespace weasel
 		std::wstring* p_commit;
 		Context* p_context;
 		Status* p_status;
+		Config* p_config;
 
-		ResponseParser(std::wstring* commit, Context* context = 0, Status* status = 0);
+		ResponseParser(std::wstring* commit, Context* context = 0, Status* status = 0, Config* config = 0);
 
 		// 重載函數調用運算符, 以扮做ResponseHandler
 		bool operator() (LPWSTR buffer, UINT length);

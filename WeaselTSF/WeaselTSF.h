@@ -58,7 +58,7 @@ public:
     HRESULT _SetKeyboardOpen(BOOL fOpen);
 
 	/* Composition */
-	void _StartComposition(ITfContext *pContext);
+	void _StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnabled);
 	void _EndComposition(ITfContext *pContext);
 	BOOL _ShowInlinePreedit(ITfContext *pContext, const weasel::Context &context);
 	void _UpdateComposition(ITfContext *pContext);
@@ -107,6 +107,5 @@ private:
 	BOOL _fCUASWorkaroundTested, _fCUASWorkaroundEnabled;
 
 	/* Weasel Related */
-	BOOL _fInlinePreedit;
 	weasel::Client m_client;
 };
