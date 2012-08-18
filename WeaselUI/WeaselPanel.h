@@ -1,6 +1,7 @@
 #pragma once
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
+#include "Layout.h"
 
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 
@@ -21,6 +22,7 @@ public:
 	void CloseDialog(int nVal);
 
 	WeaselPanel(weasel::UI &ui);
+	~WeaselPanel();
 
 	void MoveTo(RECT const& rc);
 	void Refresh();
@@ -30,11 +32,12 @@ public:
 private:
 	void _ResizeWindow();
 	void _RepositionWindow();
-	bool _DrawText(weasel::Text const& text, CDCHandle dc, CRect const& rc, int& y);
-	bool _DrawCandidates(weasel::CandidateInfo const& cinfo, CDCHandle dc, CRect const& rc, int& y);
+	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
+	bool _DrawCandidates(CDCHandle dc);
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch);
 
+	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
 	weasel::Status &m_status;
 	weasel::UIStyle &m_style;

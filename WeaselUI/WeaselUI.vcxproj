@@ -252,6 +252,9 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="HorizontalLayout.cpp" />
+    <ClCompile Include="Layout.cpp" />
+    <ClCompile Include="StandardLayout.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -263,15 +266,20 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SystemTraySDK.cpp" />
+    <ClCompile Include="VerticalLayout.cpp" />
     <ClCompile Include="WeaselPanel.cpp" />
     <ClCompile Include="WeaselTrayIcon.cpp" />
     <ClCompile Include="WeaselUI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="HorizontalLayout.h" />
+    <ClInclude Include="Layout.h" />
+    <ClInclude Include="StandardLayout.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SystemTraySDK.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="..\include\WeaselCommon.h" />
+    <ClInclude Include="VerticalLayout.h" />
     <ClInclude Include="WeaselPanel.h" />
     <ClInclude Include="..\include\WeaselUI.h" />
     <ClInclude Include="WeaselTrayIcon.h" />

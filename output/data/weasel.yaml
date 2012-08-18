@@ -2,13 +2,14 @@
 # vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.10"
+config_version: "0.11"
 
 style:
   color_scheme: aqua
   font_face: Microsoft YaHei
   font_point: 14
   layout:
+    type: vertical
     min_width: 160
     min_height: 0
     border_width: 3

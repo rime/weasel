@@ -343,6 +343,17 @@ void RimeWithWeaselHandler::_UpdateUIStyle()
 	}
 	RimeConfigGetInt(&config, "style/font_point", &style.font_point);
 	// layout
+	char layout_type[256];
+	RimeConfigGetString(&config, "style/layout/type", layout_type, 255);
+	if (!std::strcmp(layout_type, "vertical"))
+		style.layout_type = weasel::LAYOUT_VERTICAL;
+	else if (!std::strcmp(layout_type, "horizontal"))
+		style.layout_type = weasel::LAYOUT_HORIZONTAL;
+	else
+	{
+		style.layout_type = weasel::LAYOUT_VERTICAL;
+		LOG(INFO) << "Invalid style type";
+	}
 	RimeConfigGetInt(&config, "style/layout/min_width", &style.min_width);
 	RimeConfigGetInt(&config, "style/layout/min_height", &style.min_height);
 	RimeConfigGetInt(&config, "style/layout/border", &style.border);

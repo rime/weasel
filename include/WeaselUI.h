@@ -4,12 +4,19 @@
 
 namespace weasel
 {
+	enum LayoutType
+	{
+		LAYOUT_VERTICAL = 0,
+		LAYOUT_HORIZONTAL,
+		LAYOUT_TYPE_LAST
+	};
 
 	struct UIStyle
 	{
 		std::wstring font_face;
 		int font_point;
 		// layout
+		LayoutType layout_type;
 		int min_width;
 		int min_height;
 		int border;
