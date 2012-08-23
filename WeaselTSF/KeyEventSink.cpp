@@ -5,6 +5,7 @@
 
 void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
+	_EnsureServerConnected();
 	weasel::KeyEvent ke;
 	GetKeyboardState(_lpbKeyState);
 	if (!ConvertKeyEvent(wParam, lParam, _lpbKeyState, ke))
@@ -13,7 +14,9 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 		*pfEaten = FALSE;
 	}
 	else
+    {
 		*pfEaten = (BOOL) m_client.ProcessKeyEvent(ke);
+    }
 }
 
 STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
@@ -41,8 +44,8 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lPar
 		*pfEaten = TRUE;
 		return S_OK;
 	}
-	_EnsureServerConnected();
 	_ProcessKeyEvent(wParam, lParam, pfEaten);
+	_UpdateComposition(pContext);
 	if (*pfEaten)
 		_fTestKeyDownPending = TRUE;
 	return S_OK;
@@ -50,15 +53,15 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lPar
 
 STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	_EnsureServerConnected();
 	if (_fTestKeyDownPending)
+    {
 		_fTestKeyDownPending = FALSE;
+    }
 	else
+    {
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
-
-	_UpdateComposition(pContext);
-
-	*pfEaten = TRUE;
+	    _UpdateComposition(pContext);
+    }
 	return S_OK;
 } 
 
@@ -69,8 +72,8 @@ STDAPI WeaselTSF::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam
 		*pfEaten = TRUE;
 		return S_OK;
 	}
-	_EnsureServerConnected();
 	_ProcessKeyEvent(wParam, lParam, pfEaten);
+	_UpdateComposition(pContext);
 	if (*pfEaten)
 		_fTestKeyUpPending = TRUE;
 	return S_OK;
@@ -78,16 +81,15 @@ STDAPI WeaselTSF::OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam
 
 STDAPI WeaselTSF::OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
-	_EnsureServerConnected();
 	if (_fTestKeyUpPending)
+    {
 		_fTestKeyUpPending = FALSE;
+    }
 	else
+    {
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
-
-	_UpdateComposition(pContext);
-
-	*pfEaten = TRUE;
-	return S_OK;
+        _UpdateComposition(pContext);
+    }
 	return S_OK;
 }
 
