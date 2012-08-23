@@ -172,6 +172,9 @@ STDAPI WeaselTSF::Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId)
 	if (!_InitPreservedKey())
 		goto ExitError;
 
+	if (!_InitLanguageBar())
+		goto ExitError;
+
 	return S_OK;
 
 ExitError:
@@ -189,6 +192,8 @@ STDAPI WeaselTSF::Deactivate()
 
 	_UninitKeyEventSink();
 	_UninitPreservedKey();
+
+	_UninitLanguageBar();
 
 	if (_pThreadMgr != NULL)
 	{

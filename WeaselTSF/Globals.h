@@ -24,6 +24,8 @@ extern const CLSID c_clsidTextService;
 
 extern const GUID c_guidProfile;
 
+extern const GUID c_guidLangBarItemButton;
+
 /* for Windows 8 */
 #define TF_TMF_IMMERSIVEMODE			0x40000000
 #define TF_IPP_CAPS_IMMERSIVESUPPORT	0x00010000
@@ -31,3 +33,4 @@ extern const GUID c_guidProfile;
 
 extern const GUID GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT;
 extern const GUID GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT;
+extern const GUID GUID_LBI_INPUTMODE;

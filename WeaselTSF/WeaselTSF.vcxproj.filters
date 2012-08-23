@@ -54,6 +54,9 @@
     <ClCompile Include="Composition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LanguageBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -77,11 +80,31 @@
     <ClInclude Include="EditSession.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
     <None Include="WeaselTSF.def">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="..\resource\zhung.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\resource\alpha.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\resource\disabled.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\resource\enabled.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WeaselTSF.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

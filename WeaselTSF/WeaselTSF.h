@@ -83,6 +83,9 @@ private:
 
 	BOOL _InitPreservedKey();
 	void _UninitPreservedKey();
+
+	BOOL _InitLanguageBar();
+	void _UninitLanguageBar();
 	
 	BOOL _InsertText(ITfContext *pContext, const WCHAR *pchText, ULONG cchText);
 
@@ -100,6 +103,8 @@ private:
 	ULONG _cEditSessionText;
 
 	ITfComposition *_pComposition;
+
+	ITfLangBarItemButton *_pLangBarButton;
 
 	LONG _cRef;	// COM ref count
 
