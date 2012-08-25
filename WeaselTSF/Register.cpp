@@ -80,6 +80,10 @@ BOOL RegisterCategories()
 	if (hr != S_OK)
 		goto Exit;
 
+	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT, c_clsidTextService);
+	if (hr != S_OK)
+		goto Exit;
+
 	if (IsWindows8OrHigher())
 	{
 		hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);

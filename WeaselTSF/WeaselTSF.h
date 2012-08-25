@@ -67,6 +67,10 @@ public:
 	void _SetCompositionPosition(const RECT &rc);
 	BOOL _UpdateCompositionWindow(ITfContext *pContext);
 
+	/* Language bar */
+	HWND _GetFocusedContextWindow();
+	void _HandleLangBarMenuSelect(UINT wID);
+
 	/* IPC */
 	void _EnsureServerConnected();
 

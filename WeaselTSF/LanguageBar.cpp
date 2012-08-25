@@ -4,10 +4,37 @@
 
 static const DWORD LANGBARITEMSINK_COOKIE = 0x42424242;
 
+static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
+{
+	/* NOTE: Only limited functions are supported */
+	int N = GetMenuItemCount(hMenu);
+	for (int i = 0; i < N; i++)
+	{
+		MENUITEMINFO mii;
+		mii.cbSize = sizeof(MENUITEMINFO);
+		mii.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING;
+		mii.dwTypeData = NULL;
+		if (GetMenuItemInfo(hMenu, i, TRUE, &mii))
+		{
+			UINT id = mii.wID;
+			if (mii.fType == MFT_SEPARATOR)
+				pTfMenu->AddMenuItem(id, TF_LBMENUF_SEPARATOR, NULL, NULL, NULL, 0, NULL);
+			else if (mii.fType == MFT_STRING)
+			{
+				mii.dwTypeData = (LPWSTR) malloc(sizeof(WCHAR) * (mii.cch + 1));
+				mii.cch++;
+				if (GetMenuItemInfo(hMenu, i, TRUE, &mii))
+					pTfMenu->AddMenuItem(id, 0, NULL, NULL, mii.dwTypeData, mii.cch, NULL);
+				free(mii.dwTypeData);
+			}
+		}
+	}
+}
+
 class CLangBarItemButton: public ITfLangBarItemButton, public ITfSource
 {
 public:
-	CLangBarItemButton();
+	CLangBarItemButton(WeaselTSF *pTextService, REFGUID guid);
 	~CLangBarItemButton();
 
 	/* IUnknown */
@@ -33,16 +60,20 @@ public:
 	STDMETHODIMP UnadviseSink(DWORD dwCookie);
 
 private:
+	GUID _guid;
+	WeaselTSF *_pTextService;
 	ITfLangBarItemSink *_pLangBarItemSink;
 	LONG _cRef; /* COM Reference count */
 };
 
-CLangBarItemButton::CLangBarItemButton()
+CLangBarItemButton::CLangBarItemButton(WeaselTSF *pTextService, REFGUID guid)
 {
 	DllAddRef();
 
 	_pLangBarItemSink = NULL;
 	_cRef = 1;
+	_pTextService = pTextService;
+	_guid = guid;
 }
 
 CLangBarItemButton::~CLangBarItemButton()
@@ -86,11 +117,9 @@ STDAPI_(ULONG) CLangBarItemButton::Release()
 STDAPI CLangBarItemButton::GetInfo(TF_LANGBARITEMINFO *pInfo)
 {
 	pInfo->clsidService = c_clsidTextService;
-	/* FIXME */
-	//pInfo->guidItem = c_guidLangBarItemButton;
-	pInfo->guidItem = GUID_LBI_INPUTMODE;
+	pInfo->guidItem = _guid;
 	pInfo->dwStyle = TF_LBI_STYLE_BTN_BUTTON | TF_LBI_STYLE_BTN_MENU | TF_LBI_STYLE_SHOWNINTRAY;
-	pInfo->ulSort = 0;
+	pInfo->ulSort = 1;
 	lstrcpyW(pInfo->szDescription, L"WeaselTSF Button");
 	return S_OK;
 }
@@ -118,18 +147,34 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click, POINT pt, const RECT *prcAr
 	{
 		/* TODO : Switch mode */
 	}
+	else if (click == TF_LBI_CLK_RIGHT)
+	{
+		/* Open menu */
+		HWND hwnd = _pTextService->_GetFocusedContextWindow();
+		if (hwnd != NULL)
+		{
+			HMENU menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
+			HMENU popupMenu = GetSubMenu(menu, 0);
+			UINT wID = TrackPopupMenuEx(popupMenu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x, pt.y, hwnd, NULL);
+			DestroyMenu(menu);
+			_pTextService->_HandleLangBarMenuSelect(wID);
+		}
+	}
 	return S_OK;
 }
 
 STDAPI CLangBarItemButton::InitMenu(ITfMenu *pMenu)
 {
-	/* TODO */
+	HMENU menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
+	HMENU popupMenu = GetSubMenu(menu, 0);
+	HMENU2ITfMenu(popupMenu, pMenu);
+	DestroyMenu(menu);
 	return S_OK;
 }
 
 STDAPI CLangBarItemButton::OnMenuSelect(UINT wID)
 {
-	/* TODO */
+	_pTextService->_HandleLangBarMenuSelect(wID);
 	return S_OK;
 }
 
@@ -147,8 +192,6 @@ STDAPI CLangBarItemButton::GetText(BSTR *pbstrText)
 
 STDAPI CLangBarItemButton::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
-	if (IsEqualIID(riid, IID_ITfSystemLangBarItemSink))
-		MessageBoxA(GetDesktopWindow(), "ORZ", "ORZ", MB_OK);
 	if (!IsEqualIID(riid, IID_ITfLangBarItemSink))
 		return CONNECT_E_CANNOTCONNECT;
 	if (_pLangBarItemSink != NULL)
@@ -172,6 +215,53 @@ STDAPI CLangBarItemButton::UnadviseSink(DWORD dwCookie)
 	return S_OK;
 }
 
+void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
+{
+	switch (wID)
+	{
+	case ID_WEASELTRAY_QUIT:
+	case ID_WEASELTRAY_DEPLOY:
+	case ID_WEASELTRAY_SETTINGS:
+	case ID_WEASELTRAY_DICT_MANAGEMENT:
+	case ID_WEASELTRAY_WIKI:
+	case ID_WEASELTRAY_FORUM:
+	case ID_WEASELTRAY_CHECKUPDATE:
+	case ID_WEASELTRAY_INSTALLDIR:
+	case ID_WEASELTRAY_USERCONFIG:
+		/* TODO */
+	}
+}
+
+HWND WeaselTSF::_GetFocusedContextWindow()
+{
+	HWND hwnd = NULL;
+	ITfDocumentMgr *pDocMgr;
+	if (_pThreadMgr->GetFocus(&pDocMgr) == S_OK && pDocMgr != NULL)
+	{
+		ITfContext *pContext;
+		if (pDocMgr->GetTop(&pContext) == S_OK && pContext != NULL)
+		{
+			ITfContextView *pContextView;
+			if (pContext->GetActiveView(&pContextView) == S_OK && pContextView != NULL)
+			{
+				pContextView->GetWnd(&hwnd);
+				pContextView->Release();
+			}
+			pContext->Release();
+		}
+		pDocMgr->Release();
+	}
+
+	if (hwnd == NULL)
+	{
+		HWND hwndForeground = GetForegroundWindow();
+		if (GetWindowThreadProcessId(hwndForeground, NULL) == GetCurrentThreadId())
+			hwnd = hwndForeground;
+	}
+
+	return hwnd;
+}
+
 BOOL WeaselTSF::_InitLanguageBar()
 {
 	ITfLangBarItemMgr *pLangBarItemMgr;
@@ -180,7 +270,7 @@ BOOL WeaselTSF::_InitLanguageBar()
 	if (_pThreadMgr->QueryInterface(IID_ITfLangBarItemMgr, (LPVOID *) &pLangBarItemMgr) != S_OK)
 		return FALSE;
 
-	if ((_pLangBarButton = new CLangBarItemButton()) == NULL)
+	if ((_pLangBarButton = new CLangBarItemButton(this, GUID_LBI_INPUTMODE)) == NULL)
 		goto Exit;
 	
 	if (pLangBarItemMgr->AddItem(_pLangBarButton) != S_OK)
@@ -189,6 +279,7 @@ BOOL WeaselTSF::_InitLanguageBar()
 		_pLangBarButton = NULL;
 		goto Exit;
 	}
+
 	fRet = TRUE;
 
 Exit:
