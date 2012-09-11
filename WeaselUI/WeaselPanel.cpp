@@ -136,6 +136,7 @@ void WeaselPanel::_ResizeWindow()
 	std::string const& labels(m_ctx.cinfo.labels);
 	long label_width = 0;
 	long cand_width = 0;
+	long comment_width = 0;
 	for (size_t i = 0; i < candies.size(); ++i, height += m_style.candidate_spacing)
 	{
 		wstring label_text;
@@ -146,17 +147,20 @@ void WeaselPanel::_ResizeWindow()
 		dc.GetTextExtent(label_text.c_str(), label_text.length(), &sz);
 		label_width = max(label_width, sz.cx);
 
-		wstring cand = candies[i].str;
-		if (!comments[i].str.empty())
-		{
-			cand += L" " + comments[i].str;
-		}
+		const wstring& cand = candies[i].str;
 		dc.GetTextExtent(cand.c_str(), cand.length(), &sz);
 		cand_width = max(cand_width, sz.cx);
 
+		if (!comments[i].str.empty())
+		{
+			wstring comment_text = L" " + comments[i].str;
+			dc.GetTextExtent(comment_text.c_str(), comment_text.length(), &sz);
+			comment_width = max(comment_width, sz.cx);
+		}
+
 		height += sz.cy;
 	}
-	width = max(width, label_width + cand_width + 2 * m_style.hilite_padding);
+	width = max(width, label_width + cand_width + comment_width + 2 * m_style.hilite_padding);
 	if (!candies.empty())
 		height += m_style.spacing;
 
@@ -291,29 +295,23 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 		dc.GetTextExtent(label_text.back().c_str(), label_text.back().length(), &sz);
 		label_width = max(label_width, sz.cx);
 		line_height = max(line_height, sz.cy);
-		wstring cand_text = candies[i].str;
-		wstring comment_text;
+		const wstring& cand_text = candies[i].str;
 		dc.GetTextExtent(cand_text.c_str(), cand_text.length(), &sz);
 		long cand_width = sz.cx;
 		line_height = max(line_height, sz.cy);
 		if (!comments[i].str.empty())
 		{
-			comment_text = L" " + comments[i].str;
+			wstring comment_text = L" " + comments[i].str;
 			comment_shift_width = max(comment_shift_width, cand_width);
+			dc.GetTextExtent(comment_text.c_str(), comment_text.length(), &sz);
+			line_height = max(line_height, sz.cy);
 		}
-		dc.GetTextExtent(comment_text.c_str(), comment_text.length(), &sz);
-		line_height = max(line_height, sz.cy);
 	}
 	for (size_t i = 0; i < candies.size(); ++i, y += m_style.candidate_spacing)
 	{
 		if (y >= rc.bottom)
 			break;
-		wstring cand_text = candies[i].str;
-		wstring comment_text;
-		if (!comments[i].str.empty())
-		{
-			comment_text = L" " + comments[i].str;
-		}
+		const wstring& cand_text = candies[i].str;
 		CRect rc_out(rc.left + m_style.hilite_padding, y, rc.right - m_style.hilite_padding, y + line_height);
 		if (i == cinfo.highlighted)
 		{
@@ -341,8 +339,9 @@ bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRec
 			dc.SetTextColor(m_style.comment_text_color);
 		}
 		// draw comment text
-		if (!comment_text.empty())
+		if (!comments[i].str.empty())
 		{
+			wstring comment_text = L" " + comments[i].str;
 			rc_out.DeflateRect(comment_shift_width, 0, 0, 0);
 			_TextOut(dc, rc_out.left, y, rc_out, comment_text.c_str(), comment_text.length());
 		}
