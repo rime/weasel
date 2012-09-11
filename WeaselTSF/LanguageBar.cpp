@@ -229,6 +229,7 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 	case ID_WEASELTRAY_INSTALLDIR:
 	case ID_WEASELTRAY_USERCONFIG:
 		/* TODO */
+        break;
 	}
 }
 
