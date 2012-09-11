@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "WeaselServerImpl.h"
+#include <Windows.h>
 
 using namespace weasel;
 
@@ -111,6 +112,12 @@ int ServerImpl::Start()
 		return 0;
 	}
 
+	// 使用「消息免疫過濾」繞過IE9的用戶界面特權隔離機制
+	// TODO available in Vista above
+	//for (UINT cmd = WEASEL_IPC_ECHO; cmd < WEASEL_IPC_LAST_COMMAND; ++cmd)
+	//{
+	//	ChangeWindowMessageFilterEx(hwnd, cmd, MSGFLT_ALLOW, NULL);
+	//}
 	return (int)hwnd;
 }
 
