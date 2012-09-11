@@ -3,6 +3,9 @@
 #include <WeaselCommon.h>
 #include <Usp10.h>
 
+#include "VerticalLayout.h"
+#include "HorizontalLayout.h"
+
 // for IDI_ENABLED, IDI_ALPHA
 #include "../WeaselServer/resource.h"
 
@@ -11,6 +14,7 @@ using namespace weasel;
 static LPCWSTR DEFAULT_FONT_FACE = L"";
 static const int DEFAULT_FONT_POINT = 16;
 
+static const LayoutType LAYOUT_TYPE = LAYOUT_VERTICAL;
 static const int MIN_WIDTH = 160;
 static const int MIN_HEIGHT = 0;
 static const int BORDER = 3;
@@ -36,10 +40,11 @@ static const int STATUS_ICON_SIZE = 16;
 static WCHAR LABEL_PATTERN[] = L"%1%. ";
 
 WeaselPanel::WeaselPanel(weasel::UI &ui)
-	: m_ctx(ui.ctx()), m_status(ui.status()), m_style(ui.style())
+	: m_layout(NULL), m_ctx(ui.ctx()), m_status(ui.status()), m_style(ui.style())
 {
 	m_style.font_face = DEFAULT_FONT_FACE;
 	m_style.font_point = DEFAULT_FONT_POINT;
+	m_style.layout_type = LAYOUT_TYPE;
 	m_style.min_width = MIN_WIDTH;
 	m_style.min_height = MIN_HEIGHT;
 	m_style.border = BORDER;
@@ -68,6 +73,12 @@ WeaselPanel::WeaselPanel(weasel::UI &ui)
 	m_iconAlpha.LoadIconW(IDI_ALPHA, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 }
 
+WeaselPanel::~WeaselPanel()
+{
+	if (m_layout != NULL)
+		delete m_layout;
+}
+
 void WeaselPanel::_ResizeWindow()
 {
 	if (!m_status.composing)
@@ -75,111 +86,34 @@ void WeaselPanel::_ResizeWindow()
 		SetWindowPos( NULL, 0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE, SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOZORDER);
 		return;
 	}
-
-	CDC dc = GetDC();
+	CDCHandle dc = GetDC();
 	long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-
 	CFont font;
 	font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-	CFontHandle oldFont = dc.SelectFont(font);
+	dc.SelectFont(font);
 
-	long width = 0;
-	long height = 0;
-	CSize sz;
-
-	// measure preedit string
-	wstring const& preedit = m_ctx.preedit.str;
-	vector<weasel::TextAttribute> const& attrs = m_ctx.preedit.attributes;
-	if (!preedit.empty())
-	{
-		dc.GetTextExtent(preedit.c_str(), preedit.length(), &sz);
-		for (size_t j = 0; j < attrs.size(); ++j)
-		{
-			if (attrs[j].type == weasel::HIGHLIGHTED)
-			{
-				const weasel::TextRange &range = attrs[j].range;
-				if (range.start < range.end)
-				{
-					if (range.start > 0)
-						sz.cx += m_style.hilite_spacing;
-					else
-						sz.cx += m_style.hilite_padding;
-					if (range.end < static_cast<int>(preedit.length()))
-						sz.cx += m_style.hilite_spacing;
-					else
-						sz.cx += m_style.hilite_padding;
-				}
-			}
-		}
-		width = max(width, sz.cx);
-		height += sz.cy + m_style.spacing;
-	}
-
-	// ascii mode icon
-	if (m_status.ascii_mode && width > 0)
-	{
-		width += m_style.spacing + STATUS_ICON_SIZE;
-	}
-
-	// measure aux string
-	wstring const& aux = m_ctx.aux.str;
-	if (!aux.empty())
-	{
-		dc.GetTextExtent(aux.c_str(), aux.length(), &sz);
-		width = max(width, sz.cx);
-		height += sz.cy + m_style.spacing;
-	}
-
-	// measure candidates
-	vector<Text> const& candies(m_ctx.cinfo.candies);
-	vector<Text> const& comments(m_ctx.cinfo.comments);
-	std::string const& labels(m_ctx.cinfo.labels);
-	long label_width = 0;
-	long cand_width = 0;
-	long comment_width = 0;
-	for (size_t i = 0; i < candies.size(); ++i, height += m_style.candidate_spacing)
-	{
-		wstring label_text;
-		if (i < labels.size())
-			label_text = (boost::wformat(LABEL_PATTERN) % labels[i]).str();
-		else
-			label_text = (boost::wformat(LABEL_PATTERN) % ((i + 1) % 10)).str();
-		dc.GetTextExtent(label_text.c_str(), label_text.length(), &sz);
-		label_width = max(label_width, sz.cx);
-
-		const wstring& cand = candies[i].str;
-		dc.GetTextExtent(cand.c_str(), cand.length(), &sz);
-		cand_width = max(cand_width, sz.cx);
-
-		if (!comments[i].str.empty())
-		{
-			wstring comment_text = L" " + comments[i].str;
-			dc.GetTextExtent(comment_text.c_str(), comment_text.length(), &sz);
-			comment_width = max(comment_width, sz.cx);
-		}
-
-		height += sz.cy;
-	}
-	width = max(width, label_width + cand_width + comment_width + 2 * m_style.hilite_padding);
-	if (!candies.empty())
-		height += m_style.spacing;
-
-	//trim the last spacing
-	if (height > 0)
-		height -= m_style.spacing;
-
-	width += 2 * m_style.margin_x;
-	height += 2 * m_style.margin_y;
-
-	width = max(width, m_style.min_width);
-	height = max(height, m_style.min_height);
-	
-	SetWindowPos( NULL, 0, 0, width, height, SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOZORDER);
+	CSize size = m_layout->GetContentSize();
+	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+	dc.DeleteDC();
 }
 
 //更新界面
 void WeaselPanel::Refresh()
 {
+	if (m_layout != NULL)
+		delete m_layout;
+	if (m_style.layout_type == LAYOUT_VERTICAL)
+		m_layout = new VerticalLayout(m_style, m_ctx);
+	else if (m_style.layout_type == LAYOUT_HORIZONTAL)
+		m_layout = new HorizontalLayout(m_style, m_ctx);
+	CDCHandle dc = GetDC();
+	long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	CFont font;
+	font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
+	dc.SelectFont(font);
+	m_layout->DoLayout(dc);
+	dc.DeleteDC();
+
 	_ResizeWindow();
 	_RepositionWindow();
 	RedrawWindow();
@@ -200,36 +134,30 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 	dc.SelectPen(oldPen);
 }
 
-bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int& y)
+bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
 	wstring const& t = text.str;
 	if (!t.empty())
 	{
-		CSize szText;
-		dc.GetTextExtent(t.c_str(), t.length(), &szText);
 		weasel::TextRange range;
 		vector<weasel::TextAttribute> const& attrs = text.attributes;
 		for (size_t j = 0; j < attrs.size(); ++j)
-		{
 			if (attrs[j].type == weasel::HIGHLIGHTED)
-			{
 				range = attrs[j].range;
-			}
-		}
+
 		if (range.start < range.end)
 		{
-			CSize selStart;
+			CSize selStart, selEnd;
 			dc.GetTextExtent(t.c_str(), range.start, &selStart);
-			CSize selEnd;
 			dc.GetTextExtent(t.c_str(), range.end, &selEnd);
 			int x = rc.left;
 			if (range.start > 0)
 			{
 				// zzz
 				std::wstring str_before(t.substr(0, range.start));
-				CRect rc_before(x, y, x + selStart.cx, y + szText.cy);
-				_TextOut(dc, x, y, rc_before, str_before.c_str(), str_before.length());
+				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
+				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length());
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			else
@@ -238,12 +166,12 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 			}
 			{
 				// zzz[yyy]
-				std::wstring str_hi(t.substr(range.start, range.end - range.start));
-				CRect rc_hi(x, y, x + (selEnd.cx - selStart.cx), y + szText.cy);
+				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
+				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color);
 				dc.SetTextColor(m_style.hilited_text_color);
 				dc.SetBkColor(m_style.hilited_back_color);
-				_TextOut(dc, x, y, rc_hi, str_hi.c_str(), str_hi.length());
+				_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length());
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
 				x += (selEnd.cx - selStart.cx);
@@ -253,99 +181,63 @@ bool WeaselPanel::_DrawText(Text const& text, CDCHandle dc, CRect const& rc, int
 				// zzz[yyy]xxx
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
-				CRect rc_after(x, y, x + (szText.cx - selEnd.cx), y + szText.cy);
-				_TextOut(dc, x, y, rc_after, str_after.c_str(), str_after.length());
-				x += (szText.cx - selEnd.cx);
+				CRect rc_after(x, rc.top, rc.right, rc.bottom);
+				_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length());
 			}
-			else
-			{
-				x += m_style.hilite_padding;
-			}
-			// done
-			y += szText.cy;
 		}
 		else
 		{
-			CRect rcText(rc.left, y, rc.right, y + szText.cy);
-			_TextOut(dc, rc.left, y, rcText, t.c_str(), t.length());
-			y += szText.cy;
+			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
+			_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length());
 		}
 		drawn = true;
 	}
 	return drawn;
 }
 
-bool WeaselPanel::_DrawCandidates(CandidateInfo const& cinfo, CDCHandle dc, CRect const& rc, int& y)
+bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 {
 	bool drawn = false;
-	CSize sz;
-	vector<Text> const& candies(cinfo.candies);
-	vector<Text> const& comments(cinfo.comments);
-	std::string const& labels(cinfo.labels);
-	vector<wstring> label_text;
-	long label_width = 0;
-	long comment_shift_width = 0;
-	long line_height = 0;
-	for (size_t i = 0; i < candies.size(); ++i)
+	const vector<Text> &candidates(m_ctx.cinfo.candies);
+	const vector<Text> &comments(m_ctx.cinfo.comments);
+	const std::string &labels(m_ctx.cinfo.labels);
+
+	for (int i = 0; i < candidates.size(); i++)
 	{
-		if (i < labels.size())
-			label_text.push_back((boost::wformat(LABEL_PATTERN) % labels[i]).str());
-		else
-			label_text.push_back((boost::wformat(LABEL_PATTERN) % ((i + 1) % 10)).str());
-		dc.GetTextExtent(label_text.back().c_str(), label_text.back().length(), &sz);
-		label_width = max(label_width, sz.cx);
-		line_height = max(line_height, sz.cy);
-		const wstring& cand_text = candies[i].str;
-		dc.GetTextExtent(cand_text.c_str(), cand_text.length(), &sz);
-		long cand_width = sz.cx;
-		line_height = max(line_height, sz.cy);
-		if (!comments[i].str.empty())
+		CRect rect;
+		if (i == m_ctx.cinfo.highlighted)
 		{
-			wstring comment_text = L" " + comments[i].str;
-			comment_shift_width = max(comment_shift_width, cand_width);
-			dc.GetTextExtent(comment_text.c_str(), comment_text.length(), &sz);
-			line_height = max(line_height, sz.cy);
-		}
-	}
-	for (size_t i = 0; i < candies.size(); ++i, y += m_style.candidate_spacing)
-	{
-		if (y >= rc.bottom)
-			break;
-		const wstring& cand_text = candies[i].str;
-		CRect rc_out(rc.left + m_style.hilite_padding, y, rc.right - m_style.hilite_padding, y + line_height);
-		if (i == cinfo.highlighted)
-		{
-			_HighlightText(dc, rc_out, m_style.hilited_candidate_back_color);
+			_HighlightText(dc, m_layout->GetHighlightRect(), m_style.hilited_candidate_back_color);
 			dc.SetTextColor(m_style.hilited_label_text_color);
 		}
 		else
-		{
 			dc.SetTextColor(m_style.label_text_color);
-		}
-		// draw label
-		_TextOut(dc, rc_out.left, y, rc_out, label_text[i].c_str(), label_text[i].length());
-		rc_out.DeflateRect(label_width, 0, 0, 0);
-		// draw candidate text
-		if (i == cinfo.highlighted)
-		{
+
+		// Draw label
+		std::wstring label = m_layout->GetLabelText(labels, i);
+		rect = m_layout->GetCandidateLabelRect(i);
+		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length());
+
+		// Draw text
+		std::wstring text = candidates.at(i).str;
+		if (i == m_ctx.cinfo.highlighted)
 			dc.SetTextColor(m_style.hilited_candidate_text_color);
-			_TextOut(dc, rc_out.left, y, rc_out, cand_text.c_str(), cand_text.length());
-			dc.SetTextColor(m_style.hilited_comment_text_color);
-		}
 		else
-		{
 			dc.SetTextColor(m_style.candidate_text_color);
-			_TextOut(dc, rc_out.left, y, &rc_out, cand_text.c_str(), cand_text.length());
-			dc.SetTextColor(m_style.comment_text_color);
-		}
-		// draw comment text
-		if (!comments[i].str.empty())
+		rect = m_layout->GetCandidateTextRect(i);
+		_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length());
+		
+		// Draw comment
+		std::wstring comment = comments.at(i).str;
+		if (!comment.empty())
 		{
-			wstring comment_text = L" " + comments[i].str;
-			rc_out.DeflateRect(comment_shift_width, 0, 0, 0);
-			_TextOut(dc, rc_out.left, y, rc_out, comment_text.c_str(), comment_text.length());
+			if (i == m_ctx.cinfo.highlighted)
+				dc.SetTextColor(m_style.hilited_comment_text_color);
+			else
+				dc.SetTextColor(m_style.comment_text_color);
+			rect = m_layout->GetCandidateCommentRect(i);
+			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length());
 		}
-		y += line_height;
 		drawn = true;
 	}
 	dc.SetTextColor(m_style.text_color);
@@ -393,35 +285,32 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	dc.SetTextColor(m_style.text_color);
 	dc.SetBkColor(m_style.back_color);
 	dc.SetBkMode(TRANSPARENT);
-
-	rc.DeflateRect(m_style.margin_x, m_style.margin_y);
-
-	int y = rc.top;
+	
+	bool drawn = false;
 
 	// draw preedit string
-	if (_DrawText(m_ctx.preedit, dc, rc, y))
-		y += m_style.spacing;
-
+	if (!m_style.inline_preedit)
+		drawn |= _DrawPreedit(m_ctx.preedit, dc, m_layout->GetPreeditRect());
+	
+	/* FIXME: What's this?
 	// ascii mode icon
 	if (m_status.ascii_mode && y > rc.top)
 	{
 		int icon_x = rc.right - STATUS_ICON_SIZE;
 		int icon_y = (rc.top + y - m_style.spacing - STATUS_ICON_SIZE) / 2;
 		dc.DrawIconEx(icon_x, icon_y, m_iconAlpha, 0, 0);
-	}
+	}*/
 
-	// draw aux string
-	if (_DrawText(m_ctx.aux, dc, rc, y))
-		y += m_style.spacing;
+	/* TODO: Deprecated? */
+	// draw auxiliary string
+	drawn |= _DrawPreedit(m_ctx.aux, dc, m_layout->GetAuxiliaryRect());
 
 	// draw candidates
-	if (_DrawCandidates(m_ctx.cinfo, dc, rc, y))
-		y += m_style.spacing;
+	drawn |= _DrawCandidates(dc);
 
-	// TODO: draw other parts
-
-	if (y > rc.top)
-		y -= m_style.spacing;
+	/* Nothing drawn, hide candidate window */
+	if (!drawn)
+		ShowWindow(SW_HIDE);
 
 	dc.SelectFont(oldFont);	
 }

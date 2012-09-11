@@ -251,17 +251,41 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 		messages.push_back(boost::str(boost::format("commit=%s\n") % commit.text));
 		RimeFreeCommit(&commit);
 	}
-
+	
+	bool is_composing;
 	RimeStatus status = {0};
 	RIME_STRUCT_INIT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
+		is_composing = status.is_composing;
 		actions.insert("status");
 		messages.push_back(boost::str(boost::format("status.ascii_mode=%d\n") % status.is_ascii_mode));
 		messages.push_back(boost::str(boost::format("status.composing=%d\n") % status.is_composing));
 		messages.push_back(boost::str(boost::format("status.disabled=%d\n") % status.is_disabled));
 		RimeFreeStatus(&status);
 	}
+	
+	RimeContext ctx = {0};
+	RIME_STRUCT_INIT(RimeContext, ctx);
+	if (RimeGetContext(session_id, &ctx))
+	{
+		if (is_composing)
+		{
+			actions.insert("ctx");
+			messages.push_back(boost::str(boost::format("ctx.preedit=%s\n") % ctx.composition.preedit));
+			if (ctx.composition.sel_start <= ctx.composition.sel_end)
+			{
+				messages.push_back(boost::str(boost::format("ctx.preedit.cursor=%d,%d\n") %
+					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start) %
+					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)));
+			}
+		}
+		RimeFreeContext(&ctx);
+	}
+
+	// configuration information
+	actions.insert("config");
+	messages.push_back(boost::str(boost::format("config.inline_preedit=%d\n") % (int) m_ui->style().inline_preedit));
 
 	// summarize
 
@@ -322,7 +346,21 @@ void RimeWithWeaselHandler::_UpdateUIStyle()
 		style.font_face = utf8towcs(buffer);
 	}
 	RimeConfigGetInt(&config, "style/font_point", &style.font_point);
+	Bool b;
+	RimeConfigGetBool(&config, "style/inline_preedit", &b);
+	style.inline_preedit = b;
 	// layout
+	char layout_type[256];
+	RimeConfigGetString(&config, "style/layout/type", layout_type, 255);
+	if (!std::strcmp(layout_type, "vertical"))
+		style.layout_type = weasel::LAYOUT_VERTICAL;
+	else if (!std::strcmp(layout_type, "horizontal"))
+		style.layout_type = weasel::LAYOUT_HORIZONTAL;
+	else
+	{
+		style.layout_type = weasel::LAYOUT_VERTICAL;
+		LOG(INFO) << "Invalid style type";
+	}
 	RimeConfigGetInt(&config, "style/layout/min_width", &style.min_width);
 	RimeConfigGetInt(&config, "style/layout/min_height", &style.min_height);
 	RimeConfigGetInt(&config, "style/layout/border", &style.border);

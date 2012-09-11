@@ -3,6 +3,7 @@
 #include "ActionLoader.h"
 #include "Committer.h"
 #include "ContextUpdater.h"
+#include "Configurator.h"
 
 using namespace weasel;
 
@@ -20,6 +21,7 @@ void Deserializer::Initialize(ResponseParser* pTarget)
 		Define(L"commit", Committer::Create);
 		Define(L"ctx", ContextUpdater::Create);
 		Define(L"status", StatusUpdater::Create);
+		Define(L"config", Configurator::Create);
 	}
 
 	// loaded by default

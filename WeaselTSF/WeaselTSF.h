@@ -1,22 +1,120 @@
-// The following ifdef block is the standard way of creating macros which make exporting 
-// from a DLL simpler. All files within this DLL are compiled with the WEASELTSF_EXPORTS
-// symbol defined on the command line. this symbol should not be defined on any project
-// that uses this DLL. This way any other project whose source files include this file see 
-// WEASELTSF_API functions as being imported from a DLL, whereas this DLL sees symbols
-// defined with this macro as being exported.
-#ifdef WEASELTSF_EXPORTS
-#define WEASELTSF_API __declspec(dllexport)
-#else
-#define WEASELTSF_API __declspec(dllimport)
-#endif
+#pragma once
 
-// This class is exported from the WeaselTSF.dll
-class WEASELTSF_API CWeaselTSF {
+#include "Globals.h"
+#include "WeaselIPC.h"
+
+class WeaselTSF:
+	public ITfTextInputProcessor,
+	public ITfThreadMgrEventSink,
+	public ITfTextEditSink,
+	public ITfTextLayoutSink,
+	public ITfKeyEventSink,
+	public ITfCompositionSink,
+	public ITfEditSession
+{
 public:
-	CWeaselTSF(void);
-	// TODO: add your methods here.
+	WeaselTSF();
+	~WeaselTSF();
+
+	/* IUnknown */
+	STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+	STDMETHODIMP_(ULONG) AddRef();
+	STDMETHODIMP_(ULONG) Release();
+
+	/* ITfTextInputProcessor */
+	STDMETHODIMP Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId);
+	STDMETHODIMP Deactivate();
+
+	/* ITfThreadMgrEventSink */
+	STDMETHODIMP OnInitDocumentMgr(ITfDocumentMgr *pDocMgr);
+	STDMETHODIMP OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr);
+	STDMETHODIMP OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus);
+	STDMETHODIMP OnPushContext(ITfContext *pContext);
+	STDMETHODIMP OnPopContext(ITfContext *pContext);
+
+	/* ITfTextEditSink */
+	STDMETHODIMP OnEndEdit(ITfContext *pic, TfEditCookie ecReadOnly, ITfEditRecord *pEditRecord);
+
+	/* ITfTextLayoutSink */
+	STDMETHODIMP OnLayoutChange(ITfContext *pContext, TfLayoutCode lcode, ITfContextView *pContextView);
+
+	/* ITfKeyEventSink */
+	STDMETHODIMP OnSetFocus(BOOL fForeground);
+	STDMETHODIMP OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParm, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten);
+
+	/* ITfCompositionSink */
+	STDMETHODIMP OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition);
+
+	/* ITfEditSession */
+	STDMETHODIMP DoEditSession(TfEditCookie ec);
+	
+	/* Compartments */
+    BOOL _IsKeyboardDisabled();
+    BOOL _IsKeyboardOpen();
+    HRESULT _SetKeyboardOpen(BOOL fOpen);
+
+	/* Composition */
+	void _StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnabled);
+	void _EndComposition(ITfContext *pContext);
+	BOOL _ShowInlinePreedit(ITfContext *pContext, const weasel::Context &context);
+	void _UpdateComposition(ITfContext *pContext);
+	BOOL _IsComposing();
+	void _SetComposition(ITfComposition *pComposition);
+	void _SetCompositionPosition(const RECT &rc);
+	BOOL _UpdateCompositionWindow(ITfContext *pContext);
+
+	/* Language bar */
+	HWND _GetFocusedContextWindow();
+	void _HandleLangBarMenuSelect(UINT wID);
+
+	/* IPC */
+	void _EnsureServerConnected();
+
+private:
+	/* TSF Related */
+	BOOL _InitThreadMgrEventSink();
+	void _UninitThreadMgrEventSink();
+
+	BOOL _InitTextEditSink(ITfDocumentMgr *pDocMgr);
+
+	BOOL _InitKeyEventSink();
+	void _UninitKeyEventSink();
+	void _ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
+
+	BOOL _InitPreservedKey();
+	void _UninitPreservedKey();
+
+	BOOL _InitLanguageBar();
+	void _UninitLanguageBar();
+	
+	BOOL _InsertText(ITfContext *pContext, const WCHAR *pchText, ULONG cchText);
+
+	ITfThreadMgr *_pThreadMgr;
+	TfClientId _tfClientId;
+	DWORD _dwThreadMgrEventSinkCookie;
+
+	ITfContext *_pTextEditSinkContext;
+	DWORD _dwTextEditSinkCookie, _dwTextLayoutSinkCookie;
+	BYTE _lpbKeyState[256];
+	BOOL _fTestKeyDownPending, _fTestKeyUpPending;
+
+	ITfContext *_pEditSessionContext;
+	const WCHAR *_pEditSessionText;
+	ULONG _cEditSessionText;
+
+	ITfComposition *_pComposition;
+
+	ITfLangBarItemButton *_pLangBarButton;
+
+	LONG _cRef;	// COM ref count
+
+	/* CUAS Candidate Window Position Workaround */
+	BOOL _fCUASWorkaroundTested, _fCUASWorkaroundEnabled;
+
+	/* Weasel Related */
+	weasel::Client m_client;
 };
-
-extern WEASELTSF_API int nWeaselTSF;
-
-WEASELTSF_API int fnWeaselTSF(void);

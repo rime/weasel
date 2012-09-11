@@ -157,7 +157,7 @@ public:
 		cerr << "FindSession: " << session_id << endl;
 		return (session_id <= m_counter ? session_id : 0);
 	}
-	virtual UINT AddSession()
+	virtual UINT AddSession(LPWSTR buffer)
 	{
 		cerr << "AddSession: " << m_counter + 1 << endl;
 		return ++m_counter;

@@ -1,17 +1,19 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
+#include "Globals.h"
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-					 )
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID pvReserved)
 {
-	switch (ul_reason_for_call)
+	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
+		g_hInst = hInstance;
+		if (!InitializeCriticalSectionAndSpinCount(&g_cs, 0))
+			return FALSE;
+		break;
+
 	case DLL_PROCESS_DETACH:
+		DeleteCriticalSection(&g_cs);
 		break;
 	}
 	return TRUE;
