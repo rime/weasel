@@ -51,22 +51,28 @@ UninstPage instfiles
 ;--------------------------------
 
 Function .onInit
- 
   ReadRegStr $R0 HKLM \
   "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" \
   "UninstallString"
   StrCmp $R0 "" done
- 
+
   MessageBox MB_OKCANCEL|MB_ICONINFORMATION \
   "安裝前，我打盤先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。" \
   IDOK uninst
   Abort
  
-; Run the uninstaller silently
 uninst:
-  Exec '$R0 /S'
-done:
+  ; Backup data directory from previous installation, user files may exist
+  ReadRegStr $R1 HKLM SOFTWARE\Rime\Weasel "WeaselRoot"
+  StrCmp $R1 "" call_uninstaller
+  IfFileExists $R1\data\*.* 0 call_uninstaller
+  CreateDirectory $TEMP\weasel-backup
+  CopyFiles $R1\data\*.* $TEMP\weasel-backup
 
+call_uninstaller:
+  Exec '$R0 /S'
+
+done:
 FunctionEnd
 
 ; The stuff to install
@@ -74,17 +80,25 @@ Section "Weasel"
 
   SectionIn RO
   
-  ; Write the installation path into the registry
+  ; Write the new installation path into the registry
   WriteRegStr HKLM SOFTWARE\Rime\Weasel "InstallDir" "$INSTDIR"
   
+  ; Reset INSTDIR for the new version
   StrCpy $INSTDIR "${WEASEL_ROOT}"
 
   IfFileExists "$INSTDIR\WeaselServer.exe" 0 +2
   ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
 
+  SetOverwrite try
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
-  ; program files
+
+  IfFileExists $TEMP\weasel-backup\*.* 0 program_files
+  CreateDirectory $INSTDIR\data
+  CopyFiles $TEMP\weasel-backup\*.* $INSTDIR\data
+  RMDir /r $TEMP\weasel-backup
+
+program_files:
   File "LICENSE.txt"
   File "README.txt"
   File "weasel.ime"
