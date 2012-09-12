@@ -346,20 +346,22 @@ void RimeWithWeaselHandler::_UpdateUIStyle()
 		style.font_face = utf8towcs(buffer);
 	}
 	RimeConfigGetInt(&config, "style/font_point", &style.font_point);
-	Bool b;
-	RimeConfigGetBool(&config, "style/inline_preedit", &b);
-	style.inline_preedit = b;
-	// layout
-	char layout_type[256];
-	RimeConfigGetString(&config, "style/layout/type", layout_type, 255);
-	if (!std::strcmp(layout_type, "vertical"))
-		style.layout_type = weasel::LAYOUT_VERTICAL;
-	else if (!std::strcmp(layout_type, "horizontal"))
-		style.layout_type = weasel::LAYOUT_HORIZONTAL;
-	else
+	Bool inline_preedit = False;
+	RimeConfigGetBool(&config, "style/inline_preedit", &inline_preedit);
+	style.inline_preedit = inline_preedit;
+	Bool horizontal = False;
+	RimeConfigGetBool(&config, "style/horizontal", &horizontal);
+	style.layout_type = horizontal ? weasel::LAYOUT_HORIZONTAL : weasel::LAYOUT_VERTICAL;
+	// layout (alternative to style/horizontal)
+	char layout_type[256] = {0};
+	if (RimeConfigGetString(&config, "style/layout/type", layout_type, sizeof(layout_type) - 1))
 	{
-		style.layout_type = weasel::LAYOUT_VERTICAL;
-		LOG(INFO) << "Invalid style type";
+		if (!std::strcmp(layout_type, "vertical"))
+			style.layout_type = weasel::LAYOUT_VERTICAL;
+		else if (!std::strcmp(layout_type, "horizontal"))
+			style.layout_type = weasel::LAYOUT_HORIZONTAL;
+		else
+			LOG(WARNING) << "Invalid style type: " << layout_type;
 	}
 	RimeConfigGetInt(&config, "style/layout/min_width", &style.min_width);
 	RimeConfigGetInt(&config, "style/layout/min_height", &style.min_height);
