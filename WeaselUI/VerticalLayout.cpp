@@ -37,20 +37,26 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 
 	/* Candidates */
 	int comment_shift_width = 0;
+	int max_candidate_width = 0;  /* label + text */
+	int max_comment_width = 0;    /* a space + comment, or none */
 	for (int i = 0; i < candidates.size(); i++)
 	{
 		int w = _style.margin_x + _style.hilite_padding, h = 0;
+		int candidate_width = 0, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i);
 		dc.GetTextExtent(label.c_str(), label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
+		candidate_width += size.cx;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
 		dc.GetTextExtent(text.c_str(), text.length(), &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
+		candidate_width += size.cx;
+		max_candidate_width = max(max_candidate_width, candidate_width);
 
 		/* Comment */
 		if (!comments.at(i).str.empty())
@@ -59,17 +65,23 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 			dc.GetTextExtent(L" ", 1, &size);
 			w += size.cx, h = max(h, size.cy);
 			comment_shift_width = max(comment_shift_width, w);
+			comment_width += size.cx;
 
 			const std::wstring& comment = comments.at(i).str;
 			dc.GetTextExtent(comment.c_str(), comment.length(), &size);
 			_candidateCommentRects[i].SetRect(0, height, size.cx, height + size.cy);
 			w += size.cx, h = max(h, size.cy);
+			comment_width += size.cx;
+			max_comment_width = max(max_comment_width, comment_width);
 		}
 		w += _style.hilite_padding + _style.margin_x;
 
-		width = max(width, w);
+		//width = max(width, w);
 		height += h + _style.candidate_spacing;
 	}
+	/* comments are left-aligned, to the right of the longest candidate */
+	width = max(width, max_candidate_width + max_comment_width + 2 * (_style.margin_x + _style.hilite_padding));
+
 	/* Align comments */
 	for (int i = 0; i < candidates.size(); i++)
 		_candidateCommentRects[i].OffsetRect(comment_shift_width, 0);
