@@ -87,6 +87,8 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 	}
 	UINT session_id = RimeCreateSession();
 	DLOG(INFO) << "Add session: created session_id = 0x%x" << session_id;
+    // show soft cursor on weasel panel
+    RimeSetOption(session_id, "soft_cursor", Bool(!m_ui->style().inline_preedit));
 	// show session's welcome message :-) if any
 	_UpdateUI(session_id);
 	m_active_session = session_id;
