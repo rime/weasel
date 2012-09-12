@@ -94,7 +94,7 @@ void WeaselPanel::_ResizeWindow()
 
 	CSize size = m_layout->GetContentSize();
 	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
-	dc.DeleteDC();
+	ReleaseDC(dc);
 }
 
 //更新界面
@@ -112,7 +112,7 @@ void WeaselPanel::Refresh()
 	font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
 	dc.SelectFont(font);
 	m_layout->DoLayout(dc);
-	dc.DeleteDC();
+	ReleaseDC(dc);
 
 	_ResizeWindow();
 	_RepositionWindow();
