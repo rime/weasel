@@ -46,7 +46,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 		w += size.cx, h = max(h, size.cy);
 
 		/* Text */
-		std::wstring text = candidates.at(i).str;
+		const std::wstring& text = candidates.at(i).str;
 		dc.GetTextExtent(text.c_str(), text.length(), &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
@@ -58,7 +58,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 			dc.GetTextExtent(L" ", 1, &size);
 			w += size.cx, h = max(h, size.cy);
 
-			std::wstring comment = comments.at(i).str;
+			const std::wstring& comment = comments.at(i).str;
 			dc.GetTextExtent(comment.c_str(), comment.length(), &size);
 			_candidateCommentRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 			w += size.cx, h = max(h, size.cy);

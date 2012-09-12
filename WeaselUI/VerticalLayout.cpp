@@ -47,7 +47,7 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 		w += size.cx, h = max(h, size.cy);
 
 		/* Text */
-		std::wstring text = candidates.at(i).str;
+		const std::wstring& text = candidates.at(i).str;
 		dc.GetTextExtent(text.c_str(), text.length(), &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
@@ -60,7 +60,7 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 			w += size.cx, h = max(h, size.cy);
 			comment_shift_width = max(comment_shift_width, w);
 
-			std::wstring comment = comments.at(i).str;
+			const std::wstring& comment = comments.at(i).str;
 			dc.GetTextExtent(comment.c_str(), comment.length(), &size);
 			_candidateCommentRects[i].SetRect(0, height, size.cx, height + size.cy);
 			w += size.cx, h = max(h, size.cy);
