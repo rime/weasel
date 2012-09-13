@@ -6,6 +6,7 @@ ReleaseHant/
 /output/*.ime
 /output/data/*.kct
 /output/data/*.yaml
+/output/expansion/*.yaml
 /output/archives
 /lib/*.lib
 /include/glog
