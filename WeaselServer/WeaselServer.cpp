@@ -136,6 +136,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 			return 0;
 	}
 
+	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
+
 	int nRet = 0;
 	try
 	{
