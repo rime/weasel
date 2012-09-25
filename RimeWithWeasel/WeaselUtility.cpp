@@ -48,6 +48,7 @@ const char* weasel_shared_data_dir() {
 
 const char* weasel_user_data_dir() {
 	static char path[MAX_PATH] = {0};
-	WideCharToMultiByte(CP_UTF8, 0, WeaselUserDataPath().c_str(), -1, path, _countof(path) - 1, NULL, NULL);
+	// Windows wants multi-byte file paths in native encoding
+	WideCharToMultiByte(CP_ACP, 0, WeaselUserDataPath().c_str(), -1, path, _countof(path) - 1, NULL, NULL);
 	return path;
 }
