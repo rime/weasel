@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <set>
 #include <boost/foreach.hpp>
-#include <rime/expl/switcher_settings.h>
+#include <rime/lever/switcher_settings.h>
 
 
 SwitcherSettingsDialog::SwitcherSettingsDialog(rime::SwitcherSettings* settings)

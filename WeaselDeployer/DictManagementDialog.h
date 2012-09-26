@@ -5,7 +5,7 @@
 #pragma warning(disable: 4995)
 #pragma warning(disable: 4996)
 #include <rime/deployer.h>
-#include <rime/expl/user_dict_manager.h>
+#include <rime/lever/user_dict_manager.h>
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
 

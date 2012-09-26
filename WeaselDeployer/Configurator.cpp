@@ -15,7 +15,7 @@
 #include <rime_api.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
-#include <rime/expl/switcher_settings.h>
+#include <rime/lever/switcher_settings.h>
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
 #pragma warning(default: 4005)

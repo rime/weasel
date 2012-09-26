@@ -5,7 +5,7 @@
 
 #pragma warning(disable: 4995)
 #pragma warning(disable: 4996)
-#include <rime/expl/custom_settings.h>
+#include <rime/lever/custom_settings.h>
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
 
