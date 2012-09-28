@@ -19,11 +19,11 @@ if errorlevel 2 goto win7_x64_install
 if errorlevel 1 goto xp_install
 
 :win7_install
-wscript elevate.js WeaselSetup.exe %WEASEL_INSTALL_OPTION%
+wscript sudo.js WeaselSetup.exe %WEASEL_INSTALL_OPTION%
 if %ERRORLEVEL% EQU 0 goto success
 
 :win7_x64_install
-wscript elevate.js WeaselSetupx64.exe %WEASEL_INSTALL_OPTION%
+wscript sudo.js WeaselSetupx64.exe %WEASEL_INSTALL_OPTION%
 if %ERRORLEVEL% EQU 0 goto success
 
 :xp_install

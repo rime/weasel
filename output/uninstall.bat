@@ -10,11 +10,11 @@ if errorlevel 2 goto win7_x64_uninstall
 if errorlevel 1 goto xp_uninstall
 
 :win7_uninstall
-wscript elevate.js WeaselSetup.exe /u
+wscript sudo.js WeaselSetup.exe /u
 goto exit
 
 :win7_x64_uninstall
-wscript elevate.js WeaselSetupx64.exe /u
+wscript sudo.js WeaselSetupx64.exe /u
 goto exit
 
 :xp_uninstall
