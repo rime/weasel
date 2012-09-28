@@ -85,6 +85,8 @@ LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return 0;
 }
 
+extern "C" BOOL ( STDAPICALLTYPE *pChangeWindowMessageFilter )( UINT,DWORD ) = NULL;
+
 int ServerImpl::Start()
 {
 	// assure single instance
@@ -113,11 +115,20 @@ int ServerImpl::Start()
 	}
 
 	// 使用「消息免疫過濾」繞過IE9的用戶界面特權隔離機制
-	// TODO available in Vista above
-	//for (UINT cmd = WEASEL_IPC_ECHO; cmd < WEASEL_IPC_LAST_COMMAND; ++cmd)
-	//{
-	//	ChangeWindowMessageFilterEx(hwnd, cmd, MSGFLT_ALLOW, NULL);
-	//}
+	HMODULE hMod = 0;
+	if ( ( hMod = ::LoadLibrary( _T( "user32.dll" ) ) ) != 0 )
+	{
+		pChangeWindowMessageFilter = (BOOL (__stdcall *)( UINT,DWORD ) )::GetProcAddress( hMod, "ChangeWindowMessageFilter" );
+		if ( pChangeWindowMessageFilter )
+		{
+			for (UINT cmd = WEASEL_IPC_ECHO; cmd < WEASEL_IPC_LAST_COMMAND; ++cmd)
+			{
+				pChangeWindowMessageFilter(cmd, MSGFLT_ADD);
+			}
+		}
+		FreeLibrary(hMod);
+	}
+
 	return (int)hwnd;
 }
 
