@@ -1,6 +1,11 @@
 #pragma once
 #include <WeaselIPC.h>
 #include <WeaselUI.h>
+#include <map>
+#include <string>
+
+typedef std::map<std::string, bool> AppOptions;
+typedef std::map<std::string, AppOptions> AppOptionsByAppName;
 
 class RimeWithWeaselHandler :
 	public weasel::RequestHandler
@@ -14,8 +19,8 @@ public:
 	virtual UINT AddSession(LPWSTR buffer);
 	virtual UINT RemoveSession(UINT session_id);
 	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer);
-	virtual void FocusIn(UINT session_id);
-	virtual void FocusOut(UINT session_id);
+	virtual void FocusIn(DWORD param, UINT session_id);
+	virtual void FocusOut(DWORD param, UINT session_id);
 	virtual void UpdateInputPosition(RECT const& rc, UINT session_id);
 	virtual void StartMaintenance();
 	virtual void EndMaintenance();
@@ -24,9 +29,10 @@ private:
 	bool _IsDeployerRunning();
 	void _UpdateUI(UINT session_id);
 	bool _Respond(UINT session_id, LPWSTR buffer);
-	void _UpdateUIStyle();
-	
-	weasel::UI *m_ui;  // reference
+
+	AppOptionsByAppName m_app_options;
+	weasel::UI* m_ui;  // reference
 	UINT m_active_session;
+    DWORD m_client_caps;
 	bool m_disabled;
 };

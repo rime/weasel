@@ -63,8 +63,8 @@ namespace weasel
 		virtual UINT AddSession(LPWSTR buffer) { return 0; }
 		virtual UINT RemoveSession(UINT session_id) { return 0; }
 		virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, LPWSTR buffer) { return FALSE; }
-		virtual void FocusIn(UINT session_id) {}
-		virtual void FocusOut(UINT session_id) {}
+		virtual void FocusIn(DWORD param, UINT session_id) {}
+		virtual void FocusOut(DWORD param, UINT session_id) {}
 		virtual void UpdateInputPosition(RECT const& rc, UINT session_id) {}
 		virtual void StartMaintenance() {}
 		virtual void EndMaintenance() {}

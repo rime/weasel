@@ -84,7 +84,9 @@ void ClientImpl::UpdateInputPosition(RECT const& rc)
 
 void ClientImpl::FocusIn()
 {
-	PostMessage(serverWnd, WEASEL_IPC_FOCUS_IN, 0, session_id);
+    // TODO 
+    DWORD client_caps = 0;
+	PostMessage(serverWnd, WEASEL_IPC_FOCUS_IN, client_caps, session_id);
 }
 
 void ClientImpl::FocusOut()

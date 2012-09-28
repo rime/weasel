@@ -195,7 +195,7 @@ LRESULT ServerImpl::OnFocusIn(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 {
 	if (!m_pRequestHandler)
 		return 0;
-	m_pRequestHandler->FocusIn(lParam);
+	m_pRequestHandler->FocusIn(wParam, lParam);
 	return 0;
 }
 
@@ -203,7 +203,7 @@ LRESULT ServerImpl::OnFocusOut(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 {
 	if (!m_pRequestHandler)
 		return 0;
-	m_pRequestHandler->FocusOut(lParam);
+	m_pRequestHandler->FocusOut(wParam, lParam);
 	return 0;
 }
 

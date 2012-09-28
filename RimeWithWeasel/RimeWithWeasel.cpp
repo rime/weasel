@@ -24,7 +24,7 @@ int expand_ibus_modifier(int m)
 }
 
 RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
-	: m_ui(ui), m_active_session(0), m_disabled(true)
+	: m_ui(ui), m_active_session(0), m_client_caps(0), m_disabled(true)
 {
 }
 
@@ -55,15 +55,22 @@ void RimeWithWeaselHandler::Initialize()
 	{
 		m_disabled = true;
 	}
-	if (m_ui)
+
+	void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui);
+	void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
+	RimeConfig config = { NULL };
+	if (RimeConfigOpen("weasel", &config))
 	{
-		_UpdateUIStyle();
+		_UpdateUIStyle(&config, m_ui);
+		_LoadAppOptions(&config, m_app_options);
+		RimeConfigClose(&config);
 	}
 }
 
 void RimeWithWeaselHandler::Finalize()
 {
 	m_active_session = 0;
+    m_client_caps = 0;
 	m_disabled = true;
 	LOG(INFO) << "Finalizing la rime.";
 	RimeFinalize();
@@ -86,10 +93,11 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 		if (m_disabled) return 0;
 	}
 	UINT session_id = RimeCreateSession();
-	DLOG(INFO) << "Add session: created session_id = 0x%x" << session_id;
-    // show soft cursor on weasel panel
-    RimeSetOption(session_id, "soft_cursor", Bool(!m_ui->style().inline_preedit));
+	DLOG(INFO) << "Add session: created session_id = " << session_id;
+	// show soft cursor on weasel panel
+	RimeSetOption(session_id, "soft_cursor", Bool(!m_ui->style().inline_preedit));
 	// show session's welcome message :-) if any
+    m_client_caps = 0;
 	_UpdateUI(session_id);
 	m_active_session = session_id;
 	return session_id;
@@ -99,10 +107,11 @@ UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 {
 	if (m_ui) m_ui->Hide();
 	if (m_disabled) return 0;
-	DLOG(INFO) << "Remove session: session_id = 0x%x" << session_id;
+	DLOG(INFO) << "Remove session: session_id = " << session_id;
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
 	m_active_session = 0;
+    m_client_caps = 0;
 	return 0;
 }
 
@@ -118,19 +127,21 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 	return (BOOL)taken;
 }
 
-void RimeWithWeaselHandler::FocusIn(UINT session_id)
+void RimeWithWeaselHandler::FocusIn(DWORD client_caps, UINT session_id)
 {
-	DLOG(INFO) << "Focus in: session_id = 0x%x" << session_id;
+	DLOG(INFO) << "Focus in: session_id = " << session_id << ", client_caps = " << client_caps;
 	if (m_disabled) return;
+    m_client_caps = client_caps;
 	_UpdateUI(session_id);
 	m_active_session = session_id;
 }
 
-void RimeWithWeaselHandler::FocusOut(UINT session_id)
+void RimeWithWeaselHandler::FocusOut(DWORD param, UINT session_id)
 {
-	DLOG(INFO) << "Focus out: session_id = 0x%x" << session_id;
+	DLOG(INFO) << "Focus out: session_id = " << session_id;
 	if (m_ui) m_ui->Hide();
 	m_active_session = 0;
+    m_client_caps = 0;
 }
 
 void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
@@ -141,8 +152,26 @@ void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 	if (m_disabled) return;
 	if (m_active_session != session_id)
 	{
+        m_client_caps = 0;
 		_UpdateUI(session_id);
 		m_active_session = session_id;
+	}
+}
+
+void RimeWithWeaselHandler::UpdateClientInfo(UINT session_id)
+{
+    // TODO get app_name from shared memory
+    std::string app_name;
+    // set app specific options
+	if (!app_name.empty() &&
+		m_app_options.find(app_name) != m_app_options.end())
+	{
+		AppOptions& options(m_app_options[app_name]);
+		for (AppOptions::const_iterator it = options.begin(); it != options.end(); ++it)
+		{
+			DLOG(INFO) << "set app option: " << it->first << " = " << it->second;
+			RimeSetOption(session_id, it->first.c_str(), Bool(it->second));
+		}
 	}
 }
 
@@ -330,33 +359,28 @@ static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
 		);
 }
 
-void RimeWithWeaselHandler::_UpdateUIStyle()
+static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui)
 {
-	if (!m_ui) return;
-
-	RimeConfig config = { NULL };
-	if (!RimeConfigOpen("weasel", &config))
-		return;
-
-	weasel::UIStyle &style(m_ui->style());
+	if (!ui) return;
+	weasel::UIStyle &style(ui->style());
 
 	const int BUF_SIZE = 99;
 	char buffer[BUF_SIZE + 1];
 	memset(buffer, '\0', sizeof(buffer));
-	if (RimeConfigGetString(&config, "style/font_face", buffer, BUF_SIZE))
+	if (RimeConfigGetString(config, "style/font_face", buffer, BUF_SIZE))
 	{
 		style.font_face = utf8towcs(buffer);
 	}
-	RimeConfigGetInt(&config, "style/font_point", &style.font_point);
+	RimeConfigGetInt(config, "style/font_point", &style.font_point);
 	Bool inline_preedit = False;
-	RimeConfigGetBool(&config, "style/inline_preedit", &inline_preedit);
+	RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit);
 	style.inline_preedit = inline_preedit;
 	Bool horizontal = False;
-	RimeConfigGetBool(&config, "style/horizontal", &horizontal);
+	RimeConfigGetBool(config, "style/horizontal", &horizontal);
 	style.layout_type = horizontal ? weasel::LAYOUT_HORIZONTAL : weasel::LAYOUT_VERTICAL;
 	// layout (alternative to style/horizontal)
 	char layout_type[256] = {0};
-	if (RimeConfigGetString(&config, "style/layout/type", layout_type, sizeof(layout_type) - 1))
+	if (RimeConfigGetString(config, "style/layout/type", layout_type, sizeof(layout_type) - 1))
 	{
 		if (!std::strcmp(layout_type, "vertical"))
 			style.layout_type = weasel::LAYOUT_VERTICAL;
@@ -365,44 +389,44 @@ void RimeWithWeaselHandler::_UpdateUIStyle()
 		else
 			LOG(WARNING) << "Invalid style type: " << layout_type;
 	}
-	RimeConfigGetInt(&config, "style/layout/min_width", &style.min_width);
-	RimeConfigGetInt(&config, "style/layout/min_height", &style.min_height);
-	RimeConfigGetInt(&config, "style/layout/border", &style.border);
-	RimeConfigGetInt(&config, "style/layout/margin_x", &style.margin_x);
-	RimeConfigGetInt(&config, "style/layout/margin_y", &style.margin_y);
-	RimeConfigGetInt(&config, "style/layout/spacing", &style.spacing);
-	RimeConfigGetInt(&config, "style/layout/candidate_spacing", &style.candidate_spacing);
-	RimeConfigGetInt(&config, "style/layout/hilite_spacing", &style.hilite_spacing);
-	RimeConfigGetInt(&config, "style/layout/hilite_padding", &style.hilite_padding);
-	RimeConfigGetInt(&config, "style/layout/round_corner", &style.round_corner);
+	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
+	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
+	RimeConfigGetInt(config, "style/layout/border", &style.border);
+	RimeConfigGetInt(config, "style/layout/margin_x", &style.margin_x);
+	RimeConfigGetInt(config, "style/layout/margin_y", &style.margin_y);
+	RimeConfigGetInt(config, "style/layout/spacing", &style.spacing);
+	RimeConfigGetInt(config, "style/layout/candidate_spacing", &style.candidate_spacing);
+	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
+	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
+	RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner);
 	// color scheme
-	if (RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
+	if (RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
 	{
 		std::string prefix("preset_color_schemes/");
 		prefix += buffer;
-		RimeConfigGetInt(&config, (prefix + "/text_color").c_str(), &style.text_color);
-		if (!RimeConfigGetInt(&config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color))
+		RimeConfigGetInt(config, (prefix + "/text_color").c_str(), &style.text_color);
+		if (!RimeConfigGetInt(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color))
 		{
 			style.candidate_text_color = style.text_color;
 		}
-		RimeConfigGetInt(&config, (prefix + "/back_color").c_str(), &style.back_color);
-		if (!RimeConfigGetInt(&config, (prefix + "/border_color").c_str(), &style.border_color))
+		RimeConfigGetInt(config, (prefix + "/back_color").c_str(), &style.back_color);
+		if (!RimeConfigGetInt(config, (prefix + "/border_color").c_str(), &style.border_color))
 		{
 			style.border_color = style.text_color;
 		}
-		if (!RimeConfigGetInt(&config, (prefix + "/hilited_text_color").c_str(), &style.hilited_text_color))
+		if (!RimeConfigGetInt(config, (prefix + "/hilited_text_color").c_str(), &style.hilited_text_color))
 		{
 			style.hilited_text_color = style.text_color;
 		}
-		if (!RimeConfigGetInt(&config, (prefix + "/hilited_back_color").c_str(), &style.hilited_back_color))
+		if (!RimeConfigGetInt(config, (prefix + "/hilited_back_color").c_str(), &style.hilited_back_color))
 		{
 			style.hilited_back_color = style.back_color;
 		}
-		if (!RimeConfigGetInt(&config, (prefix + "/hilited_candidate_text_color").c_str(), &style.hilited_candidate_text_color))
+		if (!RimeConfigGetInt(config, (prefix + "/hilited_candidate_text_color").c_str(), &style.hilited_candidate_text_color))
 		{
 			style.hilited_candidate_text_color = style.hilited_text_color;
 		}
-		if (!RimeConfigGetInt(&config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color))
+		if (!RimeConfigGetInt(config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color))
 		{
 			style.hilited_candidate_back_color = style.hilited_back_color;
 		}
@@ -410,11 +434,31 @@ void RimeWithWeaselHandler::_UpdateUIStyle()
 		style.hilited_label_text_color = blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color);
 		style.comment_text_color = style.label_text_color;
 		style.hilited_comment_text_color = style.hilited_label_text_color;
-		if (RimeConfigGetInt(&config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color))
+		if (RimeConfigGetInt(config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color))
 		{
 			style.hilited_comment_text_color = style.comment_text_color;
 		}
-		RimeConfigGetInt(&config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
+		RimeConfigGetInt(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
 	}
-	RimeConfigClose(&config);
 }
+
+static void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options)
+{
+	app_options.clear();
+	RimeConfigIterator app_iter;
+	RimeConfigIterator option_iter;
+	RimeConfigBeginMap(&app_iter, config, "app_options");
+	while (RimeConfigNext(&app_iter)) {
+		AppOptions &options(app_options[app_iter.key]);
+		RimeConfigBeginMap(&option_iter, config, app_iter.path);
+		while (RimeConfigNext(&option_iter)) {
+			Bool value = False;
+			if (RimeConfigGetBool(config, option_iter.path, &value)) {
+				options[option_iter.key] = bool(value);
+			}
+		}
+		RimeConfigEnd(&option_iter);
+	}
+	RimeConfigEnd(&app_iter);
+}
+
