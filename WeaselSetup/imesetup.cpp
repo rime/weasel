@@ -118,7 +118,7 @@ int install(bool hant, bool silent)
 	RegCloseKey(hKey);
 
 	// ◊¢≤· ‰»Î∑®
-	HKL hKL = ImmInstallIME(destPath.native_file_string().c_str(), WEASEL_IME_NAME);
+	HKL hKL = ImmInstallIME(destPath.native_file_string().c_str(), WEASEL_IME_NAME L" (IME)");
 	if (!hKL)
 	{
 		DWORD dwErr = GetLastError();

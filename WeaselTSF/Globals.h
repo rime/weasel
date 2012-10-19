@@ -2,11 +2,12 @@
 #pragma once
 
 #include "stdafx.h"
+#include <WeaselCommon.h>
 
 #define TEXTSERVICE_LANGID	MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)
 
-#define TEXTSERVICE_DESC	L"Weasel"
-#define TEXTSERVICE_DESC_A	"Weasel"
+#define TEXTSERVICE_DESC	WEASEL_IME_NAME L" (TSF)"
+#define TEXTSERVICE_DESC_A	"Weasel (TSF)"
 #define TEXTSERVICE_MODEL	"Apartment"
 
 #define TEXTSERVICE_ICON_INDEX	0
