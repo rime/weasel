@@ -1,5 +1,6 @@
 @echo off
 
+set CD_BACK=%CD%
 cd "%~dp0"
 call stop_service.bat
 
@@ -22,3 +23,4 @@ WeaselSetup.exe /u
 goto exit
 
 :exit
+cd "%CD_BACK%"

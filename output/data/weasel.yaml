@@ -1,8 +1,13 @@
 # Weasel settings
-# vim: set sw=2 sts=2 et:
 # encoding: utf-8
 
-config_version: "0.12"
+config_version: "0.13"
+
+app_options:
+  cmd.exe:
+    ascii_mode: true
+  gvim.exe:
+    ascii_mode: true
 
 style:
   color_scheme: aqua

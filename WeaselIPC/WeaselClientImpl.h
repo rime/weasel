@@ -26,6 +26,8 @@ namespace weasel
 
 	protected:
 		HWND _GetServerWindow(LPCWSTR windowClass);
+		bool _WriteClientInfo();
+
 		bool _Connected() const { return serverWnd != NULL; }
 		bool _Active() const { return _Connected() && session_id != 0; }
 

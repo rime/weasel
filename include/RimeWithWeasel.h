@@ -29,6 +29,7 @@ private:
 	bool _IsDeployerRunning();
 	void _UpdateUI(UINT session_id);
 	bool _Respond(UINT session_id, LPWSTR buffer);
+	void _ReadClientInfo(UINT session_id, LPWSTR buffer);
 
 	AppOptionsByAppName m_app_options;
 	weasel::UI* m_ui;  // reference

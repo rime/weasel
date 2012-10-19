@@ -102,6 +102,7 @@ void ClientImpl::StartSession()
 	if (_Active() && Echo())
 		return;
 
+	_WriteClientInfo();
 	UINT ret = SendMessage(serverWnd, WEASEL_IPC_START_SESSION, 0, 0);
 	session_id = ret;
 }
@@ -154,6 +155,49 @@ bool ClientImpl::GetResponseData(ResponseHandler const& handler)
 	}
 
 	return false;
+}
+
+bool ClientImpl::_WriteClientInfo()
+{
+	WCHAR* buffer = NULL;
+	try
+	{
+		windows_shared_memory shm(open_only, WEASEL_IPC_SHARED_MEMORY, read_write);
+		mapped_region region(shm, read_write, WEASEL_IPC_METADATA_SIZE);
+		buffer = (LPWSTR)region.get_address();
+		if (!buffer)
+		{
+			return false;
+		}
+		memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
+		wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
+		bs << L"action=session\n";
+		std::wstring app_name;
+		{
+			WCHAR exe_path[MAX_PATH] = {0};
+			GetModuleFileName(NULL, exe_path, MAX_PATH);
+			app_name = exe_path;
+			size_t separator_pos = app_name.find_last_of(L"\\/");
+			if (separator_pos < app_name.size())
+			{
+				app_name = app_name.substr(separator_pos + 1);
+			}
+			boost::to_lower(app_name);
+		}
+		bs << L"session.client=" << app_name.c_str() << L"\n";
+		bs << L".\n";
+		if (!bs.good())
+		{
+			// response text toooo long!
+			return false;
+		}
+	}
+	catch (interprocess_exception& /*ex*/)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 HWND ClientImpl::_GetServerWindow(LPCWSTR windowClass)

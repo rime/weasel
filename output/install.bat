@@ -4,6 +4,7 @@ rem argument 1: [ /s | /t ] register ime as zh_CN | zh_TW keyboard layout
 set WEASEL_INSTALL_OPTION=/s
 if /i "%1" == "/t" set WEASEL_INSTALL_OPTION=/t
 
+set CD_BACK=%CD%
 cd "%~dp0"
 
 echo stopping service from an older version.
@@ -32,6 +33,5 @@ if %ERRORLEVEL% EQU 0 goto success
 
 :success
 
-rem start notepad README.txt
-
 :exit
+cd "%CD_BACK%"

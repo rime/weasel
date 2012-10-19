@@ -32,6 +32,9 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
 }
 
+void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui);
+void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
+
 void RimeWithWeaselHandler::Initialize()
 {
 	m_disabled = _IsDeployerRunning();
@@ -56,8 +59,6 @@ void RimeWithWeaselHandler::Initialize()
 		m_disabled = true;
 	}
 
-	void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui);
-	void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 	RimeConfig config = { NULL };
 	if (RimeConfigOpen("weasel", &config))
 	{
@@ -97,7 +98,8 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 	// show soft cursor on weasel panel
 	RimeSetOption(session_id, "soft_cursor", Bool(!m_ui->style().inline_preedit));
 	// show session's welcome message :-) if any
-    m_client_caps = 0;
+	m_client_caps = 0;
+	_ReadClientInfo(session_id, buffer);
 	_UpdateUI(session_id);
 	m_active_session = session_id;
 	return session_id;
@@ -158,10 +160,28 @@ void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 	}
 }
 
-void RimeWithWeaselHandler::UpdateClientInfo(UINT session_id)
+void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 {
-    // TODO get app_name from shared memory
     std::string app_name;
+
+	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
+	std::wstring line;
+	while (bs.good())
+	{
+		std::getline(bs, line);
+		if (!bs.good())
+			break;
+		// file ends
+		if (line == L".")
+			break;
+		const std::wstring kClientKey = L"session.client=";
+		if (boost::starts_with(line, kClientKey))
+		{
+			app_name = wcstoutf8(line.substr(kClientKey.length()).c_str());
+			boost::to_lower(app_name);
+		}
+	}
+
     // set app specific options
 	if (!app_name.empty() &&
 		m_app_options.find(app_name) != m_app_options.end())
