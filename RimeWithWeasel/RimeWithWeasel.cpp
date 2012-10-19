@@ -117,16 +117,36 @@ UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 	return 0;
 }
 
+namespace ibus
+{
+	enum Keycode
+	{
+		Escape = 0xFF1B,
+	};
+}
+
 BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer)
 {
 	DLOG(INFO) << "Process key event: keycode = " << keyEvent.keycode << ", mask = " << keyEvent.mask
 		 << ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
-	bool taken = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask)); 
+	bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
+	// gvim command mode tricks
+	if (!handled && keyEvent.keycode == ibus::Escape && keyEvent.mask == 0)
+	{
+		char app_name[100] = {0};
+		if (RimeGetProperty(session_id, "app", app_name, sizeof(app_name)) &&
+			!strcmp(app_name, "gvim.exe") &&
+			!RimeGetOption(session_id, "ascii_mode"))
+		{
+			RimeSetOption(session_id, "ascii_mode", True);
+			DLOG(INFO) << "disable conversion in gvim's command mode.";
+		}
+	}
 	_Respond(session_id, buffer);
 	_UpdateUI(session_id);
 	m_active_session = session_id;
-	return (BOOL)taken;
+	return (BOOL)handled;
 }
 
 void RimeWithWeaselHandler::FocusIn(DWORD client_caps, UINT session_id)
@@ -163,7 +183,6 @@ void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 {
     std::string app_name;
-
 	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
 	std::wstring line;
 	while (bs.good())
@@ -181,16 +200,19 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 			boost::to_lower(app_name);
 		}
 	}
-
     // set app specific options
-	if (!app_name.empty() &&
-		m_app_options.find(app_name) != m_app_options.end())
+	if (!app_name.empty())
 	{
-		AppOptions& options(m_app_options[app_name]);
-		for (AppOptions::const_iterator it = options.begin(); it != options.end(); ++it)
+		RimeSetProperty(session_id, "app", app_name.c_str());
+
+		if (m_app_options.find(app_name) != m_app_options.end())
 		{
-			DLOG(INFO) << "set app option: " << it->first << " = " << it->second;
-			RimeSetOption(session_id, it->first.c_str(), Bool(it->second));
+			AppOptions& options(m_app_options[app_name]);
+			for (AppOptions::const_iterator it = options.begin(); it != options.end(); ++it)
+			{
+				DLOG(INFO) << "set app option: " << it->first << " = " << it->second;
+				RimeSetOption(session_id, it->first.c_str(), Bool(it->second));
+			}
 		}
 	}
 }
