@@ -6,7 +6,7 @@
 ; 擴展包標識
 !define PACKAGE_ID "weasel-expansion"
 ; 擴展包版本
-!define PACKAGE_VERSION 0.9.15
+!define PACKAGE_VERSION 0.9.16
 ; 必須補足 4 個整數
 !define PACKAGE_BUILD ${PACKAGE_VERSION}.0
 ; 擴展包名稱
@@ -32,7 +32,7 @@ SetCompressor /SOLID lzma
 ; The default installation directory
 InstallDir $PROGRAMFILES\Rime
 
-; Registry key to check for directory (so if you install again, it will 
+; Registry key to check for directory (so if you install again, it will
 ; overwrite the old one automatically)
 InstallDirRegKey HKLM "Software\Rime\Weasel" "InstallDir"
 
@@ -63,7 +63,7 @@ Function .onInit
   "找不到【小狼毫】安裝在哪裏。$\n$\n還要繼續安裝「${PACKAGE_NAME}」嗎？" \
   IDOK done
   Abort
- 
+
 done:
   ; Reset INSTDIR for the new version
   StrCpy $INSTDIR $R0
@@ -73,7 +73,7 @@ FunctionEnd
 Section "Package"
 
   SectionIn RO
-  
+
   IfFileExists "$INSTDIR\WeaselServer.exe" 0 +2
   ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
 

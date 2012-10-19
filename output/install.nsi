@@ -3,8 +3,8 @@
 !include LogicLib.nsh
 !include x64.nsh
 
-!define WEASEL_VERSION 0.9.15
-!define WEASEL_BUILD ${WEASEL_VERSION}.1
+!define WEASEL_VERSION 0.9.16
+!define WEASEL_BUILD ${WEASEL_VERSION}.0
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
 
@@ -28,7 +28,7 @@ SetCompressor /SOLID lzma
 ; The default installation directory
 InstallDir $PROGRAMFILES\Rime
 
-; Registry key to check for directory (so if you install again, it will 
+; Registry key to check for directory (so if you install again, it will
 ; overwrite the old one automatically)
 InstallDirRegKey HKLM "Software\Rime\Weasel" "InstallDir"
 
@@ -60,7 +60,7 @@ Function .onInit
   "安裝前，我打盤先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。" \
   IDOK uninst
   Abort
- 
+
 uninst:
   ; Backup data directory from previous installation, user files may exist
   ReadRegStr $R1 HKLM SOFTWARE\Rime\Weasel "WeaselRoot"
@@ -79,10 +79,10 @@ FunctionEnd
 Section "Weasel"
 
   SectionIn RO
-  
+
   ; Write the new installation path into the registry
   WriteRegStr HKLM SOFTWARE\Rime\Weasel "InstallDir" "$INSTDIR"
-  
+
   ; Reset INSTDIR for the new version
   StrCpy $INSTDIR "${WEASEL_ROOT}"
 
@@ -101,6 +101,10 @@ Section "Weasel"
 program_files:
   File "LICENSE.txt"
   File "README.txt"
+  File "weasel.dll"
+  File "weaselx64.dll"
+  File "weaselt.dll"
+  File "weaseltx64.dll"
   File "weasel.ime"
   File "weaselx64.ime"
   File "weaselt.ime"
@@ -130,7 +134,7 @@ program_files:
   File "data\preview\*.png"
 
   SetOutPath $INSTDIR
-  
+
   ; test /T flag for zh_TW locale
   StrCpy $R2  "/s"
   ${GetParameters} $R0
@@ -154,7 +158,7 @@ program_files:
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "NoRepair" 1
   WriteUninstaller "$INSTDIR\uninstall.exe"
-  
+
 SectionEnd
 
 ; Optional section (can be disabled by the user)
@@ -166,7 +170,7 @@ Section "Start Menu Shortcuts"
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\用戶詞典管理.lnk" "$INSTDIR\WeaselDeployer.exe" "/dict" "$INSTDIR\WeaselDeployer.exe" 0
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫算法服務.lnk" "$INSTDIR\WeaselServer.exe" "" "$INSTDIR\WeaselServer.exe" 0
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\卸載小狼毫.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-  
+
 SectionEnd
 
 ;--------------------------------
@@ -174,7 +178,7 @@ SectionEnd
 ; Uninstaller
 
 Section "Uninstall"
-  
+
   ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
 
   ${If} ${RunningX64}
