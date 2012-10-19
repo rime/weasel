@@ -12,13 +12,13 @@ if errorlevel 1 goto xp_uninstall
 
 :win7_uninstall
 wscript sudo.js WeaselSetup.exe /u
-wscript sudo.js regsvr32.exe /s /u "%CD%\weasel.dll"
+rem wscript sudo.js regsvr32.exe /s /u "%CD%\weasel.dll"
 goto exit
 
 :win7_x64_uninstall
 wscript sudo.js WeaselSetupx64.exe /u
-wscript sudo.js regsvr32.exe /s /u "%CD%\weasel.dll"
-wscript sudo.js regsvr32.exe /s /u "%CD%\weaselx64.dll"
+rem wscript sudo.js regsvr32.exe /s /u "%CD%\weasel.dll"
+rem wscript sudo.js regsvr32.exe /s /u "%CD%\weaselx64.dll"
 goto exit
 
 :xp_uninstall

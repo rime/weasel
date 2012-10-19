@@ -4,7 +4,6 @@
 #include <vector>
 
 #define WEASEL_IME_NAME L"Ð¡ÀÇºÁ"
-#define WEASEL_IME_FILE L"weasel.ime"
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
 
