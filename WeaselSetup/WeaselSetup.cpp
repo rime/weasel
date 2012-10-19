@@ -17,7 +17,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 
 	HRESULT hRes = ::CoInitialize(NULL);
-	// If you are running on NT 4.0 or higher you can use the following call instead to 
+	// If you are running on NT 4.0 or higher you can use the following call instead to
 	// make the EXE free threaded. This means that calls come in on a random RPC thread.
 	//HRESULT hRes = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	ATLASSERT(SUCCEEDED(hRes));
@@ -38,8 +38,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	return ret;
 }
 
-int install(bool hant);
-int uninstall();
+int install(bool hant, bool silent);
+int uninstall(bool silent);
 bool has_installed();
 
 static int CustomInstall()
@@ -79,11 +79,12 @@ static int CustomInstall()
 	}
 	hant = dlg.hant;
 	user_dir = dlg.user_dir;
-	
-	if (0 != install(hant))
+
+	const bool non_silent = false;
+	if (0 != install(hant, non_silent))
 		return 1;
 
-	ret = RegCreateKeyEx(HKEY_CURRENT_USER, KEY, 
+	ret = RegCreateKeyEx(HKEY_CURRENT_USER, KEY,
 		                 0, NULL, 0, KEY_ALL_ACCESS | KEY_WOW64_32KEY, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
@@ -91,8 +92,8 @@ static int CustomInstall()
 		return 1;
 	}
 
-	ret = RegSetValueEx(hKey, L"RimeUserDir", 0, REG_SZ, 
-		                (const BYTE*)user_dir.c_str(),  
+	ret = RegSetValueEx(hKey, L"RimeUserDir", 0, REG_SZ,
+		                (const BYTE*)user_dir.c_str(),
 						(user_dir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
@@ -113,15 +114,16 @@ static int CustomInstall()
 
 static int Run(LPTSTR lpCmdLine)
 {
+	const bool silent = true;
 	bool uninstalling = !wcscmp(L"/u", lpCmdLine);
 	if (uninstalling)
-		return uninstall();
+		return uninstall(silent);
 	bool hans = !wcscmp(L"/s", lpCmdLine);
 	if (hans)
-		return install(false);
+		return install(false, silent);
 	bool hant = !wcscmp(L"/t", lpCmdLine);
 	if (hant)
-		return install(true);
+		return install(true, silent);
 
 	return CustomInstall();
 }

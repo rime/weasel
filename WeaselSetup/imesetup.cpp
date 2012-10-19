@@ -43,7 +43,7 @@ BOOL delete_file(const wstring& file)
 	return ret;
 }
 
-int install(bool hant)
+int install(bool hant, bool silent)
 {
 	wpath srcPath;
 	wpath destPath;
@@ -57,7 +57,7 @@ int install(bool hant)
 	wstring srcFileName = (hant ? L"weaselt" : L"weasel");
 	srcFileName += (is_x64 ? L"x64.ime" : L".ime");
 	srcPath = srcPath.remove_leaf() / srcFileName;
-	
+
 	GetSystemDirectory(path, _countof(path));
 	destPath = path;
 	destPath /= WEASEL_IME_FILE;
@@ -71,7 +71,7 @@ int install(bool hant)
 	// 复制 .ime 到系统目录
 	if (!copy_file(srcPath.native_file_string(), destPath.native_file_string()))
 	{
-		MessageBox(NULL, destPath.native_file_string().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, destPath.native_file_string().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 	if (!wow64Path.empty())
@@ -80,38 +80,38 @@ int install(bool hant)
 		boost::algorithm::ireplace_last(x86, L"x64.ime", L".ime");
 		if (!copy_file(x86, wow64Path.native_file_string()))
 		{
-			MessageBox(NULL, wow64Path.native_file_string().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBox(NULL, wow64Path.native_file_string().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 	}
 
 	// 写注册表
 	HKEY hKey;
-	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 
+	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY,
 		                         0, NULL, 0, KEY_ALL_ACCESS | KEY_WOW64_32KEY, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, WEASEL_REG_KEY, L"安裝失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, WEASEL_REG_KEY, L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
 	wstring rootDir = srcPath.parent_path().native_directory_string();
-	ret = RegSetValueEx(hKey, L"WeaselRoot", 0, REG_SZ, 
-		                (const BYTE*)rootDir.c_str(),  
+	ret = RegSetValueEx(hKey, L"WeaselRoot", 0, REG_SZ,
+		                (const BYTE*)rootDir.c_str(),
 						(rootDir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, L"無法寫入 WeaselRoot", L"安裝失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, L"無法寫入 WeaselRoot", L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
 	const wstring executable = L"WeaselServer.exe";
-	ret = RegSetValueEx(hKey, L"ServerExecutable", 0, REG_SZ, 
-		                (const BYTE*)executable.c_str(),  
+	ret = RegSetValueEx(hKey, L"ServerExecutable", 0, REG_SZ,
+		                (const BYTE*)executable.c_str(),
 						(executable.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, L"無法寫入註冊表鍵值 ServerExecutable", L"安裝失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, L"無法寫入註冊表鍵值 ServerExecutable", L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -124,15 +124,15 @@ int install(bool hant)
 		DWORD dwErr = GetLastError();
 		WCHAR msg[100];
 		wsprintf(msg, L"註冊輸入法錯誤 ImmInstallIME: HKL=%x Err=%x", hKL, dwErr);
-		MessageBox(NULL, msg, L"安裝失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, msg, L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
-	//MessageBox(hWnd, L"可以使【小狼毫】寫字了 :)", L"安裝完成", MB_ICONINFORMATION | MB_OK);
+	if (!silent) MessageBox(NULL, L"可以使【小狼毫】寫字了 :)", L"安裝完成", MB_ICONINFORMATION | MB_OK);
 	return 0;
 }
 
-int uninstall()
+int uninstall(bool silent)
 {
 	const WCHAR KL_KEY[] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts";
 	const WCHAR PRELOAD_KEY[] = L"Keyboard Layout\\Preload";
@@ -141,7 +141,7 @@ int uninstall()
 	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KL_KEY, &hKey);
 	if (ret != ERROR_SUCCESS)
 	{
-		MessageBox(NULL, KL_KEY, L"卸載失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, KL_KEY, L"卸載失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -210,8 +210,8 @@ int uninstall()
 				for (size_t i = 0; i < preloads.size(); ++i)
 				{
 					number = (boost::wformat(L"%1%") % (i + 1)).str();
-					RegSetValueEx(hPreloadKey, number.c_str(), 0, REG_SZ, 
-						          (const BYTE*)preloads[i].c_str(), 
+					RegSetValueEx(hPreloadKey, number.c_str(), 0, REG_SZ,
+						          (const BYTE*)preloads[i].c_str(),
 								  (preloads[i].length() + 1) * sizeof(WCHAR));
 				}
 				RegCloseKey(hPreloadKey);
@@ -232,7 +232,7 @@ int uninstall()
 	imePath /= WEASEL_IME_FILE;
 	if (!delete_file(imePath.native_file_string()))
 	{
-		MessageBox(NULL, imePath.native_file_string().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, imePath.native_file_string().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 	if (GetSystemWow64Directory(path, _countof(path)))
@@ -241,12 +241,12 @@ int uninstall()
 		imePath /= WEASEL_IME_FILE;
 		if (!delete_file(imePath.native_file_string()))
 		{
-			MessageBox(NULL, imePath.native_file_string().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBox(NULL, imePath.native_file_string().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 	}
 
-	//MessageBox(hWnd, L"小狼毫 :)", L"卸載完成", MB_ICONINFORMATION | MB_OK);
+	if (!silent) MessageBox(NULL, L"小狼毫 :)", L"卸載完成", MB_ICONINFORMATION | MB_OK);
 	return 0;
 }
 
