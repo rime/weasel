@@ -14,8 +14,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 	const std::vector<Text> &comments(_context.cinfo.comments);
 	const std::string &labels(_context.cinfo.labels);
 
-	int width = 0, height = _style.margin_y;
 	CSize size;
+	//dc.GetTextExtent(L"\x4e2d", 1, &size);
+	//const int space = size.cx / 4;
+	const int space = _style.hilite_spacing;
+	int width = 0, height = _style.margin_y;
 
 	/* Preedit */
 	if (!_style.inline_preedit)
@@ -36,38 +39,39 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 	}
 
 	/* Candidates */
-	int w = _style.margin_x + _style.hilite_padding, h = 0;
+	int w = _style.margin_x, h = 0;
 	for (int i = 0; i < candidates.size(); i++)
 	{
+		if (i > 0)
+			w += _style.candidate_spacing;
+
 		/* Label */
 		std::wstring label = GetLabelText(labels, i);
 		dc.GetTextExtent(label.c_str(), label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
+		w += space;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
 		dc.GetTextExtent(text.c_str(), text.length(), &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
-		w += size.cx, h = max(h, size.cy);
+		w += size.cx + space, h = max(h, size.cy);
 
 		/* Comment */
 		if (!comments.at(i).str.empty())
 		{
-			/* Add a space */
-			dc.GetTextExtent(L" ", 1, &size);
-			w += size.cx, h = max(h, size.cy);
-
 			const std::wstring& comment = comments.at(i).str;
 			dc.GetTextExtent(comment.c_str(), comment.length(), &size);
-			_candidateCommentRects[i].SetRect(w, height, w + size.cx, height + size.cy);
-			w += size.cx, h = max(h, size.cy);
+			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
+			w += size.cx + space, h = max(h, size.cy);
 		}
 		else /* Used for highlighted candidate calculation below */
+		{
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
-		w += _style.candidate_spacing;
+		}
 	}
-	w += _style.hilite_padding + _style.margin_x;
+	w += _style.margin_x;
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;

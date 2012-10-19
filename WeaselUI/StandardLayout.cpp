@@ -3,7 +3,7 @@
 
 using namespace weasel;
 
-static WCHAR LABEL_PATTERN[] = L"%1%. ";
+static WCHAR LABEL_PATTERN[] = L"%1%.";
 
 StandardLayout::StandardLayout(const UIStyle &style, const Context &context)
 	: Layout(style, context)

@@ -160,10 +160,6 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length());
 				x += selStart.cx + m_style.hilite_spacing;
 			}
-			else
-			{
-				x += m_style.hilite_padding;
-			}
 			{
 				// zzz[yyy]
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
@@ -292,8 +288,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	if (!m_style.inline_preedit)
 		drawn |= _DrawPreedit(m_ctx.preedit, dc, m_layout->GetPreeditRect());
 	
-	/* FIXME: What's this?
-	// ascii mode icon
+	/*
+	// ascii mode icon (I guess Metro IME stole my idea)
 	if (m_status.ascii_mode && y > rc.top)
 	{
 		int icon_x = rc.right - STATUS_ICON_SIZE;
@@ -301,7 +297,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		dc.DrawIconEx(icon_x, icon_y, m_iconAlpha, 0, 0);
 	}*/
 
-	/* TODO: Deprecated? */
 	// draw auxiliary string
 	drawn |= _DrawPreedit(m_ctx.aux, dc, m_layout->GetAuxiliaryRect());
 

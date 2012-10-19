@@ -14,8 +14,11 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 	const std::vector<Text> &comments(_context.cinfo.comments);
 	const std::string &labels(_context.cinfo.labels);
 
-	int width = 0, height = _style.margin_y;
 	CSize size;
+	//dc.GetTextExtent(L"\x4e2d", 1, &size);
+	//const int space = size.cx / 4;
+	const int space = _style.hilite_spacing;
+	int width = 0, height = _style.margin_y;
 
 	/* Preedit */
 	if (!_style.inline_preedit)
@@ -36,19 +39,22 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 	}
 
 	/* Candidates */
-	int comment_shift_width = 0;
+	int comment_shift_width = 0;  /* distance to the left of the candidate text */
 	int max_candidate_width = 0;  /* label + text */
-	int max_comment_width = 0;    /* a space + comment, or none */
+	int max_comment_width = 0;    /* comment, or none */
 	for (int i = 0; i < candidates.size(); i++)
 	{
-		int w = _style.margin_x + _style.hilite_padding, h = 0;
+		if (i > 0 )
+			height += _style.candidate_spacing;
+
+		int w = _style.margin_x, h = 0;
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i);
 		dc.GetTextExtent(label.c_str(), label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
-		w += size.cx, h = max(h, size.cy);
-		candidate_width += size.cx;
+		w += size.cx + space, h = max(h, size.cy);
+		candidate_width += size.cx + space;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
@@ -61,11 +67,8 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 		/* Comment */
 		if (!comments.at(i).str.empty())
 		{
-			/* Add a space */
-			dc.GetTextExtent(L" ", 1, &size);
-			w += size.cx, h = max(h, size.cy);
-			comment_shift_width = max(comment_shift_width, w);
-			comment_width += size.cx;
+			w += space;
+			comment_shift_width = max(comment_shift_width, w - _style.margin_x);
 
 			const std::wstring& comment = comments.at(i).str;
 			dc.GetTextExtent(comment.c_str(), comment.length(), &size);
@@ -74,17 +77,17 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 			comment_width += size.cx;
 			max_comment_width = max(max_comment_width, comment_width);
 		}
-		w += _style.hilite_padding + _style.margin_x;
-
+		//w += margin;
 		//width = max(width, w);
-		height += h + _style.candidate_spacing;
+		height += h;
 	}
-	/* comments are left-aligned, to the right of the longest candidate */
-	width = max(width, max_candidate_width + max_comment_width + 2 * (_style.margin_x + _style.hilite_padding));
+	/* comments are left-aligned to the right of the longest candidate who has a comment */
+	int max_content_width = max(max_candidate_width, comment_shift_width + max_comment_width);
+	width = max(width, max_content_width + 2 * _style.margin_x);
 
 	/* Align comments */
 	for (int i = 0; i < candidates.size(); i++)
-		_candidateCommentRects[i].OffsetRect(comment_shift_width, 0);
+		_candidateCommentRects[i].OffsetRect(_style.margin_x + comment_shift_width, 0);
 
 	if (candidates.size())
 		height += _style.spacing;
@@ -101,8 +104,8 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
 	_highlightRect.SetRect(
-		_style.margin_x + _style.hilite_padding,
+		_style.margin_x,
 		_candidateTextRects[id].top,
-		width - _style.margin_x  - _style.hilite_padding,
+		width - _style.margin_x,
 		_candidateTextRects[id].bottom);
 }
