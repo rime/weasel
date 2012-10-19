@@ -131,18 +131,6 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 		 << ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
 	bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
-	// gvim command mode tricks
-	if (!handled && keyEvent.keycode == ibus::Escape && keyEvent.mask == 0)
-	{
-		char app_name[100] = {0};
-		if (RimeGetProperty(session_id, "app", app_name, sizeof(app_name)) &&
-			!strcmp(app_name, "gvim.exe") &&
-			!RimeGetOption(session_id, "ascii_mode"))
-		{
-			RimeSetOption(session_id, "ascii_mode", True);
-			DLOG(INFO) << "disable conversion in gvim's command mode.";
-		}
-	}
 	_Respond(session_id, buffer);
 	_UpdateUI(session_id);
 	m_active_session = session_id;

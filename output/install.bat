@@ -21,17 +21,18 @@ if errorlevel 1 goto xp_install
 
 :win7_install
 wscript sudo.js WeaselSetup.exe %WEASEL_INSTALL_OPTION%
-if %ERRORLEVEL% EQU 0 goto success
+wscript sudo.js regsvr32.exe /s "%CD%\weasel.dll"
+goto exit
 
 :win7_x64_install
 wscript sudo.js WeaselSetupx64.exe %WEASEL_INSTALL_OPTION%
-if %ERRORLEVEL% EQU 0 goto success
+wscript sudo.js regsvr32.exe /s "%CD%\weasel.dll"
+wscript sudo.js regsvr32.exe /s "%CD%\weaselx64.dll"
+goto exit
 
 :xp_install
 WeaselSetup.exe %WEASEL_INSTALL_OPTION%
-if %ERRORLEVEL% EQU 0 goto success
-
-:success
+goto exit
 
 :exit
 cd "%CD_BACK%"

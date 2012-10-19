@@ -1,12 +1,10 @@
 # Weasel settings
 # encoding: utf-8
 
-config_version: "0.14"
+config_version: "0.15"
 
 app_options:
   cmd.exe:
-    ascii_mode: true
-  gvim.exe:
     ascii_mode: true
 
 style:

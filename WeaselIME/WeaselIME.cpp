@@ -221,7 +221,8 @@ void WeaselIME::Cleanup()
 
 LRESULT WeaselIME::OnIMESelect(BOOL fSelect)
 {
-	EZDBGONLYLOGGERPRINT("On IME select: %d, HIMC = 0x%x", fSelect, m_hIMC);  
+	EZDBGONLYLOGGERPRINT("On IME select: %d, HIMC = 0x%x", fSelect, m_hIMC);
+	ImmSetOpenStatus(m_hIMC, fSelect);
 	if (fSelect)
 	{
 		// initialize weasel client
@@ -336,6 +337,14 @@ LRESULT WeaselIME::_OnIMENotify(LPINPUTCONTEXT lpIMC, WPARAM wp, LPARAM lp)
 				_SetCompositionWindow(lpIMC);
 		}
 		break;
+	case IMN_SETOPENSTATUS:
+		{
+			if (!ImmGetOpenStatus(m_hIMC))  // gvim command mode
+			{
+				m_client.EndSession();  // cancel unfinished input (quitting insert mode with Ctrl+[ )
+			}
+		}
+		break;
 	default:
 		EZDBGONLYLOGGERPRINT("IMN_(0x%x): HIMC = 0x%x", wp, m_hIMC);  
 	}
@@ -386,7 +395,11 @@ void WeaselIME::_SetCompositionWindow(LPINPUTCONTEXT lpIMC)
 BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeyState)
 {
 	EZDBGONLYLOGGERPRINT("Process key event: vKey = 0x%x, kinfo = 0x%x, HIMC = 0x%x", vKey, UINT32(kinfo), m_hIMC);  
-	bool accepted = false;
+
+	if (!ImmGetOpenStatus(m_hIMC))  // gvim command mode
+	{
+		return FALSE;
+	}
 
 	if (!m_client.Echo())
 	{
@@ -401,7 +414,7 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 		return FALSE;
 	}
 
-	accepted = m_client.ProcessKeyEvent(ke);
+	bool accepted = m_client.ProcessKeyEvent(ke);
 
 	// get commit string from server
 	wstring commit;
