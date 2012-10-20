@@ -26,6 +26,7 @@ namespace weasel
 
 	protected:
 		HWND _GetServerWindow(LPCWSTR windowClass);
+		void _InitializeClientInfo();
 		bool _WriteClientInfo();
 
 		bool _Connected() const { return serverWnd != NULL; }
@@ -34,6 +35,8 @@ namespace weasel
 	private:
 		UINT session_id;
 		HWND serverWnd;
+		std::wstring app_name;
+		bool is_ime;
 	};
 
 }

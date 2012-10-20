@@ -47,3 +47,8 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 	}
 	return size;
 }
+
+bool StandardLayout::IsInlinePreedit() const
+{
+	return _style.inline_preedit && (_style.client_caps & weasel::INLINE_PREEDIT_CAPABLE) != 0;
+}

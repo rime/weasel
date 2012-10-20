@@ -11,6 +11,11 @@ namespace weasel
 		LAYOUT_TYPE_LAST
 	};
 
+	enum ClientCapabilities
+	{
+		INLINE_PREEDIT_CAPABLE = 1,
+	};
+
 	struct UIStyle
 	{
 		std::wstring font_face;
@@ -41,6 +46,8 @@ namespace weasel
 		int hilited_candidate_back_color;
 		int hilited_label_text_color;
 		int hilited_comment_text_color;
+		// per client
+		int client_caps;
 
 		UIStyle() : font_face(), 
 			        font_point(0),
@@ -65,7 +72,8 @@ namespace weasel
 					hilited_candidate_text_color(0),
 					hilited_candidate_back_color(0),
 					hilited_label_text_color(0),
-					hilited_comment_text_color(0) {}
+					hilited_comment_text_color(0),
+					client_caps(0) {}
 	};
 
 	class UIImpl;
@@ -107,7 +115,7 @@ namespace weasel
 
 		Context& ctx() { return ctx_; } 
 		Status& status() { return status_; } 
-		UIStyle& style() { return style_; } 
+		UIStyle& style() { return style_; }
 
 	private:
 		UIImpl* pimpl_;

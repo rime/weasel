@@ -21,6 +21,7 @@ namespace weasel
 		virtual CRect GetCandidateCommentRect(int id) const { return _candidateCommentRects[id]; }
 
 		virtual std::wstring GetLabelText(const std::string &label, int id) const;
+		virtual bool IsInlinePreedit() const;
 
 	protected:
 		/* Utility functions */

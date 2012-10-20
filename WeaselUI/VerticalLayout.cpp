@@ -21,7 +21,7 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 	int width = 0, height = _style.margin_y;
 
 	/* Preedit */
-	if (!_style.inline_preedit)
+	if (!IsInlinePreedit())
 	{
 		size = GetPreeditSize(dc);
 		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);

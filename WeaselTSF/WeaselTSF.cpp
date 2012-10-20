@@ -172,8 +172,10 @@ STDAPI WeaselTSF::Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId)
 	if (!_InitPreservedKey())
 		goto ExitError;
 
-	if (!_InitLanguageBar())
-		goto ExitError;
+	// TODO not yet complete
+	_pLangBarButton = NULL;
+	//if (!_InitLanguageBar())
+	//	goto ExitError;
 
 	if (!_IsKeyboardOpen())
 		_SetKeyboardOpen(TRUE);

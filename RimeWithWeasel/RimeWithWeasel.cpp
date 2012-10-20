@@ -24,7 +24,7 @@ int expand_ibus_modifier(int m)
 }
 
 RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
-	: m_ui(ui), m_active_session(0), m_client_caps(0), m_disabled(true)
+	: m_ui(ui), m_active_session(0), m_disabled(true)
 {
 }
 
@@ -71,7 +71,6 @@ void RimeWithWeaselHandler::Initialize()
 void RimeWithWeaselHandler::Finalize()
 {
 	m_active_session = 0;
-    m_client_caps = 0;
 	m_disabled = true;
 	LOG(INFO) << "Finalizing la rime.";
 	RimeFinalize();
@@ -95,11 +94,8 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 	}
 	UINT session_id = RimeCreateSession();
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
-	// show soft cursor on weasel panel
-	RimeSetOption(session_id, "soft_cursor", Bool(!m_ui->style().inline_preedit));
-	// show session's welcome message :-) if any
-	m_client_caps = 0;
 	_ReadClientInfo(session_id, buffer);
+	// show session's welcome message :-) if any
 	_UpdateUI(session_id);
 	m_active_session = session_id;
 	return session_id;
@@ -113,7 +109,6 @@ UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
 	m_active_session = 0;
-    m_client_caps = 0;
 	return 0;
 }
 
@@ -141,7 +136,6 @@ void RimeWithWeaselHandler::FocusIn(DWORD client_caps, UINT session_id)
 {
 	DLOG(INFO) << "Focus in: session_id = " << session_id << ", client_caps = " << client_caps;
 	if (m_disabled) return;
-    m_client_caps = client_caps;
 	_UpdateUI(session_id);
 	m_active_session = session_id;
 }
@@ -151,7 +145,6 @@ void RimeWithWeaselHandler::FocusOut(DWORD param, UINT session_id)
 	DLOG(INFO) << "Focus out: session_id = " << session_id;
 	if (m_ui) m_ui->Hide();
 	m_active_session = 0;
-    m_client_caps = 0;
 }
 
 void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
@@ -162,7 +155,6 @@ void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 	if (m_disabled) return;
 	if (m_active_session != session_id)
 	{
-        m_client_caps = 0;
 		_UpdateUI(session_id);
 		m_active_session = session_id;
 	}
@@ -170,7 +162,9 @@ void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 
 void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 {
-    std::string app_name;
+	std::string app_name;
+	std::string client_type;
+	// parse request text
 	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
 	std::wstring line;
 	while (bs.good())
@@ -181,17 +175,22 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 		// file ends
 		if (line == L".")
 			break;
-		const std::wstring kClientKey = L"session.client=";
-		if (boost::starts_with(line, kClientKey))
+		const std::wstring kClientAppKey = L"session.client_app=";
+		if (boost::starts_with(line, kClientAppKey))
 		{
-			app_name = wcstoutf8(line.substr(kClientKey.length()).c_str());
+			app_name = wcstoutf8(line.substr(kClientAppKey.length()).c_str());
 			boost::to_lower(app_name);
+		}
+		const std::wstring kClientTypeKey = L"session.client_type=";
+		if (boost::starts_with(line, kClientTypeKey))
+		{
+			client_type = wcstoutf8(line.substr(kClientTypeKey.length()).c_str());
 		}
 	}
     // set app specific options
 	if (!app_name.empty())
 	{
-		RimeSetProperty(session_id, "app", app_name.c_str());
+		RimeSetProperty(session_id, "client_app", app_name.c_str());
 
 		if (m_app_options.find(app_name) != m_app_options.end())
 		{
@@ -203,6 +202,13 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 			}
 		}
 	}
+	// ime | tsf
+	RimeSetProperty(session_id, "client_type", client_type.c_str());
+	// inline preedit
+	bool inline_preedit = m_ui->style().inline_preedit && (client_type == "tsf");	
+	RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
+	// show soft cursor on weasel panel but not inline
+	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
 }
 
 void RimeWithWeaselHandler::StartMaintenance()
@@ -286,6 +292,10 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	}
 
 	if (!m_ui) return;
+	if (RimeGetOption(session_id, "inline_preedit"))
+		m_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
+	else
+		m_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
 	if (weasel_status.composing)
 	{
 		m_ui->Update(weasel_context, weasel_status);

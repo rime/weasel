@@ -34,6 +34,5 @@ private:
 	AppOptionsByAppName m_app_options;
 	weasel::UI* m_ui;  // reference
 	UINT m_active_session;
-    DWORD m_client_caps;
 	bool m_disabled;
 };

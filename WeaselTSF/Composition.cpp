@@ -217,10 +217,7 @@ private:
 
 STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 {
-	/* TODO: This is a dirty trick to remove the pre-existing caret */
 	std::wstring preedit = _context.preedit.str;
-	std::wstring::size_type caret_pos = preedit.find(L"\x203a");
-	preedit.erase(caret_pos, 1);
 
 	ITfRange *pRangeComposition = NULL;
 	if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)

@@ -37,10 +37,11 @@ static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x000000;
 
 static const int STATUS_ICON_SIZE = 16;
 
-static WCHAR LABEL_PATTERN[] = L"%1%. ";
-
 WeaselPanel::WeaselPanel(weasel::UI &ui)
-	: m_layout(NULL), m_ctx(ui.ctx()), m_status(ui.status()), m_style(ui.style())
+	: m_layout(NULL), 
+	  m_ctx(ui.ctx()), 
+	  m_status(ui.status()), 
+	  m_style(ui.style())
 {
 	m_style.font_face = DEFAULT_FONT_FACE;
 	m_style.font_point = DEFAULT_FONT_POINT;
@@ -285,11 +286,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	bool drawn = false;
 
 	// draw preedit string
-	if (!m_style.inline_preedit)
+	if (!m_layout->IsInlinePreedit())
 		drawn |= _DrawPreedit(m_ctx.preedit, dc, m_layout->GetPreeditRect());
 	
 	/*
-	// ascii mode icon (I guess Metro IME stole my idea)
+	// ascii mode icon (I guess Metro IME stole my idea :)
 	if (m_status.ascii_mode && y > rc.top)
 	{
 		int icon_x = rc.right - STATUS_ICON_SIZE;

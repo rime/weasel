@@ -6,14 +6,47 @@ using namespace weasel;
 
 ClientImpl::ClientImpl()
 	: session_id(0),
-	  serverWnd(NULL)
+	  serverWnd(NULL),
+	  is_ime(false)
 {
+	_InitializeClientInfo();
 }
 
 ClientImpl::~ClientImpl()
 {
 	if (_Connected())
 		Disconnect();
+}
+
+//http://stackoverflow.com/questions/557081/how-do-i-get-the-hmodule-for-the-currently-executing-code
+HMODULE GetCurrentModule()
+{ // NB: XP+ solution!
+  HMODULE hModule = NULL;
+  GetModuleHandleEx(
+    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+    (LPCTSTR)GetCurrentModule,
+    &hModule);
+
+  return hModule;
+}
+
+void ClientImpl::_InitializeClientInfo()
+{
+	// get app name
+	WCHAR exe_path[MAX_PATH] = {0};
+	GetModuleFileName(NULL, exe_path, MAX_PATH);
+	std::wstring path = exe_path;
+	size_t separator_pos = path.find_last_of(L"\\/");
+	if (separator_pos < path.size())
+		app_name = path.substr(separator_pos + 1);
+	else
+		app_name = path;
+	boost::to_lower(app_name);
+	// determine client type
+	GetModuleFileName(GetCurrentModule(), exe_path, MAX_PATH);
+	path = exe_path;
+	boost::to_lower(path);
+	is_ime = boost::ends_with(path, ".ime");
 }
 
 bool ClientImpl::Connect(ServerLauncher const& launcher)
@@ -84,8 +117,7 @@ void ClientImpl::UpdateInputPosition(RECT const& rc)
 
 void ClientImpl::FocusIn()
 {
-    // TODO 
-    DWORD client_caps = 0;
+    DWORD client_caps = 0;  /* TODO */
 	PostMessage(serverWnd, WEASEL_IPC_FOCUS_IN, client_caps, session_id);
 }
 
@@ -172,19 +204,8 @@ bool ClientImpl::_WriteClientInfo()
 		memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
 		wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
 		bs << L"action=session\n";
-		std::wstring app_name;
-		{
-			WCHAR exe_path[MAX_PATH] = {0};
-			GetModuleFileName(NULL, exe_path, MAX_PATH);
-			app_name = exe_path;
-			size_t separator_pos = app_name.find_last_of(L"\\/");
-			if (separator_pos < app_name.size())
-			{
-				app_name = app_name.substr(separator_pos + 1);
-			}
-			boost::to_lower(app_name);
-		}
-		bs << L"session.client=" << app_name.c_str() << L"\n";
+		bs << L"session.client_app=" << app_name.c_str() << L"\n";
+		bs << L"session.client_type=" << (is_ime ? L"ime" : L"tsf") << L"\n";
 		bs << L".\n";
 		if (!bs.good())
 		{
