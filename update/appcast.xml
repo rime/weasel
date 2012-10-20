@@ -8,9 +8,9 @@
     <item>
       <title>小狼毫 0.9.16</title>
       <sparkle:releaseNotesLink>http://rimeime.googlecode.com/svn/trunk/weasel/update/release-notes.html</sparkle:releaseNotesLink>
-      <pubDate>Sat, 20 Oct 2012 02:00:00 +0800</pubDate>
-      <enclosure url="http://rimeime.googlecode.com/files/weasel-0.9.16.0-installer.exe"
-                 sparkle:version="0.9.16.0"
+      <pubDate>Sat, 20 Oct 2012 12:00:00 +0800</pubDate>
+      <enclosure url="http://rimeime.googlecode.com/files/weasel-0.9.16.1-installer.exe"
+                 sparkle:version="0.9.16.1"
                  type="application/octet-stream"/>
     </item>
   </channel>

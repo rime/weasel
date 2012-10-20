@@ -247,7 +247,7 @@ int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow6
 	shExInfo.cbSize = sizeof(shExInfo);
 	shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
 	shExInfo.hwnd = 0;
-	shExInfo.lpVerb = L"runas";                // Operation to perform
+	shExInfo.lpVerb = L"open";                 // Operation to perform
 	shExInfo.lpFile = L"regsvr32.exe";         // Application to start    
 	shExInfo.lpParameters = params.c_str();    // Additional parameters
 	shExInfo.lpDirectory = 0;
