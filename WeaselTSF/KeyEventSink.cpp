@@ -59,6 +59,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
 	if (_fTestKeyDownPending)
     {
 		_fTestKeyDownPending = FALSE;
+		*pfEaten = TRUE;
     }
 	else
     {
@@ -87,6 +88,7 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BO
 	if (_fTestKeyUpPending)
     {
 		_fTestKeyUpPending = FALSE;
+		*pfEaten = TRUE;
     }
 	else
     {
