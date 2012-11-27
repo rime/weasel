@@ -1,0 +1,6 @@
+[submodule "librime"]
+	path = librime
+	url = git@github.com:lotem/librime.git
+[submodule "brise"]
+	path = brise
+	url = git@github.com:lotem/brise.git

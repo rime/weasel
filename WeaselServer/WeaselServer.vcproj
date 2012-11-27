@@ -54,7 +54,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\..\librime\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\librime\include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -79,7 +79,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="imm32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\..\librime\vcbuild\lib\Debug&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\librime\vcbuild\lib\Debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -143,7 +143,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\..\librime\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\librime\include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -168,7 +168,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="imm32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\..\librime\vcbuild\lib\Debug&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\librime\vcbuild\lib\Debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
@@ -231,7 +231,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\..\librime\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\librime\include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
@@ -255,7 +255,7 @@
 				AdditionalDependencies="imm32.lib librime.lib libyaml-cppmt.lib kyotocabinet.lib zlib.lib"
 				OutputFile="$(SolutionDir)\output\$(ProjectName).exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\..\librime\vcbuild\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\librime\vcbuild\lib\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -318,7 +318,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\..\librime\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\librime\include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
@@ -342,7 +342,7 @@
 				AdditionalDependencies="imm32.lib librime.lib libyaml-cppmt.lib kyotocabinet.lib"
 				OutputFile="$(SolutionDir)\output\$(ProjectName).exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\..\librime\vcbuild\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\lib&quot;;&quot;$(BOOST_HOME)\stage\lib&quot;;&quot;$(PYTHON_HOME)\libs&quot;;&quot;$(SolutionDir)\librime\vcbuild\lib\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
@@ -405,7 +405,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\..\librime\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\librime\include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
@@ -489,7 +489,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\..\librime\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\librime\include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
@@ -573,7 +573,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\..\librime\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\librime\include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
@@ -657,7 +657,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\..\librime\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\include&quot;;&quot;$(BOOST_HOME)&quot;;&quot;$(PYTHON_HOME)\include&quot;;&quot;$(SolutionDir)\librime\include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;BOOST_PYTHON_STATIC_LIB"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"

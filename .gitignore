@@ -4,6 +4,7 @@ ReleaseHant/
 /output/*.exe
 /output/*.dll
 /output/*.ime
+/output/*.txt
 /output/data/*.kct
 /output/data/*.yaml
 /output/expansion/*.yaml

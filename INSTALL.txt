@@ -1,0 +1,76 @@
+
+= How to Rime with Weasel =
+
+0. Preparation
+
+Assume we already have a default installation of Visual Studio 2010.
+
+Install dev tools: git, cmake
+Download third-party libraries: boost(>=1.47.0)
+
+1. Checkout source code
+
+{{{
+git clone git@github.com:lotem/weasel.git
+cd weasel
+git submodule update --init
+}}}
+
+2. Setup environment variables
+
+Edit librime\env.bat.template according to your setup, save it as librime\env.bat .
+
+3. Start VC command line tools from librime\shell.bat .
+
+4. Build Boost
+
+Make sure BOOST_ROOT is set to  \path\to\boost_1_47_0  in librime\env.bat .
+
+In the command line, issue the following command from weasel directory:
+{{{
+cd librime
+vcbuild.bat boost
+}}}
+
+5. Build other third-party libraries
+
+including: glog, kyotocabinet, opencc, yaml-cpp
+{{{
+vcbuild.bat thirdparty
+}}}
+
+6. Build librime
+
+{{{
+vcbuild.bat
+}}}
+
+With some luck, you now have a copy of the built library in vcbuild\lib\Release:
+  * static library - librime.lib
+  * shared library - rime.dll / rime.lib
+
+7. Play with Rime command line tools
+
+{{{
+copy /Y thirdparty\bin\*.dll vcbuild\bin\
+cd vcbuild\bin
+echo zhongzhouyunshurufa | Release\rime_console.exe > output.txt
+}}}
+
+8. Build weasel
+
+Edit weasel\weasel.props.template, save it to weasel\weasel.props .
+
+{{{
+cd \path\to\weasel
+build.bat
+}}}
+
+Voila.
+
+9. Install and try it live
+
+{{{
+cd output
+install.bat
+}}}
