@@ -4,7 +4,7 @@
 !include x64.nsh
 
 !define WEASEL_VERSION 0.9.16
-!define WEASEL_BUILD ${WEASEL_VERSION}.1
+!define WEASEL_BUILD ${WEASEL_VERSION}.2
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
 
@@ -70,7 +70,8 @@ uninst:
   CopyFiles $R1\data\*.* $TEMP\weasel-backup
 
 call_uninstaller:
-  Exec '$R0 /S'
+  ExecWait '$R0 /S'
+  Sleep 800
 
 done:
 FunctionEnd

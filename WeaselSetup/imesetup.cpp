@@ -2,6 +2,17 @@
 #include <string>
 #include <vector>
 #include <WeaselCommon.h>
+#include <msctf.h>
+
+
+// {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
+static const GUID c_clsidTextService = 
+{ 0xa3f4cded, 0xb1e9, 0x41ee, { 0x9c, 0xa6, 0x7b, 0x4d, 0xd, 0xe6, 0xcb, 0xa } };
+
+// {3D02CAB6-2B8E-4781-BA20-1C9267529467}
+static const GUID c_guidProfile = 
+{ 0x3d02cab6, 0x2b8e, 0x4781, { 0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67 } };
+
 
 using namespace std;
 using boost::filesystem::wpath;
@@ -128,7 +139,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool s
 
 	if (register_ime)
 	{
-		HKL hKL = ImmInstallIME(ime_path.native_file_string().c_str(), WEASEL_IME_NAME L" (IME)");
+		HKL hKL = ImmInstallIME(ime_path.native_file_string().c_str(), WEASEL_IME_NAME);
 		if (!hKL)
 		{
 			DWORD dwErr = GetLastError();
@@ -230,6 +241,28 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool s
 	return 0;
 }
 
+void enable_profile(BOOL fEnable) {
+	HRESULT hr;
+	ITfInputProcessorProfiles *pProfiles = NULL;
+
+	//Create the object. 
+	hr = CoCreateInstance(  CLSID_TF_InputProcessorProfiles, 
+							NULL, 
+							CLSCTX_INPROC_SERVER, 
+							IID_ITfInputProcessorProfiles, 
+							(LPVOID*)&pProfiles);
+
+	if(SUCCEEDED(hr))
+	{
+		//Use the interface. 
+		pProfiles->EnableLanguageProfile(c_clsidTextService, 0x0804, c_guidProfile, fEnable);
+		pProfiles->EnableLanguageProfileByDefault(c_clsidTextService, 0x0804, c_guidProfile, fEnable);
+
+		//Release the interface. 
+		pProfiles->Release();
+	}
+}
+
 // 注册TSF输入法
 int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow64, bool silent)
 {
@@ -238,7 +271,7 @@ int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow6
 	{
 		params = L" /u " + params;  // unregister
 	}
-	if (silent)
+	//if (silent)  // always silent
 	{
 		params = L" /s " + params;
 	}
@@ -266,6 +299,11 @@ int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow6
 		if (!silent) MessageBox(NULL, msg, L"安装/卸載失败", MB_ICONERROR | MB_OK);
 		return 1;
 	}
+
+	// disable TSF by default
+	enable_profile(FALSE);
+	enable_profile(FALSE);
+
 	return 0;
 }
 
