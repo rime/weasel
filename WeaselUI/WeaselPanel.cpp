@@ -35,7 +35,6 @@ static const COLORREF HIGHLIGHTED_BACK_COLOR      = 0x7fffff;
 static const COLORREF HIGHLIGHTED_CAND_TEXT_COLOR = 0xffffff;
 static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x000000;
 
-static const int STATUS_ICON_SIZE = 16;
 
 WeaselPanel::WeaselPanel(weasel::UI &ui)
 	: m_layout(NULL), 
@@ -70,6 +69,7 @@ WeaselPanel::WeaselPanel(weasel::UI &ui)
 	m_style.hilited_label_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 	m_style.hilited_comment_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 
+	m_iconDisabled.LoadIconW(IDI_DISABLED, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ENABLED, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconAlpha.LoadIconW(IDI_ALPHA, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 }
@@ -104,9 +104,9 @@ void WeaselPanel::Refresh()
 	if (m_layout != NULL)
 		delete m_layout;
 	if (m_style.layout_type == LAYOUT_VERTICAL)
-		m_layout = new VerticalLayout(m_style, m_ctx);
+		m_layout = new VerticalLayout(m_style, m_ctx, m_status);
 	else if (m_style.layout_type == LAYOUT_HORIZONTAL)
-		m_layout = new HorizontalLayout(m_style, m_ctx);
+		m_layout = new HorizontalLayout(m_style, m_ctx, m_status);
 	CDCHandle dc = GetDC();
 	long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 	CFont font;
@@ -199,7 +199,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	const vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::string &labels(m_ctx.cinfo.labels);
 
-	for (int i = 0; i < candidates.size(); i++)
+	for (size_t i = 0; i < candidates.size(); i++)
 	{
 		CRect rect;
 		if (i == m_ctx.cinfo.highlighted)
@@ -289,17 +289,16 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	if (!m_layout->IsInlinePreedit())
 		drawn |= _DrawPreedit(m_ctx.preedit, dc, m_layout->GetPreeditRect());
 	
-	/*
-	// ascii mode icon (I guess Metro IME stole my idea :)
-	if (m_status.ascii_mode && y > rc.top)
-	{
-		int icon_x = rc.right - STATUS_ICON_SIZE;
-		int icon_y = (rc.top + y - m_style.spacing - STATUS_ICON_SIZE) / 2;
-		dc.DrawIconEx(icon_x, icon_y, m_iconAlpha, 0, 0);
-	}*/
-
 	// draw auxiliary string
 	drawn |= _DrawPreedit(m_ctx.aux, dc, m_layout->GetAuxiliaryRect());
+
+	// status icon (I guess Metro IME stole my idea :)
+	if (m_layout->ShouldDisplayStatusIcon())
+	{
+		const CRect iconRect(m_layout->GetStatusIconRect());
+		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
+		dc.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
+	}
 
 	// draw candidates
 	drawn |= _DrawCandidates(dc);

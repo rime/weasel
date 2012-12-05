@@ -3,8 +3,8 @@
 
 using namespace weasel;
 
-VerticalLayout::VerticalLayout(const UIStyle &style, const Context &context)
-	: StandardLayout(style, context)
+VerticalLayout::VerticalLayout(const UIStyle &style, const Context &context, const Status &status)
+	: StandardLayout(style, context, status)
 {
 }
 
@@ -99,6 +99,7 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 
 	width = max(width, _style.min_width);
 	height = max(height, _style.min_height);
+	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width, height);
 
 	/* Highlighted Candidate */

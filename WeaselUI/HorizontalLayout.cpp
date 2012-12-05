@@ -3,8 +3,8 @@
 
 using namespace weasel;
 
-HorizontalLayout::HorizontalLayout(const UIStyle &style, const Context &context)
-	: StandardLayout(style, context)
+HorizontalLayout::HorizontalLayout(const UIStyle &style, const Context &context, const Status &status)
+	: StandardLayout(style, context, status)
 {
 }
 
@@ -94,5 +94,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 
 	width = max(width, _style.min_width);
 	height = max(height, _style.min_height);
+	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width, height);
 }

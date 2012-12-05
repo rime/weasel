@@ -5,8 +5,8 @@ using namespace weasel;
 
 static WCHAR LABEL_PATTERN[] = L"%1%.";
 
-StandardLayout::StandardLayout(const UIStyle &style, const Context &context)
-	: Layout(style, context)
+StandardLayout::StandardLayout(const UIStyle &style, const Context &context, const Status &status)
+	: Layout(style, context, status)
 {
 }
 
@@ -48,7 +48,48 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 	return size;
 }
 
+void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
+{
+	// rule 1. status icon is middle-aligned with preedit text or auxiliary text, whichever comes first
+	// rule 2. there is a spacing between preedit/aux text and the status icon
+	// rule 3. status icon is right aligned in WeaselPanel, when [margin_x + width(preedit/aux) + spacing + width(icon) + margin_x] < style.min_width
+	if (ShouldDisplayStatusIcon())
+	{
+		int left = 0, middle = 0;
+		if (!_preeditRect.IsRectNull())
+		{
+			left = _preeditRect.right + _style.spacing;
+			middle = (_preeditRect.top + _preeditRect.bottom) / 2;
+		}
+		else if (!_auxiliaryRect.IsRectNull())
+		{
+			left = _auxiliaryRect.right + _style.spacing;
+			middle = (_auxiliaryRect.top + _preeditRect.bottom) / 2;
+		}
+		if (left && middle)
+		{
+			int right_alignment = *width - _style.margin_x - STATUS_ICON_SIZE;
+			if (left > right_alignment)
+			{
+				*width = left + STATUS_ICON_SIZE + _style.margin_x;
+			}
+			else
+			{
+				left = right_alignment;
+			}
+			_statusIconRect.SetRect(left, middle - STATUS_ICON_SIZE / 2, left + STATUS_ICON_SIZE, middle + STATUS_ICON_SIZE / 2);
+		}
+	}
+}
+
 bool StandardLayout::IsInlinePreedit() const
 {
 	return _style.inline_preedit && (_style.client_caps & weasel::INLINE_PREEDIT_CAPABLE) != 0;
+}
+
+bool StandardLayout::ShouldDisplayStatusIcon() const
+{
+	// rule 1. emphasis ascii mode
+	// rule 2. always show status icon with tips 
+	return _status.ascii_mode || !_context.aux.empty();
 }
