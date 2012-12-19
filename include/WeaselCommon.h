@@ -102,10 +102,13 @@ namespace weasel
 		Status() : ascii_mode(false), composing(false), disabled(false) {}
 		void reset()
 		{
+			schema_name.clear();
 			ascii_mode = false;
 			composing = false;
 			disabled = false;
 		}
+		// 輸入方案
+		std::wstring schema_name;
 		// 轉換開關
 		bool ascii_mode;
 		// 寫作狀態

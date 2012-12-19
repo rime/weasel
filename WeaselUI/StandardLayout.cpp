@@ -64,7 +64,7 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 		else if (!_auxiliaryRect.IsRectNull())
 		{
 			left = _auxiliaryRect.right + _style.spacing;
-			middle = (_auxiliaryRect.top + _preeditRect.bottom) / 2;
+			middle = (_auxiliaryRect.top + _auxiliaryRect.bottom) / 2;
 		}
 		if (left && middle)
 		{
@@ -79,6 +79,11 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 			}
 			_statusIconRect.SetRect(left, middle - STATUS_ICON_SIZE / 2, left + STATUS_ICON_SIZE, middle + STATUS_ICON_SIZE / 2);
 		}
+		else
+		{
+			_statusIconRect.SetRect(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
+			*width = *height = STATUS_ICON_SIZE;
+		}
 	}
 }
 
@@ -90,6 +95,7 @@ bool StandardLayout::IsInlinePreedit() const
 bool StandardLayout::ShouldDisplayStatusIcon() const
 {
 	// rule 1. emphasis ascii mode
-	// rule 2. always show status icon with tips 
-	return _status.ascii_mode || !_context.aux.empty();
+	// rule 2. show status icon when switching mode
+	// rule 3. always show status icon with tips 
+	return _status.ascii_mode || !_status.composing || !_context.aux.empty();
 }

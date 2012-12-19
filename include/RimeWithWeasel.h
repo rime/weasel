@@ -28,6 +28,7 @@ public:
 private:
 	bool _IsDeployerRunning();
 	void _UpdateUI(UINT session_id);
+	bool _ShowMessage(weasel::Context& ctx, weasel::Status& status);
 	bool _Respond(UINT session_id, LPWSTR buffer);
 	void _ReadClientInfo(UINT session_id, LPWSTR buffer);
 
@@ -35,4 +36,10 @@ private:
 	weasel::UI* m_ui;  // reference
 	UINT m_active_session;
 	bool m_disabled;
+
+	static void OnNotify(void* context_object,
+                         const char* message_type,
+                         const char* message_value);
+	static std::string m_message_type;
+	static std::string m_message_value;
 };

@@ -103,6 +103,8 @@ namespace weasel
 		// 界面显隐
 		void Show();
 		void Hide();
+		void ShowWithTimeout(DWORD millisec);
+		bool IsCountingDown() const;
 		
 		// 重绘界面
 		void Refresh();

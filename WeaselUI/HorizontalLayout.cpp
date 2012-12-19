@@ -21,7 +21,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 	int width = 0, height = _style.margin_y;
 
 	/* Preedit */
-	if (!IsInlinePreedit())
+	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc);
 		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
@@ -92,8 +92,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 		height -= _style.spacing;
 	height += _style.margin_y;
 
-	width = max(width, _style.min_width);
-	height = max(height, _style.min_height);
+	if (!_context.preedit.str.empty() && !candidates.empty())
+	{
+		width = max(width, _style.min_width);
+		height = max(height, _style.min_height);
+	}
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width, height);
 }

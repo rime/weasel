@@ -82,11 +82,6 @@ WeaselPanel::~WeaselPanel()
 
 void WeaselPanel::_ResizeWindow()
 {
-	if (!m_status.composing)
-	{
-		SetWindowPos( NULL, 0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE, SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOZORDER);
-		return;
-	}
 	CDCHandle dc = GetDC();
 	long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 	CFont font;
@@ -247,15 +242,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	CRect rc;
 	GetClientRect(&rc);
 
-	if (!m_status.composing)
-	{
-		if (m_status.ascii_mode)
-			dc.DrawIconEx(0, 0, m_iconAlpha, 0, 0);
-		else
-			dc.DrawIconEx(0, 0, m_iconEnabled, 0, 0); 
-		return;
-	}
-
 	// background
 	{
 		CBrush brush;
@@ -298,6 +284,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		const CRect iconRect(m_layout->GetStatusIconRect());
 		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
 		dc.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
+		drawn = true;
 	}
 
 	// draw candidates
