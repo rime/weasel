@@ -21,6 +21,7 @@ public:
 protected:
 	virtual void CustomizeMenu(HMENU hMenu);
 
+	weasel::UIStyle &m_style;
 	weasel::Status &m_status;
 	WeaselTrayMode m_mode;
 };

@@ -21,6 +21,7 @@ namespace weasel
 		std::wstring font_face;
 		int font_point;
 		bool inline_preedit;
+		bool display_tray_icon;
 		// layout
 		LayoutType layout_type;
 		int min_width;
@@ -51,6 +52,9 @@ namespace weasel
 
 		UIStyle() : font_face(), 
 			        font_point(0),
+					inline_preedit(false),
+					display_tray_icon(false),
+					layout_type(LAYOUT_VERTICAL),
 					min_width(0),
 					min_height(0),
 					border(0),

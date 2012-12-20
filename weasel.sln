@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		include\WeaselIPC.h = include\WeaselIPC.h
 		include\WeaselUI.h = include\WeaselUI.h
 		include\WeaselUtility.h = include\WeaselUtility.h
+		include\WeaselVersion.h = include\WeaselVersion.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselTSF", "WeaselTSF\WeaselTSF.vcxproj", "{FF9B3625-BBD6-4972-8F23-7BA57F3127E8}"

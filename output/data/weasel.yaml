@@ -1,7 +1,7 @@
 # Weasel settings
 # encoding: utf-8
 
-config_version: "0.15"
+config_version: "0.16"
 
 app_options:
   cmd.exe:
@@ -11,8 +11,9 @@ style:
   color_scheme: aqua
   font_face: Microsoft YaHei
   font_point: 14
-  inline_preedit: false
   horizontal: false
+  inline_preedit: false
+  display_tray_icon: false
   layout:
     min_width: 160
     min_height: 0

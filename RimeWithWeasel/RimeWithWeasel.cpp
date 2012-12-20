@@ -81,7 +81,7 @@ void RimeWithWeaselHandler::Finalize()
 UINT RimeWithWeaselHandler::FindSession(UINT session_id)
 {
 	if (m_disabled) return 0;
-	bool found = RimeFindSession(session_id);
+	Bool found = RimeFindSession(session_id);
 	DLOG(INFO) << "Find session: session_id = " << session_id << ", found = " << found;
 	return found ? session_id : 0;
 }
@@ -127,7 +127,7 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 	DLOG(INFO) << "Process key event: keycode = " << keyEvent.keycode << ", mask = " << keyEvent.mask
 		 << ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
-	bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
+	Bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
 	_Respond(session_id, buffer);
 	_UpdateUI(session_id);
 	m_active_session = session_id;
@@ -473,6 +473,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui)
 	Bool inline_preedit = False;
 	RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit);
 	style.inline_preedit = inline_preedit;
+	Bool display_tray_icon = False;
+	RimeConfigGetBool(config, "style/display_tray_icon", &display_tray_icon);
+	style.display_tray_icon = display_tray_icon;
 	Bool horizontal = False;
 	RimeConfigGetBool(config, "style/horizontal", &horizontal);
 	style.layout_type = horizontal ? weasel::LAYOUT_HORIZONTAL : weasel::LAYOUT_VERTICAL;
