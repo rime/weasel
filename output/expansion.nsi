@@ -6,7 +6,7 @@
 ; 擴展包標識
 !define PACKAGE_ID "weasel-expansion"
 ; 擴展包版本
-!define PACKAGE_VERSION 0.9.16
+!define PACKAGE_VERSION 0.9.17
 ; 必須補足 4 個整數
 !define PACKAGE_BUILD ${PACKAGE_VERSION}.0
 ; 擴展包名稱

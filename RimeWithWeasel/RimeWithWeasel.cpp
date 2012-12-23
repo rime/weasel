@@ -166,6 +166,7 @@ std::string RimeWithWeaselHandler::m_message_type;
 std::string RimeWithWeaselHandler::m_message_value;
 
 void RimeWithWeaselHandler::OnNotify(void* context_object,
+	                                 uintptr_t session_id,
                                      const char* message_type,
                                      const char* message_value)
 {
