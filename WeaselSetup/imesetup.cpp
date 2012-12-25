@@ -54,7 +54,7 @@ BOOL delete_file(const wstring& file)
 	return ret;
 }
 
-typedef int (*ime_register_func)(const wpath& ime_path, bool register_ime, bool is_wow64, bool silent);
+typedef int (*ime_register_func)(const wpath& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent);
 
 int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent, ime_register_func func)
 {
@@ -87,7 +87,7 @@ int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent,
 		if (!silent) MessageBox(NULL, destPath.native_file_string().c_str(), L"∞≤—b ßî°", MB_ICONERROR | MB_OK);
 		return 1;
 	}
-	retval += func(destPath, true, false, silent);
+	retval += func(destPath, true, false, hant, silent);
 	if (!wow64Path.empty())
 	{
 		wstring x86 = srcPath.native_file_string();
@@ -97,7 +97,7 @@ int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent,
 			if (!silent) MessageBox(NULL, wow64Path.native_file_string().c_str(), L"∞≤—b ßî°", MB_ICONERROR | MB_OK);
 			return 1;
 		}
-		retval += func(wow64Path, true, true, silent);
+		retval += func(wow64Path, true, true, hant, silent);
 	}
 	return retval;
 }
@@ -109,7 +109,7 @@ int uninstall_ime_file(const wstring& ext, bool silent, ime_register_func func)
 	GetSystemDirectory(path, _countof(path));
 	wpath imePath = path;
 	imePath /= L"weasel" + ext;
-	retval += func(imePath, false, false, silent);
+	retval += func(imePath, false, false, false, silent);
 	if (!delete_file(imePath.native_file_string()))
 	{
 		if (!silent) MessageBox(NULL, imePath.native_file_string().c_str(), L"–∂›d ßî°", MB_ICONERROR | MB_OK);
@@ -119,7 +119,7 @@ int uninstall_ime_file(const wstring& ext, bool silent, ime_register_func func)
 	{
 		wpath wow64Path = path;
 		wow64Path /= L"weasel" + ext;
-		retval += func(wow64Path, false, true, silent);
+		retval += func(wow64Path, false, true, false, silent);
 		if (!delete_file(wow64Path.native_file_string()))
 		{
 			if (!silent) MessageBox(NULL, wow64Path.native_file_string().c_str(), L"–∂›d ßî°", MB_ICONERROR | MB_OK);
@@ -130,16 +130,89 @@ int uninstall_ime_file(const wstring& ext, bool silent, ime_register_func func)
 }
 
 // ◊¢≤·IME ‰»Î∑®
-int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool silent)
+int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	if (is_wow64)
 	{
 		return 0;  // only once
 	}
 
+	const WCHAR KEYBOARD_LAYOUTS_KEY[] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts";
+	const WCHAR PRELOAD_KEY[] = L"Keyboard Layout\\Preload";
+
 	if (register_ime)
 	{
 		HKL hKL = ImmInstallIME(ime_path.native_file_string().c_str(), WEASEL_IME_NAME);
+		if (!hKL)
+		{
+			// manually register ime
+			WCHAR hkl_str[16] = {0};
+			HKEY hKey;
+			LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
+			if (ret == ERROR_SUCCESS)
+			{
+				for (DWORD k = 0xE0200000 + (hant ? 0x0404 : 0x0804); true; k += 0x10000)
+				{
+					wsprintf(hkl_str, L"%08X", k);
+					HKEY hSubKey;
+					ret = RegOpenKey(hKey, hkl_str, &hSubKey);
+					if (ret == ERROR_SUCCESS)
+					{
+						WCHAR imeFile[32] = {0};
+						DWORD len = sizeof(imeFile);
+						DWORD type = 0;
+						ret = RegQueryValueEx(hSubKey, L"Ime File", NULL, &type, (LPBYTE)imeFile, &len);
+						RegCloseKey(hSubKey);
+						if (_wcsicmp(imeFile, L"weasel.ime") == 0)
+						{
+							hKL = (HKL)k;  // already there
+						}
+					}
+					else
+					{
+						// found a spare number to register
+						ret = RegCreateKey(hKey, hkl_str, &hSubKey);
+						if (ret == ERROR_SUCCESS)
+						{
+							const WCHAR ime_file[] = L"weasel.ime";
+							RegSetValueEx(hSubKey, L"Ime File", 0, REG_SZ, (LPBYTE)ime_file, sizeof(ime_file));
+							const WCHAR layout_file[] = L"kbdus.dll";
+							RegSetValueEx(hSubKey, L"Layout File", 0, REG_SZ, (LPBYTE)layout_file, sizeof(layout_file));
+							const WCHAR layout_text[] = WEASEL_IME_NAME;
+							RegSetValueEx(hSubKey, L"Layout Text", 0, REG_SZ, (LPBYTE)layout_text, sizeof(layout_text));
+							RegCloseKey(hSubKey);
+							hKL = (HKL)k;
+						}
+						break;
+					}
+				}
+				RegCloseKey(hKey);
+			}
+			if (hKL)
+			{
+				HKEY hPreloadKey;
+				ret = RegOpenKey(HKEY_CURRENT_USER, PRELOAD_KEY, &hPreloadKey);
+				if (ret == ERROR_SUCCESS)
+				{
+					for (size_t i = 1; true; ++i)
+					{
+						std::wstring number = (boost::wformat(L"%1%") % i).str();
+						DWORD type = 0;
+						WCHAR value[32];
+						DWORD len = sizeof(value);
+						ret = RegQueryValueEx(hPreloadKey, number.c_str(), 0, &type, (LPBYTE)value, &len);
+						if (ret != ERROR_SUCCESS)
+						{
+							RegSetValueEx(hPreloadKey, number.c_str(), 0, REG_SZ,
+											(const BYTE*)hkl_str,
+											(wcslen(hkl_str) + 1) * sizeof(WCHAR));
+							break;
+						}
+					}
+					RegCloseKey(hPreloadKey);
+				}
+			}
+		}
 		if (!hKL)
 		{
 			DWORD dwErr = GetLastError();
@@ -152,14 +225,12 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool s
 	}
 
 	// unregister ime
-	const WCHAR KL_KEY[] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts";
-	const WCHAR PRELOAD_KEY[] = L"Keyboard Layout\\Preload";
 
 	HKEY hKey;
-	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KL_KEY, &hKey);
+	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
 	if (ret != ERROR_SUCCESS)
 	{
-		if (!silent) MessageBox(NULL, KL_KEY, L"–∂›d ßî°", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, KEYBOARD_LAYOUTS_KEY, L"–∂›d ßî°", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -264,7 +335,7 @@ void enable_profile(BOOL fEnable) {
 }
 
 // ◊¢≤·TSF ‰»Î∑®
-int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow64, bool silent)
+int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	wstring params = L" \"" + tsf_path.native_file_string() + L"\"";
 	if (!register_ime)
