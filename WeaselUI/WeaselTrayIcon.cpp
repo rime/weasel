@@ -22,10 +22,14 @@ BOOL WeaselTrayIcon::Create(HWND hTargetWnd)
 	CIcon icon;
 	icon.LoadIconW(IDI_ENABLED);
 	BOOL bRet = CSystemTray::Create(hModule, NULL, WM_WEASEL_TRAY_NOTIFY, 
-		WEASEL_IME_NAME, icon, IDR_MENU_POPUP, TRUE);
+		WEASEL_IME_NAME, icon, IDR_MENU_POPUP);
 	if (hTargetWnd)
 	{
 		SetTargetWnd(hTargetWnd);
+	}
+	if (!m_style.display_tray_icon)
+	{
+		RemoveIcon();
 	}
 	return bRet;
 }
@@ -46,8 +50,8 @@ void WeaselTrayIcon::Refresh()
 	if (mode != m_mode)
 	{
 		m_mode = mode;
-		SetIcon(mode_icon[mode]);
 		ShowIcon();
+		SetIcon(mode_icon[mode]);
 		if (mode_label[mode])
 		{
 			ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
