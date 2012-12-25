@@ -4,7 +4,7 @@
 !include x64.nsh
 
 !define WEASEL_VERSION 0.9.17
-!define WEASEL_BUILD ${WEASEL_VERSION}.0
+!define WEASEL_BUILD ${WEASEL_VERSION}.1
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
 
@@ -167,10 +167,12 @@ Section "Start Menu Shortcuts"
 
   CreateDirectory "$SMPROGRAMS\小狼毫輸入法"
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\說明書.lnk" "$INSTDIR\README.txt"
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\輸入法設定.lnk" "$INSTDIR\WeaselDeployer.exe" "" "$INSTDIR\WeaselDeployer.exe" 0
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\用戶詞典管理.lnk" "$INSTDIR\WeaselDeployer.exe" "/dict" "$INSTDIR\WeaselDeployer.exe" 0
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\重新部署.lnk" "$INSTDIR\WeaselDeployer.exe" "/deploy" "$INSTDIR\WeaselServer.exe" 0
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫算法服務.lnk" "$INSTDIR\WeaselServer.exe" "/restart" "$INSTDIR\WeaselServer.exe" 0
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\輸入法設定.lnk" "$INSTDIR\WeaselDeployer.exe" "" "$SYSDIR\shell32.dll" 21
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\用戶詞典管理.lnk" "$INSTDIR\WeaselDeployer.exe" "/dict" "$SYSDIR\shell32.dll" 6
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\重新部署.lnk" "$INSTDIR\WeaselDeployer.exe" "/deploy" "$SYSDIR\shell32.dll" 144
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫算法服務.lnk" "$INSTDIR\WeaselServer.exe" "" "$INSTDIR\WeaselServer.exe" 0
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\用戶文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/userdir" "$SYSDIR\shell32.dll" 126
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\程序文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/weaseldir" "$SYSDIR\shell32.dll" 19
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\卸載小狼毫.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 
 SectionEnd
