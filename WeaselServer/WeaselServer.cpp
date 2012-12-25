@@ -40,6 +40,16 @@ public:
 		return true;
 	}
 
+	static std::wstring install_dir()
+	{
+		WCHAR exe_path[MAX_PATH] = {0};
+		GetModuleFileNameW(GetModuleHandle(NULL), exe_path, _countof(exe_path));
+		std::wstring dir(exe_path);
+		size_t pos = dir.find_last_of(L"\\");
+		dir.resize(pos);
+		return dir;
+	}
+
 public:
 	WeaselServerApp();
 	~WeaselServerApp();
@@ -86,20 +96,16 @@ int WeaselServerApp::Run()
 
 void WeaselServerApp::SetupMenuHandlers()
 {
-	WCHAR exe_path[MAX_PATH] = {0};
-	GetModuleFileNameW(GetModuleHandle(NULL), exe_path, _countof(exe_path));
-	std::wstring install_dir(exe_path);
-	size_t pos = install_dir.find_last_of(L"\\");
-	install_dir.resize(pos);
+	std::wstring dir(install_dir());
 	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, boost::lambda::bind(&weasel::Server::Stop, boost::ref(m_server)) == 0);
-	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
-	m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring()));
-	m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, boost::lambda::bind(&execute, install_dir + L"\\WeaselDeployer.exe", std::wstring(L"/dict")));
+	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
+	m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring()));
+	m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/dict")));
 	m_server.AddMenuHandler(ID_WEASELTRAY_WIKI, boost::lambda::bind(&open, L"http://code.google.com/p/rimeime/w/list"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, boost::lambda::bind(&open, L"http://code.google.com/p/rimeime/"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_FORUM, boost::lambda::bind(&open, L"http://tieba.baidu.com/f?kw=rime"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);
-	m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, boost::lambda::bind(&explore, install_dir));
+	m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, boost::lambda::bind(&explore, dir));
 	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, boost::lambda::bind(&explore, WeaselUserDataPath()));
 }
 
@@ -122,16 +128,29 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
 
+	if (!wcscmp(L"/userdir", lpstrCmdLine))
+	{
+		CreateDirectory(WeaselUserDataPath().c_str(), NULL);
+		WeaselServerApp::explore(WeaselUserDataPath());
+		return 0;
+	}
+	if (!wcscmp(L"/weaseldir", lpstrCmdLine))
+	{
+		WeaselServerApp::explore(WeaselServerApp::install_dir());
+		return 0;
+	}
+
 	RimeSetupLogging("rime.weasel");
 
 	// command line option /q stops the running server
 	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);
-	//bool restart = !wcscmp(L"/restart", lpstrCmdLine);
-	//if (quit || restart)
+	// restart if already running
 	{
 		weasel::Client client;
-		if (client.Connect())
+		if (client.Connect())  // try to connect to running server
+		{
 			client.ShutdownServer();
+		}
 		if (quit)
 			return 0;
 	}
