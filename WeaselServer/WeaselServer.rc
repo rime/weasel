@@ -117,6 +117,7 @@ BEGIN
     BEGIN
         MENUITEM "輸入法設定 (&S)",                  ID_WEASELTRAY_SETTINGS
         MENUITEM "用戶詞典管理 (&D)",                 ID_WEASELTRAY_DICT_MANAGEMENT
+        MENUITEM "用戶詞典同步 (&N)",                 ID_WEASELTRAY_SYNC
         MENUITEM SEPARATOR
         MENUITEM "用戶文件夾 (&C)",                  ID_WEASELTRAY_USERCONFIG
         MENUITEM "程序文件夾 (&P)",                  ID_WEASELTRAY_INSTALLDIR

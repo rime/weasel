@@ -6,11 +6,11 @@
     <description>小狼毫Appcast更新頻道</description>
     <language>zh</language>
     <item>
-      <title>小狼毫 0.9.17</title>
+      <title>小狼毫 0.9.18</title>
       <sparkle:releaseNotesLink>http://rimeime.googlecode.com/svn/trunk/weasel/update/release-notes.html</sparkle:releaseNotesLink>
-      <pubDate>Tue, 25 Dec 2012 23:30:00 +0800</pubDate>
-      <enclosure url="http://rimeime.googlecode.com/files/weasel-0.9.17.1-installer.exe"
-                 sparkle:version="0.9.17.0"
+      <pubDate>Sun, 5 Jan 2013 12:00:00 +0800</pubDate>
+      <enclosure url="http://rimeime.googlecode.com/files/weasel-0.9.18.0-installer.exe"
+                 sparkle:version="0.9.18.0"
                  type="application/octet-stream"/>
     </item>
   </channel>

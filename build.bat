@@ -31,15 +31,15 @@ if %build_all% == 1 (
 )
 
 if %build_all% == 1 (
-  devenv weasel.sln /Build "ReleaseHant|x64"
+  devenv weasel.sln %build_option% "ReleaseHant|x64"
   if errorlevel 1 goto error
-  devenv weasel.sln /Build "ReleaseHant|Win32"
+  devenv weasel.sln %build_option% "ReleaseHant|Win32"
   if errorlevel 1 goto error
 )
 
-devenv weasel.sln /Build "Release|x64"
+devenv weasel.sln %build_option% "Release|x64"
 if errorlevel 1 goto error
-devenv weasel.sln /Build "Release|Win32"
+devenv weasel.sln %build_option% "Release|Win32"
 if errorlevel 1 goto error
 goto end
 
