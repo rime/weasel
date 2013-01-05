@@ -16,7 +16,6 @@
 #include <rime/deployer.h>
 #include <rime/service.h>
 #include <rime/lever/switcher_settings.h>
-#include <rime/lever/deployment_tasks.h>
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
 #pragma warning(default: 4005)
@@ -51,7 +50,7 @@ int Configurator::Run(bool installing)
 
 	bool skip_switcher_settings = installing && !switcher_settings.IsFirstRun();
 	bool skip_ui_style_settings = installing && !ui_style_settings.IsFirstRun();
-	
+
 	(skip_switcher_settings || ConfigureSwitcher(&switcher_settings, &reconfigured)) &&
 		(skip_ui_style_settings || ConfigureUI(&ui_style_settings, &reconfigured));
 
@@ -190,12 +189,12 @@ int Configurator::SyncUserDict() {
 
 	{
 		rime::Deployer& deployer(rime::Service::instance().deployer());
-		rime::InstallationUpdate inst;  // for user_id & sync_dir
-		if (!inst.Run(&deployer) || !RimeSyncUserDict())
+		if (!RimeSyncUserDict())
 		{
 			LOG(ERROR) << "Error synching user dict.";
 			return 1;
 		}
+		RimeJoinMaintenanceThread();
 	}
 
 	CloseHandle(hMutex);  // should be closed before resuming service.
