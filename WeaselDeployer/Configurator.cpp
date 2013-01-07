@@ -165,7 +165,7 @@ int Configurator::DictManagement() {
 	return 0;
 }
 
-int Configurator::SyncUserDict() {
+int Configurator::SyncUserData() {
 	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
 	if (!hMutex)
 	{
@@ -189,9 +189,9 @@ int Configurator::SyncUserDict() {
 
 	{
 		rime::Deployer& deployer(rime::Service::instance().deployer());
-		if (!RimeSyncUserDict())
+		if (!RimeSyncUserData())
 		{
-			LOG(ERROR) << "Error synching user dict.";
+			LOG(ERROR) << "Error synching user data.";
 			return 1;
 		}
 		RimeJoinMaintenanceThread();

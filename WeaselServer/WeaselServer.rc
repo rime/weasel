@@ -26,18 +26,18 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -117,7 +117,7 @@ BEGIN
     BEGIN
         MENUITEM "輸入法設定 (&S)",                  ID_WEASELTRAY_SETTINGS
         MENUITEM "用戶詞典管理 (&D)",                 ID_WEASELTRAY_DICT_MANAGEMENT
-        MENUITEM "用戶詞典同步 (&N)",                 ID_WEASELTRAY_SYNC
+        MENUITEM "用戶資料同步 (&N)",                 ID_WEASELTRAY_SYNC
         MENUITEM SEPARATOR
         MENUITEM "用戶文件夾 (&C)",                  ID_WEASELTRAY_USERCONFIG
         MENUITEM "程序文件夾 (&P)",                  ID_WEASELTRAY_INSTALLDIR

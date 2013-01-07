@@ -82,7 +82,7 @@ static int Run(LPTSTR lpCmdLine)
 	bool sync_user_dict = !wcscmp(L"/sync", lpCmdLine);
 	if (sync_user_dict)
 	{
-		return configurator.SyncUserDict();
+		return configurator.SyncUserData();
 	}
 
 	bool installing = !wcscmp(L"/install", lpCmdLine);
