@@ -26,6 +26,14 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 	if (kinfo.isKeyUp)
 		result.mask |= ibus::RELEASE_MASK;
 
+	if (vkey == VK_CAPITAL && !kinfo.isKeyUp)
+	{
+		// NOTE: rime assumes XK_Caps_Lock to be sent before modifier changes,
+		// while VK_CAPITAL has the modifier changed already.
+		// so it is necessary to revert LOCK_MASK.
+		result.mask ^= ibus::LOCK_MASK;
+	}
+
 	// set keycode
 	ibus::Keycode code = TranslateKeycode(vkey, kinfo);
 	if (code)
@@ -37,10 +45,11 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 	const int buf_len = 8;
 	static WCHAR buf[buf_len];
 	static BYTE table[256];
-	// 清除Ctrl、Alt鍵狀態，以令ToUnicodeEx()返回字符
+	// 清除Ctrl、Alt、CapsLock鍵狀態，以令ToUnicodeEx()返回字符
 	memcpy(table, keyState, sizeof(table));
 	table[VK_CONTROL] = 0;
 	table[VK_MENU] = 0;
+	table[VK_CAPITAL] = 0;
 	int ret = ToUnicodeEx(vkey, UINT(kinfo), table, buf, buf_len, 0, NULL);
 	if (ret == 1)
 	{
@@ -61,7 +70,7 @@ ibus::Keycode TranslateKeycode(UINT vkey, KeyInfo kinfo)
 	case VK_CLEAR:	return ibus::Clear;
 	case VK_RETURN:	return ibus::Return;
 
-	case VK_SHIFT:	
+	case VK_SHIFT:
 	{
 		if (kinfo.scanCode == 0x36)
 			return ibus::Shift_R;
