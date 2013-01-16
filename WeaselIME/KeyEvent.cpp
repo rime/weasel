@@ -45,11 +45,10 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 	const int buf_len = 8;
 	static WCHAR buf[buf_len];
 	static BYTE table[256];
-	// 清除Ctrl、Alt、CapsLock鍵狀態，以令ToUnicodeEx()返回字符
+	// 清除Ctrl、Alt鍵狀態，以令ToUnicodeEx()返回字符
 	memcpy(table, keyState, sizeof(table));
 	table[VK_CONTROL] = 0;
 	table[VK_MENU] = 0;
-	table[VK_CAPITAL] = 0;
 	int ret = ToUnicodeEx(vkey, UINT(kinfo), table, buf, buf_len, 0, NULL);
 	if (ret == 1)
 	{
