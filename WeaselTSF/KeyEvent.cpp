@@ -26,6 +26,14 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 	if (kinfo.isKeyUp)
 		result.mask |= ibus::RELEASE_MASK;
 
+	if (vkey == VK_CAPITAL && !kinfo.isKeyUp)
+	{
+		// NOTE: rime assumes XK_Caps_Lock to be sent before modifier changes,
+		// while VK_CAPITAL has the modifier changed already.
+		// so it is necessary to revert LOCK_MASK.
+		result.mask ^= ibus::LOCK_MASK;
+	}
+
 	// set keycode
 	ibus::Keycode code = TranslateKeycode(vkey, kinfo);
 	if (code)
