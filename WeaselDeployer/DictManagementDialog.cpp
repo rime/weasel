@@ -6,7 +6,7 @@
 #include <boost/filesystem.hpp>
 
 DictManagementDialog::DictManagementDialog(rime::Deployer* deployer)
-	: mgr_(deployer)
+	: mgr_(deployer), user_data_sync_dir_(deployer->user_data_sync_dir())
 {
 }
 
@@ -51,22 +51,31 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 		MessageBox(L"請在左列選擇要導出的詞典名稱。", L":-(", MB_OK | MB_ICONINFORMATION);
 		return 0;
 	}
-	if (!mgr_.Backup(dicts_[sel])) {
-		MessageBox(L"不知哪裏出錯了，未能完成操作。", L":-(", MB_OK | MB_ICONERROR);
+	boost::filesystem::wpath path;
+	{
+		WCHAR sync_dir[MAX_PATH] = {0};
+		MultiByteToWideChar(CP_ACP, 0, user_data_sync_dir_.c_str(), -1, sync_dir, _countof(sync_dir));
+		path = sync_dir;
 	}
-	else {
-		boost::filesystem::wpath path(WeaselUserDataPath());
+	if (_waccess(path.wstring().c_str(), 0) != 0) {
+		MessageBox(L"未能完成導出操作。會不會是同步文件夾無法訪問？", L":-(", MB_OK | MB_ICONERROR);
+		return 0;
+	}
+	{
 		WCHAR dict_name[100] = {0};
 		MultiByteToWideChar(CP_ACP, 0, dicts_[sel].c_str(), -1, dict_name, _countof(dict_name));
 		path /= std::wstring(dict_name) + L".userdb.kct.snapshot";
-		if (_waccess(path.wstring().c_str(), 0) != 0) {
-			MessageBox(L"咦，輸出的快照文件找不着了。", L":-(", MB_OK | MB_ICONERROR);
-		}
-		else {
-			std::wstring param = L"/select, \"" + path.wstring() + L"\"";
-			ShellExecute(NULL, L"open", L"explorer.exe", param.c_str(), NULL, SW_SHOWNORMAL);
-		}
 	}
+	if (!mgr_.Backup(dicts_[sel])) {
+		MessageBox(L"不知哪裏出錯了，未能完成導出操作。", L":-(", MB_OK | MB_ICONERROR);
+		return 0;
+	}
+	else if (_waccess(path.wstring().c_str(), 0) != 0) {
+		MessageBox(L"咦，輸出的快照文件找不着了。", L":-(", MB_OK | MB_ICONERROR);
+		return 0;
+	}
+	std::wstring param = L"/select, \"" + path.wstring() + L"\"";
+	ShellExecute(NULL, L"open", L"explorer.exe", param.c_str(), NULL, SW_SHOWNORMAL);
 	return 0;
 }
 

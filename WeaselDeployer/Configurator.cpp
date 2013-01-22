@@ -15,6 +15,7 @@
 #include <rime_api.h>
 #include <rime/deployer.h>
 #include <rime/service.h>
+#include <rime/lever/deployment_tasks.h>
 #include <rime/lever/switcher_settings.h>
 #pragma warning(default: 4996)
 #pragma warning(default: 4995)
@@ -151,6 +152,8 @@ int Configurator::DictManagement() {
 
 	{
 		rime::Deployer& deployer(rime::Service::instance().deployer());
+		rime::InstallationUpdate installation;
+		installation.Run(&deployer);  // setup user data sync dir
 		DictManagementDialog dlg(&deployer);
 		dlg.DoModal();
 	}

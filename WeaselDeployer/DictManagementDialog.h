@@ -46,5 +46,6 @@ protected:
 
 	rime::UserDictManager mgr_;
 	rime::UserDictList dicts_;
+	std::string user_data_sync_dir_;
 };
 
