@@ -240,7 +240,7 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 	TF_SELECTION tfSelection;
 	pRangeComposition->Collapse(ec, TF_ANCHOR_START);
 	pRangeComposition->ShiftEnd(ec, sel_end, &cch, NULL);
-	pRangeComposition->ShiftStart(ec, sel_end, &cch, NULL);
+	pRangeComposition->ShiftStart(ec, sel_start, &cch, NULL);
 	tfSelection.range = pRangeComposition;
 	tfSelection.style.ase = TF_AE_NONE;
 	tfSelection.style.fInterimChar = FALSE;
