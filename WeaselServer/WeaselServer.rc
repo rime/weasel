@@ -81,7 +81,7 @@ BEGIN
             VALUE "FileDescription", "小狼毫算法服務"
             VALUE "FileVersion", WEASEL_VERSION_STR
             VALUE "InternalName", "WeaselServer"
-            VALUE "LegalCopyright", "版權所無 式恕堂 2012"
+            VALUE "LegalCopyright", "式恕堂 版權所無"
             VALUE "OriginalFilename", "WeaselServer.exe"
             VALUE "ProductName", "小狼毫"
             VALUE "ProductVersion", WEASEL_VERSION_STR

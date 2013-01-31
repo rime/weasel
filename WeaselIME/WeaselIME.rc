@@ -28,18 +28,18 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -74,7 +74,7 @@ BEGIN
             VALUE "FileDescription", "小狼毫輸入法"
             VALUE "FileVersion", WEASEL_VERSION_STR
             VALUE "InternalName", "Weasel"
-            VALUE "LegalCopyright", "版權所無 式恕堂 2012"
+            VALUE "LegalCopyright", "式恕堂 版權所無"
             VALUE "OriginalFilename", "weasel.ime"
             VALUE "ProductName", "小狼毫"
             VALUE "ProductVersion", WEASEL_VERSION_STR
@@ -85,7 +85,7 @@ BEGIN
             VALUE "FileDescription", "小狼毫輸入法"
             VALUE "FileVersion", WEASEL_VERSION_STR
             VALUE "InternalName", "Weasel"
-            VALUE "LegalCopyright", "版權所無 式恕堂 2012"
+            VALUE "LegalCopyright", "式恕堂 版權所無"
             VALUE "OriginalFilename", "weasel.ime"
             VALUE "ProductName", "小狼毫"
             VALUE "ProductVersion", WEASEL_VERSION_STR

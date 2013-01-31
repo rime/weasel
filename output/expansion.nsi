@@ -22,7 +22,7 @@ VIProductVersion "${PACKAGE_BUILD}"
 VIAddVersionKey /LANG=2052 "ProductName" "${PACKAGE_NAME}"
 VIAddVersionKey /LANG=2052 "Comments" "Powered by RIME | 中州韻輸入法引擎"
 VIAddVersionKey /LANG=2052 "CompanyName" "式恕堂"
-VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyleft RIME Developers 2012"
+VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyleft RIME Developers"
 VIAddVersionKey /LANG=2052 "FileDescription" "${PACKAGE_NAME}"
 VIAddVersionKey /LANG=2052 "FileVersion" "${PACKAGE_VERSION}"
 
