@@ -21,6 +21,7 @@ goto parse_cmdline_options
 :end_parsing_cmdline_options
 
 if %build_all% == 1 (
+  call :build_essay
   copy %work%\LICENSE.txt output\
   copy %work%\README.txt output\
   copy %work%\brise\essay.kct output\data\
@@ -43,6 +44,13 @@ if errorlevel 1 goto error
 devenv weasel.sln %build_option% "Release|Win32"
 if errorlevel 1 goto error
 goto end
+
+:build_essay
+copy %work%\librime\thirdparty\bin\kctreemgr.exe %work%\brise\
+copy %work%\librime\thirdparty\bin\zlib1.dll %work%\brise\
+cd %work%\brise
+call make_essay.bat
+cd %work%
 
 :error
 echo error building weasel...
