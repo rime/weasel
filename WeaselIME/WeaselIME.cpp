@@ -65,8 +65,8 @@ static bool launch_server()
 	RegCloseKey(hKey);
 
 	// 啓動服務進程
-	wstring exe = serverPath.native_file_string();
-	wstring dir = weaselRoot.native_file_string();
+	wstring exe = serverPath.wstring();
+	wstring dir = weaselRoot.wstring();
 
 	STARTUPINFO startup_info = {0};
 	PROCESS_INFORMATION process_info = {0};
@@ -89,14 +89,14 @@ static bool launch_server()
 	return true;
 }
 
-WeaselIME::WeaselIME(HIMC hIMC) 
+WeaselIME::WeaselIME(HIMC hIMC)
 : m_hIMC(hIMC)
 , m_composing(false)
 , m_preferCandidatePos(false)
 {
 	WCHAR path[MAX_PATH];
 	GetModuleFileName(NULL, path, _countof(path));
-	wstring exe = wpath(path).filename();
+	wstring exe = wpath(path).filename().wstring();
 	if (boost::iequals(L"chrome.exe", exe))
 		m_preferCandidatePos = true;
 }
@@ -241,7 +241,7 @@ LRESULT WeaselIME::OnIMESelect(BOOL fSelect)
 
 LRESULT WeaselIME::OnIMEFocus(BOOL fFocus)
 {
-	EZDBGONLYLOGGERPRINT("On IME focus: %d, HIMC = 0x%x", fFocus, m_hIMC);  
+	EZDBGONLYLOGGERPRINT("On IME focus: %d, HIMC = 0x%x", fFocus, m_hIMC);
 	LPINPUTCONTEXT lpIMC = ImmLockIMC(m_hIMC);
 	if(!lpIMC)
 	{
@@ -274,13 +274,13 @@ LRESULT WeaselIME::OnUIMessage(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp)
 	{
 	case WM_IME_NOTIFY:
 		{
-			EZDBGONLYLOGGERPRINT("WM_IME_NOTIFY: wp = 0x%x, lp = 0x%x, HIMC = 0x%x", wp, lp, m_hIMC);  
+			EZDBGONLYLOGGERPRINT("WM_IME_NOTIFY: wp = 0x%x, lp = 0x%x, HIMC = 0x%x", wp, lp, m_hIMC);
 			_OnIMENotify(lpIMC, wp, lp);
 		}
 		break;
 	case WM_IME_SELECT:
 		{
-			EZDBGONLYLOGGERPRINT("WM_IME_SELECT: wp = 0x%x, lp = 0x%x, HIMC = 0x%x", wp, lp, m_hIMC);  
+			EZDBGONLYLOGGERPRINT("WM_IME_SELECT: wp = 0x%x, lp = 0x%x, HIMC = 0x%x", wp, lp, m_hIMC);
 			if (m_preferCandidatePos)
 				_SetCandidatePos(lpIMC);
 			else
@@ -297,7 +297,7 @@ LRESULT WeaselIME::OnUIMessage(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp)
 		}
 		break;
 	default:
-		if (!IsIMEMessage(uMsg)) 
+		if (!IsIMEMessage(uMsg))
 		{
 			ImmUnlockIMC(m_hIMC);
 			return DefWindowProcW(hWnd, uMsg, wp, lp);
@@ -310,12 +310,12 @@ LRESULT WeaselIME::OnUIMessage(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp)
 }
 
 LRESULT WeaselIME::_OnIMENotify(LPINPUTCONTEXT lpIMC, WPARAM wp, LPARAM lp)
-{			
+{
 	switch (wp)
 	{
 	case IMN_OPENCANDIDATE:
 		{
-			EZDBGONLYLOGGERPRINT("IMN_OPENCANDIDATE: HIMC = 0x%x", m_hIMC);  
+			EZDBGONLYLOGGERPRINT("IMN_OPENCANDIDATE: HIMC = 0x%x", m_hIMC);
 			if (m_preferCandidatePos)
 				_SetCandidatePos(lpIMC);
 			else
@@ -324,13 +324,13 @@ LRESULT WeaselIME::_OnIMENotify(LPINPUTCONTEXT lpIMC, WPARAM wp, LPARAM lp)
 		break;
 	case IMN_SETCANDIDATEPOS:
 		{
-			EZDBGONLYLOGGERPRINT("IMN_SETCANDIDATEPOS: HIMC = 0x%x", m_hIMC);  
+			EZDBGONLYLOGGERPRINT("IMN_SETCANDIDATEPOS: HIMC = 0x%x", m_hIMC);
 			_SetCandidatePos(lpIMC);
 		}
 		break;
 	case IMN_SETCOMPOSITIONWINDOW:
 		{
-			EZDBGONLYLOGGERPRINT("IMN_SETCOMPOSITIONWINDOW: HIMC = 0x%x", m_hIMC);  
+			EZDBGONLYLOGGERPRINT("IMN_SETCOMPOSITIONWINDOW: HIMC = 0x%x", m_hIMC);
 			if (m_preferCandidatePos)
 				_SetCandidatePos(lpIMC);
 			else
@@ -346,7 +346,7 @@ LRESULT WeaselIME::_OnIMENotify(LPINPUTCONTEXT lpIMC, WPARAM wp, LPARAM lp)
 		}
 		break;
 	default:
-		EZDBGONLYLOGGERPRINT("IMN_(0x%x): HIMC = 0x%x", wp, m_hIMC);  
+		EZDBGONLYLOGGERPRINT("IMN_(0x%x): HIMC = 0x%x", wp, m_hIMC);
 	}
 
 	return 0;
@@ -394,7 +394,7 @@ void WeaselIME::_SetCompositionWindow(LPINPUTCONTEXT lpIMC)
 
 BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeyState)
 {
-	EZDBGONLYLOGGERPRINT("Process key event: vKey = 0x%x, kinfo = 0x%x, HIMC = 0x%x", vKey, UINT32(kinfo), m_hIMC);  
+	EZDBGONLYLOGGERPRINT("Process key event: vKey = 0x%x, kinfo = 0x%x, HIMC = 0x%x", vKey, UINT32(kinfo), m_hIMC);
 
 	if (!ImmGetOpenStatus(m_hIMC))  // gvim command mode
 	{
@@ -543,7 +543,7 @@ HRESULT WeaselIME::_AddIMEMessage(UINT msg, WPARAM wp, LPARAM lp)
 	if(!lpIMC)
 		return E_FAIL;
 
-	HIMCC hBuf = ImmReSizeIMCC(lpIMC->hMsgBuf, 
+	HIMCC hBuf = ImmReSizeIMCC(lpIMC->hMsgBuf,
 		sizeof(TRANSMSG) * (lpIMC->dwNumMsgBuf + 1));
 	if(!hBuf)
 	{
@@ -581,7 +581,7 @@ void WeaselIME::_UpdateInputPosition(LPINPUTCONTEXT lpIMC, POINT pt)
 	EZDBGONLYLOGGERPRINT("_UpdateInputPosition: (%d, %d)", pt.x, pt.y);
 
 	//EZDBGONLYLOGGERPRINT("cfCompForm: ptCurrentPos = (%d, %d), rcArea = (%d, %d)",
-	//	lpIMC->cfCompForm.ptCurrentPos.x, lpIMC->cfCompForm.ptCurrentPos.y, 
+	//	lpIMC->cfCompForm.ptCurrentPos.x, lpIMC->cfCompForm.ptCurrentPos.y,
 	//	lpIMC->cfCompForm.rcArea.left, lpIMC->cfCompForm.rcArea.top);
 	//EZDBGONLYLOGGERPRINT("cfCandForm[0]: ptCurrentPos = (%d, %d), rcArea = (%d, %d)",
 	//	lpIMC->cfCandForm[0].ptCurrentPos.x, lpIMC->cfCandForm[0].ptCurrentPos.y,

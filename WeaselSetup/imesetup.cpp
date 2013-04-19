@@ -82,19 +82,19 @@ int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent,
 
 	int retval = 0;
 	// 复制 .dll/.ime 到系统目录
-	if (!copy_file(srcPath.native_file_string(), destPath.native_file_string()))
+	if (!copy_file(srcPath.wstring(), destPath.wstring()))
 	{
-		if (!silent) MessageBox(NULL, destPath.native_file_string().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, destPath.wstring().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 	retval += func(destPath, true, false, hant, silent);
 	if (!wow64Path.empty())
 	{
-		wstring x86 = srcPath.native_file_string();
+		wstring x86 = srcPath.wstring();
 		boost::algorithm::ireplace_last(x86, L"x64" + ext, ext);
-		if (!copy_file(x86, wow64Path.native_file_string()))
+		if (!copy_file(x86, wow64Path.wstring()))
 		{
-			if (!silent) MessageBox(NULL, wow64Path.native_file_string().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBox(NULL, wow64Path.wstring().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 		retval += func(wow64Path, true, true, hant, silent);
@@ -110,9 +110,9 @@ int uninstall_ime_file(const wstring& ext, bool silent, ime_register_func func)
 	wpath imePath = path;
 	imePath /= L"weasel" + ext;
 	retval += func(imePath, false, false, false, silent);
-	if (!delete_file(imePath.native_file_string()))
+	if (!delete_file(imePath.wstring()))
 	{
-		if (!silent) MessageBox(NULL, imePath.native_file_string().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, imePath.wstring().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
 		retval += 1;
 	}
 	if (GetSystemWow64Directory(path, _countof(path)))
@@ -120,9 +120,9 @@ int uninstall_ime_file(const wstring& ext, bool silent, ime_register_func func)
 		wpath wow64Path = path;
 		wow64Path /= L"weasel" + ext;
 		retval += func(wow64Path, false, true, false, silent);
-		if (!delete_file(wow64Path.native_file_string()))
+		if (!delete_file(wow64Path.wstring()))
 		{
-			if (!silent) MessageBox(NULL, wow64Path.native_file_string().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBox(NULL, wow64Path.wstring().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
 			retval += 1;
 		}
 	}
@@ -142,7 +142,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 
 	if (register_ime)
 	{
-		HKL hKL = ImmInstallIME(ime_path.native_file_string().c_str(), WEASEL_IME_NAME);
+		HKL hKL = ImmInstallIME(ime_path.wstring().c_str(), WEASEL_IME_NAME);
 		if (!hKL)
 		{
 			// manually register ime
@@ -337,7 +337,7 @@ void enable_profile(BOOL fEnable) {
 // 注册TSF输入法
 int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
-	wstring params = L" \"" + tsf_path.native_file_string() + L"\"";
+	wstring params = L" \"" + tsf_path.wstring() + L"\"";
 	if (!register_ime)
 	{
 		params = L" /u " + params;  // unregister
@@ -395,7 +395,7 @@ int install(bool hant, bool silent)
 		return 1;
 	}
 
-	wstring rootDir = ime_src_path.parent_path().native_directory_string();
+	wstring rootDir = ime_src_path.parent_path().wstring();
 	ret = RegSetValueEx(hKey, L"WeaselRoot", 0, REG_SZ,
 		                (const BYTE*)rootDir.c_str(),
 						(rootDir.length() + 1) * sizeof(WCHAR));

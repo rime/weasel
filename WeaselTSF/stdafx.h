@@ -15,8 +15,6 @@
 #include <msctf.h>
 #include <assert.h>
 
-#define BOOST_FILESYSTEM_VERSION 2
-
 #pragma warning(disable : 4819)
 
 #include <boost/algorithm/string.hpp>

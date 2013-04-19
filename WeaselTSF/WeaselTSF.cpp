@@ -51,8 +51,8 @@ static bool launch_server()
 	RegCloseKey(hKey);
 
 	// †™„Ó·þ„ÕßM³Ì
-	wstring exe = serverPath.native_file_string();
-	wstring dir = weaselRoot.native_file_string();
+	wstring exe = serverPath.wstring();
+	wstring dir = weaselRoot.wstring();
 
 	STARTUPINFO startup_info = {0};
 	PROCESS_INFORMATION process_info = {0};
