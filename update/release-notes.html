@@ -1,34 +1,24 @@
-﻿<h3>【小狼毫】0.9.20 </h3>
+﻿<h3>【小狼毫】0.9.21 </h3>
 <hr/>
-<p>更新日期：2013-02-01</p>
+<p>更新日期：2013-04-21</p>
 <ul>
-  <li><p>變更：Caps Lock 燈亮時默認輸出大寫字母</p>
-  <p>升級安裝後若 Caps Lock 的表現不正確，請註銷並重新登錄</p></li>
-  <li><p>新增：無重碼自動上屏（<code>speller/auto_select:</code>）</p>
-  <p>輸入方案【倉頡・快打模式】</p></li>
-  <li><p>改進：允許以空格做輸入碼，或作爲符號頂字上屏</p>
-  <p>（<code>speller/use_space:, punctuator/use_space:</code>）</p></li>
-  <li><p>改進：【注音】輸入方案以空格輸入第一聲（陰平）</p></li>
-  <li><p>新增：特殊符號表 <code>symbols.yaml</code> 用法見↙</p></li>
-  <li><p>改進：【朙月拼音・簡化字】以 <code>/ts</code> 等形式輸入特殊符號</p></li>
-  <li><p>改進：標點符號註明〔全角〕〔半角〕</p></li>
-  <li><p>優化：同步用戶資料時更聰明地備份用戶自定義的 YAML 文件</p></li>
-  <li><p>修復：避免創建、使用不完整的詞典文件</p></li>
-  <li><p>修復：糾正用戶詞典中無法調頻的受損詞條</p></li>
-  <li><p>修復：用戶詞典管理／輸出詞典快照後定位文件出錯</p></li>
-  <li><p>修復：TSF 內嵌輸入碼沒有反選效果、候選窗位置頻繁變化</p></li>
+  <li><p>新增：配色方案【曬經石】／Solarized Rock</p></li>
+  <li><p>新增：Control+BackSpace 或 Shift+BackSpace 回退一個音節</p></li>
+  <li><p>新增：固態詞典可引用多份碼表文件</p></li>
+  <li><p>新增：在輸入方案中加載翻譯器的多個具名實例</p></li>
+  <li><p>新增：以選項 translator/user_dict 指定用戶詞典的名稱</p></li>
+  <li><p>新增：支持從用戶文件夾加載文本碼表作爲自定義短語詞典</p></li>
+  <li><p>修復：繁簡轉換使無重碼自動上屏失效的 BUG</p></li>
+  <li><p>修復：若非以 Caps Lock 鍵進入西文模式，按 Caps Lock 只切換大小寫，不返回中文模式</p></li>
+  <li><p>變更：r10n_translator 更名爲 script_translator，舊名稱仍可使用</p></li>
+  <li><p>變更：用戶詞典快照改爲文本格式</p></li>
+  <li><p>改進：【八股文】導入《萌典》詞彙，並修正了不少錯詞</p></li>
+  <li><p>改進：使自動生成的 YAML 文檔更合理地縮排、方便閱讀</p></li>
+  <li><p>改進：碼表中 "# no comments" 行之後不再識別註釋，以支持 "#" 作文字內容</p></li>
+  <li><p>改進：檢測到因斷電造成用戶詞典損壞時，自動在後臺線程恢復數據文件</p></li>
 </ul>
 
-<h3>【小狼毫】0.9.19.1 </h3>
-<hr/>
-<p>更新日期：2013-01-16</p>
-<ul>
-  <li><p>新增：Caps Lock 點亮時，切換到西文模式，輸出小寫字母</p>
-  <p>選項 <code>ascii_composer/switch_key/Caps_Lock:</code></p></li>
-  <li><p>修復：Control + 字母编辑键在临时西文模式下无效</p></li>
-  <li><p>修復：用戶詞典有可能因讀取時 I/O 錯誤導致部份詞序無法調整</p></li>
-  <li><p>改進：用戶詞典同步／合入快照的字頻合併算法</p></li>
-</ul>
+<p>詳解：<a href="http://tieba.baidu.com/f?kw=rime" target="_blank">Rime 貼吧新版本討論帖</a></p>
 
 <hr/>
 <p>RIME 主頁：<a href="http://code.google.com/p/rimeime/" target="_blank">http://code.google.com/p/rimeime/</a></p>

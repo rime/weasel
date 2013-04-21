@@ -6,7 +6,10 @@
 Assume we already have a default installation of Visual Studio 2010.
 
 Install dev tools: git, cmake
-Download third-party libraries: boost(>=1.47.0)
+Download third-party libraries: boost(==1.47.0)
+
+NOTE: higher versions of boost are not garranteed to work,
+due to the breaking changes in boost::inter_process.
 
 1. Checkout source code
 
