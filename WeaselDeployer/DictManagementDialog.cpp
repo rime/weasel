@@ -64,7 +64,7 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 	{
 		WCHAR dict_name[100] = {0};
 		MultiByteToWideChar(CP_ACP, 0, dicts_[sel].c_str(), -1, dict_name, _countof(dict_name));
-		path /= std::wstring(dict_name) + L".userdb.kct.snapshot";
+		path /= std::wstring(dict_name) + L".userdb.txt";
 	}
 	if (!mgr_.Backup(dicts_[sel])) {
 		MessageBox(L"不知哪裏出錯了，未能完成導出操作。", L":-(", MB_OK | MB_ICONERROR);
@@ -80,7 +80,8 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 }
 
 LRESULT DictManagementDialog::OnRestore(WORD, WORD code, HWND, BOOL&) {
-	CFileDialog dlg(TRUE, L"snapshot", NULL, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST, L"詞典快照\0*.userdb.kct.snapshot\0全部文件\0*.*\0");
+	CFileDialog dlg(TRUE, L"snapshot", NULL, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST,
+		L"詞典快照\0*.userdb.txt\0KCSS格式詞典快照\0*.userdb.kct.snapshot\0全部文件\0*.*\0");
 	if (IDOK == dlg.DoModal()) {
 		char path[MAX_PATH] = {0};
 		WideCharToMultiByte(CP_ACP, 0, dlg.m_szFileName, -1, path, _countof(path), NULL, NULL);
