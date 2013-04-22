@@ -57,7 +57,8 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 		MultiByteToWideChar(CP_ACP, 0, user_data_sync_dir_.c_str(), -1, sync_dir, _countof(sync_dir));
 		path = sync_dir;
 	}
-	if (_waccess(path.wstring().c_str(), 0) != 0) {
+	if (_waccess(path.wstring().c_str(), 0) != 0 &&
+		!boost::filesystem::create_directories(user_data_sync_dir_)) {
 		MessageBox(L"未能完成導出操作。會不會是同步文件夾無法訪問？", L":-(", MB_OK | MB_ICONERROR);
 		return 0;
 	}
