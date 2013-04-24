@@ -134,6 +134,24 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 	return (BOOL)handled;
 }
 
+void RimeWithWeaselHandler::CommitComposition(UINT session_id)
+{
+	DLOG(INFO) << "Commit composition: session_id = " << session_id;
+	if (m_disabled) return;
+	RimeCommitComposition(session_id);
+	_UpdateUI(session_id);
+	m_active_session = session_id;
+}
+
+void RimeWithWeaselHandler::ClearComposition(UINT session_id)
+{
+	DLOG(INFO) << "Clear composition: session_id = " << session_id;
+	if (m_disabled) return;
+	RimeClearComposition(session_id);
+	_UpdateUI(session_id);
+	m_active_session = session_id;
+}
+
 void RimeWithWeaselHandler::FocusIn(DWORD client_caps, UINT session_id)
 {
 	DLOG(INFO) << "Focus in: session_id = " << session_id << ", client_caps = " << client_caps;

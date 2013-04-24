@@ -89,6 +89,24 @@ bool ClientImpl::ProcessKeyEvent(KeyEvent const& keyEvent)
 	return ret != 0;
 }
 
+bool ClientImpl::CommitComposition()
+{
+	if (!_Active())
+		return false;
+
+	LRESULT ret = SendMessage(serverWnd, WEASEL_IPC_COMMIT_COMPOSITION, 0, session_id);
+	return ret != 0;
+}
+
+bool ClientImpl::ClearComposition()
+{
+	if (!_Active())
+		return false;
+
+	LRESULT ret = SendMessage(serverWnd, WEASEL_IPC_CLEAR_COMPOSITION, 0, session_id);
+	return ret != 0;
+}
+
 void ClientImpl::UpdateInputPosition(RECT const& rc)
 {
 	if (!_Active())
@@ -275,6 +293,16 @@ void Client::ShutdownServer()
 bool Client::ProcessKeyEvent(KeyEvent const& keyEvent)
 {
 	return m_pImpl->ProcessKeyEvent(keyEvent);
+}
+
+bool Client::CommitComposition()
+{
+	return m_pImpl->CommitComposition();
+}
+
+bool Client::ClearComposition()
+{
+	return m_pImpl->ClearComposition();
 }
 
 void Client::UpdateInputPosition(RECT const& rc)

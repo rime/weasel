@@ -249,6 +249,20 @@ LRESULT ServerImpl::OnEndMaintenance(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 	return 0;
 }
 
+LRESULT ServerImpl::OnCommitComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (m_pRequestHandler)
+		m_pRequestHandler->CommitComposition(lParam);
+	return 0;
+}
+
+LRESULT ServerImpl::OnClearComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (m_pRequestHandler)
+		m_pRequestHandler->ClearComposition(lParam);
+	return 0;
+}
+
 // weasel::Server
 
 Server::Server()

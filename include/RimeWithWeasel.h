@@ -19,6 +19,8 @@ public:
 	virtual UINT AddSession(LPWSTR buffer);
 	virtual UINT RemoveSession(UINT session_id);
 	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer);
+	virtual void CommitComposition(UINT session_id);
+	virtual void ClearComposition(UINT session_id);
 	virtual void FocusIn(DWORD param, UINT session_id);
 	virtual void FocusOut(DWORD param, UINT session_id);
 	virtual void UpdateInputPosition(RECT const& rc, UINT session_id);

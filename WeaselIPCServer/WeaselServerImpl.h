@@ -44,6 +44,8 @@ namespace weasel
 			MESSAGE_HANDLER(WEASEL_IPC_UPDATE_INPUT_POS, OnUpdateInputPosition)
 			MESSAGE_HANDLER(WEASEL_IPC_START_MAINTENANCE, OnStartMaintenance)
 			MESSAGE_HANDLER(WEASEL_IPC_END_MAINTENANCE, OnEndMaintenance)
+			MESSAGE_HANDLER(WEASEL_IPC_COMMIT_COMPOSITION, OnCommitComposition)
+			MESSAGE_HANDLER(WEASEL_IPC_CLEAR_COMPOSITION, OnClearComposition)
 		END_MSG_MAP()
 
 		LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -62,6 +64,8 @@ namespace weasel
 		LRESULT OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnStartMaintenance(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnEndMaintenance(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnCommitComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnClearComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 	public:
 		ServerImpl();

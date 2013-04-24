@@ -19,6 +19,8 @@ namespace weasel
 		void EndMaintenance();
 		bool Echo();
 		bool ProcessKeyEvent(KeyEvent const& keyEvent);
+		bool CommitComposition();
+		bool ClearComposition();
 		void UpdateInputPosition(RECT const& rc);
 		void FocusIn();
 		void FocusOut();

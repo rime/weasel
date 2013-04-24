@@ -341,7 +341,7 @@ LRESULT WeaselIME::_OnIMENotify(LPINPUTCONTEXT lpIMC, WPARAM wp, LPARAM lp)
 		{
 			if (!ImmGetOpenStatus(m_hIMC))  // gvim command mode
 			{
-				m_client.EndSession();  // cancel unfinished input (quitting insert mode with Ctrl+[ )
+				m_client.ClearComposition();  // cancel unfinished input (eg. quitting insert mode with Ctrl+[ )
 			}
 		}
 		break;

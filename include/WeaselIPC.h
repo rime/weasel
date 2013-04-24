@@ -23,6 +23,8 @@ enum WEASEL_IPC_COMMAND
 	WEASEL_IPC_UPDATE_INPUT_POS,
 	WEASEL_IPC_START_MAINTENANCE,
 	WEASEL_IPC_END_MAINTENANCE,
+	WEASEL_IPC_COMMIT_COMPOSITION,
+	WEASEL_IPC_CLEAR_COMPOSITION,
 	WEASEL_IPC_LAST_COMMAND
 };
 
@@ -63,6 +65,8 @@ namespace weasel
 		virtual UINT AddSession(LPWSTR buffer) { return 0; }
 		virtual UINT RemoveSession(UINT session_id) { return 0; }
 		virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, LPWSTR buffer) { return FALSE; }
+		virtual void CommitComposition(UINT session_id) {}
+		virtual void ClearComposition(UINT session_id) {}
 		virtual void FocusIn(DWORD param, UINT session_id) {}
 		virtual void FocusOut(DWORD param, UINT session_id) {}
 		virtual void UpdateInputPosition(RECT const& rc, UINT session_id) {}
@@ -112,6 +116,10 @@ namespace weasel
 		bool Echo();
 		// 请求服务处理按键消息
 		bool ProcessKeyEvent(KeyEvent const& keyEvent);
+		// 上屏正在編輯的文字
+		bool CommitComposition();
+		// 清除正在編輯的文字
+		bool ClearComposition();
 		// 更新输入位置
 		void UpdateInputPosition(RECT const& rc);
 		// 输入窗口获得焦点
