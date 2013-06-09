@@ -50,7 +50,7 @@ http://code.google.com/p/rimeime/w/list
   * 新增：快捷鍵 Control+Shift+1 切換至下一個輸入方案
   * 新增：快捷鍵 Control+Shift+2~5 切換輸入模式
   * 新增：初次安裝時由用戶指定輸入語言：中文（中國／臺灣）
-  * 新增：可屏蔽符合 fuzzy 拼寫規則的單字候選，僅以其輸入詞組
+  * 新增：可屏蔽符合 fuzz 拼寫規則的單字候選，僅以其輸入詞組
     選項 translator/strict_spelling: true
   * 改進：綜合候選詞的詞頻和詞條質量比較不同 translator 的結果
   * 修復：自定義短語不應參與組詞
