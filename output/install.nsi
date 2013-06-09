@@ -56,6 +56,7 @@ Function .onInit
   "UninstallString"
   StrCmp $R0 "" done
 
+  IfSilent uninst 0
   MessageBox MB_OKCANCEL|MB_ICONINFORMATION \
   "安裝前，我打盤先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。" \
   IDOK uninst
@@ -138,9 +139,12 @@ program_files:
   SetOutPath $INSTDIR
 
   ; test /T flag for zh_TW locale
-  StrCpy $R2  "/s"
+  StrCpy $R2  "/i"
   ${GetParameters} $R0
   ClearErrors
+  ${GetOptions} $R0 "/S" $R1
+  IfErrors +2 0
+  StrCpy $R2 "/s"
   ${GetOptions} $R0 "/T" $R1
   IfErrors +2 0
   StrCpy $R2 "/t"

@@ -42,9 +42,10 @@ int install(bool hant, bool silent);
 int uninstall(bool silent);
 bool has_installed();
 
-static int CustomInstall()
+static int CustomInstall(bool installing)
 {
 	bool hant = false;
+	bool silent = false;
 	std::wstring user_dir;
 
 	const WCHAR KEY[] = L"Software\\Rime\\Weasel";
@@ -66,22 +67,28 @@ static int CustomInstall()
 		if (ret == ERROR_SUCCESS && type == REG_DWORD)
 		{
 			hant = (data != 0);
+			if (installing)
+				silent = true;
 		}
 		RegCloseKey(hKey);
 	}
 
-	InstallOptionsDialog dlg;
-	dlg.installed = has_installed();
-	dlg.hant = hant;
-	dlg.user_dir = user_dir;
-	if (IDOK != dlg.DoModal()) {
-		return 0;  // aborted by user
+	if (!silent)
+	{
+		InstallOptionsDialog dlg;
+		dlg.installed = has_installed();
+		dlg.hant = hant;
+		dlg.user_dir = user_dir;
+		if (IDOK != dlg.DoModal()) {
+			if (!installing)
+				return 1;  // aborted by user
+		}
+		else {
+			hant = dlg.hant;
+			user_dir = dlg.user_dir;
+		}
 	}
-	hant = dlg.hant;
-	user_dir = dlg.user_dir;
-
-	const bool non_silent = false;
-	if (0 != install(hant, non_silent))
+	if (0 != install(hant, silent))
 		return 1;
 
 	ret = RegCreateKeyEx(HKEY_CURRENT_USER, KEY,
@@ -124,6 +131,6 @@ static int Run(LPTSTR lpCmdLine)
 	bool hant = !wcscmp(L"/t", lpCmdLine);
 	if (hant)
 		return install(true, silent);
-
-	return CustomInstall();
+	bool installing = !wcscmp(L"/i", lpCmdLine);
+	return CustomInstall(installing);
 }

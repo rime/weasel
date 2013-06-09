@@ -31,6 +31,7 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	remove_.EnableWindow(installed);
 	dir_.EnableWindow(user_dir.empty() ? FALSE : TRUE);
 
+	CenterWindow();
 	return 0;
 }
 
