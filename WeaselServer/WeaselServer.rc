@@ -51,7 +51,7 @@ END
 //
 
 // Get updates from this appcast feed:
-FeedURL APPCAST {"http://rimeime.googlecode.com/svn/trunk/weasel/update/appcast.xml"}
+FeedURL APPCAST {"http://rimeime.github.io/weasel-update/appcast.xml"}
 
 
 /////////////////////////////////////////////////////////////////////////////

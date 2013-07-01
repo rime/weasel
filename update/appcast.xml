@@ -2,12 +2,12 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
 <channel>
     <title>【小狼毫】輸入法更新</title>
-    <link>http://rimeime.googlecode.com/svn/trunk/weasel/update/appcast.xml</link>
+    <link>http://rimeime.github.io/weasel-update/appcast.xml</link>
     <description>小狼毫Appcast更新頻道</description>
     <language>zh</language>
     <item>
       <title>小狼毫 0.9.23</title>
-      <sparkle:releaseNotesLink>http://rimeime.googlecode.com/svn/trunk/weasel/update/release-notes.html</sparkle:releaseNotesLink>
+      <sparkle:releaseNotesLink>http://rimeime.github.io/weasel-update/</sparkle:releaseNotesLink>
       <pubDate>Sun, 9 Jun 2013 21:00:00 +0800</pubDate>
       <enclosure url="http://rimeime.googlecode.com/files/weasel-0.9.23.0-installer.exe"
                  sparkle:version="0.9.23"
