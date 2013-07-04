@@ -9,9 +9,9 @@ RIME 主頁： http://code.google.com/p/rimeime/
   * 更新：中古漢語【全拼】【三拼】輸入方案；三拼亦採用全拼詞典
   * 修復：大陸與臺灣異讀的字「微」「檔」「蝸」「垃圾」等
   * 修復：繁簡轉換錯詞「么么哒」
-  * 新增：（輸入方案設計用）可設定對特定類型的候選詞不做繁簡轉換
+  * 新增：（輸入方案設計用）可設定對特定類型的候選詞不做繁簡轉換<br/>
     如不轉換反查字使用選項 `simplifier/excluded_types: [ reverse_lookup ]`
-  * 新增：（輸入方案設計用）干預多個 translator 之間的結果排序
+  * 新增：（輸入方案設計用）干預多個 translator 之間的結果排序<br/>
     選項 `translator/initial_quality: 0`
   * 修復：用戶詞典未能完整支持 `derive` 拼寫運算產生的歧義切分
 
