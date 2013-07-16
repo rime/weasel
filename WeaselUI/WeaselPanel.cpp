@@ -5,6 +5,7 @@
 
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
+#include "FullScreenLayout.h"
 
 // for IDI_ENABLED, IDI_ALPHA
 #include "../WeaselServer/resource.h"
@@ -93,15 +94,25 @@ void WeaselPanel::_ResizeWindow()
 	ReleaseDC(dc);
 }
 
-//更新界面
-void WeaselPanel::Refresh()
+void WeaselPanel::_CreateLayout()
 {
 	if (m_layout != NULL)
 		delete m_layout;
+
+	Layout* layout = NULL;
 	if (m_style.layout_type == LAYOUT_VERTICAL)
-		m_layout = new VerticalLayout(m_style, m_ctx, m_status);
+		layout = new VerticalLayout(m_style, m_ctx, m_status);
 	else if (m_style.layout_type == LAYOUT_HORIZONTAL)
-		m_layout = new HorizontalLayout(m_style, m_ctx, m_status);
+		layout = new HorizontalLayout(m_style, m_ctx, m_status);
+	// TODO:
+	m_layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout);
+}
+
+//更新界面
+void WeaselPanel::Refresh()
+{
+	_CreateLayout();
+
 	CDCHandle dc = GetDC();
 	long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 	CFont font;

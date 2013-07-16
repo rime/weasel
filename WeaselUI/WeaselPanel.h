@@ -30,6 +30,7 @@ public:
 	void DoPaint(CDCHandle dc);
 
 private:
+	void _CreateLayout();
 	void _ResizeWindow();
 	void _RepositionWindow();
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
