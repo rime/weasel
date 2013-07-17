@@ -15,6 +15,14 @@ FullScreenLayout::~FullScreenLayout()
 
 void FullScreenLayout::DoLayout(CDCHandle dc)
 {
+	if (_context.empty())
+	{
+		int width = 0, height = 0;
+		UpdateStatusIconLayout(&width, &height);
+		_contentSize.SetSize(width, height);
+		return;
+	}
+
 	CRect workArea;
 	HMONITOR hMonitor = MonitorFromRect(mr_inputPos, MONITOR_DEFAULTTONEAREST);
 	if (hMonitor)
@@ -39,6 +47,8 @@ void FullScreenLayout::DoLayout(CDCHandle dc)
 	}
 	while (AdjustFontPoint(dc, workArea, fontPoint, step));
 
+	if (fontPoint < 4) fontPoint = 4;
+	else if (fontPoint > 2048) fontPoint = 2048;
 	const_cast<UIStyle*>(&_style)->font_point = fontPoint;
 
 	int offsetX = (workArea.Width() - m_layout->GetContentSize().cx) / 2;

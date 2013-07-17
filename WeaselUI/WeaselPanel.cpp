@@ -100,12 +100,22 @@ void WeaselPanel::_CreateLayout()
 		delete m_layout;
 
 	Layout* layout = NULL;
-	if (m_style.layout_type == LAYOUT_VERTICAL)
+	if (m_style.layout_type == LAYOUT_VERTICAL ||
+		m_style.layout_type == LAYOUT_VERTICAL_FULLSCREEN)
+	{
 		layout = new VerticalLayout(m_style, m_ctx, m_status);
-	else if (m_style.layout_type == LAYOUT_HORIZONTAL)
+	}
+	else if (m_style.layout_type == LAYOUT_HORIZONTAL ||
+		m_style.layout_type == LAYOUT_HORIZONTAL_FULLSCREEN)
+	{
 		layout = new HorizontalLayout(m_style, m_ctx, m_status);
-	// TODO:
-	m_layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout);
+	}
+	if (m_style.layout_type == LAYOUT_VERTICAL_FULLSCREEN ||
+		m_style.layout_type == LAYOUT_HORIZONTAL_FULLSCREEN)
+	{
+		layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout);
+	}
+	m_layout = layout;
 }
 
 //更新界面

@@ -498,6 +498,12 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui)
 	Bool horizontal = False;
 	RimeConfigGetBool(config, "style/horizontal", &horizontal);
 	style.layout_type = horizontal ? weasel::LAYOUT_HORIZONTAL : weasel::LAYOUT_VERTICAL;
+	Bool fullscreen = False;
+	RimeConfigGetBool(config, "style/fullscreen", &fullscreen);
+	if (fullscreen)
+	{
+		style.layout_type = horizontal ? weasel::LAYOUT_HORIZONTAL_FULLSCREEN : weasel::LAYOUT_VERTICAL_FULLSCREEN;
+	}
 	// layout (alternative to style/horizontal)
 	char layout_type[256] = {0};
 	if (RimeConfigGetString(config, "style/layout/type", layout_type, sizeof(layout_type) - 1))
@@ -506,6 +512,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui)
 			style.layout_type = weasel::LAYOUT_VERTICAL;
 		else if (!std::strcmp(layout_type, "horizontal"))
 			style.layout_type = weasel::LAYOUT_HORIZONTAL;
+		if (!std::strcmp(layout_type, "vertical+fullscreen"))
+			style.layout_type = weasel::LAYOUT_VERTICAL_FULLSCREEN;
+		else if (!std::strcmp(layout_type, "horizontal+fullscreen"))
+			style.layout_type = weasel::LAYOUT_HORIZONTAL_FULLSCREEN;
 		else
 			LOG(WARNING) << "Invalid style type: " << layout_type;
 	}
