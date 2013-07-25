@@ -6,11 +6,11 @@
     <description>小狼毫Appcast更新頻道</description>
     <language>zh</language>
     <item>
-      <title>小狼毫 0.9.25</title>
+      <title>小狼毫 0.9.25.1</title>
       <sparkle:releaseNotesLink>http://rimeime.github.io/weasel-update/pioneer/</sparkle:releaseNotesLink>
-      <pubDate>Wed, 4 Jul 2013 21:00:00 +0800</pubDate>
-      <enclosure url="http://dl.bintray.com/lotem/rime/weasel-0.9.25.0-installer.exe?direct"
-                 sparkle:version="0.9.25"
+      <pubDate>Thu, 25 Jul 2013 22:00:00 +0800</pubDate>
+      <enclosure url="http://dl.bintray.com/lotem/rime/weasel-0.9.25.1-installer.exe?direct"
+                 sparkle:version="0.9.25.1"
                  type="application/octet-stream"/>
     </item>
   </channel>
