@@ -52,6 +52,7 @@ END
 
 // Get updates from this appcast feed:
 FeedURL APPCAST {"http://rimeime.github.io/weasel-update/appcast.xml"}
+ManualUpdateFeedURL APPCAST {"http://rimeime.github.io/weasel-update/pioneer/appcast.xml"}
 
 
 /////////////////////////////////////////////////////////////////////////////

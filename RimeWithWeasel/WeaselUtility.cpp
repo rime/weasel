@@ -24,7 +24,7 @@ int utf8towcslen(const char* utf8_str, int utf8_len)
 	return MultiByteToWideChar(CP_UTF8, 0, utf8_str, utf8_len, NULL, 0);
 }
 
-const std::wstring WeaselUserDataPath() {
+std::wstring WeaselUserDataPath() {
 	WCHAR path[MAX_PATH] = {0};
 	const WCHAR KEY[] = L"Software\\Rime\\Weasel";
 	HKEY hKey;
@@ -60,4 +60,28 @@ const char* weasel_user_data_dir() {
 	// Windows wants multi-byte file paths in native encoding
 	WideCharToMultiByte(CP_ACP, 0, WeaselUserDataPath().c_str(), -1, path, _countof(path) - 1, NULL, NULL);
 	return path;
+}
+
+std::string GetCustomResource(const char *name, const char *type)
+{
+    const HINSTANCE module = 0; // main executable
+    HRSRC hRes = FindResourceA(module, name, type);
+    if ( hRes )
+    {
+        HGLOBAL hData = LoadResource(module, hRes);
+        if ( hData )
+        {
+            const char *data = (const char*)::LockResource(hData);
+            size_t size = ::SizeofResource(module, hRes);
+
+            if ( data && size )
+            {
+                if ( data[size-1] == '\0' ) // null-terminated string
+                    size--;
+                return std::string(data, size);
+            }
+        }
+    }
+
+    return std::string();
 }

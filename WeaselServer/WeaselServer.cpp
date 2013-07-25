@@ -36,6 +36,12 @@ public:
 
 	static bool check_update()
 	{
+		// when checked manually, show testing versions too
+		std::string feed_url = GetCustomResource("ManualUpdateFeedURL", "APPCAST");
+		if (!feed_url.empty())
+		{
+			win_sparkle_set_appcast_url(feed_url.c_str());
+		}
 		win_sparkle_check_update_with_ui();
 		return true;
 	}
