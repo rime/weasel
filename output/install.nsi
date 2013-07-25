@@ -171,14 +171,15 @@ SectionEnd
 Section "Start Menu Shortcuts"
 
   CreateDirectory "$SMPROGRAMS\小狼毫輸入法"
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫說明書.lnk" "$INSTDIR\README.txt"
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫輸入法設定.lnk" "$INSTDIR\WeaselDeployer.exe" "" "$SYSDIR\shell32.dll" 21
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫用戶詞典管理.lnk" "$INSTDIR\WeaselDeployer.exe" "/dict" "$SYSDIR\shell32.dll" 6
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫用戶資料同步.lnk" "$INSTDIR\WeaselDeployer.exe" "/sync" "$SYSDIR\shell32.dll" 26
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\重新部署小狼毫.lnk" "$INSTDIR\WeaselDeployer.exe" "/deploy" "$SYSDIR\shell32.dll" 144
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】說明書.lnk" "$INSTDIR\README.txt"
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】輸入法設定.lnk" "$INSTDIR\WeaselDeployer.exe" "" "$SYSDIR\shell32.dll" 21
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】用戶詞典管理.lnk" "$INSTDIR\WeaselDeployer.exe" "/dict" "$SYSDIR\shell32.dll" 6
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】用戶資料同步.lnk" "$INSTDIR\WeaselDeployer.exe" "/sync" "$SYSDIR\shell32.dll" 26
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】重新部署.lnk" "$INSTDIR\WeaselDeployer.exe" "/deploy" "$SYSDIR\shell32.dll" 144
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫算法服務.lnk" "$INSTDIR\WeaselServer.exe" "" "$INSTDIR\WeaselServer.exe" 0
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫用戶文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/userdir" "$SYSDIR\shell32.dll" 126
-  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\小狼毫程序文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/weaseldir" "$SYSDIR\shell32.dll" 19
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】用戶文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/userdir" "$SYSDIR\shell32.dll" 126
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】程序文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/weaseldir" "$SYSDIR\shell32.dll" 19
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】檢查新版本.lnk" "$INSTDIR\WeaselServer.exe" "/update" "$SYSDIR\shell32.dll" 13
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\卸載小狼毫.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 
 SectionEnd
