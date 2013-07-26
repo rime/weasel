@@ -89,7 +89,8 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 
 bool StandardLayout::IsInlinePreedit() const
 {
-	return _style.inline_preedit && (_style.client_caps & weasel::INLINE_PREEDIT_CAPABLE) != 0;
+	return _style.inline_preedit && (_style.client_caps & weasel::INLINE_PREEDIT_CAPABLE) != 0 &&
+		_style.layout_type != LAYOUT_VERTICAL_FULLSCREEN && _style.layout_type != LAYOUT_HORIZONTAL_FULLSCREEN;
 }
 
 bool StandardLayout::ShouldDisplayStatusIcon() const
