@@ -4,7 +4,7 @@
 !include x64.nsh
 
 !define WEASEL_VERSION 0.9.25
-!define WEASEL_BUILD ${WEASEL_VERSION}.2
+!define WEASEL_BUILD ${WEASEL_VERSION}.3
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
 
@@ -169,7 +169,7 @@ SectionEnd
 
 ; Optional section (can be disabled by the user)
 Section "Start Menu Shortcuts"
-
+  SetShellVarContext all
   CreateDirectory "$SMPROGRAMS\小狼毫輸入法"
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】說明書.lnk" "$INSTDIR\README.txt"
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】輸入法設定.lnk" "$INSTDIR\WeaselDeployer.exe" "" "$SYSDIR\shell32.dll" 21
@@ -212,6 +212,7 @@ Section "Uninstall"
   RMDir /REBOOTOK "$INSTDIR\data\preview"
   RMDir /REBOOTOK "$INSTDIR\data"
   RMDir /REBOOTOK "$INSTDIR"
+  SetShellVarContext all
   Delete /REBOOTOK "$SMPROGRAMS\小狼毫輸入法\*.*"
   RMDir /REBOOTOK "$SMPROGRAMS\小狼毫輸入法"
 
