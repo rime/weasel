@@ -32,7 +32,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
 }
 
-void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui);
+void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void RimeWithWeaselHandler::Initialize()
@@ -64,7 +64,11 @@ void RimeWithWeaselHandler::Initialize()
 	RimeConfig config = { NULL };
 	if (RimeConfigOpen("weasel", &config))
 	{
-		_UpdateUIStyle(&config, m_ui);
+		if (m_ui)
+		{
+			_UpdateUIStyle(&config, m_ui, true);
+			m_base_style = m_ui->style();
+		}
 		_LoadAppOptions(&config, m_app_options);
 		RimeConfigClose(&config);
 	}
@@ -272,10 +276,12 @@ bool RimeWithWeaselHandler::_IsDeployerRunning()
 	return deployer_detected;
 }
 
+
 void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 {
 	weasel::Status weasel_status;
 	weasel::Context weasel_context;
+
 	if (session_id == 0)
 		weasel_status.disabled = m_disabled;
 
@@ -283,6 +289,12 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	RIME_STRUCT_INIT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
+		std::string schema_id = status.schema_id;
+		if (schema_id != m_last_schema_id)
+		{
+			m_last_schema_id = schema_id;
+			_LoadSchemaSpecificSettings(schema_id);
+		}
 		weasel_status.schema_name = utf8towcs(status.schema_name);
 		weasel_status.ascii_mode = status.is_ascii_mode;
 		weasel_status.composing = status.is_composing;
@@ -347,6 +359,16 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	m_message_value.clear();
 }
 
+void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schema_id)
+{
+	if (!m_ui) return;
+	RimeConfig config;
+	if (!RimeSchemaOpen(schema_id.c_str(), &config))
+		return;
+	m_ui->style() = m_base_style;
+	_UpdateUIStyle(&config, m_ui, false);
+	RimeConfigClose(&config);
+}
 
 bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& status) {
 	// show as auxiliary string
@@ -476,7 +498,7 @@ static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
 		);
 }
 
-static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui)
+static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 {
 	if (!ui) return;
 	weasel::UIStyle &style(ui->style());
@@ -490,19 +512,25 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui)
 	}
 	RimeConfigGetInt(config, "style/font_point", &style.font_point);
 	Bool inline_preedit = False;
-	RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit);
-	style.inline_preedit = inline_preedit;
-	Bool display_tray_icon = False;
-	RimeConfigGetBool(config, "style/display_tray_icon", &display_tray_icon);
-	style.display_tray_icon = display_tray_icon;
-	Bool horizontal = False;
-	RimeConfigGetBool(config, "style/horizontal", &horizontal);
-	style.layout_type = horizontal ? weasel::LAYOUT_HORIZONTAL : weasel::LAYOUT_VERTICAL;
-	Bool fullscreen = False;
-	RimeConfigGetBool(config, "style/fullscreen", &fullscreen);
-	if (fullscreen)
+	if (RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit) || initialize)
 	{
-		style.layout_type = horizontal ? weasel::LAYOUT_HORIZONTAL_FULLSCREEN : weasel::LAYOUT_VERTICAL_FULLSCREEN;
+		style.inline_preedit = inline_preedit;
+	}
+	Bool display_tray_icon = False;
+	if (RimeConfigGetBool(config, "style/display_tray_icon", &display_tray_icon) || initialize)
+	{
+		style.display_tray_icon = display_tray_icon;
+	}
+	Bool horizontal = False;
+	if (RimeConfigGetBool(config, "style/horizontal", &horizontal) || initialize)
+	{
+		style.layout_type = horizontal ? weasel::LAYOUT_HORIZONTAL : weasel::LAYOUT_VERTICAL;
+	}
+	Bool fullscreen = False;
+	if (RimeConfigGetBool(config, "style/fullscreen", &fullscreen) && fullscreen)
+	{
+		style.layout_type = (style.layout_type == weasel::LAYOUT_HORIZONTAL)
+			 ? weasel::LAYOUT_HORIZONTAL_FULLSCREEN : weasel::LAYOUT_VERTICAL_FULLSCREEN;
 	}
 	// layout (alternative to style/horizontal)
 	char layout_type[256] = {0};
@@ -519,6 +547,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui)
 		else
 			LOG(WARNING) << "Invalid style type: " << layout_type;
 	}
+	// the following settings are global and cannot be overriden in schema
+	if (!initialize)
+		return;
 	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
 	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
 	RimeConfigGetInt(config, "style/layout/border", &style.border);
