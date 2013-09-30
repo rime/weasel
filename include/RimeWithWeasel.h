@@ -30,6 +30,7 @@ public:
 private:
 	bool _IsDeployerRunning();
 	void _UpdateUI(UINT session_id);
+	void _LoadSchemaSpecificSettings(const std::string& schema_id);
 	bool _ShowMessage(weasel::Context& ctx, weasel::Status& status);
 	bool _Respond(UINT session_id, LPWSTR buffer);
 	void _ReadClientInfo(UINT session_id, LPWSTR buffer);
@@ -38,6 +39,8 @@ private:
 	weasel::UI* m_ui;  // reference
 	UINT m_active_session;
 	bool m_disabled;
+	std::string m_last_schema_id;
+	weasel::UIStyle m_base_style;
 
 	static void OnNotify(void* context_object,
 		                 uintptr_t session_id,
