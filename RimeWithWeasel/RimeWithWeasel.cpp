@@ -334,7 +334,10 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 			}
 			cinfo.highlighted = ctx.menu.highlighted_candidate_index;
 			cinfo.currentPage = ctx.menu.page_no;
-			cinfo.labels = ctx.menu.select_keys;
+			if (ctx.menu.select_keys)
+			{
+				cinfo.labels = ctx.menu.select_keys;
+			}
 		}
 		RimeFreeContext(&ctx);
 	}
@@ -547,9 +550,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		else
 			LOG(WARNING) << "Invalid style type: " << layout_type;
 	}
-	// the following settings are global and cannot be overriden in schema
-	if (!initialize)
-		return;
 	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
 	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
 	RimeConfigGetInt(config, "style/layout/border", &style.border);
@@ -561,7 +561,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
 	RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner);
 	// color scheme
-	if (RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
+	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
 	{
 		std::string prefix("preset_color_schemes/");
 		prefix += buffer;
