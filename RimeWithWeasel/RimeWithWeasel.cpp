@@ -72,6 +72,7 @@ void RimeWithWeaselHandler::Initialize()
 		_LoadAppOptions(&config, m_app_options);
 		RimeConfigClose(&config);
 	}
+	m_last_schema_id.clear();
 }
 
 void RimeWithWeaselHandler::Finalize()
