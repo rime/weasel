@@ -28,7 +28,8 @@ Configurator::Configurator()
 
 void Configurator::Initialize()
 {
-	RimeTraits weasel_traits;
+	RimeTraits weasel_traits = {0};
+	RIME_STRUCT_INIT(RimeTraits, weasel_traits);
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
 	const int len = 20;
