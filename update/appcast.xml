@@ -8,9 +8,9 @@
     <item>
       <title>小狼毫 0.9.26</title>
       <sparkle:releaseNotesLink>http://rimeime.github.io/weasel-update/</sparkle:releaseNotesLink>
-      <pubDate>Tue, 8 Oct 2013 23:00:00 +0800</pubDate>
-      <enclosure url="http://dl.bintray.com/lotem/rime/weasel-0.9.26.0-installer.exe?direct"
-                 sparkle:version="0.9.26"
+      <pubDate>Wed, 9 Oct 2013 02:00:00 +0800</pubDate>
+      <enclosure url="http://dl.bintray.com/lotem/rime/weasel-0.9.26.1-installer.exe?direct"
+                 sparkle:version="0.9.26.1"
                  type="application/octet-stream"/>
     </item>
   </channel>
