@@ -6,11 +6,11 @@
     <description>小狼毫Appcast更新頻道</description>
     <language>zh</language>
     <item>
-      <title>小狼毫 0.9.25.2</title>
+      <title>小狼毫 0.9.26</title>
       <sparkle:releaseNotesLink>http://rimeime.github.io/weasel-update/</sparkle:releaseNotesLink>
-      <pubDate>Fri, 26 Jul 2013 18:00:00 +0800</pubDate>
-      <enclosure url="http://dl.bintray.com/lotem/rime/weasel-0.9.25.2-installer.exe?direct"
-                 sparkle:version="0.9.25.2"
+      <pubDate>Tue, 8 Oct 2013 23:00:00 +0800</pubDate>
+      <enclosure url="http://dl.bintray.com/lotem/rime/weasel-0.9.26.0-installer.exe?direct"
+                 sparkle:version="0.9.26"
                  type="application/octet-stream"/>
     </item>
   </channel>
