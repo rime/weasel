@@ -12,7 +12,6 @@
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <rime_api.h>
 
 CAppModule _Module;
 
@@ -146,8 +145,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		WeaselServerApp::explore(WeaselServerApp::install_dir());
 		return 0;
 	}
-
-	RimeSetupLogging("rime.weasel");
 
 	// command line option /q stops the running server
 	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);

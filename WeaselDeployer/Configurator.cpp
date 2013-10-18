@@ -28,8 +28,7 @@ Configurator::Configurator()
 
 void Configurator::Initialize()
 {
-	RimeTraits weasel_traits = {0};
-	RIME_STRUCT_INIT(RimeTraits, weasel_traits);
+	RIME_STRUCT(RimeTraits, weasel_traits);
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
 	const int len = 20;
@@ -39,7 +38,11 @@ void Configurator::Initialize()
 	weasel_traits.distribution_name = utf8_str;
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
-	RimeDeployerInitialize(&weasel_traits);
+	weasel_traits.app_name = "rime.weasel";
+	RimeSetup(&weasel_traits);
+	
+	LOG(INFO) << "WeaselDeployer reporting.";
+	RimeDeployerInitialize(NULL);
 }
 
 int Configurator::Run(bool installing)
