@@ -117,6 +117,7 @@ program_files:
   File "WeaselSetupx64.exe"
   File "libglog.dll"
   File "opencc.dll"
+  File "rime.dll"
   File "WinSparkle.dll"
   File "zlib1.dll"
   ; shared data files
