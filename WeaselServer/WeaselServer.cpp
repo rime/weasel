@@ -120,6 +120,16 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	// 防止服务进程开启输入法
 	ImmDisableIME(-1);
 
+	{
+		WCHAR user_name[20] = {0};
+		DWORD size = _countof(user_name);
+		GetUserName(user_name, &size);
+		if (!_wcsicmp(user_name, L"SYSTEM"))
+		{
+			return 1;
+		}
+	}
+
 	HRESULT hRes = ::CoInitialize(NULL);
 	// If you are running on NT 4.0 or higher you can use the following call instead to 
 	// make the EXE free threaded. This means that calls come in on a random RPC thread.
