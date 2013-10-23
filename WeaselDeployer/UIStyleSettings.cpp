@@ -1,50 +1,57 @@
 #include "stdafx.h"
 #include "UIStyleSettings.h"
 #include <boost/filesystem.hpp>
-#include <rime/config.h>
-#include <rime/deployer.h>
 
 
-UIStyleSettings::UIStyleSettings(rime::Deployer* deployer)
-	: rime::CustomSettings(deployer, "weasel", "Weasel::UIStyleSettings")
+UIStyleSettings::UIStyleSettings()
 {
+	api_ = (RimeLeversApi*)rime_get_api()->find_module("levers")->get_api();
+	settings_ = api_->custom_settings_init("weasel", "Weasel::UIStyleSettings");
 }
 
 bool UIStyleSettings::GetPresetColorSchemes(std::vector<ColorSchemeInfo>* result) {
 	if (!result) return false;
 	result->clear();
-	rime::ConfigMapPtr preset = GetMap("preset_color_schemes");
-	if (!preset) return false;
-	for (rime::ConfigMap::Iterator it = preset->begin(); it != preset->end(); ++it) {
-		rime::ConfigMapPtr definition = rime::As<rime::ConfigMap>(it->second);
-		if (!definition) continue;
-		rime::ConfigValuePtr name = definition->GetValue("name");
-		rime::ConfigValuePtr author = definition->GetValue("author");
-		ColorSchemeInfo info;
-		info.color_scheme_id = it->first;
+	RimeConfig config = {0};
+	api_->settings_get_config(settings_, &config);
+	RimeApi* rime = rime_get_api();
+	RimeConfigIterator preset = {0};
+	if (!rime->config_begin_map(&preset, &config, "preset_color_schemes")) {
+		return false;
+	}
+	while (rime->config_next(&preset)) {
+		std::string name_key(preset.path);
+		name_key += "/name";
+		const char* name = rime->config_get_cstring(&config, name_key.c_str());
+		std::string author_key(preset.path);
+		author_key += "/author";
+		const char* author = rime->config_get_cstring(&config, author_key.c_str());
 		if (!name) continue;
-		info.name = name->str();
-		if (author) info.author = author->str();
+		ColorSchemeInfo info;
+		info.color_scheme_id = preset.key;
+		info.name = name;
+		if (author) info.author = author;
 		result->push_back(info);
 	}
 	return true;
 }
 
-const std::string UIStyleSettings::GetColorSchemePreview(const std::string& color_scheme_id) {
-	boost::filesystem::path preview_path(deployer_->shared_data_dir);
+std::string UIStyleSettings::GetColorSchemePreview(const std::string& color_scheme_id) {
+	boost::filesystem::path preview_path(rime_get_api()->get_shared_data_dir());
 	preview_path /= "preview";
 	preview_path /= "color_scheme_" + color_scheme_id + ".png";
 	return preview_path.string();
 }
 
-const std::string UIStyleSettings::GetActiveColorScheme() {
-	rime::ConfigValuePtr value = GetValue("style/color_scheme");
+std::string UIStyleSettings::GetActiveColorScheme() {
+	RimeConfig config = {0};
+	api_->settings_get_config(settings_, &config);
+	const char* value = rime_get_api()->config_get_cstring(&config, "style/color_scheme");
 	if (!value) return std::string();
-	return value->str();
+	return std::string(value);
 }
 
 bool UIStyleSettings::SelectColorScheme(const std::string& color_scheme_id) {
-	Customize("style/color_scheme", rime::ConfigValuePtr(new rime::ConfigValue(color_scheme_id)));
-	modified_ = true;
+	api_->customize_string(settings_, "style/color_scheme", color_scheme_id.c_str());
 	return true;
 }
