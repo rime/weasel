@@ -46,27 +46,30 @@ http://code.google.com/p/rimeime/w/list
 致謝
 
 輸入方案設計：
-  * 【朙月拼音】系列
-    感謝 CC-CEDICT、Android 拼音、新酷音、opencc 等開源項目
+  * 【朙月拼音】系列及【八股文】詞典
+    數據來源於 CC-CEDICT、Android 拼音、新酷音、opencc 等開源項目
+    維護者 佛振 瑾昀
+  * 【注音／地球拼音】
+    維護者 佛振 瑾昀
   * 【倉頡五代】
     發明人 朱邦復先生
     碼表源自 www.chinesecj.com
+    構詞碼表作者 惜緣
+    輸入方案作者 佛振
   * 【五笔86】
     發明人 王永民先生
     碼表源自 ibus-table
-  * 【注音／地球拼音】
-    作者 佛振
   * 【粵拼】
     採用《香港語言學學會粵語拼音方案》
     http://www.lshk.org/cantonese.php
     碼表源自 ibus-table
-  * 【上海吳語】、【蘇州吳語】
+  * 【上海吳語】【蘇州吳語】
     採用《吳語拉丁式注音法》
     http://input.foruto.com/wu/method.html
     作者 上海閒話abc、吳語越音、寒寒豆
   * 【中古全拼／三拼】
     採用《廣韻》音系的中古漢語拼音，亦稱「古韻羅馬字」。
-    韻典網・廣韻 http://ytenx.org/kyonh/
+    韻典網·廣韻 http://ytenx.org/kyonh/
     http://zh.wikipedia.org/wiki/User:Polyhedron/中古漢語拼音
     作者 Polyhedron
   * 【X-SAMPA】
@@ -83,17 +86,16 @@ http://code.google.com/p/rimeime/w/list
 項目策劃：
   * 中州式恕堂
 
-感謝以下開源項目和第三方程序庫：
-  * Boost C++ Libraries
-  * darts-clone
-  * google-glog
-  * Google Test
-  * Kyoto Cabinet
-  * opencc / 開放中文轉換
-  * UTF8-CPP
-  * Windows Template Library
-  * WinSparkle
-  * yaml-cpp
+本品引用了以下開源軟件：
+  * Boost C++ Libraries  (Boost Software License)
+  * darts-clone  (New BSD License)
+  * google-glog  (New BSD License)
+  * Google Test  (New BSD License)
+  * Kyoto Cabinet  (GNU Public License)
+  * opencc / 開放中文轉換  (Apache License 2.0)
+  * UTF8-CPP  (Boost Software License)
+  * WinSparkle  (MIT License)
+  * yaml-cpp  (MIT License)
 
 ----------------------------------------------------------
 問題與反饋
