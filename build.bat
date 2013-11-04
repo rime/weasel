@@ -11,6 +11,7 @@ if "%1" == "rebuild" set build_option=/Rebuild
 if "%1" == "data" set build_data=1
 if "%1" == "hant" set build_hant=1
 if "%1" == "rime" set build_rime=1
+if "%1" == "librime" set build_rime=1
 if "%1" == "all" (
   set build_data=1
   set build_hant=1
@@ -20,6 +21,11 @@ shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
 
+cd %work%
+if exist output\weaselserver.exe (
+  output\weaselserver.exe /q
+)
+
 if %build_rime% == 1 (
   cd %work%\librime
   call vcbuild.bat
@@ -27,11 +33,6 @@ if %build_rime% == 1 (
   copy /Y librime\thirdparty\lib\*.lib lib\
   copy /Y librime\thirdparty\bin\*.dll output\
   copy /Y librime\vcbuild\lib\Release\rime.dll output\
-)
-
-cd %work%
-if exist output\weaselserver.exe (
-  output\weaselserver.exe /q
 )
 
 if %build_data% == 1 (
