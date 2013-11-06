@@ -26,6 +26,7 @@ int expand_ibus_modifier(int m)
 RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
 	: m_ui(ui), m_active_session(0), m_disabled(true)
 {
+	_Setup();
 }
 
 RimeWithWeaselHandler::~RimeWithWeaselHandler()
@@ -35,17 +36,9 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
-void RimeWithWeaselHandler::Initialize()
+void RimeWithWeaselHandler::_Setup()
 {
-	m_disabled = _IsDeployerRunning();
-	if (m_disabled)
-	{
-		 return;
-	}
-	LOG(INFO) << "Initializing la rime.";
-	RimeSetNotificationHandler(&RimeWithWeaselHandler::OnNotify, this);
-	RimeTraits weasel_traits = {0};
-	RIME_STRUCT_INIT(RimeTraits, weasel_traits);
+	RIME_STRUCT(RimeTraits, weasel_traits);
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
 	const int len = 20;
@@ -55,9 +48,22 @@ void RimeWithWeaselHandler::Initialize()
 	weasel_traits.distribution_name = utf8_str;
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
-	RimeInitialize(&weasel_traits);
-	Bool full_check = False;
-	if (RimeStartMaintenance(full_check))
+	weasel_traits.app_name = "rime.weasel";
+	RimeSetup(&weasel_traits);
+	RimeSetNotificationHandler(&RimeWithWeaselHandler::OnNotify, this);
+}
+
+void RimeWithWeaselHandler::Initialize()
+{
+	m_disabled = _IsDeployerRunning();
+	if (m_disabled)
+	{
+		 return;
+	}
+
+	LOG(INFO) << "Initializing la rime.";
+	RimeInitialize(NULL);
+	if (RimeStartMaintenance(/*full_check = */False))
 	{
 		m_disabled = true;
 	}
@@ -287,8 +293,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	if (session_id == 0)
 		weasel_status.disabled = m_disabled;
 
-	RimeStatus status = {0};
-	RIME_STRUCT_INIT(RimeStatus, status);
+	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
 		std::string schema_id = status.schema_id;
@@ -298,14 +303,13 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 			_LoadSchemaSpecificSettings(schema_id);
 		}
 		weasel_status.schema_name = utf8towcs(status.schema_name);
-		weasel_status.ascii_mode = status.is_ascii_mode;
-		weasel_status.composing = status.is_composing;
-		weasel_status.disabled = status.is_disabled;
+		weasel_status.ascii_mode = !!status.is_ascii_mode;
+		weasel_status.composing = !!status.is_composing;
+		weasel_status.disabled = !!status.is_disabled;
 		RimeFreeStatus(&status);
 	}
 
-	RimeContext ctx = {0};
-	RIME_STRUCT_INIT(RimeContext, ctx);
+	RIME_STRUCT(RimeContext, ctx);
 	if (RimeGetContext(session_id, &ctx))
 	{
 		if (ctx.composition.length > 0)
@@ -428,11 +432,10 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	}
 	
 	bool is_composing;
-	RimeStatus status = {0};
-	RIME_STRUCT_INIT(RimeStatus, status);
+	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
-		is_composing = status.is_composing;
+		is_composing = !!status.is_composing;
 		actions.insert("status");
 		messages.push_back(boost::str(boost::format("status.ascii_mode=%d\n") % status.is_ascii_mode));
 		messages.push_back(boost::str(boost::format("status.composing=%d\n") % status.is_composing));
@@ -440,8 +443,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 		RimeFreeStatus(&status);
 	}
 	
-	RimeContext ctx = {0};
-	RIME_STRUCT_INIT(RimeContext, ctx);
+	RIME_STRUCT(RimeContext, ctx);
 	if (RimeGetContext(session_id, &ctx))
 	{
 		if (is_composing)
@@ -519,12 +521,12 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	Bool inline_preedit = False;
 	if (RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit) || initialize)
 	{
-		style.inline_preedit = inline_preedit;
+		style.inline_preedit = !!inline_preedit;
 	}
 	Bool display_tray_icon = False;
 	if (RimeConfigGetBool(config, "style/display_tray_icon", &display_tray_icon) || initialize)
 	{
-		style.display_tray_icon = display_tray_icon;
+		style.display_tray_icon = !!display_tray_icon;
 	}
 	Bool horizontal = False;
 	if (RimeConfigGetBool(config, "style/horizontal", &horizontal) || initialize)
@@ -617,7 +619,7 @@ static void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options
 		while (RimeConfigNext(&option_iter)) {
 			Bool value = False;
 			if (RimeConfigGetBool(config, option_iter.path, &value)) {
-				options[option_iter.key] = bool(value);
+				options[option_iter.key] = !!value;
 			}
 		}
 		RimeConfigEnd(&option_iter);

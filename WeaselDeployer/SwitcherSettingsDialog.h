@@ -1,19 +1,13 @@
 #pragma once
 
 #include "resource.h"
-
-namespace rime {
-
-struct SchemaInfo;
-class SwitcherSettings;
-
-}  // namespace rime
+#include <rime_levers_api.h>
 
 class SwitcherSettingsDialog : public CDialogImpl<SwitcherSettingsDialog> {
 public:
 	enum { IDD = IDD_SWITCHER_SETTING };
 
-	SwitcherSettingsDialog(rime::SwitcherSettings* settings);
+	SwitcherSettingsDialog(RimeSwitcherSettings* settings);
 	~SwitcherSettingsDialog();
 
 protected:
@@ -30,9 +24,10 @@ protected:
 	LRESULT OnSchemaListItemChanged(int, LPNMHDR, BOOL&);
 
 	void Populate();
-	void ShowDetails(const rime::SchemaInfo* info);
+	void ShowDetails(RimeSchemaInfo* info);
 
-	rime::SwitcherSettings* settings_;
+	RimeLeversApi* api_;
+	RimeSwitcherSettings* settings_;
 	bool loaded_;
 	bool modified_;
 

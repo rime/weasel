@@ -49,13 +49,14 @@ vcbuild.bat
 }}}
 
 With some luck, you now have a copy of the built library in vcbuild\lib\Release:
-  * static library - librime.lib
   * shared library - rime.dll / rime.lib
+  * static library - librime.lib - if built with `vcbuild.bat static`
 
 7. Play with Rime command line tools
 
 {{{
 copy /Y thirdparty\bin\*.dll vcbuild\bin\
+copy /Y vcbuild\lib\Release\rime.dll vcbuild\bin\
 cd vcbuild\bin
 echo zhongzhouyunshurufa | Release\rime_console.exe > output.txt
 }}}
@@ -66,6 +67,11 @@ Edit weasel\weasel.props.template, save it to weasel\weasel.props .
 
 {{{
 cd \path\to\weasel
+
+copy /Y librime\thirdparty\lib\*.lib lib\
+copy /Y librime\thirdparty\bin\*.dll output\
+copy /Y librime\vcbuild\lib\Release\rime.dll output\
+
 build.bat all
 }}}
 

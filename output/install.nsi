@@ -3,8 +3,8 @@
 !include LogicLib.nsh
 !include x64.nsh
 
-!define WEASEL_VERSION 0.9.26
-!define WEASEL_BUILD ${WEASEL_VERSION}.1
+!define WEASEL_VERSION 0.9.27
+!define WEASEL_BUILD ${WEASEL_VERSION}.0
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
 
@@ -22,7 +22,7 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyleft RIME Developers"
 VIAddVersionKey /LANG=2052 "FileDescription" "小狼毫輸入法"
 VIAddVersionKey /LANG=2052 "FileVersion" "${WEASEL_VERSION}"
 
-Icon zhung.ico
+Icon ..\resource\weasel.ico
 SetCompressor /SOLID lzma
 
 ; The default installation directory
@@ -117,6 +117,7 @@ program_files:
   File "WeaselSetupx64.exe"
   File "libglog.dll"
   File "opencc.dll"
+  File "rime.dll"
   File "WinSparkle.dll"
   File "zlib1.dll"
   ; shared data files
@@ -180,6 +181,11 @@ Section "Start Menu Shortcuts"
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】用戶文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/userdir" "$SYSDIR\shell32.dll" 126
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】程序文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/weaseldir" "$SYSDIR\shell32.dll" 19
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】檢查新版本.lnk" "$INSTDIR\WeaselServer.exe" "/update" "$SYSDIR\shell32.dll" 13
+  ${If} ${RunningX64}
+    CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】安裝選項.lnk" "$INSTDIR\WeaselSetupx64.exe" "" "$SYSDIR\shell32.dll" 162
+  ${Else}
+    CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】安裝選項.lnk" "$INSTDIR\WeaselSetup.exe" "" "$SYSDIR\shell32.dll" 162
+  ${EndIf}
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\卸載小狼毫.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 
 SectionEnd

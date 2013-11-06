@@ -400,10 +400,10 @@
     <ClInclude Include="WeaselTSF.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\resource\alpha.ico" />
-    <None Include="..\resource\disabled.ico" />
-    <None Include="..\resource\enabled.ico" />
-    <None Include="..\resource\zhung.ico" />
+    <None Include="..\resource\en.ico" />
+    <None Include="..\resource\reload.ico" />
+    <None Include="..\resource\zh.ico" />
+    <None Include="..\resource\weasel.ico" />
     <None Include="ReadMe.txt" />
     <None Include="WeaselTSF.def" />
   </ItemGroup>

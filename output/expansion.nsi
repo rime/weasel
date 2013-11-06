@@ -6,7 +6,7 @@
 ; 擴展包標識
 !define PACKAGE_ID "weasel-expansion"
 ; 擴展包版本
-!define PACKAGE_VERSION 0.9.18
+!define PACKAGE_VERSION 0.9.19
 ; 必須補足 4 個整數
 !define PACKAGE_BUILD ${PACKAGE_VERSION}.0
 ; 擴展包名稱
@@ -26,7 +26,7 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyleft RIME Developers"
 VIAddVersionKey /LANG=2052 "FileDescription" "${PACKAGE_NAME}"
 VIAddVersionKey /LANG=2052 "FileVersion" "${PACKAGE_VERSION}"
 
-Icon zhung.ico
+Icon ..\resource\weasel.ico
 SetCompressor /SOLID lzma
 
 ; The default installation directory

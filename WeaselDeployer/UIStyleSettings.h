@@ -2,16 +2,7 @@
 
 #include <string>
 #include <vector>
-
-#pragma warning(disable: 4995)
-#pragma warning(disable: 4996)
-#include <rime/lever/custom_settings.h>
-#pragma warning(default: 4996)
-#pragma warning(default: 4995)
-
-namespace rime {
-	class Deployer;
-}
+#include <rime_levers_api.h>
 
 struct ColorSchemeInfo {
 	std::string color_scheme_id;
@@ -19,12 +10,18 @@ struct ColorSchemeInfo {
 	std::string author;
 };
 
-class UIStyleSettings : public rime::CustomSettings {
+class UIStyleSettings {
 public:
-	UIStyleSettings(rime::Deployer* deployer);
+	UIStyleSettings();
 
 	bool GetPresetColorSchemes(std::vector<ColorSchemeInfo>* result);
-	const std::string GetColorSchemePreview(const std::string& color_scheme_id);
-	const std::string GetActiveColorScheme();
+	std::string GetColorSchemePreview(const std::string& color_scheme_id);
+	std::string GetActiveColorScheme();
 	bool SelectColorScheme(const std::string& color_scheme_id);
+
+	RimeCustomSettings* settings() { return settings_; }
+
+private:
+	RimeLeversApi* api_;
+	RimeCustomSettings* settings_;
 };

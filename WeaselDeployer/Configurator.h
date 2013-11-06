@@ -1,9 +1,5 @@
 #pragma once
 
-namespace rime {
-	class SwitcherSettings;
-}
-
 class UIStyleSettings;
 
 class Configurator
@@ -16,10 +12,6 @@ public:
 	int UpdateWorkspace(bool report_errors = false);
 	int DictManagement();
 	int SyncUserData();
-
-protected:
-	bool ConfigureSwitcher(rime::SwitcherSettings* settings, bool* reconfigured);
-	bool ConfigureUI(UIStyleSettings* settings, bool* reconfigured);
 };
 
 const WCHAR* utf8towcs(const char* utf8_str);

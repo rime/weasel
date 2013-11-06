@@ -2,19 +2,14 @@
 
 #include "resource.h"
 
-#pragma warning(disable: 4995)
-#pragma warning(disable: 4996)
-#include <rime/deployer.h>
-#include <rime/lever/user_dict_manager.h>
-#pragma warning(default: 4996)
-#pragma warning(default: 4995)
+#include <rime_levers_api.h>
 
 
 class DictManagementDialog : public CDialogImpl<DictManagementDialog> {
 public:
 	enum { IDD = IDD_DICT_MANAGEMENT };
 
-	DictManagementDialog(rime::Deployer* deployer);
+	DictManagementDialog();
 	~DictManagementDialog();
 
 protected:
@@ -44,8 +39,6 @@ protected:
 	CButton export_;
 	CButton import_;
 
-	rime::UserDictManager mgr_;
-	rime::UserDictList dicts_;
-	std::string user_data_sync_dir_;
+	RimeLeversApi* api_;
 };
 

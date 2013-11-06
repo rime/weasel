@@ -4,7 +4,6 @@
 #include <WeaselUtility.h>
 #include "WeaselDeployer.h"
 #include "Configurator.h"
-#include <rime_api.h>
 
 CAppModule _Module;
 
@@ -30,8 +29,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
-
-	RimeSetupLogging("rime.weasel");
 
 	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 
@@ -62,8 +59,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 static int Run(LPTSTR lpCmdLine)
 {
-	LOG(INFO) << "WeaselDeployer reporting.";
-
 	Configurator configurator;
 	configurator.Initialize();
 

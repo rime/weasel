@@ -4,12 +4,13 @@
 #include <algorithm>
 #include <set>
 #include <boost/foreach.hpp>
-#include <rime/lever/switcher_settings.h>
+#include <rime_levers_api.h>
 
 
-SwitcherSettingsDialog::SwitcherSettingsDialog(rime::SwitcherSettings* settings)
+SwitcherSettingsDialog::SwitcherSettingsDialog(RimeSwitcherSettings* settings)
 	: settings_(settings), loaded_(false), modified_(false)
 {
+	api_ = (RimeLeversApi*)rime_get_api()->find_module("levers")->get_api();
 }
 
 
@@ -19,44 +20,54 @@ SwitcherSettingsDialog::~SwitcherSettingsDialog()
 
 void SwitcherSettingsDialog::Populate() {
 	if (!settings_) return;
-	const rime::SwitcherSettings::SchemaList& available(settings_->available());
-	const rime::SwitcherSettings::Selection& selection(settings_->selection());
+	RimeSchemaList available = {0};
+	api_->get_available_schema_list(settings_, &available);
+	RimeSchemaList selected = {0};
+	api_->get_selected_schema_list(settings_, &selected);
 	schema_list_.DeleteAllItems();
-	size_t i = 0;
-	std::set<const rime::SchemaInfo*> recruited;
-	BOOST_FOREACH(const std::string& schema_id, selection) {
-		BOOST_FOREACH(const rime::SchemaInfo& info, available) {
-			if (info.schema_id == schema_id && recruited.find(&info) == recruited.end()) {
-				recruited.insert(&info);
-				schema_list_.AddItem(i, 0, utf8towcs(info.name.c_str()));
-				schema_list_.SetItemData(i, (DWORD_PTR)&info);
-				schema_list_.SetCheckState(i, TRUE);
-				++i;
+	size_t k = 0;
+	std::set<RimeSchemaInfo*> recruited;
+	for (size_t i = 0; i < selected.size; ++i) {
+		const char* schema_id = selected.list[i].schema_id;
+		for (size_t j = 0; j < available.size; ++j) {
+			RimeSchemaListItem& item(available.list[j]);
+			RimeSchemaInfo* info = (RimeSchemaInfo*)item.reserved;
+			if (!strcmp(item.schema_id, schema_id) && recruited.find(info) == recruited.end()) {
+				recruited.insert(info);
+				schema_list_.AddItem(k, 0, utf8towcs(item.name));
+				schema_list_.SetItemData(k, (DWORD_PTR)info);
+				schema_list_.SetCheckState(k, TRUE);
+				++k;
 				break;
 			}
 		}
 	}
-	BOOST_FOREACH(const rime::SchemaInfo& info, available) {
-		if (recruited.find(&info) == recruited.end()) {
-			recruited.insert(&info);
-			schema_list_.AddItem(i, 0, utf8towcs(info.name.c_str()));
-			schema_list_.SetItemData(i, (DWORD_PTR)&info);
-			++i;
+	for (size_t i = 0; i < available.size; ++i) {
+		RimeSchemaListItem& item(available.list[i]);
+		RimeSchemaInfo* info = (RimeSchemaInfo*)item.reserved;
+		if (recruited.find(info) == recruited.end()) {
+			recruited.insert(info);
+			schema_list_.AddItem(k, 0, utf8towcs(item.name));
+			schema_list_.SetItemData(k, (DWORD_PTR)info);
+			++k;
 		}
 	}
-	hotkeys_.SetWindowTextW(utf8towcs(settings_->hotkeys().c_str()));
+	hotkeys_.SetWindowTextW(utf8towcs(api_->get_hotkeys(settings_)));
 	loaded_ = true;
 	modified_ = false;
 }
 
-void SwitcherSettingsDialog::ShowDetails(const rime::SchemaInfo* info) {
+void SwitcherSettingsDialog::ShowDetails(RimeSchemaInfo* info) {
 	if (!info) return;
-	std::string details(info->name);
-    if (!info->author.empty()) {
-        details += "\n\n" + info->author;
+	std::string details;
+	if (const char* name = api_->get_schema_name(info)) {
+		details += name;
+	}
+    if (const char* author = api_->get_schema_author(info)) {
+        (details += "\n\n") += author;
     }
-    if (!info->description.empty()) {
-        details += "\n\n" + info->description;
+    if (const char* description = api_->get_schema_description(info)) {
+        (details += "\n\n") += description;
     }
 	description_.SetWindowTextW(utf8towcs(details.c_str()));
 }
@@ -87,22 +98,22 @@ LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 }
 
 LRESULT SwitcherSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
-	if (modified_ && settings_) {
-		rime::SwitcherSettings::Selection selection;
+	if (modified_ && settings_ && schema_list_.GetItemCount() != 0) {
+		const char** selection = new const char*[schema_list_.GetItemCount()];
+		int count = 0;
 		for (int i = 0; i < schema_list_.GetItemCount(); ++i) {
 			if (!schema_list_.GetCheckState(i))
 				continue;
-			const rime::SchemaInfo* info = 
-				(const rime::SchemaInfo*)(schema_list_.GetItemData(i));
+			RimeSchemaInfo* info = (RimeSchemaInfo*)(schema_list_.GetItemData(i));
 			if (info) {
-				selection.push_back(info->schema_id);
+				selection[count++] = api_->get_schema_id(info);
 			}
 		}
-		if (selection.empty()) {
+		if (count == 0) {
 			MessageBox(L"至少要選用一項吧。", L"小狼毫不是這般用法", MB_OK | MB_ICONEXCLAMATION);
 			return 0;
 		}
-		settings_->Select(selection);
+		api_->select_schemas(settings_, selection, count);
 	}
 	EndDialog(code);
 	return 0;
@@ -116,7 +127,7 @@ LRESULT SwitcherSettingsDialog::OnSchemaListItemChanged(int, LPNMHDR p, BOOL&) {
 		modified_ = true;
 	}
 	else if ((lv->uNewState & LVIS_SELECTED) && !(lv->uOldState & LVIS_SELECTED)) {
-		ShowDetails((const rime::SchemaInfo*)(schema_list_.GetItemData(lv->iItem)));
+		ShowDetails((RimeSchemaInfo*)(schema_list_.GetItemData(lv->iItem)));
 	}
 	return 0;
 }

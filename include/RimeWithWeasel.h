@@ -28,6 +28,7 @@ public:
 	virtual void EndMaintenance();
 
 private:
+	void _Setup();
 	bool _IsDeployerRunning();
 	void _UpdateUI(UINT session_id);
 	void _LoadSchemaSpecificSettings(const std::string& schema_id);

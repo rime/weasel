@@ -12,7 +12,6 @@
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <rime_api.h>
 
 CAppModule _Module;
 
@@ -121,6 +120,16 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	// 防止服务进程开启输入法
 	ImmDisableIME(-1);
 
+	{
+		WCHAR user_name[20] = {0};
+		DWORD size = _countof(user_name);
+		GetUserName(user_name, &size);
+		if (!_wcsicmp(user_name, L"SYSTEM"))
+		{
+			return 1;
+		}
+	}
+
 	HRESULT hRes = ::CoInitialize(NULL);
 	// If you are running on NT 4.0 or higher you can use the following call instead to 
 	// make the EXE free threaded. This means that calls come in on a random RPC thread.
@@ -146,8 +155,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		WeaselServerApp::explore(WeaselServerApp::install_dir());
 		return 0;
 	}
-
-	RimeSetupLogging("rime.weasel");
 
 	// command line option /q stops the running server
 	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);
