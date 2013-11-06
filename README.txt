@@ -83,8 +83,9 @@ http://code.google.com/p/rimeime/w/list
   * BYVoid <byvoid.kcp@gmail.com>
   * wishstudio <wishstudio@gmail.com>
 
-項目策劃：
-  * 中州式恕堂
+美術：
+  * 圖標設計 Patrick Tschang
+  * 配色方案 Aben、skoj、佛振
 
 本品引用了以下開源軟件：
   * Boost C++ Libraries  (Boost Software License)
