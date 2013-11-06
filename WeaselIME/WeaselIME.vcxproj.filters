@@ -35,10 +35,10 @@
     <None Include="weasel.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\resource\zhung.ico">
+    <None Include="ReadMe.txt" />
+    <None Include="..\resource\weasel.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imm.h">

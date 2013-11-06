@@ -2,7 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by WeaselIME.rc
 //
-#define IDI_ZHUNG                       101
+#define IDI_WEASEL                      101
 
 // Next default values for new objects
 // 

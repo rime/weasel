@@ -180,7 +180,7 @@ STDAPI CLangBarItemButton::OnMenuSelect(UINT wID)
 
 STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 {
-	*phIcon = (HICON) LoadImageW(g_hInst, MAKEINTRESOURCEW(IDI_ENABLED), IMAGE_ICON, 16, 16, LR_SHARED);
+	*phIcon = (HICON) LoadImageW(g_hInst, MAKEINTRESOURCEW(IDI_ZH), IMAGE_ICON, 16, 16, LR_SHARED);
 	return (*phIcon == NULL)? E_FAIL: S_OK;
 }
 
