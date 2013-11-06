@@ -2,10 +2,10 @@
 // Microsoft Visual C++ generated include file.
 // Used by WeaselServer.rc
 //
-#define IDI_ZHUNG                       101
-#define IDI_ALPHA                       102
-#define IDI_ENABLED                     103
-#define IDI_DISABLED                    104
+#define IDI_WEASEL                      101
+#define IDI_EN                          102
+#define IDI_ZH                          103
+#define IDI_RELOAD                      104
 #define IDR_MENU_POPUP                  105
 #define ID_WEASELTRAY_QUIT              40001
 #define ID_WEASELTRAY_DEPLOY            40002

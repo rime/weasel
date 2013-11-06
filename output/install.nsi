@@ -22,7 +22,7 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyleft RIME Developers"
 VIAddVersionKey /LANG=2052 "FileDescription" "小狼毫輸入法"
 VIAddVersionKey /LANG=2052 "FileVersion" "${WEASEL_VERSION}"
 
-Icon zhung.ico
+Icon ..\resource\weasel.ico
 SetCompressor /SOLID lzma
 
 ; The default installation directory

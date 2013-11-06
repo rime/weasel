@@ -75,7 +75,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\resource\zhung.ico">
+    <None Include="..\resource\reload.ico">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

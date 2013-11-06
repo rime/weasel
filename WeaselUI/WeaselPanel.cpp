@@ -7,7 +7,7 @@
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
 
-// for IDI_ENABLED, IDI_ALPHA
+// for IDI_ZH, IDI_EN
 #include "../WeaselServer/resource.h"
 
 using namespace weasel;
@@ -70,9 +70,9 @@ WeaselPanel::WeaselPanel(weasel::UI &ui)
 	m_style.hilited_label_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 	m_style.hilited_comment_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 
-	m_iconDisabled.LoadIconW(IDI_DISABLED, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
-	m_iconEnabled.LoadIconW(IDI_ENABLED, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
-	m_iconAlpha.LoadIconW(IDI_ALPHA, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	m_iconAlpha.LoadIconW(IDI_EN, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 }
 
 WeaselPanel::~WeaselPanel()

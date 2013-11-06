@@ -89,16 +89,16 @@
     <None Include="WeaselTSF.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\resource\zhung.ico">
+    <None Include="..\resource\weasel.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\resource\alpha.ico">
+    <None Include="..\resource\zh.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\resource\disabled.ico">
+    <None Include="..\resource\reload.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\resource\enabled.ico">
+    <None Include="..\resource\en.ico">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
