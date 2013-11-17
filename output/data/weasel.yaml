@@ -14,7 +14,7 @@ style:
   horizontal: false
   fullscreen: false
   inline_preedit: false
-  display_tray_icon: false
+  display_tray_icon: true
   layout:
     min_width: 160
     min_height: 0
@@ -139,17 +139,17 @@ preset_color_schemes:
     text_color: 0xffffff
     back_color: 0xd99500
     border_color: 0xd99500
-    label_color: 0xffffff 
+    label_color: 0xffffff
     candidate_text_color: 0xffffff
     comment_text_color: 0xffffff
     hilited_text_color: 0xf7d891
     hilited_back_color: 0xd99500
     hilited_candidate_text_color: 0xffffff
     hilited_comment_text_color: 0xffffff
-    hilited_candidate_back_color: 0x2164f1   
+    hilited_candidate_back_color: 0x2164f1
 
   dota_2:
-    name: "DOTA 2／dota_2"
+    name: "DOTA 2"
     author: " Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
     back_color: 0x120f10
@@ -164,7 +164,7 @@ preset_color_schemes:
     hilited_candidate_back_color: 0x1841dd
 
   brasil:
-    name: "笆悉／brasil"
+    name: "笆悉／Brasil"
     author: " Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
     back_color: 0x559311
@@ -194,7 +194,7 @@ preset_color_schemes:
     hilited_candidate_back_color: 0xe89f00
 
   espagna:
-    name: "埃斯巴尼亞／espagna"
+    name: "埃斯巴尼亞／España"
     author: " Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
     back_color: 0x230dc3
@@ -209,7 +209,7 @@ preset_color_schemes:
     hilited_candidate_back_color: 0x2cb5f7
 
   gholabok:
-    name: "胡蘿菔／gholabok"
+    name: "胡蘿菔／Gholabok"
     author: " Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
     back_color: 0x2939e8
@@ -224,7 +224,7 @@ preset_color_schemes:
     hilited_candidate_back_color: 0x3d6ded
 
   kuma_shuzboz:
-    name: "熊出沒／kuma_shuzboz"
+    name: "熊出沒／Kuma Shuzboz"
     author: " Patricivs ipatrickmac@me.com"
     text_color: 0x000000
     back_color: 0x2db6f8
@@ -239,7 +239,7 @@ preset_color_schemes:
     hilited_candidate_back_color: 0x000000
 
   kuon:
-    name: "琨／kuon"
+    name: "琨／Kuon"
     author: " Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
     back_color: 0x70b33e
@@ -269,7 +269,7 @@ preset_color_schemes:
     hilited_candidate_back_color: 0xffffff
 
   nba:
-    name: "NBA／nba"
+    name: "NBA"
     author: "Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
     back_color: 0xb76a00
@@ -284,7 +284,7 @@ preset_color_schemes:
     hilited_candidate_back_color: 0x541ed7
 
   ps4:
-    name: "遊驛四／ps4"
+    name: "遊驛四／PS4"
     author: " Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
     back_color: 0x000000
@@ -314,22 +314,22 @@ preset_color_schemes:
     hilited_candidate_back_color: 0xa2501e
 
   skype:
-    name: "斯蓋普／skype"
+    name: "斯蓋普／Skype"
     author: "Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
     back_color: 0xefad00
-    border_color: 0xefad00 
+    border_color: 0xefad00
     label_color: 0xffffff
-    hilited_text_color: 0xefad00 
+    hilited_text_color: 0xefad00
     hilited_back_color: 0xffffff
     candidate_text_color: 0xffffff
     comment_text_color: 0xffffff
-    hilited_candidate_text_color: 0xefad00 
+    hilited_candidate_text_color: 0xefad00
     hilited_comment_text_color: 0xefad00
     hilited_candidate_back_color: 0xffffff
 
   xbox_silver:
-    name: "銀色叉盒／xbox_silver"
+    name: "銀色叉盒／Xbox Silver"
     author: "Patricivs ipatrickmac@me.com"
     text_color: 0x1fc28d
     back_color: 0xefeeee
@@ -344,7 +344,7 @@ preset_color_schemes:
     hilited_candidate_back_color: 0x448c28
 
   youtube:
-    name: "YouTube／youtube"
+    name: "YouTube"
     author: "Patricivs ipatrickmac@me.com"
     text_color: 0x000000
     back_color: 0xdedede
@@ -357,9 +357,9 @@ preset_color_schemes:
     hilited_candidate_text_color: 0xffffff
     hilited_comment_text_color: 0xffffff
     hilited_candidate_back_color: 0x230dc3
-    
+
   so_young:
-    name: "致青春／so_young"
+    name: "致青春／So Young"
     author: "五磅兔 zcunlin@foxmail.com"
     text_color: 0x8236d3
     back_color: 0xe3f6fd
@@ -389,7 +389,7 @@ preset_color_schemes:
     hilited_candidate_back_color: 0xdbbc6d
 
   wii:
-    name: "Wii／wii"
+    name: "Wii"
     author: " Patricivs ipatrickmac@me.com"
     text_color: 0x575759
     back_color: 0xefefef
@@ -399,22 +399,22 @@ preset_color_schemes:
     hilited_back_color: 0xefefef
     candidate_text_color: 0x575759
     comment_text_color: 0xcac9c8
-    hilited_candidate_text_color: 0xffffff 
+    hilited_candidate_text_color: 0xffffff
     hilited_comment_text_color: 0xffffff
     hilited_candidate_back_color: 0xffcc33
 
   android:
-    name: "安卓／android"
+    name: "安卓／Android"
     author: " Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
-    back_color: 0x99731c 
-    border_color: 0x99731c 
+    back_color: 0x99731c
+    border_color: 0x99731c
     label_color: 0xc18835
     hilited_text_color: 0x50c4a8
     hilited_back_color: 0x99731c
     candidate_text_color: 0xffffff
     comment_text_color: 0xffffff
-    hilited_candidate_text_color: 0xffffff 
+    hilited_candidate_text_color: 0xffffff
     hilited_comment_text_color: 0xffffff
     hilited_candidate_back_color: 0x50c4a8
 
@@ -422,10 +422,50 @@ preset_color_schemes:
     name: "清風／Cool Breeze"
     author: "skoj <skoj@qq.com>"
     text_color: 0x0000FF
-    back_color: 0xFFFBFB 
+    back_color: 0xFFFBFB
     border_color: 0xFFAAAA
     hilited_text_color: 0x0000CE
     hilited_back_color: 0xFFFBFB
     candidate_text_color: 0x009100
     hilited_candidate_text_color: 0x6F003A
-    hilited_candidate_back_color: 0xFFD6AC    
+    hilited_candidate_back_color: 0xFFD6AC
+
+  google+:
+    name: "Google+"
+    author: " Patricivs ipatrickmac@me.com"
+    text_color: 0xcac9c8
+    back_color: 0xffffff
+    border_color: 0x394bdd
+    label_color: 0xcac9c8
+    hilited_text_color: 0x394bdd
+    hilited_back_color: 0xffffff
+    candidate_text_color: 0x394bdd
+    comment_text_color: 0xcac9c8
+    hilited_candidate_text_color: 0xffffff
+    hilited_comment_text_color: 0xffffff
+    hilited_candidate_back_color: 0x394bdd
+
+  modern_warfare:
+    name: "現代戰爭／Modern Warfare"
+    author: P1461
+    text_color: 0x14bc70
+    back_color: 0x0a1b0d
+    border_color: 0x4bad83
+    hilited_text_color: 0xfbfdfc
+    hilited_back_color: 0x030e06
+    candidate_text_color: 0xabfedc
+    comment_text_color: 0xfcfdfb
+    hilited_candidate_text_color: 0xabfedc
+    hilited_candidate_back_color: 0x676f63
+
+  brisk:
+    name: "輕盈／Brisk"
+    author: "skoj <skoj@qq.com>"
+    text_color: 0x2238dc
+    back_color: 0xffffff
+    border_color: 0x333333
+    hilited_text_color: 0x2238dc
+    hilited_back_color: 0xffffff
+    candidate_text_color: 0x575757
+    hilited_candidate_text_color: 0x2238dc
+    hilited_candidate_back_color: 0xffffff
