@@ -469,3 +469,18 @@ preset_color_schemes:
     candidate_text_color: 0x575757
     hilited_candidate_text_color: 0x2238dc
     hilited_candidate_back_color: 0xffffff
+
+starcraft_ii:
+    name: "星際爭霸Ⅱ／StarCraft Ⅱ"
+    author: " Patricivs ipatrickmac@me.com"
+    text_color: 0xffffff
+    back_color: 0x29190a
+    border_color: 0x534b46
+    label_color: 0xffffff
+    hilited_text_color: 0xffffff
+    hilited_back_color: 0x17100a
+    candidate_text_color: 0xffffff
+    comment_text_color: 0xffffff
+    hilited_candidate_text_color: 0xffffff
+    hilited_comment_text_color: 0xffffff
+    hilited_candidate_back_color: 0xefad1e
