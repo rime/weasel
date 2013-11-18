@@ -73,7 +73,7 @@ void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnab
 	if ((pStartCompositionEditSession = new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled)) != NULL)
 	{
 		HRESULT hr;
-		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_SYNC | TF_ES_READWRITE, &hr);
 		pStartCompositionEditSession->Release();
 	}
 }
@@ -114,7 +114,7 @@ void WeaselTSF::_EndComposition(ITfContext *pContext)
 
 	if ((pEditSession = new CEndCompositionEditSession(this, pContext, _pComposition)) != NULL)
 	{
-		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_SYNC | TF_ES_READWRITE, &hr);
 		pEditSession->Release();
 	}
 }
@@ -170,7 +170,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext *pContext)
 	if ((pEditSession = new CGetTextExtentEditSession(this, pContext, pContextView, _pComposition)) != NULL)
 	{
 		HRESULT hr;
-		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_SYNC | TF_ES_READ, &hr);
+		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READ, &hr);
 		pEditSession->Release();
 		pContextView->Release();
 		return TRUE;
@@ -296,7 +296,9 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 		if (_IsComposing() && config.inline_preedit)
 			_ShowInlinePreedit(pContext, context);
 		if (!commit.empty())
-			_InsertText(pContext, commit.c_str(), commit.length());
+		{
+			_InsertText(pContext, commit);
+		}
 	}
 }
 

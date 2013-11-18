@@ -11,7 +11,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 		return E_FAIL;
 
 	/* insert the text */
-	if (pInsertAtSelection->InsertTextAtSelection(ec, 0, _pEditSessionText, _cEditSessionText, &pRange) != S_OK)
+	if (pInsertAtSelection->InsertTextAtSelection(ec, 0, _editSessionText.c_str(), _editSessionText.length(), &pRange) != S_OK)
 	{
 		pInsertAtSelection->Release();
 		return E_FAIL;
@@ -32,15 +32,14 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	return S_OK;
 }
 
-BOOL WeaselTSF::_InsertText(ITfContext *pContext, const WCHAR *pchText, ULONG cchText)
+BOOL WeaselTSF::_InsertText(ITfContext *pContext, const std::wstring& text)
 {
 	HRESULT hr;
 
 	_pEditSessionContext = pContext;
-	_pEditSessionText = pchText;
-	_cEditSessionText = cchText;
-	
-	if (_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_READWRITE | TF_ES_ASYNCDONTCARE, &hr) != S_OK || hr != S_OK)
+	_editSessionText = text;
+
+	if (_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr) != S_OK || hr != S_OK)
 		return FALSE;
 
 	return TRUE;
