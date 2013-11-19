@@ -84,8 +84,8 @@ http://code.google.com/p/rimeime/w/list
   * wishstudio <wishstudio@gmail.com>
 
 美術：
-  * 圖標設計 Patrick Tschang
-  * 配色方案 Aben、skoj、佛振
+  * 圖標設計 Patricivs
+  * 配色方案 Aben、P1461、Patricivs、skoj、佛振、五磅兔
 
 本品引用了以下開源軟件：
   * Boost C++ Libraries  (Boost Software License)
