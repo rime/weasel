@@ -124,7 +124,7 @@ preset_color_schemes:
 
   solarized_rock:
     name: 曬經石／Solarized Rock
-    author: Aben <tntaben@gmail.com>, based on Ethan Schoonover's Solarized color scheme
+    author: "Aben <tntaben@gmail.com>, based on Ethan Schoonover's Solarized color scheme"
     back_color: 0x362b00
     border_color: 0x362b00
     text_color: 0x009985
@@ -178,7 +178,7 @@ preset_color_schemes:
     hilited_comment_text_color: 0xffffff
     hilited_candidate_back_color: 0x16c7f7
 
-  Doraemon:
+  doraemon:
     name: "銅鑼衛門／Doraemon"
     author: "Patricivs ipatrickmac@me.com"
     text_color: 0x1200e5
@@ -253,7 +253,7 @@ preset_color_schemes:
     hilited_comment_text_color: 0x70b33e
     hilited_candidate_back_color: 0xffffff
 
-  Macau:
+  macau:
     name: "澳門／Macau"
     author: "Patricivs ipatrickmac@me.com"
     text_color: 0x00d9ff
@@ -298,7 +298,7 @@ preset_color_schemes:
     hilited_comment_text_color: 0xffffff
     hilited_candidate_back_color: 0xe89f00
 
-  RoC:
+  roc:
     name: "青天白日滿地紅／RoC"
     author: "Patricivs ipatrickmac@me.com"
     text_color: 0xffffff
@@ -430,7 +430,7 @@ preset_color_schemes:
     hilited_candidate_text_color: 0x6F003A
     hilited_candidate_back_color: 0xFFD6AC
 
-  google+:
+  google_plus:
     name: "Google+"
     author: "Patricivs ipatrickmac@me.com"
     text_color: 0xcac9c8
