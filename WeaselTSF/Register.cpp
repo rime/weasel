@@ -4,6 +4,7 @@
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
 static const char c_szInfoKeyPrefix[] = "CLSID\\";
+static const char c_szTipKeyPrefix[] = "Software\\Microsft\\CTF\\TIP\\";
 static const char c_szInProcSvr32[] = "InprocServer32";
 static const char c_szModelName[] = "ThreadingModel";
 
@@ -200,4 +201,11 @@ void UnregisterServer()
 		return;
 	memcpy(achIMEKey, c_szInfoKeyPrefix, sizeof(c_szInfoKeyPrefix) - 1);
 	RecurseDeleteKeyA(HKEY_CLASSES_ROOT, achIMEKey);
+
+	// On Windows 8, we need to manually delete the registry key for our TIP
+	char tipKey[ARRAYSIZE(c_szTipKeyPrefix) + CLSID_STRLEN];
+	if (!CLSIDToStringA(c_clsidTextService, tipKey + ARRAYSIZE(c_szTipKeyPrefix) - 1))
+		return;
+	memcpy(tipKey, c_szTipKeyPrefix, sizeof(c_szTipKeyPrefix) - 1);
+	RecurseDeleteKeyA(HKEY_CLASSES_ROOT, tipKey);
 }
