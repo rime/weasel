@@ -91,7 +91,7 @@ private:
 	BOOL _InitLanguageBar();
 	void _UninitLanguageBar();
 	
-	BOOL _InsertText(ITfContext *pContext, const WCHAR *pchText, ULONG cchText);
+	BOOL _InsertText(ITfContext *pContext, const std::wstring& ext);
 
 	ITfThreadMgr *_pThreadMgr;
 	TfClientId _tfClientId;
@@ -103,8 +103,7 @@ private:
 	BOOL _fTestKeyDownPending, _fTestKeyUpPending;
 
 	ITfContext *_pEditSessionContext;
-	const WCHAR *_pEditSessionText;
-	ULONG _cEditSessionText;
+	std::wstring _editSessionText;
 
 	ITfComposition *_pComposition;
 

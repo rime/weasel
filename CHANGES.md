@@ -3,6 +3,28 @@
 
 RIME 主頁： http://code.google.com/p/rimeime/
 
+小狼毫 0.9.28 <2013-12-01>
+---
+【小狼毫】變更集
+
+  * 新增：一組配色方案，作者：P1461、Patricivs、skoj、五磅兔
+  * 修復：[Issue 528](https://code.google.com/p/rimeime/issues/detail?id=528) Windows 7 IE11 文字無法上屏
+  * 修復：[Issue 531](https://code.google.com/p/rimeime/issues/detail?id=531) Windows 8 卸載輸入法後在輸入法列表中有殘留項
+  * 變更：註冊輸入法時同時啓用 IME、TSF 模式
+
+Rime 算法庫變更集
+
+  * 更新：librime 升級到 1.0
+  * 改進：`affix_segmentor` 支持向匹配到的代碼段添加標籤 `extra_tags`
+  * 修復：`table_translator` 按字符集過濾候選字，修正對 CJK-D 漢字的判斷
+
+【東風破】變更集
+
+  * 優化：【粵拼】兼容[教育學院拼音方案](http://zh.wikipedia.org/wiki/%E6%95%99%E8%82%B2%E5%AD%B8%E9%99%A2%E6%8B%BC%E9%9F%B3%E6%96%B9%E6%A1%88)
+  * 更新：`symbols.yaml` 由 Patricivs 重新整理符號表。
+  * 更新：Emoji 提供更加豐富的繪文字。（需要字體支持）
+  * 更新：【八股文】【朙月拼音】【地球拼音】【中古全拼】修正錯別字、註音錯誤
+
 小狼毫 0.9.27 <2013-11-06>
 ---
 【小狼毫】變更集

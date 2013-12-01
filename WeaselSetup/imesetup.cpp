@@ -337,6 +337,9 @@ void enable_profile(BOOL fEnable) {
 // ◊¢≤·TSF ‰»Î∑®
 int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
+	if (!register_ime)
+		enable_profile(FALSE);
+
 	wstring params = L" \"" + tsf_path.wstring() + L"\"";
 	if (!register_ime)
 	{
@@ -371,9 +374,8 @@ int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow6
 		return 1;
 	}
 
-	// disable TSF by default
-	enable_profile(FALSE);
-	enable_profile(FALSE);
+	if (register_ime)
+		enable_profile(TRUE);
 
 	return 0;
 }
