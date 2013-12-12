@@ -13,6 +13,7 @@ ReleaseHant/
 /include/glog
 /ipch
 weasel.props
+*.log
 *.user
 *.suo
 *.sdf
