@@ -3,6 +3,26 @@
 
 RIME 主頁： http://code.google.com/p/rimeime/
 
+小狼毫 0.9.29 <2013-12-22>
+---
+【小狼毫】變更集
+
+  * 修復：配色方案 Google+ 的預覽圖
+
+Rime 算法庫變更集
+
+  * 更新：librime 升級到 1.1
+  * 新增：固定方案選單排列順序的選項 `default.yaml`: `switcher/fix_schema_list_order: true`
+  * 修復：正確匹配嵌套的“‘彎引號’”
+  * 改進：碼表輸入法自動上屏及頂字上屏（[示例](https://gist.github.com/lotem/f879a020d56ef9b3b792)）<br/>
+    若有 `speller/auto_select: true`，則選項 `speller/max_code_length:` 限定第N碼無重碼自動上屏
+  * 優化：爲詞組自動編碼時，限制因多音字而產生的組合數目，避免窮舉消耗過量資源
+
+【東風破】變更集
+
+  * 更新：【粵拼】匯入衆多粵語詞彙
+  * 優化：調整部分異體字的字頻
+
 小狼毫 0.9.28 <2013-12-01>
 ---
 【小狼毫】變更集
@@ -21,8 +41,8 @@ Rime 算法庫變更集
 【東風破】變更集
 
   * 優化：【粵拼】兼容[教育學院拼音方案](http://zh.wikipedia.org/wiki/%E6%95%99%E8%82%B2%E5%AD%B8%E9%99%A2%E6%8B%BC%E9%9F%B3%E6%96%B9%E6%A1%88)
-  * 更新：`symbols.yaml` 由 Patricivs 重新整理符號表。
-  * 更新：Emoji 提供更加豐富的繪文字。（需要字體支持）
+  * 更新：`symbols.yaml` 由 Patricivs 重新整理符號表
+  * 更新：Emoji 提供更加豐富的繪文字（需要字體支持）
   * 更新：【八股文】【朙月拼音】【地球拼音】【中古全拼】修正錯別字、註音錯誤
 
 小狼毫 0.9.27 <2013-11-06>

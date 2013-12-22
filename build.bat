@@ -1,13 +1,14 @@
 set work=%cd%
 
-set build_option=/Build
+set build_option=/t:Build
 set build_data=0
 set build_hant=0
 set build_rime=0
+set build_x64=1
 
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
-if "%1" == "rebuild" set build_option=/Rebuild
+if "%1" == "rebuild" set build_option=/t:Rebuild
 if "%1" == "data" set build_data=1
 if "%1" == "hant" set build_hant=1
 if "%1" == "rime" set build_rime=1
@@ -17,6 +18,7 @@ if "%1" == "all" (
   set build_hant=1
   set build_rime=1
 )
+if "%1" == "nox64" set build_x64=0
 shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
@@ -41,16 +43,22 @@ if %build_data% == 1 (
   call :build_data
 )
 
+del msbuild*.log
+
 if %build_hant% == 1 (
-  devenv weasel.sln %build_option% "ReleaseHant|x64"
-  if errorlevel 1 goto error
-  devenv weasel.sln %build_option% "ReleaseHant|Win32"
+  if %build_x64% == 1 (
+    msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
+    if errorlevel 1 goto error
+  )
+  msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="Win32" /fl3
   if errorlevel 1 goto error
 )
 
-devenv weasel.sln %build_option% "Release|x64"
-if errorlevel 1 goto error
-devenv weasel.sln %build_option% "Release|Win32"
+if %build_x64% == 1 (
+  msbuild.exe weasel.sln %build_option% /p:Configuration=Release /p:Platform="x64" /fl2
+  if errorlevel 1 goto error
+)
+msbuild.exe weasel.sln %build_option% /p:Configuration=Release /p:Platform="Win32" /fl1
 if errorlevel 1 goto error
 goto end
 
