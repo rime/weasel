@@ -312,7 +312,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 	return 0;
 }
 
-void enable_profile(BOOL fEnable) {
+void enable_profile(BOOL fEnable, bool hant) {
 	HRESULT hr;
 	ITfInputProcessorProfiles *pProfiles = NULL;
 
@@ -325,9 +325,10 @@ void enable_profile(BOOL fEnable) {
 
 	if(SUCCEEDED(hr))
 	{
+		LANGID lang_id = hant ? 0x0404 : 0x0804;
 		//Use the interface. 
-		pProfiles->EnableLanguageProfile(c_clsidTextService, 0x0804, c_guidProfile, fEnable);
-		pProfiles->EnableLanguageProfileByDefault(c_clsidTextService, 0x0804, c_guidProfile, fEnable);
+		pProfiles->EnableLanguageProfile(c_clsidTextService, lang_id, c_guidProfile, fEnable);
+		pProfiles->EnableLanguageProfileByDefault(c_clsidTextService, lang_id, c_guidProfile, fEnable);
 
 		//Release the interface. 
 		pProfiles->Release();
@@ -338,7 +339,7 @@ void enable_profile(BOOL fEnable) {
 int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	if (!register_ime)
-		enable_profile(FALSE);
+		enable_profile(FALSE, hant);
 
 	wstring params = L" \"" + tsf_path.wstring() + L"\"";
 	if (!register_ime)
@@ -375,7 +376,7 @@ int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow6
 	}
 
 	if (register_ime)
-		enable_profile(TRUE);
+		enable_profile(TRUE, hant);
 
 	return 0;
 }
