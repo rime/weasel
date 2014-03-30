@@ -125,7 +125,7 @@ program_files:
   File "data\default.yaml"
   File "data\symbols.yaml"
   File "data\weasel.yaml"
-  File "data\essay.kct"
+  File "data\essay.txt"
   File "data\*.schema.yaml"
   File "data\*.dict.yaml"
   ; opencc data files

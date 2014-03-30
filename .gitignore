@@ -5,7 +5,7 @@ ReleaseHant/
 /output/*.dll
 /output/*.ime
 /output/*.txt
-/output/data/*.kct
+/output/data/essay.txt
 /output/data/*.yaml
 /output/expansion/*.yaml
 /output/archives
