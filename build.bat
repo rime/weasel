@@ -39,7 +39,7 @@ if %build_rime% == 1 (
 
 if %build_data% == 1 (
   call :build_data
-) else if not exist output\data\essay.kct (
+) else if not exist output\data\essay.txt (
   call :build_data
 )
 
@@ -63,10 +63,10 @@ if errorlevel 1 goto error
 goto end
 
 :build_data
-call :build_essay
+rem call :build_essay
 copy %work%\LICENSE.txt output\
 copy %work%\README.txt output\
-copy %work%\brise\essay.kct output\data\
+copy %work%\brise\essay.txt output\data\
 copy %work%\brise\default.yaml output\data\
 copy %work%\brise\symbols.yaml output\data\
 copy %work%\brise\preset\*.yaml output\data\

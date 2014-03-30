@@ -3,8 +3,8 @@
 !include LogicLib.nsh
 !include x64.nsh
 
-!define WEASEL_VERSION 0.9.29
-!define WEASEL_BUILD ${WEASEL_VERSION}.1
+!define WEASEL_VERSION 0.9.30
+!define WEASEL_BUILD ${WEASEL_VERSION}.0
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
 
@@ -125,7 +125,7 @@ program_files:
   File "data\default.yaml"
   File "data\symbols.yaml"
   File "data\weasel.yaml"
-  File "data\essay.kct"
+  File "data\essay.txt"
   File "data\*.schema.yaml"
   File "data\*.dict.yaml"
   ; opencc data files

@@ -403,6 +403,10 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 			tips = L"∞ÎΩ«";
 		else if (m_message_value == "full_shape")
 			tips = L"»´Ω«";
+		else if (m_message_value == "!ascii_punct")
+			tips = L"£¨°£";
+		else if (m_message_value == "ascii_punct")
+			tips = L"£¨£Æ";
 		else if (m_message_value == "!simplification")
 			tips = L"ùh◊÷";
 		else if (m_message_value == "simplification")
