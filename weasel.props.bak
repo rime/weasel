@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="UserMacros">
+    <BOOST_HOME>D:\code\boost_1_47_0</BOOST_HOME>
+    <PYTHON_HOME>C:\Python27</PYTHON_HOME>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <_PropertySheetDisplayName>Weasel Project Properties</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <ItemGroup>
+    <BuildMacro Include="BOOST_HOME">
+      <Value>$(BOOST_HOME)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="PYTHON_HOME">
+      <Value>$(PYTHON_HOME)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
