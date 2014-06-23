@@ -58,7 +58,7 @@ With some luck, you now have a copy of the built library in vcbuild\lib\Release:
 copy /Y thirdparty\bin\*.dll vcbuild\bin\
 copy /Y vcbuild\lib\Release\rime.dll vcbuild\bin\
 cd vcbuild\bin
-echo zhongzhouyunshurufa | Release\rime_console.exe > output.txt
+echo zhongzhouyunshurufa | Release\rime_api_console.exe > output.txt
 }}}
 
 8. Build weasel
