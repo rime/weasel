@@ -1,7 +1,7 @@
 # Weasel settings
 # encoding: utf-8
 
-config_version: "0.19"
+config_version: "0.20"
 
 app_options:
   cmd.exe:
@@ -484,3 +484,22 @@ preset_color_schemes:
     hilited_candidate_text_color: 0xffffff
     hilited_comment_text_color: 0xa7a7a9
     hilited_candidate_back_color: 0x594231
+
+  flypy:
+    # description:
+    #   根据小鹤双拼官网图片制作
+    #   http://www.flypy.com/images/mr.png
+    name: "小鹤飞扬／flypy"
+    author: "Pal.lxk <Pal.lxk@gmail.com>"
+    text_color: 0x000000
+    back_color: 0xffffff
+    border_color: 0xc6c6c6
+    label_color: 0xff8000
+    hilited_text_color: 0xff8000
+    hilited_back_color: 0xffffff
+    candidate_text_color: 0xff8000
+    comment_text_color: 0xff8000
+    hilited_candidate_text_color: 0x0000b0
+    hilited_comment_text_color: 0x0000b0
+    hilited_candidate_back_color: 0xffffff
+
