@@ -486,7 +486,8 @@ preset_color_schemes:
     hilited_candidate_back_color: 0x594231
 
   flypy:
-    # description:
+    # description: |
+    #   小鹤飞扬：白底蓝字，红色高亮。
     #   根据小鹤双拼官网图片制作
     #   http://www.flypy.com/images/mr.png
     name: "小鹤飞扬／flypy"
