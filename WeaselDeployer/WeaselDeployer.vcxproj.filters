@@ -75,7 +75,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\resource\reload.ico">
+    <None Include="..\resource\weasel.ico">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
