@@ -1,6 +1,9 @@
+if exist env.bat call env.bat
+
 set work=%cd%
 
 set build_option=/t:Build
+set build_boost=0
 set build_data=0
 set build_hant=0
 set build_rime=0
@@ -9,11 +12,13 @@ set build_x64=1
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
 if "%1" == "rebuild" set build_option=/t:Rebuild
+if "%1" == "boost" set build_boost=1
 if "%1" == "data" set build_data=1
 if "%1" == "hant" set build_hant=1
 if "%1" == "rime" set build_rime=1
 if "%1" == "librime" set build_rime=1
 if "%1" == "all" (
+  set build_boost=1
   set build_data=1
   set build_hant=1
   set build_rime=1
@@ -28,13 +33,18 @@ if exist output\weaselserver.exe (
   output\weaselserver.exe /q
 )
 
+if %build_boost% == 1 (
+  call :build_boost
+  cd %work%
+)
+
 if %build_rime% == 1 (
   cd %work%\librime
-  call vcbuild.bat
+  call build.bat
   cd %work%
   copy /Y librime\thirdparty\lib\*.lib lib\
   copy /Y librime\thirdparty\bin\*.dll output\
-  copy /Y librime\vcbuild\lib\Release\rime.dll output\
+  copy /Y librime\build\lib\Release\rime.dll output\
 )
 
 if %build_data% == 1 (
@@ -62,6 +72,20 @@ msbuild.exe weasel.sln %build_option% /p:Configuration=Release /p:Platform="Win3
 if errorlevel 1 goto error
 goto end
 
+:build_boost
+set boost_build_flags=toolset=msvc-12.0 variant=release link=static threading=multi runtime-link=static
+set boost_libs=--with-date_time --with-filesystem --with-thread
+cd %BOOST_ROOT%
+if not exist bjam.exe call bootstrap.bat
+if %ERRORLEVEL% NEQ 0 goto error
+bjam %boost_build_flags% stage %boost_libs%
+if %ERRORLEVEL% NEQ 0 goto error
+if %build_x64% == 1 (
+  bjam %boost_build_flags% address-model=64 --stagedir=stage_x64 stage %boost_libs%
+  if %ERRORLEVEL% NEQ 0 goto error
+)
+exit /b
+
 :build_data
 rem call :build_essay
 copy %work%\LICENSE.txt output\
@@ -75,6 +99,7 @@ copy %work%\brise\extra\*.yaml output\expansion\
 exit /b
 
 :build_essay
+rem essay.kct is deprecated.
 copy %work%\librime\thirdparty\bin\kctreemgr.exe %work%\brise\
 copy %work%\librime\thirdparty\bin\zlib1.dll %work%\brise\
 cd %work%\brise
