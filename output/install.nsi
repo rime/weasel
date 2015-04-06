@@ -119,7 +119,6 @@ program_files:
   File "opencc.dll"
   File "rime.dll"
   File "WinSparkle.dll"
-  File "zlib1.dll"
   ; shared data files
   SetOutPath  $INSTDIR\data
   File "data\default.yaml"
