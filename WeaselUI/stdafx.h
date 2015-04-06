@@ -31,8 +31,4 @@
 
 using namespace std;
 
-//
-#define GLOG_NO_ABBREVIATED_SEVERITIES
-#pragma warning(disable : 4244)
-#include <glog/logging.h>
-#pragma warning(default : 4244)
+#include <logging.h>

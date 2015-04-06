@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <logging.h>
 #include <RimeWithWeasel.h>
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
@@ -8,11 +9,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
-
-#define GLOG_NO_ABBREVIATED_SEVERITIES
-#pragma warning(disable : 4244)
-#include <glog/logging.h>
-#pragma warning(default : 4244)
 
 #pragma warning(disable: 4005)
 #include <rime_api.h>
