@@ -196,7 +196,8 @@ bool ClientImpl::GetResponseData(ResponseHandler const& handler)
 	try
 	{
 		windows_shared_memory shm(open_only, WEASEL_IPC_SHARED_MEMORY, read_only);
-		mapped_region region(shm, read_only, WEASEL_IPC_METADATA_SIZE);
+		mapped_region region(shm, read_only, WEASEL_IPC_METADATA_SIZE,
+			WEASEL_IPC_SHARED_MEMORY_SIZE - WEASEL_IPC_METADATA_SIZE);
 		return handler((LPWSTR)region.get_address(), WEASEL_IPC_BUFFER_LENGTH);
 	}
 	catch (interprocess_exception& /*ex*/)
@@ -213,7 +214,8 @@ bool ClientImpl::_WriteClientInfo()
 	try
 	{
 		windows_shared_memory shm(open_only, WEASEL_IPC_SHARED_MEMORY, read_write);
-		mapped_region region(shm, read_write, WEASEL_IPC_METADATA_SIZE);
+		mapped_region region(shm, read_write, WEASEL_IPC_METADATA_SIZE,
+			WEASEL_IPC_SHARED_MEMORY_SIZE - WEASEL_IPC_METADATA_SIZE);
 		buffer = (LPWSTR)region.get_address();
 		if (!buffer)
 		{

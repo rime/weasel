@@ -9,10 +9,13 @@ extern CAppModule _Module;
 
 SharedMemory::SharedMemory()
 {
+	boost::interprocess::permissions perms;
+	perms.set_unrestricted();
 	m_pShm.reset(new windows_shared_memory(create_only, 
 										   WEASEL_IPC_SHARED_MEMORY, 
 										   read_write, 
-										   WEASEL_IPC_SHARED_MEMORY_SIZE));
+										   WEASEL_IPC_SHARED_MEMORY_SIZE,
+										   perms));
 	m_pRegion.reset(new mapped_region(*m_pShm, read_write));
 }
 
