@@ -423,7 +423,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 
 	// extract information
 
-	RimeCommit commit = {0};
+	RIME_STRUCT(RimeCommit, commit);
 	if (RimeGetCommit(session_id, &commit))
 	{
 		actions.insert("commit");
