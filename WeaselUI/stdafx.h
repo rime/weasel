@@ -9,10 +9,9 @@
 
 //#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
-#pragma warning(disable : 4996)
+#include <atl.h>
 
-#include <atlbase.h>
-#include <atlwin.h>
+#pragma warning(disable : 4996)
 
 #include <wtl/atlapp.h>
 #include <wtl/atlframe.h>

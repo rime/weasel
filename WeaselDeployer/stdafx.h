@@ -12,10 +12,10 @@
 #include <windows.h>
 #include <ShellAPI.h>
 
+#include <atl.h>
+
 #pragma warning(disable : 4996)
 
-#include <atlbase.h>
-#include <atlwin.h>
 #include <atlimage.h>
 
 #include <wtl/atlapp.h>

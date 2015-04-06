@@ -11,8 +11,7 @@
 
 #include <windows.h>
 
-#include <atlbase.h>
-#include <atlwin.h>
+#include <atl.h>
 
 #pragma warning(disable : 4996)
 
