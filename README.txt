@@ -7,7 +7,7 @@
 式恕堂 版權所無
 
 授權條款：GPL v3
-項目主頁：http://code.google.com/p/rimeime/
+項目主葉：http://rime.github.io/
 
 您可能還需要 RIME 用於其他操作系統的發行版：
   * 【中州韻】用於 Linux + IBus 輸入法框架
@@ -40,7 +40,7 @@
 修改詞庫、配置文件後，須「重新部署」方可生效。
 
 定製 Rime 的方法，請參考 Wiki 《定製指南》
-http://code.google.com/p/rimeime/w/list
+https://github.com/rime/home/wiki/CustomizationGuide
 
 ----------------------------------------------------------
 致謝
@@ -61,7 +61,7 @@ http://code.google.com/p/rimeime/w/list
     碼表源自 ibus-table
   * 【粵拼】
     採用《香港語言學學會粵語拼音方案》
-    http://www.lshk.org/cantonese.php
+    http://www.lshk.org/
     碼表源自 ibus-table
   * 【上海吳語】【蘇州吳語】
     採用《吳語拉丁式注音法》
