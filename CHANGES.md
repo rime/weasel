@@ -1,7 +1,7 @@
 ﻿【小狼毫】更新日誌
 ===
 
-RIME 主頁： http://code.google.com/p/rimeime/
+RIME 主葉： http://rime.github.io/
 
 小狼毫 0.9.30 <2014-04-01>
 ---
