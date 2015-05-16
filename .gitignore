@@ -6,6 +6,7 @@ ReleaseHant/
 /output/*.ime
 /output/*.txt
 /output/data/essay.txt
+/output/data/opencc/
 /output/data/*.yaml
 /output/expansion/*.yaml
 /output/archives

@@ -120,7 +120,7 @@ if not exist %work%\librime\thirdparty\data\opencc\TSCharacters.ocd (
 )
 cd %work%
 if not exist output\data\opencc mkdir output\data\opencc
-copy %work%\librime\thirdparty\data\*.* output\data\opencc\
+copy %work%\librime\thirdparty\data\opencc\*.* output\data\opencc\
 
 :error
 echo error building weasel...
