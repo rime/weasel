@@ -1,3 +1,5 @@
+setlocal
+
 if exist env.bat call env.bat
 
 set work=%cd%
@@ -40,6 +42,9 @@ if %build_boost% == 1 (
 
 if %build_rime% == 1 (
   cd %work%\librime
+  if not exist librime\thirdparty\lib\opencc.lib (
+    call build.bat thirdparty
+  )
   call build.bat
   cd %work%
   rem copy /Y librime\thirdparty\lib\*.lib lib\
@@ -96,6 +101,7 @@ copy %work%\brise\symbols.yaml output\data\
 copy %work%\brise\preset\*.yaml output\data\
 copy %work%\brise\supplement\*.yaml output\data\
 copy %work%\brise\extra\*.yaml output\expansion\
+call :build_opencc_data
 exit /b
 
 :build_essay
@@ -106,6 +112,15 @@ cd %work%\brise
 call make_essay.bat
 cd %work%
 exit /b
+
+:build_opencc_data
+if not exist %work%\librime\thirdparty\data\opencc\TSCharacters.ocd (
+  cd %work%\librime
+  call build.bat thirdparty
+)
+cd %work%
+if not exist output\data\opencc mkdir output\data\opencc
+copy %work%\librime\thirdparty\data\opencc\*.* output\data\opencc\
 
 :error
 echo error building weasel...
