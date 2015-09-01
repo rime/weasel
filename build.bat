@@ -100,6 +100,7 @@ copy %work%\brise\default.yaml output\data\
 copy %work%\brise\symbols.yaml output\data\
 copy %work%\brise\preset\*.yaml output\data\
 copy %work%\brise\supplement\*.yaml output\data\
+if not exist output\expansion mkdir output\expansion
 copy %work%\brise\extra\*.yaml output\expansion\
 call :build_opencc_data
 exit /b
