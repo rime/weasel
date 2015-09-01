@@ -82,7 +82,7 @@ Section "Package"
   SetOutPath $INSTDIR
 
   ; shared data files
-  SetOutPath  $INSTDIR\data
+  SetOutPath $INSTDIR\data
   File "expansion\*.schema.yaml"
   File "expansion\*.dict.yaml"
   ; We can even replace preset files with a newer/customized version
@@ -90,13 +90,12 @@ Section "Package"
   ;File weasel.yaml
 
   ; opencc data files
-  SetOutPath  $INSTDIR\data\opencc
-  File "expansion\opencc\*.ini"
-  File "expansion\opencc\*.ocd"
-  ;File "expansion\opencc\*.txt"
+  ;SetOutPath $INSTDIR\data\opencc
+  ;File "expansion\opencc\*.json"
+  ;File "expansion\opencc\*.ocd"
 
   ; images
-  ;SetOutPath  $INSTDIR\data\preview
+  ;SetOutPath $INSTDIR\data\preview
   ;File "data\preview\*.png"
 SectionEnd
 
