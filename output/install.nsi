@@ -116,11 +116,10 @@ program_files:
   File "WeaselSetup.exe"
   File "WeaselSetupx64.exe"
   File "libglog.dll"
-  File "opencc.dll"
   File "rime.dll"
   File "WinSparkle.dll"
   ; shared data files
-  SetOutPath  $INSTDIR\data
+  SetOutPath $INSTDIR\data
   File "data\default.yaml"
   File "data\symbols.yaml"
   File "data\weasel.yaml"
@@ -128,12 +127,11 @@ program_files:
   File "data\*.schema.yaml"
   File "data\*.dict.yaml"
   ; opencc data files
-  SetOutPath  $INSTDIR\data\opencc
-  File "data\opencc\*.ini"
+  SetOutPath $INSTDIR\data\opencc
+  File "data\opencc\*.json"
   File "data\opencc\*.ocd"
-  File "data\opencc\*.txt"
   ; images
-  SetOutPath  $INSTDIR\data\preview
+  SetOutPath $INSTDIR\data\preview
   File "data\preview\*.png"
 
   SetOutPath $INSTDIR
