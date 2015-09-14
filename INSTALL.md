@@ -66,7 +66,7 @@ rem cd librime
 copy /Y thirdparty\bin\*.dll build\bin\
 copy /Y build\lib\Release\rime.dll build\bin\
 cd build\bin
-echo zhongzhouyunshurufa | Release\rime_console.exe > output.txt
+echo zhongzhouyunshurufa | Release\rime_api_console.exe > output.txt
 ```
 
 ## Build and Install Weasel
@@ -75,7 +75,7 @@ Back to `weasel` directory.
 
 ### Setup build environment
 
-You may want to edit some variables in `env.bat` according to your machine setup.
+Edit `env.bat.template`, save your copy as `env.bat`.
 
 Edit `weasel.props.template`, save your copy as `weasel.props`.
 Forget about Python. It's not used anyway.
@@ -92,7 +92,7 @@ build.bat all
 ```
 
 Or, when using prebuilt librime libraries (see "Using prebuilt binaries" section above):
-``` batch
+```batch
 build.bat boost data hant
 ```
 
