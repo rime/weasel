@@ -39,6 +39,7 @@ BOOL WeaselTSF::_InitThreadMgrEventSink()
 		pSource->Release();
 		return FALSE;
 	}
+	pSource->Release();
 	return TRUE;
 }
 
