@@ -9,12 +9,10 @@ Download third-party libraries: `boost(>=1.56.0)`
 
 ## Checkout source code
 
-Also checkout submodules `brise` and `librime` under `weasel` directory.
+Make sure you also checkout submodules `brise` and `librime` under `weasel` directory.
 
 ```batch
-git clone git@github.com:lotem/weasel.git
-cd weasel
-git submodule update --init
+git clone --recursive https://github.com/rime/weasel.git
 ```
 
 ## Build librime
@@ -32,7 +30,7 @@ dependent third-party libraries including boost, glog, marisa-trie, leveldb, ope
 
 If you've already got a copy of prebuilt binaries of librime,
 you can simply copy `.dll`s / `.lib`s into `weasel\output` / `weasel\lib` directories respectively.
-Then go straight to build Weasel.
+Then go straight to building Weasel.
 
 ### Setup build environment
 
@@ -91,7 +89,8 @@ rem shell.bat
 build.bat all
 ```
 
-Or, when using prebuilt librime libraries (see "Using prebuilt binaries" section above):
+Or, if using prebuilt librime libraries (see "Using prebuilt binaries" section above):
+
 ```batch
 build.bat boost data hant
 ```
