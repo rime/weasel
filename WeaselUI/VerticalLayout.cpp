@@ -12,7 +12,7 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 {
 	const std::vector<Text> &candidates(_context.cinfo.candies);
 	const std::vector<Text> &comments(_context.cinfo.comments);
-	const std::string &labels(_context.cinfo.labels);
+	const std::vector<Text> &labels(_context.cinfo.labels);
 
 	CSize size;
 	//dc.GetTextExtent(L"\x4e2d", 1, &size);
