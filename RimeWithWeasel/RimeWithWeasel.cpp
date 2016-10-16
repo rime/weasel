@@ -326,6 +326,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 			weasel::CandidateInfo &cinfo(weasel_context.cinfo);
 			cinfo.candies.resize(ctx.menu.num_candidates);
 			cinfo.comments.resize(ctx.menu.num_candidates);
+			cinfo.labels.resize(ctx.menu.num_candidates);
 			for (int i = 0; i < ctx.menu.num_candidates; ++i)
 			{
 				cinfo.candies[i].str = utf8towcs(ctx.menu.candidates[i].text);
@@ -333,13 +334,21 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 				{
 					cinfo.comments[i].str = utf8towcs(ctx.menu.candidates[i].comment);
 				}
+				if (RIME_STRUCT_HAS_MEMBER(ctx, ctx.select_labels) && ctx.select_labels)
+				{
+					cinfo.labels[i].str = utf8towcs(ctx.select_labels[i]);
+				}
+				else if (ctx.menu.select_keys)
+				{
+					cinfo.labels[i].str = std::wstring(1, ctx.menu.select_keys[i]);
+				}
+				else
+				{
+					cinfo.labels[i].str = std::to_wstring((i + 1) % 10);
+				}
 			}
 			cinfo.highlighted = ctx.menu.highlighted_candidate_index;
 			cinfo.currentPage = ctx.menu.page_no;
-			if (ctx.menu.select_keys)
-			{
-				cinfo.labels = ctx.menu.select_keys;
-			}
 		}
 		RimeFreeContext(&ctx);
 	}

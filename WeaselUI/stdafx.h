@@ -20,12 +20,6 @@
 
 #pragma warning(default: 4996)
 
-#pragma warning(disable : 4819)
-
-#include <boost/format.hpp>
-
-#pragma warning(default: 4819)
-
 #include <string>
 #include <vector>
 

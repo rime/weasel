@@ -75,7 +75,7 @@ namespace weasel
 		int highlighted;
 		std::vector<Text> candies;
 		std::vector<Text> comments;
-		std::string labels;
+		std::vector<Text> labels;
 	};
 
 	struct Context

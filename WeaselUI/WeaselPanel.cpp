@@ -213,7 +213,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	bool drawn = false;
 	const vector<Text> &candidates(m_ctx.cinfo.candies);
 	const vector<Text> &comments(m_ctx.cinfo.comments);
-	const std::string &labels(m_ctx.cinfo.labels);
+	const vector<Text> &labels(m_ctx.cinfo.labels);
 
 	for (size_t i = 0; i < candidates.size(); i++)
 	{

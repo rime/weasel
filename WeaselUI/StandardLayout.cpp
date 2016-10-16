@@ -3,19 +3,14 @@
 
 using namespace weasel;
 
-static WCHAR LABEL_PATTERN[] = L"%1%.";
-
 StandardLayout::StandardLayout(const UIStyle &style, const Context &context, const Status &status)
 	: Layout(style, context, status)
 {
 }
 
-std::wstring StandardLayout::GetLabelText(const std::string &label, int id) const
+std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int id) const
 {
-	if (id < label.length())
-		return (boost::wformat(LABEL_PATTERN) % label.at(id)).str();
-	else
-		return (boost::wformat(LABEL_PATTERN) % ((id + 1) % 10)).str();
+	return labels.at(id).str + L'.';
 }
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
