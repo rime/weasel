@@ -2,10 +2,10 @@
 
 ## Preparation
 
-Assume we already have a default installation of **Visual Studio 2013** on drive `C:`.
+Assume we already have a default installation of **Visual Studio 2015**.
 
 Install dev tools: `git`, `cmake`
-Download third-party libraries: `boost(>=1.56.0)`
+Download third-party libraries: `boost(>=1.60.0)`
 
 ## Checkout source code
 
@@ -14,6 +14,10 @@ Make sure you also checkout submodules `brise` and `librime` under `weasel` dire
 ```batch
 git clone --recursive https://github.com/rime/weasel.git
 ```
+
+## Fast build
+
+If you want to build Weasel in minimal steps, jump to [this section] (#build-and-install-weasel).
 
 ## Build librime
 
