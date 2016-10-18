@@ -107,3 +107,11 @@ Voila.
 cd output
 install.bat
 ```
+
+### Create installer packages
+
+To create installer packages, you need to download and install [Unicode NSIS] (https://github.com/jimpark/unsis/releases).
+
+Then go to `output` directory, right-click and choose "Compile Unicode NSIS Script" with `install.nsi` and `expansion.nsi`.
+
+Installers will be generated in `archives` directory.
