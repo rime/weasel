@@ -115,7 +115,6 @@ program_files:
   File "WeaselServer.exe"
   File "WeaselSetup.exe"
   File "WeaselSetupx64.exe"
-  File "libglog.dll"
   File "rime.dll"
   File "WinSparkle.dll"
   ; shared data files
