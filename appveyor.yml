@@ -1,0 +1,35 @@
+skip_tags: true
+clone_depth: 1
+pull_requests:
+  do_not_increment_build_number: true
+
+version: '{branch} build {build}'
+image: Visual Studio 2015
+
+environment:
+  BOOST_ROOT: C:\Libraries\libboost
+
+cache:
+  - C:\Libraries\libboost -> appveyor.install.bat
+
+init:
+  - git --version
+  - msbuild /version
+  - git config --global core.autocrlf true
+
+install:
+  - choco install nsis-unicode
+  - .\appveyor.install.bat
+
+build_script:
+  - .\build.bat data hant
+
+after_build:
+  - appveyor.after_build.bat
+
+artifacts:
+  - path: output\archives\weasel-0.9.30.0-installer.exe
+    name: Weasel
+
+  - path: output\archives\weasel-expansion-0.9.19.0.exe
+    name: Weasel Expansion
