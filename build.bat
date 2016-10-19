@@ -48,7 +48,6 @@ if %build_rime% == 1 (
   call build.bat
   cd %work%
   rem copy /Y librime\thirdparty\lib\*.lib lib\
-  copy /Y librime\thirdparty\bin\*.dll output\
   copy /Y librime\build\lib\Release\rime.dll output\
 )
 
