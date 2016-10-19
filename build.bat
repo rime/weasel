@@ -79,7 +79,7 @@ goto end
 
 :build_boost
 set boost_build_flags=toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static
-set boost_libs=--with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-thread
+set boost_libs=--with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-system --with-thread
 cd %BOOST_ROOT%
 if not exist bjam.exe call bootstrap.bat
 if %ERRORLEVEL% NEQ 0 goto error
