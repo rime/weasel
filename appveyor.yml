@@ -10,6 +10,7 @@ environment:
   BOOST_ROOT: C:\Libraries\libboost
 
 cache:
+  - boost.cached -> appveyor.install.bat
   - C:\Libraries\libboost -> appveyor.install.bat
 
 init:
