@@ -1,7 +1,7 @@
 /*
- *  This file is part of WinSparkle (http://winsparkle.org)
+ *  This file is part of WinSparkle (https://winsparkle.org)
  *
- *  Copyright (C) 2009-2010 Vaclav Slavik
+ *  Copyright (C) 2009-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -31,8 +31,8 @@
  *--------------------------------------------------------------------------*/
 
 #define WIN_SPARKLE_VERSION_MAJOR   0
-#define WIN_SPARKLE_VERSION_MINOR   3
-#define WIN_SPARKLE_VERSION_MICRO   0
+#define WIN_SPARKLE_VERSION_MINOR   5
+#define WIN_SPARKLE_VERSION_MICRO   2
 
 /**
     Checks if WinSparkle version is at least @a major.@a minor.@a micro.
@@ -45,7 +45,7 @@
              WIN_SPARKLE_VERSION_MINOR >= (minor))               \
             ||                                                   \
             (WIN_SPARKLE_VERSION_MAJOR == (major) &&             \
-            (WIN_SPARKLE_VERSION_MINOR == (minor) &&             \
+             WIN_SPARKLE_VERSION_MINOR == (minor) &&             \
              WIN_SPARKLE_VERSION_MICRO >= (micro))               \
         )
 
