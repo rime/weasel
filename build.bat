@@ -93,7 +93,7 @@ exit /b
 :build_data
 rem call :build_essay
 copy %work%\LICENSE.txt output\
-copy %work%\README.txt output\
+copy %work%\README.md output\README.txt
 copy %work%\brise\essay.txt output\data\
 copy %work%\brise\default.yaml output\data\
 copy %work%\brise\symbols.yaml output\data\
