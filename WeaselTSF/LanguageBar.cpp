@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "resource.h"
 #include "WeaselTSF.h"
 
@@ -137,7 +137,7 @@ STDAPI CLangBarItemButton::Show(BOOL fShow)
 
 STDAPI CLangBarItemButton::GetTooltipString(BSTR *pbstrToolTip)
 {
-	*pbstrToolTip = SysAllocString(L"×óæIÇĞ“QÄ£Ê½£¬ÓÒæI´òé_²Ë†Î");
+	*pbstrToolTip = SysAllocString(L"å·¦éµåˆ‡æ›æ¨¡å¼ï¼Œå³éµæ‰“é–‹èœå–®");
 	return (*pbstrToolTip == NULL)? E_OUTOFMEMORY: S_OK;
 }
 

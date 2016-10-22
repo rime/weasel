@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <WeaselCommon.h>
 
@@ -85,7 +85,7 @@ namespace weasel
 	class UIImpl;
 
 	//
-	// ÊäÈë·¨½çÃæ½Ó¿ÚÀà
+	// è¾“å…¥æ³•ç•Œé¢æ¥å£ç±»
 	//
 	class UI
 	{
@@ -100,25 +100,25 @@ namespace weasel
 				Destroy();
 		}
 
-		// ´´½¨ÊäÈë·¨½çÃæ
+		// åˆ›å»ºè¾“å…¥æ³•ç•Œé¢
 		bool Create(HWND parent);
 
-		// Ïú»Ù½çÃæ
+		// é”€æ¯ç•Œé¢
 		void Destroy();
 		
-		// ½çÃæÏÔÒş
+		// ç•Œé¢æ˜¾éš
 		void Show();
 		void Hide();
 		void ShowWithTimeout(DWORD millisec);
 		bool IsCountingDown() const;
 		
-		// ÖØ»æ½çÃæ
+		// é‡ç»˜ç•Œé¢
 		void Refresh();
 
-		// ÖÃÊäÈë½¹µãÎ»ÖÃ£¨¹â±ê¸úËæÊ±ÒÆ¶¯ºòÑ¡´°£©µ«²»ÖØ»æ
+		// ç½®è¾“å…¥ç„¦ç‚¹ä½ç½®ï¼ˆå…‰æ ‡è·Ÿéšæ—¶ç§»åŠ¨å€™é€‰çª—ï¼‰ä½†ä¸é‡ç»˜
 		void UpdateInputPosition(RECT const& rc);
 
-		// ¸üĞÂ½çÃæÏÔÊ¾ÄÚÈİ
+		// æ›´æ–°ç•Œé¢æ˜¾ç¤ºå†…å®¹
 		void Update(Context const& ctx, Status const& status);
 
 		Context& ctx() { return ctx_; } 

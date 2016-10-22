@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "WeaselServerImpl.h"
 #include <Windows.h>
 
@@ -117,7 +117,7 @@ int ServerImpl::Start()
 		return 0;
 	}
 
-	// Ê¹ÓÃ¡¸ÏûÏ¢ÃâÒßß^žV¡¹À@ß^IE9µÄÓÃ‘ô½çÃæÌØ™à¸ôëx™CÖÆ
+	// ä½¿ç”¨ã€Œæ¶ˆæ¯å…ç–«éŽæ¿¾ã€ç¹žéŽIE9çš„ç”¨æˆ¶ç•Œé¢ç‰¹æ¬Šéš”é›¢æ©Ÿåˆ¶
 	HMODULE hMod = 0;
 	if ( ( hMod = ::LoadLibrary( _T( "user32.dll" ) ) ) != 0 )
 	{
@@ -215,16 +215,16 @@ LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lPara
 	if (!m_pRequestHandler)
 		return 0;
 	/*
-	ÒÆÎ»±êÖ¾ = 1bit == 0
+	ç§»ä½æ ‡å¿— = 1bit == 0
 	height:0~127 = 7bit
-	top:-2048~2047 = 12bit£¨ÓÐ·ûºÅ£©
-	left:-2048~2047 = 12bit£¨ÓÐ·ûºÅ£©
+	top:-2048~2047 = 12bitï¼ˆæœ‰ç¬¦å·ï¼‰
+	left:-2048~2047 = 12bitï¼ˆæœ‰ç¬¦å·ï¼‰
 
-	¸ß½âÎö¶ÈÏÂ£º
-	ÒÆÎ»±êÖ¾ = 1bit == 1
-	height:0~254 = 7bit£¨ÉáÆúµÍ1Î»£©
-	top:-4096~4094 = 12bit£¨ÓÐ·ûºÅ£¬ÉáÆúµÍ1Î»£©
-	left:-4096~4094 = 12bit£¨ÓÐ·ûºÅ£¬ÉáÆúµÍ1Î»£©
+	é«˜è§£æžåº¦ä¸‹ï¼š
+	ç§»ä½æ ‡å¿— = 1bit == 1
+	height:0~254 = 7bitï¼ˆèˆå¼ƒä½Ž1ä½ï¼‰
+	top:-4096~4094 = 12bitï¼ˆæœ‰ç¬¦å·ï¼Œèˆå¼ƒä½Ž1ä½ï¼‰
+	left:-4096~4094 = 12bitï¼ˆæœ‰ç¬¦å·ï¼Œèˆå¼ƒä½Ž1ä½ï¼‰
 	*/
 	RECT rc;
 	int hi_res = (wParam >> 31) & 0x01;

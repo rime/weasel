@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <string>
 #include <vector>
 #include <WeaselCommon.h>
@@ -81,10 +81,10 @@ int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent,
 	}
 
 	int retval = 0;
-	// ¸´ÖÆ .dll/.ime µ½ÏµÍ³Ä¿Â¼
+	// å¤åˆ¶ .dll/.ime åˆ°ç³»ç»Ÿç›®å½•
 	if (!copy_file(srcPath.wstring(), destPath.wstring()))
 	{
-		if (!silent) MessageBox(NULL, destPath.wstring().c_str(), L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, destPath.wstring().c_str(), L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 	retval += func(destPath, true, false, hant, silent);
@@ -94,7 +94,7 @@ int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent,
 		boost::algorithm::ireplace_last(x86, L"x64" + ext, ext);
 		if (!copy_file(x86, wow64Path.wstring()))
 		{
-			if (!silent) MessageBox(NULL, wow64Path.wstring().c_str(), L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBox(NULL, wow64Path.wstring().c_str(), L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 		retval += func(wow64Path, true, true, hant, silent);
@@ -112,7 +112,7 @@ int uninstall_ime_file(const wstring& ext, bool silent, ime_register_func func)
 	retval += func(imePath, false, false, false, silent);
 	if (!delete_file(imePath.wstring()))
 	{
-		if (!silent) MessageBox(NULL, imePath.wstring().c_str(), L"Ğ¶İdÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, imePath.wstring().c_str(), L"å¸è¼‰å¤±æ•—", MB_ICONERROR | MB_OK);
 		retval += 1;
 	}
 	if (GetSystemWow64Directory(path, _countof(path)))
@@ -122,14 +122,14 @@ int uninstall_ime_file(const wstring& ext, bool silent, ime_register_func func)
 		retval += func(wow64Path, false, true, false, silent);
 		if (!delete_file(wow64Path.wstring()))
 		{
-			if (!silent) MessageBox(NULL, wow64Path.wstring().c_str(), L"Ğ¶İdÊ§”¡", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBox(NULL, wow64Path.wstring().c_str(), L"å¸è¼‰å¤±æ•—", MB_ICONERROR | MB_OK);
 			retval += 1;
 		}
 	}
 	return retval;
 }
 
-// ×¢²áIMEÊäÈë·¨
+// æ³¨å†ŒIMEè¾“å…¥æ³•
 int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	if (is_wow64)
@@ -217,8 +217,8 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 		{
 			DWORD dwErr = GetLastError();
 			WCHAR msg[100];
-			wsprintf(msg, L"Ô]ƒÔİ”Èë·¨åeÕ` ImmInstallIME: HKL=%x Err=%x", hKL, dwErr);
-			if (!silent) MessageBox(NULL, msg, L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+			wsprintf(msg, L"è¨»å†Šè¼¸å…¥æ³•éŒ¯èª¤ ImmInstallIME: HKL=%x Err=%x", hKL, dwErr);
+			if (!silent) MessageBox(NULL, msg, L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 		return 0;
@@ -230,7 +230,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
 	if (ret != ERROR_SUCCESS)
 	{
-		if (!silent) MessageBox(NULL, KEYBOARD_LAYOUTS_KEY, L"Ğ¶İdÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, KEYBOARD_LAYOUTS_KEY, L"å¸è¼‰å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -241,7 +241,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 		if (ret != ERROR_SUCCESS)
 			break;
 
-		// ÖĞÎÄ¼üÅÌ²¼¾Ö?
+		// ä¸­æ–‡é”®ç›˜å¸ƒå±€?
 		if (wcscmp(subKey + 4, L"0804") == 0 || wcscmp(subKey + 4, L"0404") == 0)
 		{
 			HKEY hSubKey;
@@ -257,7 +257,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 			if (ret != ERROR_SUCCESS)
 				continue;
 
-			// Ğ¡ÀÇºÁ?
+			// å°ç‹¼æ¯«?
 			if (_wcsicmp(imeFile, L"weasel.ime") == 0)
 			{
 				DWORD value;
@@ -266,7 +266,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 
 				RegDeleteKey(hKey, subKey);
 
-				// ÒÆ³ıpreload
+				// ç§»é™¤preload
 				HKEY hPreloadKey;
 				ret = RegOpenKey(HKEY_CURRENT_USER, PRELOAD_KEY, &hPreloadKey);
 				if (ret != ERROR_SUCCESS)
@@ -284,7 +284,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 					{
 						if (i > preloads.size())
 						{
-							// É¾³ı×î´óÒ»ºÅ×¢²á±íÖµ
+							// åˆ é™¤æœ€å¤§ä¸€å·æ³¨å†Œè¡¨å€¼
 							number = (boost::wformat(L"%1%") % (i - 1)).str();
 							RegDeleteValue(hPreloadKey, number.c_str());
 						}
@@ -295,7 +295,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 						preloads.push_back(value);
 					}
 				}
-				// ÖØĞ´preloads
+				// é‡å†™preloads
 				for (size_t i = 0; i < preloads.size(); ++i)
 				{
 					number = (boost::wformat(L"%1%") % (i + 1)).str();
@@ -335,7 +335,7 @@ void enable_profile(BOOL fEnable, bool hant) {
 	}
 }
 
-// ×¢²áTSFÊäÈë·¨
+// æ³¨å†ŒTSFè¾“å…¥æ³•
 int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	if (!register_ime)
@@ -370,8 +370,8 @@ int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow6
 	else
 	{
 		WCHAR msg[100];
-		wsprintf(msg, L"Ô]ƒÔİ”Èë·¨åeÕ` regsvr32.exe %s", params.c_str());
-		if (!silent) MessageBox(NULL, msg, L"°²×°/Ğ¶İdÊ§°Ü", MB_ICONERROR | MB_OK);
+		wsprintf(msg, L"è¨»å†Šè¼¸å…¥æ³•éŒ¯èª¤ regsvr32.exe %s", params.c_str());
+		if (!silent) MessageBox(NULL, msg, L"å®‰è£…/å¸è¼‰å¤±è´¥", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -388,13 +388,13 @@ int install(bool hant, bool silent)
 	retval += install_ime_file(ime_src_path, L".ime", hant, silent, &register_ime);
 	retval += install_ime_file(ime_src_path, L".dll", hant, silent, &register_text_service);
 
-	// Ğ´×¢²á±í
+	// å†™æ³¨å†Œè¡¨
 	HKEY hKey;
 	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY,
 		                         0, NULL, 0, KEY_ALL_ACCESS | KEY_WOW64_32KEY, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		if (!silent) MessageBox(NULL, WEASEL_REG_KEY, L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, WEASEL_REG_KEY, L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -404,7 +404,7 @@ int install(bool hant, bool silent)
 						(rootDir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		if (!silent) MessageBox(NULL, L"Ÿo·¨Œ‘Èë WeaselRoot", L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, L"ç„¡æ³•å¯«å…¥ WeaselRoot", L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -414,7 +414,7 @@ int install(bool hant, bool silent)
 						(executable.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		if (!silent) MessageBox(NULL, L"Ÿo·¨Œ‘ÈëÔ]ƒÔ±íæIÖµ ServerExecutable", L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, L"ç„¡æ³•å¯«å…¥è¨»å†Šè¡¨éµå€¼ ServerExecutable", L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -423,25 +423,25 @@ int install(bool hant, bool silent)
 	if (retval)
 		return 1;
 
-	if (!silent) MessageBox(NULL, L"¿ÉÒÔÊ¹¡¾Ğ¡ÀÇºÁ¡¿Œ‘×ÖÁË :)", L"°²ÑbÍê³É", MB_ICONINFORMATION | MB_OK);
+	if (!silent) MessageBox(NULL, L"å¯ä»¥ä½¿ã€å°ç‹¼æ¯«ã€‘å¯«å­—äº† :)", L"å®‰è£å®Œæˆ", MB_ICONINFORMATION | MB_OK);
 	return 0;
 }
 
 int uninstall(bool silent)
 {
-	// ×¢ÏúÊäÈë·¨
+	// æ³¨é”€è¾“å…¥æ³•
 	int retval = 0;
 	retval += uninstall_ime_file(L".ime", silent, &register_ime);
 	retval += uninstall_ime_file(L".dll", silent, &register_text_service);
 
-	// Çå³ı×¢²áĞÅÏ¢
+	// æ¸…é™¤æ³¨å†Œä¿¡æ¯
 	RegDeleteKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY);
 	RegDeleteKey(HKEY_LOCAL_MACHINE, RIME_REG_KEY);
 
 	if (retval)
 		return 1;
 
-	if (!silent) MessageBox(NULL, L"Ğ¡ÀÇºÁ :)", L"Ğ¶İdÍê³É", MB_ICONINFORMATION | MB_OK);
+	if (!silent) MessageBox(NULL, L"å°ç‹¼æ¯« :)", L"å¸è¼‰å®Œæˆ", MB_ICONINFORMATION | MB_OK);
 	return 0;
 }
 

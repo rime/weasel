@@ -1,4 +1,4 @@
-// TestPyWeasel.cpp : Defines the entry point for the console application.
+ï»¿// TestPyWeasel.cpp : Defines the entry point for the console application.
 //
 
 #include "stdafx.h"
@@ -29,22 +29,22 @@ void test_pyweasel()
 	handler->Initialize();
 
 	memset(buffer, 0, sizeof(buffer));
-	// ³É¹¦´´½¨»á»°£¬·µ»Øsession_id£»Ê§°Ü·µ»Ø0
+	// æˆåŠŸåˆ›å»ºä¼šè¯ï¼Œè¿”å›session_idï¼›å¤±è´¥è¿”å›0
 	UINT session_id = handler->AddSession(buffer);
 	BOOST_ASSERT(session_id);
 	cout << wcstomb(buffer) << endl;
 
-	// »á»°´æÔÚ·µ»Øsession_id£¬²»´æÔÚ·µ»Ø0
+	// ä¼šè¯å­˜åœ¨è¿”å›session_idï¼Œä¸å­˜åœ¨è¿”å›0
 	BOOST_ASSERT(session_id == handler->FindSession(session_id));
 
 	memset(buffer, 0, sizeof(buffer));
-	// ÊäÈë a£¬ProcessKeyEventÓ¦·µ»ØTRUE£¬²¢½«»ØÓ¦´®Ğ´Èëbuffer
+	// è¾“å…¥ aï¼ŒProcessKeyEventåº”è¿”å›TRUEï¼Œå¹¶å°†å›åº”ä¸²å†™å…¥buffer
 	BOOL taken = handler->ProcessKeyEvent(weasel::KeyEvent(L'a', 0), session_id, buffer);
 	BOOST_ASSERT(taken);
-	// Windows¿ØÖÆÌ¨²»ÄÜÖ±½ÓÏÔÊ¾WideCharÖĞÎÄ´®£¬×ªÎªMultiByteString
+	// Windowsæ§åˆ¶å°ä¸èƒ½ç›´æ¥æ˜¾ç¤ºWideCharä¸­æ–‡ä¸²ï¼Œè½¬ä¸ºMultiByteString
 	cout << wcstomb(buffer) << endl;
 	
-	// ³É¹¦Ïú»Ù»á»°£¬·µ»Øsession_id£»Ê§°Ü·µ»Ø0
+	// æˆåŠŸé”€æ¯ä¼šè¯ï¼Œè¿”å›session_idï¼›å¤±è´¥è¿”å›0
 	BOOST_ASSERT(session_id == handler->RemoveSession(session_id));
 
 	handler->Finalize();

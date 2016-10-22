@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "DictManagementDialog.h"
 #include "Configurator.h"
 #include <WeaselUtility.h>
@@ -51,7 +51,7 @@ LRESULT DictManagementDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 	int sel = user_dict_list_.GetCurSel();
 	if (sel < 0 || sel >= user_dict_list_.GetCount()) {
-		MessageBox(L"ÕˆÔÚ×óÁĞßx“ñÒªŒ§³öµÄÔ~µäÃû·Q¡£", L":-(", MB_OK | MB_ICONINFORMATION);
+		MessageBox(L"è«‹åœ¨å·¦åˆ—é¸æ“‡è¦å°å‡ºçš„è©å…¸åç¨±ã€‚", L":-(", MB_OK | MB_ICONINFORMATION);
 		return 0;
 	}
 	boost::filesystem::wpath path;
@@ -64,18 +64,18 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 	}
 	if (_waccess(path.wstring().c_str(), 0) != 0 &&
 		!boost::filesystem::create_directories(path)) {
-		MessageBox(L"Î´ÄÜÍê³ÉŒ§³ö²Ù×÷¡£•ş²»•şÊÇÍ¬²½ÎÄ¼şŠAŸo·¨ÔL†–£¿", L":-(", MB_OK | MB_ICONERROR);
+		MessageBox(L"æœªèƒ½å®Œæˆå°å‡ºæ“ä½œã€‚æœƒä¸æœƒæ˜¯åŒæ­¥æ–‡ä»¶å¤¾ç„¡æ³•è¨ªå•ï¼Ÿ", L":-(", MB_OK | MB_ICONERROR);
 		return 0;
 	}
 	WCHAR dict_name[100] = {0};
 	user_dict_list_.GetText(sel, dict_name);
 	path /= std::wstring(dict_name) + L".userdb.txt";
 	if (!api_->backup_user_dict(wcstoutf8(dict_name))) {
-		MessageBox(L"²»ÖªÄÄÑY³öåeÁË£¬Î´ÄÜÍê³ÉŒ§³ö²Ù×÷¡£", L":-(", MB_OK | MB_ICONERROR);
+		MessageBox(L"ä¸çŸ¥å“ªè£å‡ºéŒ¯äº†ï¼Œæœªèƒ½å®Œæˆå°å‡ºæ“ä½œã€‚", L":-(", MB_OK | MB_ICONERROR);
 		return 0;
 	}
 	else if (_waccess(path.wstring().c_str(), 0) != 0) {
-		MessageBox(L"ß×£¬İ”³öµÄ¿ìÕÕÎÄ¼şÕÒ²»×ÅÁË¡£", L":-(", MB_OK | MB_ICONERROR);
+		MessageBox(L"å’¦ï¼Œè¼¸å‡ºçš„å¿«ç…§æ–‡ä»¶æ‰¾ä¸ç€äº†ã€‚", L":-(", MB_OK | MB_ICONERROR);
 		return 0;
 	}
 	std::wstring param = L"/select, \"" + path.wstring() + L"\"";
@@ -85,15 +85,15 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 
 LRESULT DictManagementDialog::OnRestore(WORD, WORD code, HWND, BOOL&) {
 	CFileDialog dlg(TRUE, L"snapshot", NULL, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST,
-		L"Ô~µä¿ìÕÕ\0*.userdb.txt\0KCSS¸ñÊ½Ô~µä¿ìÕÕ\0*.userdb.kct.snapshot\0È«²¿ÎÄ¼ş\0*.*\0");
+		L"è©å…¸å¿«ç…§\0*.userdb.txt\0KCSSæ ¼å¼è©å…¸å¿«ç…§\0*.userdb.kct.snapshot\0å…¨éƒ¨æ–‡ä»¶\0*.*\0");
 	if (IDOK == dlg.DoModal()) {
 		char path[MAX_PATH] = {0};
 		WideCharToMultiByte(CP_ACP, 0, dlg.m_szFileName, -1, path, _countof(path), NULL, NULL);
 		if (!api_->restore_user_dict(path)) {
-			MessageBox(L"²»ÖªÄÄÑY³öåeÁË£¬Î´ÄÜÍê³É²Ù×÷¡£", L":-(", MB_OK | MB_ICONERROR);
+			MessageBox(L"ä¸çŸ¥å“ªè£å‡ºéŒ¯äº†ï¼Œæœªèƒ½å®Œæˆæ“ä½œã€‚", L":-(", MB_OK | MB_ICONERROR);
 		}
 		else {
-			MessageBox(L"Íê³ÉÁË¡£", L":-)", MB_OK | MB_ICONINFORMATION);
+			MessageBox(L"å®Œæˆäº†ã€‚", L":-)", MB_OK | MB_ICONINFORMATION);
 		}
 	}
 	return 0;
@@ -102,26 +102,26 @@ LRESULT DictManagementDialog::OnRestore(WORD, WORD code, HWND, BOOL&) {
 LRESULT DictManagementDialog::OnExport(WORD, WORD code, HWND, BOOL&) {
 	int sel = user_dict_list_.GetCurSel();
 	if (sel < 0 || sel >= user_dict_list_.GetCount()) {
-		MessageBox(L"ÕˆÔÚ×óÁĞßx“ñÒªŒ§³öµÄÔ~µäÃû·Q¡£", L":-(", MB_OK | MB_ICONINFORMATION);
+		MessageBox(L"è«‹åœ¨å·¦åˆ—é¸æ“‡è¦å°å‡ºçš„è©å…¸åç¨±ã€‚", L":-(", MB_OK | MB_ICONINFORMATION);
 		return 0;
 	}
 	WCHAR dict_name[MAX_PATH] = {0};
 	user_dict_list_.GetText(sel, dict_name);
 	std::wstring file_name(dict_name);
 	file_name += L"_export.txt";
-	CFileDialog dlg(FALSE, L"txt", file_name.c_str(), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, L"ÎÄ±¾ÎÄ™n\0*.txt\0È«²¿ÎÄ¼ş\0*.*\0");
+	CFileDialog dlg(FALSE, L"txt", file_name.c_str(), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, L"æ–‡æœ¬æ–‡æª”\0*.txt\0å…¨éƒ¨æ–‡ä»¶\0*.*\0");
 	if (IDOK == dlg.DoModal()) {
 		char path[MAX_PATH] = {0};
 		WideCharToMultiByte(CP_ACP, 0, dlg.m_szFileName, -1, path, _countof(path), NULL, NULL);
 		int result = api_->export_user_dict(wcstoutf8(dict_name), path);
 		if (result < 0) {
-			MessageBox(L"²»ÖªÄÄÑY³öåeÁË£¬Î´ÄÜÍê³É²Ù×÷¡£", L":-(", MB_OK | MB_ICONERROR);
+			MessageBox(L"ä¸çŸ¥å“ªè£å‡ºéŒ¯äº†ï¼Œæœªèƒ½å®Œæˆæ“ä½œã€‚", L":-(", MB_OK | MB_ICONERROR);
 		}
 		else if (_waccess(dlg.m_szFileName, 0) != 0) {
-			MessageBox(L"ß×£¬Œ§³öµÄÎÄ¼şÕÒ²»×ÅÁË¡£", L":-(", MB_OK | MB_ICONERROR);
+			MessageBox(L"å’¦ï¼Œå°å‡ºçš„æ–‡ä»¶æ‰¾ä¸ç€äº†ã€‚", L":-(", MB_OK | MB_ICONERROR);
 		}
 		else {
-			std::wstring report(boost::str(boost::wformat(L"Œ§³öÁË %d —lÓ›ä›¡£") % result));
+			std::wstring report(boost::str(boost::wformat(L"å°å‡ºäº† %d æ¢è¨˜éŒ„ã€‚") % result));
 			MessageBox(report.c_str(), L":-)", MB_OK | MB_ICONINFORMATION);
 			std::wstring param = L"/select, \"" + std::wstring(dlg.m_szFileName) + L"\"";
 			ShellExecute(NULL, L"open", L"explorer.exe", param.c_str(), NULL, SW_SHOWNORMAL);
@@ -133,23 +133,23 @@ LRESULT DictManagementDialog::OnExport(WORD, WORD code, HWND, BOOL&) {
 LRESULT DictManagementDialog::OnImport(WORD, WORD code, HWND, BOOL&) {
 	int sel = user_dict_list_.GetCurSel();
 	if (sel < 0 || sel >= user_dict_list_.GetCount()) {
-		MessageBox(L"ÕˆÔÚ×óÁĞßx“ñÒªŒ§ÈëµÄÔ~µäÃû·Q¡£", L":-(", MB_OK | MB_ICONINFORMATION);
+		MessageBox(L"è«‹åœ¨å·¦åˆ—é¸æ“‡è¦å°å…¥çš„è©å…¸åç¨±ã€‚", L":-(", MB_OK | MB_ICONINFORMATION);
 		return 0;
 	}
 	WCHAR dict_name[MAX_PATH] = {0};
 	user_dict_list_.GetText(sel, dict_name);
 	std::wstring file_name(dict_name);
 	file_name += L"_export.txt";
-	CFileDialog dlg(TRUE, L"txt", file_name.c_str(), OFN_HIDEREADONLY | OFN_FILEMUSTEXIST, L"ÎÄ±¾ÎÄ™n\0*.txt\0È«²¿ÎÄ¼ş\0*.*\0");
+	CFileDialog dlg(TRUE, L"txt", file_name.c_str(), OFN_HIDEREADONLY | OFN_FILEMUSTEXIST, L"æ–‡æœ¬æ–‡æª”\0*.txt\0å…¨éƒ¨æ–‡ä»¶\0*.*\0");
 	if (IDOK == dlg.DoModal()) {
 		char path[MAX_PATH] = {0};
 		WideCharToMultiByte(CP_ACP, 0, dlg.m_szFileName, -1, path, _countof(path), NULL, NULL);
 		int result = api_->import_user_dict(wcstoutf8(dict_name), path);
 		if (result < 0) {
-			MessageBox(L"²»ÖªÄÄÑY³öåeÁË£¬Î´ÄÜÍê³É²Ù×÷¡£", L":-(", MB_OK | MB_ICONERROR);
+			MessageBox(L"ä¸çŸ¥å“ªè£å‡ºéŒ¯äº†ï¼Œæœªèƒ½å®Œæˆæ“ä½œã€‚", L":-(", MB_OK | MB_ICONERROR);
 		}
 		else {
-			std::wstring report(boost::str(boost::wformat(L"Œ§ÈëÁË %d —lÓ›ä›¡£") % result));
+			std::wstring report(boost::str(boost::wformat(L"å°å…¥äº† %d æ¢è¨˜éŒ„ã€‚") % result));
 			MessageBox(report.c_str(), L":-)", MB_OK | MB_ICONINFORMATION);
 		}
 	}

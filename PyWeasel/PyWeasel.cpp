@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <PyWeasel.h>
 
 PyWeaselHandler::PyWeaselHandler()
@@ -11,7 +11,7 @@ PyWeaselHandler::~PyWeaselHandler()
 
 void PyWeaselHandler::Initialize()
 {
-	// ³õÊ¼»¯Python½âÊÍÆ÷, ÓĞ±ØÒªÔÚPyWeaselHandler´´½¨Ö®Ç°µ÷ÓÃ
+	// åˆå§‹åŒ–Pythonè§£é‡Šå™¨, æœ‰å¿…è¦åœ¨PyWeaselHandleråˆ›å»ºä¹‹å‰è°ƒç”¨
 	Py_Initialize();
 	try
 	{

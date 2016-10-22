@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "WeaselClientImpl.h"
 
 using namespace boost::interprocess;
@@ -54,7 +54,7 @@ bool ClientImpl::Connect(ServerLauncher const& launcher)
 	serverWnd = _GetServerWindow(WEASEL_IPC_WINDOW);
 	if ( !serverWnd && !launcher.empty() )
 	{
-		// Æô¶¯·şÎñ½ø³Ì
+		// å¯åŠ¨æœåŠ¡è¿›ç¨‹
 		if (!launcher())
 		{
 			serverWnd = NULL;
@@ -112,16 +112,16 @@ void ClientImpl::UpdateInputPosition(RECT const& rc)
 	if (!_Active())
 		return;
 	/*
-	ÒÆÎ»±êÖ¾ = 1bit == 0
+	ç§»ä½æ ‡å¿— = 1bit == 0
 	height:0~127 = 7bit
-	top:-2048~2047 = 12bit£¨ÓĞ·ûºÅ£©
-	left:-2048~2047 = 12bit£¨ÓĞ·ûºÅ£©
+	top:-2048~2047 = 12bitï¼ˆæœ‰ç¬¦å·ï¼‰
+	left:-2048~2047 = 12bitï¼ˆæœ‰ç¬¦å·ï¼‰
 
-	¸ß½âÎö¶ÈÏÂ£º
-	ÒÆÎ»±êÖ¾ = 1bit == 1
-	height:0~254 = 7bit£¨ÉáÆúµÍ1Î»£©
-	top:-4096~4094 = 12bit£¨ÓĞ·ûºÅ£¬ÉáÆúµÍ1Î»£©
-	left:-4096~4094 = 12bit£¨ÓĞ·ûºÅ£¬ÉáÆúµÍ1Î»£©
+	é«˜è§£æåº¦ä¸‹ï¼š
+	ç§»ä½æ ‡å¿— = 1bit == 1
+	height:0~254 = 7bitï¼ˆèˆå¼ƒä½1ä½ï¼‰
+	top:-4096~4094 = 12bitï¼ˆæœ‰ç¬¦å·ï¼Œèˆå¼ƒä½1ä½ï¼‰
+	left:-4096~4094 = 12bitï¼ˆæœ‰ç¬¦å·ï¼Œèˆå¼ƒä½1ä½ï¼‰
 	*/
 	int hi_res = static_cast<int>(rc.bottom - rc.top >= 128 || 
 		rc.left < -2048 || rc.left >= 2048 || rc.top < -2048 || rc.top >= 2048);

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "WeaselDeployer.h"
 #include "Configurator.h"
 #include "SwitcherSettingsDialog.h"
@@ -103,7 +103,7 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 		CloseHandle(hMutex);
 		if (report_errors)
 		{
-			MessageBox(NULL, L"ÕıÔÚˆÌĞĞÁíÒ»í—²¿ÊğÈÎ„Õ£¬·½ÀuËù×öµÄĞŞ¸ÄŒ¢ÔÚİ”Èë·¨ÔÙ´Î†™„ÓááÉúĞ§¡£", L"¡¾Ğ¡ÀÇºÁ¡¿", MB_OK | MB_ICONINFORMATION);
+			MessageBox(NULL, L"æ­£åœ¨åŸ·è¡Œå¦ä¸€é …éƒ¨ç½²ä»»å‹™ï¼Œæ–¹çº”æ‰€åšçš„ä¿®æ”¹å°‡åœ¨è¼¸å…¥æ³•å†æ¬¡å•“å‹•å¾Œç”Ÿæ•ˆã€‚", L"ã€å°ç‹¼æ¯«ã€‘", MB_OK | MB_ICONINFORMATION);
 		}
 		return 1;
 	}
@@ -144,7 +144,7 @@ int Configurator::DictManagement() {
 	{
 		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
-		MessageBox(NULL, L"ÕıÔÚˆÌĞĞÁíÒ»í—²¿ÊğÈÎ„Õ£¬ÕˆÉÔºòÔÙÔ‡¡£", L"¡¾Ğ¡ÀÇºÁ¡¿", MB_OK | MB_ICONINFORMATION);
+		MessageBox(NULL, L"æ­£åœ¨åŸ·è¡Œå¦ä¸€é …éƒ¨ç½²ä»»å‹™ï¼Œè«‹ç¨å€™å†è©¦ã€‚", L"ã€å°ç‹¼æ¯«ã€‘", MB_OK | MB_ICONINFORMATION);
 		return 1;
 	}
 
@@ -186,7 +186,7 @@ int Configurator::SyncUserData() {
 	{
 		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
-		MessageBox(NULL, L"ÕıÔÚˆÌĞĞÁíÒ»í—²¿ÊğÈÎ„Õ£¬ÕˆÉÔºòÔÙÔ‡¡£", L"¡¾Ğ¡ÀÇºÁ¡¿", MB_OK | MB_ICONINFORMATION);
+		MessageBox(NULL, L"æ­£åœ¨åŸ·è¡Œå¦ä¸€é …éƒ¨ç½²ä»»å‹™ï¼Œè«‹ç¨å€™å†è©¦ã€‚", L"ã€å°ç‹¼æ¯«ã€‘", MB_OK | MB_ICONINFORMATION);
 		return 1;
 	}
 

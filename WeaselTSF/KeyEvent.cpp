@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "KeyEvent.h"
 
 
@@ -45,7 +45,7 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 	const int buf_len = 8;
 	static WCHAR buf[buf_len];
 	static BYTE table[256];
-	// Çå³ıCtrl¡¢AltæI î‘B£¬ÒÔÁîToUnicodeEx()·µ»Ø×Ö·û
+	// æ¸…é™¤Ctrlã€Altéµç‹€æ…‹ï¼Œä»¥ä»¤ToUnicodeEx()è¿”å›å­—ç¬¦
 	memcpy(table, keyState, sizeof(table));
 	table[VK_CONTROL] = 0;
 	table[VK_MENU] = 0;

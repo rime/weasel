@@ -1,9 +1,9 @@
-#pragma once
+ï»¿#pragma once
 
 #include <string>
 #include <vector>
 
-#define WEASEL_IME_NAME L"Ğ¡ÀÇºÁ"
+#define WEASEL_IME_NAME L"å°ç‹¼æ¯«"
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
 
@@ -96,7 +96,7 @@ namespace weasel
 		CandidateInfo cinfo;
 	};
 
-	// ÓÉime¹ÜÀí
+	// ç”±imeç®¡ç†
 	struct Status
 	{
 		Status() : ascii_mode(false), composing(false), disabled(false) {}
@@ -107,17 +107,17 @@ namespace weasel
 			composing = false;
 			disabled = false;
 		}
-		// İ”Èë·½°¸
+		// è¼¸å…¥æ–¹æ¡ˆ
 		std::wstring schema_name;
-		// ŞD“Qé_êP
+		// è½‰æ›é–‹é—œ
 		bool ascii_mode;
-		// Œ‘×÷ î‘B
+		// å¯«ä½œç‹€æ…‹
 		bool composing;
-		// ¾S×oÄ£Ê½£¨•ºÍ£İ”Èë¹¦ÄÜ£©
+		// ç¶­è­·æ¨¡å¼ï¼ˆæš«åœè¼¸å…¥åŠŸèƒ½ï¼‰
 		bool disabled;
 	};
 
-	// ÓÃì¶ÏòÇ°¶Ë¸æÖªÔOÖÃĞÅÏ¢
+	// ç”¨æ–¼å‘å‰ç«¯å‘ŠçŸ¥è¨­ç½®ä¿¡æ¯
 	struct Config
 	{
 		Config() : inline_preedit(false) {}

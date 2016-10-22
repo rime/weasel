@@ -1,4 +1,4 @@
-// TestResponseParser.cpp : Defines the entry point for the console application.
+ï»¿// TestResponseParser.cpp : Defines the entry point for the console application.
 //
 
 #include "stdafx.h"
@@ -27,18 +27,18 @@ void test_2()
 {
 	WCHAR resp[] = 
 		L"action=commit\n"
-		L"commit=½Ìß@¾äÔ’ÉÏÆÁ=3.14\n"
+		L"commit=æ•™é€™å¥è©±ä¸Šå±=3.14\n"
 		;
 	DWORD len = wcslen(resp);
 	wstring commit;
 	weasel::Context ctx;
 	weasel::Status status;
-	ctx.aux.str = L"ÄÇ°µÄÖµ";
+	ctx.aux.str = L"å¾å‰çš„å€¼";
 	weasel::ResponseParser parser(&commit, &ctx, &status);
 	parser(resp, len);
-	BOOST_TEST(commit == L"½Ìß@¾äÔ’ÉÏÆÁ=3.14");
+	BOOST_TEST(commit == L"æ•™é€™å¥è©±ä¸Šå±=3.14");
 	BOOST_TEST(ctx.preedit.empty());
-	BOOST_TEST(ctx.aux.str == L"ÄÇ°µÄÖµ");
+	BOOST_TEST(ctx.aux.str == L"å¾å‰çš„å€¼");
 	BOOST_TEST(ctx.cinfo.candies.empty());
 }
 
@@ -46,7 +46,7 @@ void test_3()
 {
 	WCHAR resp[] = 
 		L"action=ctx\n"
-		L"ctx.preedit=Œ‘×÷´®=3.14\n"
+		L"ctx.preedit=å¯«ä½œä¸²=3.14\n"
 		L"ctx.aux=sie'zuoh'chuan=3.14\n"
 		;
 	DWORD len = wcslen(resp);
@@ -56,7 +56,7 @@ void test_3()
 	weasel::ResponseParser parser(&commit, &ctx, &status);
 	parser(resp, len);
 	BOOST_TEST(commit.empty());
-	BOOST_TEST(ctx.preedit.str == L"Œ‘×÷´®=3.14");
+	BOOST_TEST(ctx.preedit.str == L"å¯«ä½œä¸²=3.14");
 	BOOST_TEST(ctx.preedit.attributes.empty());
 	BOOST_TEST(ctx.aux.str == L"sie'zuoh'chuan=3.14");
 }
@@ -65,11 +65,11 @@ void test_4()
 {
 	WCHAR resp[] = 
 		L"action=commit,ctx\n"
-		L"ctx.preedit=ºòßxÒÒ=3.14\n"
+		L"ctx.preedit=å€™é¸ä¹™=3.14\n"
 		L"ctx.preedit.cursor=0,3\n"
 		L"ctx.cand.length=2\n"
-		L"ctx.cand.0=ºòßx¼×\n"
-		L"ctx.cand.1=ºòßxÒÒ\n"
+		L"ctx.cand.0=å€™é¸ç”²\n"
+		L"ctx.cand.1=å€™é¸ä¹™\n"
 		L"ctx.cand.cursor=1\n"
 		L"ctx.cand.page=0/1\n"
 		;
@@ -80,7 +80,7 @@ void test_4()
 	weasel::ResponseParser parser(&commit, &ctx, &status);
 	parser(resp, len);
 	BOOST_TEST(commit.empty());
-	BOOST_TEST(ctx.preedit.str == L"ºòßxÒÒ=3.14");
+	BOOST_TEST(ctx.preedit.str == L"å€™é¸ä¹™=3.14");
 	BOOST_ASSERT(1 == ctx.preedit.attributes.size());
 	weasel::TextAttribute attr0 = ctx.preedit.attributes[0];
 	BOOST_TEST_EQ(weasel::HIGHLIGHTED, attr0.type);
@@ -89,8 +89,8 @@ void test_4()
 	BOOST_TEST(ctx.aux.empty());
 	weasel::CandidateInfo& c = ctx.cinfo;
 	BOOST_ASSERT(2 == c.candies.size());
-	BOOST_TEST(c.candies[0].str == L"ºòßx¼×");
-	BOOST_TEST(c.candies[1].str == L"ºòßxÒÒ");
+	BOOST_TEST(c.candies[0].str == L"å€™é¸ç”²");
+	BOOST_TEST(c.candies[1].str == L"å€™é¸ä¹™");
 	BOOST_TEST_EQ(1, c.highlighted);
 	BOOST_TEST_EQ(0, c.currentPage);
 	BOOST_TEST_EQ(1, c.totalPages);

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
 #include <Usp10.h>
@@ -118,7 +118,7 @@ void WeaselPanel::_CreateLayout()
 	m_layout = layout;
 }
 
-//¸üĞÂ½çÃæ
+//æ›´æ–°ç•Œé¢
 void WeaselPanel::Refresh()
 {
 	_CreateLayout();

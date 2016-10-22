@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <WeaselCommon.h>
 #include <windows.h>
 #include <boost/function.hpp>
@@ -54,7 +54,7 @@ namespace weasel
 		}
 	};
 
-	// ÌÀíÕˆÇóÖ®Îï¼ş
+	// è™•ç†è«‹æ±‚ä¹‹ç‰©ä»¶
 	struct RequestHandler
 	{
 		RequestHandler() {}
@@ -74,22 +74,22 @@ namespace weasel
 		virtual void EndMaintenance() {}
 	};
 	
-	// ÌÀíserver¶Ë»Ø‘ªÖ®Îï¼ş
+	// è™•ç†serverç«¯å›æ‡‰ä¹‹ç‰©ä»¶
 	typedef boost::function<bool (LPWSTR buffer, UINT length)> ResponseHandler;
 	
-	// ÊÂ¼şÌÀíº¯”µ
+	// äº‹ä»¶è™•ç†å‡½æ•¸
 	typedef boost::function<bool ()> CommandHandler;
 
-	// †¢„Ó·ş„ÕßM³ÌÖ®Îï¼ş
+	// å•Ÿå‹•æœå‹™é€²ç¨‹ä¹‹ç‰©ä»¶
 	typedef CommandHandler ServerLauncher;
 
 
-	// IPCŒ¬FîÂ•Ã÷
+	// IPCå¯¦ç¾é¡è²æ˜
 
 	class ClientImpl;
 	class ServerImpl;
 
-	// IPC½Ó¿Úî
+	// IPCæ¥å£é¡
 
 	class Client
 	{
@@ -98,35 +98,35 @@ namespace weasel
 		Client();
 		virtual ~Client();
 		
-		// Á¬½Óµ½·şÎñ£¬±ØÒªÊ±Æô¶¯·şÎñ½ø³Ì
+		// è¿æ¥åˆ°æœåŠ¡ï¼Œå¿…è¦æ—¶å¯åŠ¨æœåŠ¡è¿›ç¨‹
 		bool Connect(ServerLauncher launcher = 0);
-		// ¶Ï¿ªÁ¬½Ó
+		// æ–­å¼€è¿æ¥
 		void Disconnect();
-		// ÖÕÖ¹·şÎñ
+		// ç»ˆæ­¢æœåŠ¡
 		void ShutdownServer();
-		// °lÆğ•şÔ’
+		// ç™¼èµ·æœƒè©±
 		void StartSession();
-		// ½YÊø•şÔ’
+		// çµæŸæœƒè©±
 		void EndSession();
-		// ßMÈë¾S×oÄ£Ê½
+		// é€²å…¥ç¶­è­·æ¨¡å¼
 		void StartMaintenance();
-		// ÍË³ö¾S×oÄ£Ê½
+		// é€€å‡ºç¶­è­·æ¨¡å¼
 		void EndMaintenance();
-		// ²âÊÔÁ¬½Ó
+		// æµ‹è¯•è¿æ¥
 		bool Echo();
-		// ÇëÇó·şÎñ´¦Àí°´¼üÏûÏ¢
+		// è¯·æ±‚æœåŠ¡å¤„ç†æŒ‰é”®æ¶ˆæ¯
 		bool ProcessKeyEvent(KeyEvent const& keyEvent);
-		// ÉÏÆÁÕıÔÚ¾İ‹µÄÎÄ×Ö
+		// ä¸Šå±æ­£åœ¨ç·¨è¼¯çš„æ–‡å­—
 		bool CommitComposition();
-		// Çå³ıÕıÔÚ¾İ‹µÄÎÄ×Ö
+		// æ¸…é™¤æ­£åœ¨ç·¨è¼¯çš„æ–‡å­—
 		bool ClearComposition();
-		// ¸üĞÂÊäÈëÎ»ÖÃ
+		// æ›´æ–°è¾“å…¥ä½ç½®
 		void UpdateInputPosition(RECT const& rc);
-		// ÊäÈë´°¿Ú»ñµÃ½¹µã
+		// è¾“å…¥çª—å£è·å¾—ç„¦ç‚¹
 		void FocusIn();
-		// ÊäÈë´°¿ÚÊ§È¥½¹µã
+		// è¾“å…¥çª—å£å¤±å»ç„¦ç‚¹
 		void FocusOut();
-		// ¶ÁÈ¡server·µ»ØµÄÊı¾İ
+		// è¯»å–serverè¿”å›çš„æ•°æ®
 		bool GetResponseData(ResponseHandler handler);
 
 	private:
@@ -139,11 +139,11 @@ namespace weasel
 		Server();
 		virtual ~Server();
 
-		// ³õÊ¼»¯·şÎñ
+		// åˆå§‹åŒ–æœåŠ¡
 		int Start();
-		// ½áÊø·şÎñ
+		// ç»“æŸæœåŠ¡
 		int Stop();
-		// ÏûÏ¢Ñ­»·
+		// æ¶ˆæ¯å¾ªç¯
 		int Run();
 
 		void SetRequestHandler(RequestHandler* pHandler);

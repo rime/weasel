@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "SwitcherSettingsDialog.h"
 #include "Configurator.h"
 #include <algorithm>
@@ -75,7 +75,7 @@ void SwitcherSettingsDialog::ShowDetails(RimeSchemaInfo* info) {
 LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	schema_list_.SubclassWindow(GetDlgItem(IDC_SCHEMA_LIST));
 	schema_list_.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
-	schema_list_.AddColumn(L"·½°¸Ãû·Q", 0);
+	schema_list_.AddColumn(L"æ–¹æ¡ˆåç¨±", 0);
 	WTL::CRect rc;
 	schema_list_.GetClientRect(&rc);
 	schema_list_.SetColumnWidth(0, rc.Width() - 20);
@@ -110,7 +110,7 @@ LRESULT SwitcherSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
 			}
 		}
 		if (count == 0) {
-			MessageBox(L"ÖÁÉÙÒªßxÓÃÒ»í—°É¡£", L"Ð¡ÀÇºÁ²»ÊÇß@°ãÓÃ·¨", MB_OK | MB_ICONEXCLAMATION);
+			MessageBox(L"è‡³å°‘è¦é¸ç”¨ä¸€é …å§ã€‚", L"å°ç‹¼æ¯«ä¸æ˜¯é€™èˆ¬ç”¨æ³•", MB_OK | MB_ICONEXCLAMATION);
 			return 0;
 		}
 		api_->select_schemas(settings_, selection, count);

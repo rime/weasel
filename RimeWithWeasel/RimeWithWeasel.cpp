@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <logging.h>
 #include <RimeWithWeasel.h>
 #include <WeaselUtility.h>
@@ -390,32 +390,32 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 	bool show_icon = false;
 	if (m_message_type == "deploy") {
 		if (m_message_type == "start")
-			tips = L"ÕýÔÚ²¿Êð RIME";
+			tips = L"æ­£åœ¨éƒ¨ç½² RIME";
 		else if (m_message_value == "success")
-			tips = L"²¿ÊðÍê³É";
+			tips = L"éƒ¨ç½²å®Œæˆ";
 		else if (m_message_value == "failure")
-			tips = L"ÓÐåeÕ`£¬Õˆ²é¿´ÈÕÕI %TEMP%\rime.weasel.*.INFO";
+			tips = L"æœ‰éŒ¯èª¤ï¼Œè«‹æŸ¥çœ‹æ—¥èªŒ %TEMP%\rime.weasel.*.INFO";
 	}
 	else if (m_message_type == "schema") {
-		tips = /*L"¡¾" + */status.schema_name/* + L"¡¿"*/;
+		tips = /*L"ã€" + */status.schema_name/* + L"ã€‘"*/;
 	}
 	else if (m_message_type == "option") {
 		if (m_message_value == "!ascii_mode")
-			show_icon = true;  //tips = L"ÖÐÎÄ";
+			show_icon = true;  //tips = L"ä¸­æ–‡";
 		else if (m_message_value == "ascii_mode")
-			show_icon = true;  //tips = L"Î÷ÎÄ";
+			show_icon = true;  //tips = L"è¥¿æ–‡";
 		else if (m_message_value == "!full_shape")
-			tips = L"°ë½Ç";
+			tips = L"åŠè§’";
 		else if (m_message_value == "full_shape")
-			tips = L"È«½Ç";
+			tips = L"å…¨è§’";
 		else if (m_message_value == "!ascii_punct")
-			tips = L"£¬¡£";
+			tips = L"ï¼Œã€‚";
 		else if (m_message_value == "ascii_punct")
-			tips = L"£¬£®";
+			tips = L"ï¼Œï¼Ž";
 		else if (m_message_value == "!simplification")
-			tips = L"h×Ö";
+			tips = L"æ¼¢å­—";
 		else if (m_message_value == "simplification")
-			tips = L"ºº×Ö";
+			tips = L"æ±‰å­—";
 	}
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();

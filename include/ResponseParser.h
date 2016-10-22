@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <WeaselCommon.h>
 #include <windows.h>
 #include <map>
@@ -11,7 +11,7 @@ namespace weasel
 {
 	class Deserializer;
 
-	// ½âÎöserver»Ø‘ªÎÄ±¾
+	// è§£æserverå›æ‡‰æ–‡æœ¬
 	struct ResponseParser
 	{
 		std::map<std::wstring, boost::shared_ptr<Deserializer> > deserializers;
@@ -23,10 +23,10 @@ namespace weasel
 
 		ResponseParser(std::wstring* commit, Context* context = 0, Status* status = 0, Config* config = 0);
 
-		// ÖØİdº¯”µÕ{ÓÃß\Ëã·û, ÒÔ°ç×öResponseHandler
+		// é‡è¼‰å‡½æ•¸èª¿ç”¨é‹ç®—ç¬¦, ä»¥æ‰®åšResponseHandler
 		bool operator() (LPWSTR buffer, UINT length);
 
-		// ÌÀíÒ»ĞĞ»Ø‘ªÎÄ±¾
+		// è™•ç†ä¸€è¡Œå›æ‡‰æ–‡æœ¬
 		void Feed(const std::wstring& line);
 	};
 

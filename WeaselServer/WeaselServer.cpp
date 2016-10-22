@@ -1,6 +1,6 @@
-// WeaselServer.cpp : main source file for WeaselServer.exe
+ï»¿// WeaselServer.cpp : main source file for WeaselServer.exe
 //
-//	WTL MessageLoop ·â×°ÁËÏûÏ¢Ñ­»·. ÊµÏÖÁË getmessage/dispatchmessage....
+//	WTL MessageLoop å°è£…äº†æ¶ˆæ¯å¾ªç¯. å®ç°äº† getmessage/dispatchmessage....
 
 #include "stdafx.h"
 #include "resource.h"
@@ -117,7 +117,7 @@ void WeaselServerApp::SetupMenuHandlers()
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
-	// ·ÀÖ¹·şÎñ½ø³Ì¿ªÆôÊäÈë·¨
+	// é˜²æ­¢æœåŠ¡è¿›ç¨‹å¼€å¯è¾“å…¥æ³•
 	ImmDisableIME(-1);
 
 	{

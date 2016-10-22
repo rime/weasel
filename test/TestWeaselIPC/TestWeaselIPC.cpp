@@ -1,4 +1,4 @@
-// TestWeaselIPC.cpp : Defines the entry point for the console application.
+﻿// TestWeaselIPC.cpp : Defines the entry point for the console application.
 //
 
 #include "stdafx.h"
@@ -172,7 +172,7 @@ public:
 			  << " keycode: " << keyEvent.keycode 
 			  << " mask: " << keyEvent.mask 
 			  << endl;
-		wsprintf(buffer, L"Greeting=Hello, С�Ǻ�.\n");
+		wsprintf(buffer, L"Greeting=Hello, 小狼毫.\n");
 		return TRUE;
 	}
 private:

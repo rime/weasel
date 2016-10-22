@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "WeaselIME.h"
 
 #pragma warning(disable: 4996)
@@ -38,7 +38,7 @@ BOOL WINAPI ImeConfigure(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 	if (g_is_winlogon) return TRUE;
 
 	// TODO:
-	MessageBox(hWnd, L"±¾Æ·ŸoÔO¶¨½éÃæ :)", L"İ”Èë·¨ÔO¶¨", MB_OK);
+	MessageBox(hWnd, L"æœ¬å“ç„¡è¨­å®šä»‹é¢ :)", L"è¼¸å…¥æ³•è¨­å®š", MB_OK);
 	return TRUE;
 }
 

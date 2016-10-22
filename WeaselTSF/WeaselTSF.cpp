@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include "WeaselTSF.h"
 #include "WeaselCommon.h"
@@ -16,12 +16,12 @@ static void error_message(const WCHAR *msg)
 
 static bool launch_server()
 {
-	// ÄÔ]ƒÔ±íÈ¡µÃserverÎ»ÖÃ
+	// å¾è¨»å†Šè¡¨å–å¾—serverä½ç½®
 	HKEY hKey;
 	LSTATUS ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 0, KEY_READ | KEY_WOW64_32KEY, &hKey);
 	if (ret != ERROR_SUCCESS)
 	{
-		error_message(L"Ô]ƒÔ±íĞÅÏ¢ŸoÓ°ÁË");
+		error_message(L"è¨»å†Šè¡¨ä¿¡æ¯ç„¡å½±äº†");
 		return false;
 	}
 
@@ -31,7 +31,7 @@ static bool launch_server()
 	ret = RegQueryValueEx(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
 	if (ret != ERROR_SUCCESS)
 	{
-		error_message(L"Î´ÔOÖÃ WeaselRoot");
+		error_message(L"æœªè¨­ç½® WeaselRoot");
 		RegCloseKey(hKey);
 		return false;
 	}
@@ -42,7 +42,7 @@ static bool launch_server()
 	ret = RegQueryValueEx(hKey, L"ServerExecutable", NULL, &type, (LPBYTE)value, &len);
 	if (ret != ERROR_SUCCESS)
 	{
-		error_message(L"Î´ÔOÖÃ ServerExecutable");
+		error_message(L"æœªè¨­ç½® ServerExecutable");
 		RegCloseKey(hKey);
 		return false;
 	}
@@ -50,7 +50,7 @@ static bool launch_server()
 
 	RegCloseKey(hKey);
 
-	// †™„Ó·ş„ÕßM³Ì
+	// å•“å‹•æœå‹™é€²ç¨‹
 	wstring exe = serverPath.wstring();
 	wstring dir = weaselRoot.wstring();
 
@@ -61,7 +61,7 @@ static bool launch_server()
 	if (!CreateProcess(exe.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, dir.c_str(), &startup_info, &process_info))
 	{
 	//	EZDBGONLYLOGGERPRINT("ERROR: failed to launch weasel server.");
-		error_message(L"·ş„ÕßM³Ì†™„Ó²»Æğí :(");
+		error_message(L"æœå‹™é€²ç¨‹å•“å‹•ä¸èµ·ä¾† :(");
 		return false;
 	}
 

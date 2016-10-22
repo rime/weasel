@@ -1,4 +1,4 @@
-// WeaselSetup.cpp : Defines the entry point for the application.
+ï»¿// WeaselSetup.cpp : Defines the entry point for the application.
 //
 
 #include "stdafx.h"
@@ -95,7 +95,7 @@ static int CustomInstall(bool installing)
 		                 0, NULL, 0, KEY_ALL_ACCESS | KEY_WOW64_32KEY, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, KEY, L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		MessageBox(NULL, KEY, L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -104,7 +104,7 @@ static int CustomInstall(bool installing)
 						(user_dir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, L"Ÿo·¨Œ‘Èë RimeUserDir", L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		MessageBox(NULL, L"ç„¡æ³•å¯«å…¥ RimeUserDir", L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -112,7 +112,7 @@ static int CustomInstall(bool installing)
 	ret = RegSetValueEx(hKey, L"Hant", 0, REG_DWORD, (const BYTE*)&data, sizeof(DWORD));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, L"Ÿo·¨Œ‘Èë Hant", L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		MessageBox(NULL, L"ç„¡æ³•å¯«å…¥ Hant", L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 

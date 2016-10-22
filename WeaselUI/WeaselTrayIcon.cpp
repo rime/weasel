@@ -1,11 +1,11 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "WeaselTrayIcon.h"
 
 // nasty
 #include "../WeaselServer/resource.h"
 
 static UINT mode_icon[] = { IDI_ZH, IDI_ZH, IDI_EN, IDI_RELOAD };
-static const WCHAR *mode_label[] = { NULL, /*L"ÖÐÎÄ"*/ NULL, /*L"Î÷ÎÄ"*/ NULL, L"¾S×oÖÐ" };
+static const WCHAR *mode_label[] = { NULL, /*L"ä¸­æ–‡"*/ NULL, /*L"è¥¿æ–‡"*/ NULL, L"ç¶­è­·ä¸­" };
 
 WeaselTrayIcon::WeaselTrayIcon(weasel::UI &ui)
 	: m_style(ui.style()), m_status(ui.status()), m_mode(INITIAL)
