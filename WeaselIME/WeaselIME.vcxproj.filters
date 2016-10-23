@@ -41,7 +41,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Imm.h">
+    <ClInclude Include="immdev.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="KeyEvent.h">

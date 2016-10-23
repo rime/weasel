@@ -13,7 +13,7 @@
 #include <windows.h>
 #include <shellapi.h>
 
-#include "Imm.h"
+#include "immdev.h"
 
 #pragma warning(disable : 4819)
 

@@ -18,12 +18,6 @@ struct CompositionInfo
 	}
 };
 
-typedef struct _tagTRANSMSG {
-	UINT message;
-	WPARAM wParam;
-	LPARAM lParam;
-} TRANSMSG, *LPTRANSMSG;
-
 class WeaselIME;
 
 class HIMCMap : public std::map<HIMC, boost::shared_ptr<WeaselIME> >
