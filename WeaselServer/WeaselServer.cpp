@@ -102,7 +102,7 @@ int WeaselServerApp::Run()
 void WeaselServerApp::SetupMenuHandlers()
 {
 	std::wstring dir(install_dir());
-	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, boost::lambda::bind(&weasel::Server::Stop, boost::ref(m_server)) == 0);
+	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, boost::lambda::bind(&weasel::Server::Stop, std::ref(m_server)) == 0);
 	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
 	m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring()));
 	m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/dict")));

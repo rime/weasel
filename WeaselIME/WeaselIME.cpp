@@ -420,7 +420,7 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 	wstring commit;
 	weasel::Status status;
 	weasel::ResponseParser parser(&commit, NULL, &status);
-	bool ok = m_client.GetResponseData(boost::ref(parser));
+	bool ok = m_client.GetResponseData(std::ref(parser));
 
 	if (ok)
 	{

@@ -273,7 +273,7 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 	weasel::Context context;
 	weasel::Config config;
 	weasel::ResponseParser parser(&commit, &context, &status, &config);
-	bool ok = m_client.GetResponseData(boost::ref(parser));
+	bool ok = m_client.GetResponseData(std::ref(parser));
 
 	if (ok)
 	{

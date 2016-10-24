@@ -4,7 +4,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <boost/function.hpp>
 
 
 namespace weasel

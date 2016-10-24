@@ -52,7 +52,7 @@ void ClientImpl::_InitializeClientInfo()
 bool ClientImpl::Connect(ServerLauncher const& launcher)
 {
 	serverWnd = _GetServerWindow(WEASEL_IPC_WINDOW);
-	if ( !serverWnd && !launcher.empty() )
+	if (!serverWnd && launcher)
 	{
 		// 启动服务进程
 		if (!launcher())
@@ -189,7 +189,7 @@ bool ClientImpl::Echo()
 
 bool ClientImpl::GetResponseData(ResponseHandler const& handler)
 {
-	if (handler.empty())
+	if (!handler)
 	{
 		return false;
 	}

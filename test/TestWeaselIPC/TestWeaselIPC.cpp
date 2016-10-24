@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include <WeaselIPC.h>
 
-#include <boost/bind.hpp>
 #include <boost/interprocess/streams/bufferstream.hpp>
 #include <boost/scoped_ptr.hpp>
 using namespace boost::interprocess;
@@ -101,7 +100,7 @@ int console_main()
 		if (eaten)
 		{
 			WCHAR response[WEASEL_IPC_BUFFER_LENGTH];
-			bool ret = client.GetResponseData(boost::bind<bool>(read_buffer, _1, _2, boost::ref(response)));
+			bool ret = client.GetResponseData(std::bind<bool>(read_buffer, std::placeholders::_1, std::placeholders::_2, std::ref(response)));
 			cout << "get response data: " << ret << endl;
 			cout << "buffer reads: " << endl << wcstomb(response) << endl;
 		}
@@ -131,7 +130,7 @@ int client_main()
 	if (eaten)
 	{
 		WCHAR response[WEASEL_IPC_BUFFER_LENGTH];
-		bool ret = client.GetResponseData(boost::bind<bool>(read_buffer, _1, _2, boost::ref(response)));
+		bool ret = client.GetResponseData(std::bind<bool>(read_buffer, std::placeholders::_1, std::placeholders::_2, std::ref(response)));
 		cout << "get response data: " << ret << endl;
 		cout << "buffer reads: " << endl << wcstomb(response) << endl;
 	}

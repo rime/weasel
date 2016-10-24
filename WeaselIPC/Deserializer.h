@@ -1,6 +1,6 @@
 #pragma once
 #include <ResponseParser.h>
-#include <vector>
+#include <functional>
 
 namespace weasel
 {
@@ -10,7 +10,7 @@ namespace weasel
 	public:
 		typedef std::vector<std::wstring> KeyType;
 		typedef std::shared_ptr<Deserializer> Ptr;
-		typedef boost::function<Ptr (ResponseParser* pTarget)> Factory;
+		typedef std::function<Ptr (ResponseParser* pTarget)> Factory;
 
 		Deserializer(ResponseParser* pTarget) : m_pTarget(pTarget) {}
 		virtual ~Deserializer() {}
