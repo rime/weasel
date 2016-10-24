@@ -15,8 +15,8 @@ namespace weasel
 		LPWSTR GetBuffer();
 
 	private:
-		boost::shared_ptr<windows_shared_memory> m_pShm;
-		boost::shared_ptr<mapped_region> m_pRegion;
+		std::shared_ptr<windows_shared_memory> m_pShm;
+		std::shared_ptr<mapped_region> m_pRegion;
 	};
 
 	typedef CWinTraits<WS_DISABLED, WS_EX_TRANSPARENT> ServerWinTraits;

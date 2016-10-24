@@ -156,7 +156,7 @@ LRESULT WINAPI WeaselIME::UIWndProc(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp)
 	HIMC hIMC = (HIMC)GetWindowLongPtr(hWnd, 0);
 	if (hIMC)
 	{
-		boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
+		std::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
 		if (!p)
 			return 0;
 		return p->OnUIMessage(hWnd, uMsg, wp, lp);
@@ -193,14 +193,14 @@ BOOL WeaselIME::IsIMEMessage(UINT uMsg)
 	return FALSE;
 }
 
-boost::shared_ptr<WeaselIME> WeaselIME::GetInstance(HIMC hIMC)
+std::shared_ptr<WeaselIME> WeaselIME::GetInstance(HIMC hIMC)
 {
 	if (!s_instances.is_valid())
 	{
-		return boost::shared_ptr<WeaselIME>();
+		return std::shared_ptr<WeaselIME>();
 	}
 	boost::lock_guard<boost::mutex> lock(s_instances.get_mutex());
-	boost::shared_ptr<WeaselIME>& p = s_instances[hIMC];
+	std::shared_ptr<WeaselIME>& p = s_instances[hIMC];
 	if (!p)
 	{
 		p.reset(new WeaselIME(hIMC));
@@ -210,9 +210,9 @@ boost::shared_ptr<WeaselIME> WeaselIME::GetInstance(HIMC hIMC)
 
 void WeaselIME::Cleanup()
 {
-	for (map<HIMC, boost::shared_ptr<WeaselIME> >::const_iterator i = s_instances.begin(); i != s_instances.end(); ++i)
+	for (map<HIMC, std::shared_ptr<WeaselIME> >::const_iterator i = s_instances.begin(); i != s_instances.end(); ++i)
 	{
-		boost::shared_ptr<WeaselIME> p = i->second;
+		std::shared_ptr<WeaselIME> p = i->second;
 		p->OnIMESelect(FALSE);
 	}
 	boost::lock_guard<boost::mutex> lock(s_instances.get_mutex());

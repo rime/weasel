@@ -24,9 +24,9 @@
 
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-#include <boost/smart_ptr.hpp>
 
 #pragma warning(default: 4819)
 
+#include <memory>
+
 using namespace boost::interprocess;
-using boost::shared_ptr;

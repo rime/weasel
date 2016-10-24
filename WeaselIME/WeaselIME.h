@@ -20,7 +20,7 @@ struct CompositionInfo
 
 class WeaselIME;
 
-class HIMCMap : public std::map<HIMC, boost::shared_ptr<WeaselIME> >
+class HIMCMap : public std::map<HIMC, std::shared_ptr<WeaselIME> >
 {
 public:
     HIMCMap() : m_valid(true) {}
@@ -42,7 +42,7 @@ public:
 	static LPCWSTR GetUIClassName();
 	static LRESULT WINAPI UIWndProc(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp);
 	static BOOL IsIMEMessage(UINT uMsg);
-	static boost::shared_ptr<WeaselIME> GetInstance(HIMC hIMC);
+	static std::shared_ptr<WeaselIME> GetInstance(HIMC hIMC);
 	static void Cleanup();
 
 	WeaselIME(HIMC hIMC);

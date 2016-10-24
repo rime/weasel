@@ -9,7 +9,7 @@ namespace weasel
 	{
 	public:
 		typedef std::vector<std::wstring> KeyType;
-		typedef boost::shared_ptr<Deserializer> Ptr;
+		typedef std::shared_ptr<Deserializer> Ptr;
 		typedef boost::function<Ptr (ResponseParser* pTarget)> Factory;
 
 		Deserializer(ResponseParser* pTarget) : m_pTarget(pTarget) {}
