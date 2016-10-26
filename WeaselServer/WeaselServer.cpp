@@ -11,7 +11,7 @@
 #include <winsparkle.h>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <memory>
 
 CAppModule _Module;
 
@@ -65,7 +65,7 @@ protected:
 
 	weasel::Server m_server;
 	weasel::UI m_ui;
-	boost::scoped_ptr<RimeWithWeaselHandler> m_handler;
+	std::unique_ptr<RimeWithWeaselHandler> m_handler;
 };
 
 WeaselServerApp::WeaselServerApp()

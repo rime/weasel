@@ -5,10 +5,10 @@
 #include <WeaselIPC.h>
 
 #include <boost/interprocess/streams/bufferstream.hpp>
-#include <boost/scoped_ptr.hpp>
 using namespace boost::interprocess;
 
 #include <iostream>
+#include <memory>
 using namespace std;
 
 CAppModule _Module;
@@ -184,7 +184,7 @@ int server_main()
 	ATLASSERT(SUCCEEDED(hRes));
 
 	weasel::Server server;
-	boost::scoped_ptr<weasel::RequestHandler> handler(new TestRequestHandler);
+	const std::unique_ptr<weasel::RequestHandler> handler(new TestRequestHandler);
 	server.SetRequestHandler(handler.get());
 	if (!server.Start())
 		return -4;
