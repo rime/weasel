@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <StringAlgorithm.hpp>
 #include "Deserializer.h"
 #include "ActionLoader.h"
 
@@ -25,7 +26,7 @@ void ActionLoader::Store(Deserializer::KeyType const& key, wstring const& value)
 	{
 		// split value by L","
 		vector<wstring> vecAction;
-		split(vecAction, value, is_any_of(L","));
+		split(vecAction, value, L",");
 		
 		// require specified action deserializers
 		for(vector<wstring>::const_iterator it = vecAction.begin(); it != vecAction.end(); ++it)

@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include <strsafe.h>
+#include <StringAlgorithm.hpp>
 #include <WeaselCommon.h>
 #include <ResponseParser.h>
 #include "WeaselIME.h"
@@ -97,7 +98,7 @@ WeaselIME::WeaselIME(HIMC hIMC)
 	WCHAR path[MAX_PATH];
 	GetModuleFileName(NULL, path, _countof(path));
 	wstring exe = wpath(path).filename().wstring();
-	if (boost::iequals(L"chrome.exe", exe))
+	if (iequals(L"chrome.exe", exe))
 		m_preferCandidatePos = true;
 }
 

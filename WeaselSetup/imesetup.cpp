@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include <string>
 #include <vector>
+#include <StringAlgorithm.hpp>
 #include <WeaselCommon.h>
 #include <msctf.h>
 
@@ -91,7 +92,7 @@ int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent,
 	if (!wow64Path.empty())
 	{
 		wstring x86 = srcPath.wstring();
-		boost::algorithm::ireplace_last(x86, L"x64" + ext, ext);
+		ireplace_last(x86, L"x64" + ext, ext);
 		if (!copy_file(x86, wow64Path.wstring()))
 		{
 			if (!silent) MessageBox(NULL, wow64Path.wstring().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);

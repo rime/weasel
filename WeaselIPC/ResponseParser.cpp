@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <StringAlgorithm.hpp>
 #include <WeaselIPC.h>
 #include "Deserializer.h"
 
@@ -42,7 +43,7 @@ void ResponseParser::Feed(const wstring& line)
 	wstring::size_type sep_pos = line.find_first_of(L'=');
 	if (sep_pos == wstring::npos)
 		return;
-	split(key, line.substr(0, sep_pos), is_any_of(L"."));
+	split(key, line.substr(0, sep_pos), L".");
 	if (key.empty())
 		return;
 	value = line.substr(sep_pos + 1);

@@ -12,7 +12,6 @@
 
 #pragma warning(disable : 4819)
 
-#include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/interprocess/streams/bufferstream.hpp>

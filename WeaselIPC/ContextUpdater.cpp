@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <StringAlgorithm.hpp>
 #include "Deserializer.h"
 #include "ContextUpdater.h"
 
@@ -57,7 +58,7 @@ void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, wstring c
 		if (k[2] == L"cursor")
 		{
 			vector<wstring> vec;
-			split(vec, value, is_any_of(L","));
+			split(vec, value, L",");
 			if (vec.size() < 2)
 				return;
 
@@ -93,7 +94,7 @@ void ContextUpdater::_StoreCand(Deserializer::KeyType k, wstring const& value)
 	if (k[2] == L"page")
 	{
 		vector<wstring> vec;
-		split(vec, value, is_any_of(L"/"));
+		split(vec, value, L"/");
 		if (vec.size() == 0)
 			return;
 		int i = _wtoi(vec[0].c_str());

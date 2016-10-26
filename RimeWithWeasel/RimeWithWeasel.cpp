@@ -1,14 +1,12 @@
 ﻿#include "stdafx.h"
 #include <logging.h>
 #include <RimeWithWeasel.h>
+#include <StringAlgorithm.hpp>
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
 #include <list>
 #include <set>
 #include <string>
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
-#include <boost/format.hpp>
 
 #pragma warning(disable: 4005)
 #include <rime_api.h>
@@ -219,13 +217,14 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 		if (line == L".")
 			break;
 		const std::wstring kClientAppKey = L"session.client_app=";
-		if (boost::starts_with(line, kClientAppKey))
+		if (starts_with(line, kClientAppKey))
 		{
-			app_name = wcstoutf8(line.substr(kClientAppKey.length()).c_str());
-			boost::to_lower(app_name);
+			std::wstring lwr = line;
+			to_lower(lwr);
+			app_name = wcstoutf8(lwr.substr(kClientAppKey.length()).c_str());
 		}
 		const std::wstring kClientTypeKey = L"session.client_type=";
-		if (boost::starts_with(line, kClientTypeKey))
+		if (starts_with(line, kClientTypeKey))
 		{
 			client_type = wcstoutf8(line.substr(kClientTypeKey.length()).c_str());
 		}
@@ -481,7 +480,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	}
 	else
 	{
-		std::string actionList(boost::join(actions, ","));
+		std::string actionList(join(actions, ","));
 		messages.insert(messages.begin(), boost::str(boost::format("action=%s\n") % actionList));
 	}
 

@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "WeaselClientImpl.h"
+#include <StringAlgorithm.hpp>
 
 using namespace boost::interprocess;
 using namespace weasel;
@@ -41,12 +42,12 @@ void ClientImpl::_InitializeClientInfo()
 		app_name = path.substr(separator_pos + 1);
 	else
 		app_name = path;
-	boost::to_lower(app_name);
+	to_lower(app_name);
 	// determine client type
 	GetModuleFileName(GetCurrentModule(), exe_path, MAX_PATH);
 	path = exe_path;
-	boost::to_lower(path);
-	is_ime = boost::ends_with(path, ".ime");
+	to_lower(path);
+	is_ime = ends_with(path, L".ime");
 }
 
 bool ClientImpl::Connect(ServerLauncher const& launcher)
@@ -135,7 +136,7 @@ void ClientImpl::UpdateInputPosition(RECT const& rc)
 
 void ClientImpl::FocusIn()
 {
-    DWORD client_caps = 0;  /* TODO */
+	DWORD client_caps = 0;  /* TODO */
 	PostMessage(serverWnd, WEASEL_IPC_FOCUS_IN, client_caps, session_id);
 }
 
