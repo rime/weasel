@@ -19,12 +19,12 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/thread.hpp>
 
 #pragma warning(default : 4819)
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 
 using namespace std;

@@ -19,7 +19,6 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/thread.hpp>
 
 #pragma warning(default : 4819)
 

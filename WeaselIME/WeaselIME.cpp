@@ -200,7 +200,7 @@ std::shared_ptr<WeaselIME> WeaselIME::GetInstance(HIMC hIMC)
 	{
 		return std::shared_ptr<WeaselIME>();
 	}
-	boost::lock_guard<boost::mutex> lock(s_instances.get_mutex());
+	std::lock_guard<std::mutex> lock(s_instances.get_mutex());
 	std::shared_ptr<WeaselIME>& p = s_instances[hIMC];
 	if (!p)
 	{
@@ -216,7 +216,7 @@ void WeaselIME::Cleanup()
 		std::shared_ptr<WeaselIME> p = i->second;
 		p->OnIMESelect(FALSE);
 	}
-	boost::lock_guard<boost::mutex> lock(s_instances.get_mutex());
+	std::lock_guard<std::mutex> lock(s_instances.get_mutex());
 	s_instances.clear();
 }
 
