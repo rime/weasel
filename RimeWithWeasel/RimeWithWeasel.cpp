@@ -491,7 +491,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
 	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
 
-	BOOST_FOREACH(const std::string &msg, messages)
+	return std::all_of(messages.begin(), messages.end(), [&bs] (std::string &msg)
 	{
 		bs << utf8towcs(msg.c_str());
 		if (!bs.good())
@@ -499,9 +499,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 			// response text toooo long!
 			return false;
 		}
-	}
-
-	return true;
+		else
+			return true;
+	});
 }
 
 static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)

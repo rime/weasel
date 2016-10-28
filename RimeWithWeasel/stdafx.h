@@ -12,7 +12,6 @@
 
 #pragma warning(disable : 4819)
 
-#include <boost/foreach.hpp>
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #pragma warning(default : 4819)
