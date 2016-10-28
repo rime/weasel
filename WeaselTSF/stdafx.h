@@ -18,7 +18,6 @@
 #pragma warning(disable : 4819)
 
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 
 #pragma warning(default : 4819)
 

@@ -435,7 +435,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	if (RimeGetCommit(session_id, &commit))
 	{
 		actions.insert("commit");
-		messages.push_back(boost::str(boost::format("commit=%s\n") % commit.text));
+		messages.push_back(std::string("commit=") + commit.text + '\n');
 		RimeFreeCommit(&commit);
 	}
 	
@@ -445,9 +445,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	{
 		is_composing = !!status.is_composing;
 		actions.insert("status");
-		messages.push_back(boost::str(boost::format("status.ascii_mode=%d\n") % status.is_ascii_mode));
-		messages.push_back(boost::str(boost::format("status.composing=%d\n") % status.is_composing));
-		messages.push_back(boost::str(boost::format("status.disabled=%d\n") % status.is_disabled));
+		messages.push_back(std::string("status.ascii_mode=") + std::to_string(status.is_ascii_mode) + '\n');
+		messages.push_back(std::string("status.composing=") + std::to_string(status.is_composing) + '\n');
+		messages.push_back(std::string("status.disabled=") + std::to_string(status.is_disabled) + '\n');
 		RimeFreeStatus(&status);
 	}
 	
@@ -457,12 +457,12 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 		if (is_composing)
 		{
 			actions.insert("ctx");
-			messages.push_back(boost::str(boost::format("ctx.preedit=%s\n") % ctx.composition.preedit));
+			messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
 			if (ctx.composition.sel_start <= ctx.composition.sel_end)
 			{
-				messages.push_back(boost::str(boost::format("ctx.preedit.cursor=%d,%d\n") %
-					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start) %
-					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)));
+				messages.push_back(std::string("ctx.preedit.cursor=") +
+					std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start)) + ',' +
+					std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + '\n');
 			}
 		}
 		RimeFreeContext(&ctx);
@@ -470,7 +470,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 
 	// configuration information
 	actions.insert("config");
-	messages.push_back(boost::str(boost::format("config.inline_preedit=%d\n") % (int) m_ui->style().inline_preedit));
+	messages.push_back(std::string("config.inline_preedit=") + std::to_string((int) m_ui->style().inline_preedit) + '\n');
 
 	// summarize
 
@@ -481,7 +481,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	else
 	{
 		std::string actionList(join(actions, ","));
-		messages.insert(messages.begin(), boost::str(boost::format("action=%s\n") % actionList));
+		messages.insert(messages.begin(), std::string("action=") + actionList + '\n');
 	}
 
 	messages.push_back(std::string(".\n"));

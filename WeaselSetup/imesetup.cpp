@@ -25,7 +25,7 @@ BOOL copy_file(const wstring& src, const wstring& dest)
 	{
 		for (int i = 0; i < 10; ++i)
 		{
-			wstring old = (boost::wformat(L"%1%.old.%2%") % dest % i).str();
+			wstring old = dest + L".old." + std::to_wstring(i);
 			if (MoveFileEx(dest.c_str(), old.c_str(), MOVEFILE_REPLACE_EXISTING))
 			{
 				MoveFileEx(old.c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
@@ -44,7 +44,7 @@ BOOL delete_file(const wstring& file)
 	{
 		for (int i = 0; i < 10; ++i)
 		{
-			wstring old = (boost::wformat(L"%1%.old.%2%") % file % i).str();
+			wstring old = file + L".old." + std::to_wstring(i);
 			if (MoveFileEx(file.c_str(), old.c_str(), MOVEFILE_REPLACE_EXISTING))
 			{
 				MoveFileEx(old.c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
@@ -197,7 +197,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 				{
 					for (size_t i = 1; true; ++i)
 					{
-						std::wstring number = (boost::wformat(L"%1%") % i).str();
+						std::wstring number = std::to_wstring(i);
 						DWORD type = 0;
 						WCHAR value[32];
 						DWORD len = sizeof(value);
@@ -276,7 +276,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 				wstring number;
 				for (size_t i = 1; true; ++i)
 				{
-					number = (boost::wformat(L"%1%") % i).str();
+					number = std::to_wstring(i);
 					DWORD type = 0;
 					WCHAR value[32];
 					DWORD len = sizeof(value);
@@ -286,7 +286,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 						if (i > preloads.size())
 						{
 							// 删除最大一号注册表值
-							number = (boost::wformat(L"%1%") % (i - 1)).str();
+							number = std::to_wstring(i - 1);
 							RegDeleteValue(hPreloadKey, number.c_str());
 						}
 						break;
@@ -299,7 +299,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 				// 重写preloads
 				for (size_t i = 0; i < preloads.size(); ++i)
 				{
-					number = (boost::wformat(L"%1%") % (i + 1)).str();
+					number = std::to_wstring(i + 1);
 					RegSetValueEx(hPreloadKey, number.c_str(), 0, REG_SZ,
 						          (const BYTE*)preloads[i].c_str(),
 								  (preloads[i].length() + 1) * sizeof(WCHAR));
