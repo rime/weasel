@@ -30,7 +30,7 @@ void ActionLoader::Store(Deserializer::KeyType const& key, std::wstring const& v
 		split(vecAction, value, L",");
 		
 		// require specified action deserializers
-		std::for_each(vecAction.begin(), vecAction.end(), [this] (std::wstring& action)
+		std::for_each(vecAction.begin(), vecAction.end(), [this](std::wstring& action)
 		{
 			Deserializer::Require(action, m_pTarget);
 		});

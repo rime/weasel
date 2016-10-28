@@ -4,6 +4,7 @@
 #include <StringAlgorithm.hpp>
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
+#include <algorithm>
 #include <list>
 #include <set>
 #include <string>
@@ -237,11 +238,11 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 		if (m_app_options.find(app_name) != m_app_options.end())
 		{
 			AppOptions& options(m_app_options[app_name]);
-			for (AppOptions::const_iterator it = options.begin(); it != options.end(); ++it)
+			std::for_each(options.begin(), options.end(), [&session_id](std::pair<const std::string, bool> &pair)
 			{
-				DLOG(INFO) << "set app option: " << it->first << " = " << it->second;
-				RimeSetOption(session_id, it->first.c_str(), Bool(it->second));
-			}
+				DLOG(INFO) << "set app option: " << pair.first << " = " << pair.second;
+				RimeSetOption(session_id, pair.first.c_str(), Bool(pair.second));
+			});
 		}
 	}
 	// ime | tsf
@@ -491,7 +492,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
 	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
 
-	return std::all_of(messages.begin(), messages.end(), [&bs] (std::string &msg)
+	return std::all_of(messages.begin(), messages.end(), [&bs](std::string &msg)
 	{
 		bs << utf8towcs(msg.c_str());
 		if (!bs.good())

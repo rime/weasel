@@ -212,7 +212,7 @@ std::shared_ptr<WeaselIME> WeaselIME::GetInstance(HIMC hIMC)
 
 void WeaselIME::Cleanup()
 {
-	std::for_each(s_instances.begin(), s_instances.end(), [] (std::pair<HIMC, std::shared_ptr<WeaselIME>> pair)
+	std::for_each(s_instances.begin(), s_instances.end(), [](std::pair<const HIMC, std::shared_ptr<WeaselIME>> &pair)
 	{
 		pair.second->OnIMESelect(FALSE);
 	});
