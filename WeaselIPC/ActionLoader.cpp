@@ -2,6 +2,7 @@
 #include <StringAlgorithm.hpp>
 #include "Deserializer.h"
 #include "ActionLoader.h"
+#include <algorithm>
 
 using namespace weasel;
 
@@ -20,18 +21,18 @@ ActionLoader::~ActionLoader()
 {
 }
 
-void ActionLoader::Store(Deserializer::KeyType const& key, wstring const& value)
+void ActionLoader::Store(Deserializer::KeyType const& key, std::wstring const& value)
 {
 	if (key.size() == 1)  // no extention parts
 	{
 		// split value by L","
-		vector<wstring> vecAction;
+		std::vector<std::wstring> vecAction;
 		split(vecAction, value, L",");
 		
 		// require specified action deserializers
-		for(vector<wstring>::const_iterator it = vecAction.begin(); it != vecAction.end(); ++it)
+		std::for_each(vecAction.begin(), vecAction.end(), [this] (std::wstring& action)
 		{
-			Deserializer::Require(*it, m_pTarget);
-		}
+			Deserializer::Require(action, m_pTarget);
+		});
 	}
 }

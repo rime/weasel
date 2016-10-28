@@ -37,11 +37,13 @@
 // The debugger can't handle symbols more than 255 characters long.
 // STL often creates symbols longer than that.
 // When symbols are longer than 255 characters, the warning is disabled.
-#pragma warning(disable:4786) 
-#include <time.h>
+#if _MSC_VER < 1400
+#pragma warning(disable: 4786)
+#endif // _MSC_VER < 1400
+
+#include <ctime>
 #include <vector>
-using namespace std;
-typedef vector<HICON> ICONVECTOR;
+typedef std::vector<HICON> ICONVECTOR;
 
 #ifdef NOTIFYICONDATA_V1_SIZE   // If NOTIFYICONDATA_V1_SIZE, then we can use fun stuff
 #define SYSTEMTRAY_USEW2K

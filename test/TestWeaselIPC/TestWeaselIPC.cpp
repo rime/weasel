@@ -9,7 +9,6 @@ using namespace boost::interprocess;
 
 #include <iostream>
 #include <memory>
-using namespace std;
 
 CAppModule _Module;
 
@@ -34,7 +33,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		weasel::Client client;
 		if (!client.Connect())
 		{
-			cerr << "server not running." << endl;
+			std::cerr << "server not running." << std::endl;
 			return 0;
 		}
 		client.ShutdownServer();
@@ -54,7 +53,7 @@ bool launch_server()
 	int ret = (int)ShellExecute( NULL, L"open", L"TestWeaselIPC.exe", L"/start", NULL, SW_HIDE );
 	if (ret <= 32)
 	{
-		cerr << "failed to launch server." << endl;
+		std::cerr << "failed to launch server." << std::endl;
 		return false;
 	}
 	return true;
@@ -80,29 +79,29 @@ int console_main()
 	weasel::Client client;
 	if (!client.Connect())
 	{
-		cerr << "failed to connect to server." << endl;
+		std::cerr << "failed to connect to server." << std::endl;
 		return -2;
 	}
 	client.StartSession();
 	if (!client.Echo())
 	{
-		cerr << "failed to start session." << endl;
+		std::cerr << "failed to start session." << std::endl;
 		return -3;
 	}
 	
-	while (cin.good())
+	while (std::cin.good())
 	{
-		int ch = cin.get();
-		if (!cin.good())
+		int ch = std::cin.get();
+		if (!std::cin.good())
 			break;
 		bool eaten = client.ProcessKeyEvent(weasel::KeyEvent(ch, 0));
-		cout << "server replies: " << eaten << endl;
+		std::cout << "server replies: " << eaten << std::endl;
 		if (eaten)
 		{
 			WCHAR response[WEASEL_IPC_BUFFER_LENGTH];
 			bool ret = client.GetResponseData(std::bind<bool>(read_buffer, std::placeholders::_1, std::placeholders::_2, std::ref(response)));
-			cout << "get response data: " << ret << endl;
-			cout << "buffer reads: " << endl << wcstomb(response) << endl;
+			std::cout << "get response data: " << ret << std::endl;
+			std::cout << "buffer reads: " << std::endl << wcstomb(response) << std::endl;
 		}
 	}
 
@@ -116,23 +115,23 @@ int client_main()
 	weasel::Client client;
 	if (!client.Connect(launch_server))
 	{
-		cerr << "failed to connect to server." << endl;
+		std::cerr << "failed to connect to server." << std::endl;
 		return -2;
 	}
 	client.StartSession();
 	if (!client.Echo())
 	{
-		cerr << "failed to login." << endl;
+		std::cerr << "failed to login." << std::endl;
 		return -3;
 	}
 	bool eaten = client.ProcessKeyEvent(weasel::KeyEvent(L'A', 0));
-	cout << "server replies: " << eaten << endl;
+	std::cout << "server replies: " << eaten << std::endl;
 	if (eaten)
 	{
 		WCHAR response[WEASEL_IPC_BUFFER_LENGTH];
 		bool ret = client.GetResponseData(std::bind<bool>(read_buffer, std::placeholders::_1, std::placeholders::_2, std::ref(response)));
-		cout << "get response data: " << ret << endl;
-		cout << "buffer reads: " << endl << wcstomb(response) << endl;
+		std::cout << "get response data: " << ret << std::endl;
+		std::cout << "buffer reads: " << std::endl << wcstomb(response) << std::endl;
 	}
 	client.EndSession();
 
@@ -145,32 +144,32 @@ class TestRequestHandler : public weasel::RequestHandler
 public:
 	TestRequestHandler() : m_counter(0)
 	{
-		cerr << "handler ctor." << endl;
+		std::cerr << "handler ctor." << std::endl;
 	}
 	virtual ~TestRequestHandler()
 	{
-		cerr << "handler dtor: " << m_counter << endl;
+		std::cerr << "handler dtor: " << m_counter << std::endl;
 	}
 	virtual UINT FindSession(UINT session_id)
 	{
-		cerr << "FindSession: " << session_id << endl;
+		std::cerr << "FindSession: " << session_id << std::endl;
 		return (session_id <= m_counter ? session_id : 0);
 	}
 	virtual UINT AddSession(LPWSTR buffer)
 	{
-		cerr << "AddSession: " << m_counter + 1 << endl;
+		std::cerr << "AddSession: " << m_counter + 1 << std::endl;
 		return ++m_counter;
 	}
 	virtual UINT RemoveSession(UINT session_id)
 	{
-		cerr << "RemoveClient: " << session_id << endl;
+		std::cerr << "RemoveClient: " << session_id << std::endl;
 		return 0;
 	}
 	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer) {
-		cerr << "ProcessKeyEvent: " << session_id 
+		std::cerr << "ProcessKeyEvent: " << session_id 
 			  << " keycode: " << keyEvent.keycode 
 			  << " mask: " << keyEvent.mask 
-			  << endl;
+			  << std::endl;
 		wsprintf(buffer, L"Greeting=Hello, 小狼毫.\n");
 		return TRUE;
 	}
@@ -188,8 +187,8 @@ int server_main()
 	server.SetRequestHandler(handler.get());
 	if (!server.Start())
 		return -4;
-	cerr << "server running." << endl;
+	std::cerr << "server running." << std::endl;
 	int ret = server.Run();
-	cerr << "server quitting." << endl;
+	std::cerr << "server quitting." << std::endl;
 	return ret;
 }

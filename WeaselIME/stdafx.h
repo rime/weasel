@@ -26,5 +26,4 @@
 #include <mutex>
 #include <string>
 
-using namespace std;
 using boost::filesystem::wpath;

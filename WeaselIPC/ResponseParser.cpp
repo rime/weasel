@@ -14,10 +14,10 @@ ResponseParser::ResponseParser(std::wstring* commit, Context* context, Status* s
 bool ResponseParser::operator() (LPWSTR buffer, UINT length)
 {
 	wbufferstream bs(buffer, length);
-	wstring line;
+	std::wstring line;
 	while (bs.good())
 	{
-		getline(bs, line);
+		std::getline(bs, line);
 		if (!bs.good())
 			return false;
 
@@ -30,18 +30,18 @@ bool ResponseParser::operator() (LPWSTR buffer, UINT length)
 	return bs.good();
 }
 
-void ResponseParser::Feed(const wstring& line)
+void ResponseParser::Feed(const std::wstring& line)
 {
 	// ignore blank lines and comments
 	if (line.empty() || line.find_first_of(L'#') == 0)
 		return;
 
 	Deserializer::KeyType key;
-	wstring value;
+	std::wstring value;
 
 	// extract key (split by L'.') and value
-	wstring::size_type sep_pos = line.find_first_of(L'=');
-	if (sep_pos == wstring::npos)
+	std::wstring::size_type sep_pos = line.find_first_of(L'=');
+	if (sep_pos == std::wstring::npos)
 		return;
 	split(key, line.substr(0, sep_pos), L".");
 	if (key.empty())
@@ -49,10 +49,10 @@ void ResponseParser::Feed(const wstring& line)
 	value = line.substr(sep_pos + 1);
 
 	// first part of the key serve as action type
-	wstring const& action = key[0];
+	std::wstring const& action = key[0];
 	
 	// get required action deserializer instance
-	map<wstring, Deserializer::Ptr>::iterator i = deserializers.find(action);
+	std::map<std::wstring, Deserializer::Ptr>::iterator i = deserializers.find(action);
 	if (i == deserializers.end())
 	{
 		// line ignored... since corresponding deserializer is not active

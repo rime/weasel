@@ -16,5 +16,4 @@
 
 #pragma warning(default : 4819)
 
-using namespace std;
 using boost::interprocess::wbufferstream;

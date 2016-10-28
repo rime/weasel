@@ -15,8 +15,8 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 {
-	const wstring &preedit = _context.preedit.str;
-	const vector<weasel::TextAttribute> &attrs = _context.preedit.attributes;
+	const std::wstring &preedit = _context.preedit.str;
+	const std::vector<weasel::TextAttribute> &attrs = _context.preedit.attributes;
 	CSize size(0, 0);
 	if (!preedit.empty())
 	{

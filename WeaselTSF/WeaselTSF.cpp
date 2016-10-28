@@ -51,8 +51,8 @@ static bool launch_server()
 	RegCloseKey(hKey);
 
 	// 啓動服務進程
-	wstring exe = serverPath.wstring();
-	wstring dir = weaselRoot.wstring();
+	std::wstring exe = serverPath.wstring();
+	std::wstring dir = weaselRoot.wstring();
 
 	STARTUPINFO startup_info = {0};
 	PROCESS_INFORMATION process_info = {0};

@@ -154,11 +154,11 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
-	wstring const& t = text.str;
+	std::wstring const& t = text.str;
 	if (!t.empty())
 	{
 		weasel::TextRange range;
-		vector<weasel::TextAttribute> const& attrs = text.attributes;
+		std::vector<weasel::TextAttribute> const& attrs = text.attributes;
 		for (size_t j = 0; j < attrs.size(); ++j)
 			if (attrs[j].type == weasel::HIGHLIGHTED)
 				range = attrs[j].range;
@@ -211,9 +211,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 {
 	bool drawn = false;
-	const vector<Text> &candidates(m_ctx.cinfo.candies);
-	const vector<Text> &comments(m_ctx.cinfo.comments);
-	const vector<Text> &labels(m_ctx.cinfo.labels);
+	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+	const std::vector<Text> &comments(m_ctx.cinfo.comments);
+	const std::vector<Text> &labels(m_ctx.cinfo.labels);
 
 	for (size_t i = 0; i < candidates.size(); i++)
 	{

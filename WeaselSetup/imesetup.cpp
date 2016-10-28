@@ -15,17 +15,16 @@ static const GUID c_guidProfile =
 { 0x3d02cab6, 0x2b8e, 0x4781, { 0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67 } };
 
 
-using namespace std;
 using boost::filesystem::wpath;
 
-BOOL copy_file(const wstring& src, const wstring& dest)
+BOOL copy_file(const std::wstring& src, const std::wstring& dest)
 {
 	BOOL ret = CopyFile(src.c_str(), dest.c_str(), FALSE);
 	if (!ret)
 	{
 		for (int i = 0; i < 10; ++i)
 		{
-			wstring old = dest + L".old." + std::to_wstring(i);
+			std::wstring old = dest + L".old." + std::to_wstring(i);
 			if (MoveFileEx(dest.c_str(), old.c_str(), MOVEFILE_REPLACE_EXISTING))
 			{
 				MoveFileEx(old.c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
@@ -37,14 +36,14 @@ BOOL copy_file(const wstring& src, const wstring& dest)
 	return ret;
 }
 
-BOOL delete_file(const wstring& file)
+BOOL delete_file(const std::wstring& file)
 {
 	BOOL ret = DeleteFile(file.c_str());
 	if (!ret)
 	{
 		for (int i = 0; i < 10; ++i)
 		{
-			wstring old = file + L".old." + std::to_wstring(i);
+			std::wstring old = file + L".old." + std::to_wstring(i);
 			if (MoveFileEx(file.c_str(), old.c_str(), MOVEFILE_REPLACE_EXISTING))
 			{
 				MoveFileEx(old.c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
@@ -57,7 +56,7 @@ BOOL delete_file(const wstring& file)
 
 typedef int (*ime_register_func)(const wpath& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent);
 
-int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent, ime_register_func func)
+int install_ime_file(wpath& srcPath, const std::wstring& ext, bool hant, bool silent, ime_register_func func)
 {
 	wpath destPath;
 	wpath wow64Path;
@@ -67,7 +66,7 @@ int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent,
 	srcPath = path;
 
 	bool is_x64 = (sizeof(HANDLE) == 8);
-	wstring srcFileName = (hant ? L"weaselt" : L"weasel");
+	std::wstring srcFileName = (hant ? L"weaselt" : L"weasel");
 	srcFileName += (is_x64 ? L"x64" + ext : ext);
 	srcPath = srcPath.remove_leaf() / srcFileName;
 
@@ -91,7 +90,7 @@ int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent,
 	retval += func(destPath, true, false, hant, silent);
 	if (!wow64Path.empty())
 	{
-		wstring x86 = srcPath.wstring();
+		std::wstring x86 = srcPath.wstring();
 		ireplace_last(x86, L"x64" + ext, ext);
 		if (!copy_file(x86, wow64Path.wstring()))
 		{
@@ -103,7 +102,7 @@ int install_ime_file(wpath& srcPath, const wstring& ext, bool hant, bool silent,
 	return retval;
 }
 
-int uninstall_ime_file(const wstring& ext, bool silent, ime_register_func func)
+int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func func)
 {
 	int retval = 0;
 	WCHAR path[MAX_PATH];
@@ -272,8 +271,8 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 				ret = RegOpenKey(HKEY_CURRENT_USER, PRELOAD_KEY, &hPreloadKey);
 				if (ret != ERROR_SUCCESS)
 					continue;
-				vector<wstring> preloads;
-				wstring number;
+				std::vector<std::wstring> preloads;
+				std::wstring number;
 				for (size_t i = 1; true; ++i)
 				{
 					number = std::to_wstring(i);
@@ -342,7 +341,7 @@ int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow6
 	if (!register_ime)
 		enable_profile(FALSE, hant);
 
-	wstring params = L" \"" + tsf_path.wstring() + L"\"";
+	std::wstring params = L" \"" + tsf_path.wstring() + L"\"";
 	if (!register_ime)
 	{
 		params = L" /u " + params;  // unregister
@@ -399,7 +398,7 @@ int install(bool hant, bool silent)
 		return 1;
 	}
 
-	wstring rootDir = ime_src_path.parent_path().wstring();
+	std::wstring rootDir = ime_src_path.parent_path().wstring();
 	ret = RegSetValueEx(hKey, L"WeaselRoot", 0, REG_SZ,
 		                (const BYTE*)rootDir.c_str(),
 						(rootDir.length() + 1) * sizeof(WCHAR));
@@ -409,7 +408,7 @@ int install(bool hant, bool silent)
 		return 1;
 	}
 
-	const wstring executable = L"WeaselServer.exe";
+	const std::wstring executable = L"WeaselServer.exe";
 	ret = RegSetValueEx(hKey, L"ServerExecutable", 0, REG_SZ,
 		                (const BYTE*)executable.c_str(),
 						(executable.length() + 1) * sizeof(WCHAR));

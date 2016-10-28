@@ -268,7 +268,7 @@ BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const weasel::Context &
 void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 {
 	// get commit string from server
-	wstring commit;
+	std::wstring commit;
 	weasel::Status status;
 	weasel::Context context;
 	weasel::Config config;

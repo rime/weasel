@@ -6,15 +6,13 @@
 #include <ResponseParser.h>
 #include <string>
 
-using namespace std;
-
 void test_1()
 {
 	WCHAR resp[] = 
 		L"action=noop\n"
 		;
 	DWORD len = wcslen(resp);
-	wstring commit;
+	std::wstring commit;
 	weasel::Context ctx;
 	weasel::Status status;
 	weasel::ResponseParser parser(&commit, &ctx, &status);
@@ -30,7 +28,7 @@ void test_2()
 		L"commit=教這句話上屏=3.14\n"
 		;
 	DWORD len = wcslen(resp);
-	wstring commit;
+	std::wstring commit;
 	weasel::Context ctx;
 	weasel::Status status;
 	ctx.aux.str = L"從前的值";
@@ -50,7 +48,7 @@ void test_3()
 		L"ctx.aux=sie'zuoh'chuan=3.14\n"
 		;
 	DWORD len = wcslen(resp);
-	wstring commit;
+	std::wstring commit;
 	weasel::Context ctx;
 	weasel::Status status;
 	weasel::ResponseParser parser(&commit, &ctx, &status);
@@ -74,7 +72,7 @@ void test_4()
 		L"ctx.cand.page=0/1\n"
 		;
 	DWORD len = wcslen(resp);
-	wstring commit;
+	std::wstring commit;
 	weasel::Context ctx;
 	weasel::Status status;
 	weasel::ResponseParser parser(&commit, &ctx, &status);
