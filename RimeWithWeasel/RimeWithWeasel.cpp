@@ -238,7 +238,7 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 		if (m_app_options.find(app_name) != m_app_options.end())
 		{
 			AppOptions& options(m_app_options[app_name]);
-			std::for_each(options.begin(), options.end(), [&session_id](std::pair<const std::string, bool> &pair)
+			std::for_each(options.begin(), options.end(), [session_id](std::pair<const std::string, bool> &pair)
 			{
 				DLOG(INFO) << "set app option: " << pair.first << " = " << pair.second;
 				RimeSetOption(session_id, pair.first.c_str(), Bool(pair.second));
