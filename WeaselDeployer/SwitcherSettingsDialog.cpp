@@ -3,7 +3,6 @@
 #include "Configurator.h"
 #include <algorithm>
 #include <set>
-#include <boost/foreach.hpp>
 #include <rime_levers_api.h>
 
 

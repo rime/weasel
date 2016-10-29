@@ -65,7 +65,7 @@ BOOL WINAPI ImeProcessKey(HIMC hIMC, UINT vKey, LPARAM lKeyData, const LPBYTE lp
 	if (g_is_winlogon) return FALSE;
 
 	BOOL accepted = FALSE;
-	boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
+	std::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
     if (!p)
         return FALSE;
 	accepted = p->ProcessKeyEvent(vKey, lKeyData, lpbKeyState);
@@ -76,7 +76,7 @@ BOOL WINAPI ImeSelect(HIMC hIMC, BOOL fSelect)
 {
 	if (g_is_winlogon) return TRUE;
 
-	boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
+	std::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
     if (!p)
         return FALSE;
 	HRESULT hr = p->OnIMESelect(fSelect);
@@ -92,7 +92,7 @@ BOOL WINAPI ImeSetActiveContext(HIMC hIMC, BOOL fFocus)
 
 	if (hIMC)
 	{	
-		boost::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
+		std::shared_ptr<WeaselIME> p = WeaselIME::GetInstance(hIMC);
         if (!p)
             return FALSE;
 		HRESULT hr = p->OnIMEFocus(fFocus);

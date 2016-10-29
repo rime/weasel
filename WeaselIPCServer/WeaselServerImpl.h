@@ -1,7 +1,7 @@
 #pragma once
 #include <WeaselIPC.h>
-#include <boost/scoped_ptr.hpp>
 #include <map>
+#include <memory>
 
 namespace weasel
 {
@@ -15,8 +15,8 @@ namespace weasel
 		LPWSTR GetBuffer();
 
 	private:
-		boost::shared_ptr<windows_shared_memory> m_pShm;
-		boost::shared_ptr<mapped_region> m_pRegion;
+		std::shared_ptr<windows_shared_memory> m_pShm;
+		std::shared_ptr<mapped_region> m_pRegion;
 	};
 
 	typedef CWinTraits<WS_DISABLED, WS_EX_TRANSPARENT> ServerWinTraits;
@@ -87,7 +87,7 @@ namespace weasel
 	private:
 		RequestHandler *m_pRequestHandler;  // reference
 		std::map<UINT, CommandHandler> m_MenuHandlers;
-		boost::scoped_ptr<SharedMemory> m_pSharedMemory;
+		std::unique_ptr<SharedMemory> m_pSharedMemory;
 	};
 
 }

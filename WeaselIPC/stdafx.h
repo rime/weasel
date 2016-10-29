@@ -14,12 +14,9 @@
 #pragma warning(disable : 4819)
 #pragma warning(disable : 4996)
 
-#include <boost/algorithm/string.hpp>
-#include <boost/function.hpp>
 #include <boost/interprocess/streams/bufferstream.hpp>
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-#include <boost/smart_ptr.hpp>
 
 #pragma warning(default: 4819)
 #pragma warning(default: 4996)
@@ -28,7 +25,4 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-using namespace boost::algorithm;
 using boost::interprocess::wbufferstream;
-using boost::shared_ptr;

@@ -29,12 +29,10 @@
 
 #pragma warning(disable : 4819)
 
-#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
 
 #pragma warning(default : 4819)
+
+#include <memory>
 
 // TODO: reference additional headers your program requires here

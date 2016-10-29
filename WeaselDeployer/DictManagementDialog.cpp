@@ -2,7 +2,6 @@
 #include "DictManagementDialog.h"
 #include "Configurator.h"
 #include <WeaselUtility.h>
-#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 #include <rime_api.h>
 
@@ -121,7 +120,7 @@ LRESULT DictManagementDialog::OnExport(WORD, WORD code, HWND, BOOL&) {
 			MessageBox(L"咦，導出的文件找不着了。", L":-(", MB_OK | MB_ICONERROR);
 		}
 		else {
-			std::wstring report(boost::str(boost::wformat(L"導出了 %d 條記錄。") % result));
+			std::wstring report(L"導出了 " + std::to_wstring(result) + L" 條記錄。");
 			MessageBox(report.c_str(), L":-)", MB_OK | MB_ICONINFORMATION);
 			std::wstring param = L"/select, \"" + std::wstring(dlg.m_szFileName) + L"\"";
 			ShellExecute(NULL, L"open", L"explorer.exe", param.c_str(), NULL, SW_SHOWNORMAL);
@@ -149,7 +148,7 @@ LRESULT DictManagementDialog::OnImport(WORD, WORD code, HWND, BOOL&) {
 			MessageBox(L"不知哪裏出錯了，未能完成操作。", L":-(", MB_OK | MB_ICONERROR);
 		}
 		else {
-			std::wstring report(boost::str(boost::wformat(L"導入了 %d 條記錄。") % result));
+			std::wstring report(L"導入了 " + std::to_wstring(result) + L" 條記錄。");
 			MessageBox(report.c_str(), L":-)", MB_OK | MB_ICONINFORMATION);
 		}
 	}

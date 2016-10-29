@@ -9,9 +9,8 @@
 #include <RimeWithWeasel.h>
 #include <WeaselUtility.h>
 #include <winsparkle.h>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <functional>
+#include <memory>
 
 CAppModule _Module;
 
@@ -65,7 +64,7 @@ protected:
 
 	weasel::Server m_server;
 	weasel::UI m_ui;
-	boost::scoped_ptr<RimeWithWeaselHandler> m_handler;
+	std::unique_ptr<RimeWithWeaselHandler> m_handler;
 };
 
 WeaselServerApp::WeaselServerApp()
@@ -102,17 +101,17 @@ int WeaselServerApp::Run()
 void WeaselServerApp::SetupMenuHandlers()
 {
 	std::wstring dir(install_dir());
-	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, boost::lambda::bind(&weasel::Server::Stop, boost::ref(m_server)) == 0);
-	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
-	m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring()));
-	m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/dict")));
-	m_server.AddMenuHandler(ID_WEASELTRAY_SYNC, boost::lambda::bind(&execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/sync")));
-	m_server.AddMenuHandler(ID_WEASELTRAY_WIKI, boost::lambda::bind(&open, L"https://github.com/rime/home/wiki/UserGuide"));
-	m_server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, boost::lambda::bind(&open, L"http://rime.github.io/"));
-	m_server.AddMenuHandler(ID_WEASELTRAY_FORUM, boost::lambda::bind(&open, L"http://tieba.baidu.com/f?kw=rime"));
+	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, [this] { return m_server.Stop() == 0; });
+	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
+	m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring()));
+	m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/dict")));
+	m_server.AddMenuHandler(ID_WEASELTRAY_SYNC, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/sync")));
+	m_server.AddMenuHandler(ID_WEASELTRAY_WIKI, std::bind(open, L"https://github.com/rime/home/wiki/UserGuide"));
+	m_server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, std::bind(open, L"http://rime.im/"));
+	m_server.AddMenuHandler(ID_WEASELTRAY_FORUM, std::bind(open, L"http://tieba.baidu.com/f?kw=rime"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);
-	m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, boost::lambda::bind(&explore, dir));
-	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, boost::lambda::bind(&explore, WeaselUserDataPath()));
+	m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, std::bind(explore, dir));
+	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, std::bind(explore, WeaselUserDataPath()));
 }
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)

@@ -2,9 +2,8 @@
 #include <WeaselCommon.h>
 #include <windows.h>
 #include <map>
+#include <memory>
 #include <string>
-#include <boost/function.hpp>
-#include <boost/smart_ptr.hpp>
 
 
 namespace weasel
@@ -14,7 +13,7 @@ namespace weasel
 	// 解析server回應文本
 	struct ResponseParser
 	{
-		std::map<std::wstring, boost::shared_ptr<Deserializer> > deserializers;
+		std::map<std::wstring, std::shared_ptr<Deserializer> > deserializers;
 
 		std::wstring* p_commit;
 		Context* p_context;

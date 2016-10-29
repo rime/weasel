@@ -12,12 +12,8 @@
 
 #pragma warning(disable : 4819)
 
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
-#include <boost/format.hpp>
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #pragma warning(default : 4819)
 
-using namespace std;
 using boost::interprocess::wbufferstream;

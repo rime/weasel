@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <StringAlgorithm.hpp>
 #include "Deserializer.h"
 #include "ContextUpdater.h"
 
@@ -20,7 +21,7 @@ ContextUpdater::~ContextUpdater()
 {
 }
 
-void ContextUpdater::Store(Deserializer::KeyType const& k, wstring const& value)
+void ContextUpdater::Store(Deserializer::KeyType const& k, std::wstring const& value)
 {
 	if(!m_pTarget->p_context || k.size() < 2)
 		return;
@@ -44,7 +45,7 @@ void ContextUpdater::Store(Deserializer::KeyType const& k, wstring const& value)
 	}
 }
 
-void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, wstring const& value)
+void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, std::wstring const& value)
 {
 	if(k.size() == 2)
 	{
@@ -56,8 +57,8 @@ void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, wstring c
 	{
 		if (k[2] == L"cursor")
 		{
-			vector<wstring> vec;
-			split(vec, value, is_any_of(L","));
+			std::vector<std::wstring> vec;
+			split(vec, value, L",");
 			if (vec.size() < 2)
 				return;
 
@@ -72,7 +73,7 @@ void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, wstring c
 	}
 }
 
-void ContextUpdater::_StoreCand(Deserializer::KeyType k, wstring const& value)
+void ContextUpdater::_StoreCand(Deserializer::KeyType k, std::wstring const& value)
 {
 	CandidateInfo& cinfo = m_pTarget->p_context->cinfo;
 	if(k.size() < 3)
@@ -92,8 +93,8 @@ void ContextUpdater::_StoreCand(Deserializer::KeyType k, wstring const& value)
 	}
 	if (k[2] == L"page")
 	{
-		vector<wstring> vec;
-		split(vec, value, is_any_of(L"/"));
+		std::vector<std::wstring> vec;
+		split(vec, value, L"/");
 		if (vec.size() == 0)
 			return;
 		int i = _wtoi(vec[0].c_str());
@@ -125,7 +126,7 @@ StatusUpdater::~StatusUpdater()
 {
 }
 
-void StatusUpdater::Store(Deserializer::KeyType const& k, wstring const& value)
+void StatusUpdater::Store(Deserializer::KeyType const& k, std::wstring const& value)
 {
 	if(!m_pTarget->p_status || k.size() < 2)
 		return;

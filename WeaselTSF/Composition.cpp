@@ -268,12 +268,12 @@ BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const weasel::Context &
 void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 {
 	// get commit string from server
-	wstring commit;
+	std::wstring commit;
 	weasel::Status status;
 	weasel::Context context;
 	weasel::Config config;
 	weasel::ResponseParser parser(&commit, &context, &status, &config);
-	bool ok = m_client.GetResponseData(boost::ref(parser));
+	bool ok = m_client.GetResponseData(std::ref(parser));
 
 	if (ok)
 	{

@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <WeaselCommon.h>
 #include <windows.h>
-#include <boost/function.hpp>
+#include <functional>
 
 #define WEASEL_IPC_WINDOW L"WeaselIPCWindow_1.0"
 #define WEASEL_IPC_SHARED_MEMORY "WeaselIPCSharedMemory_1.0"
@@ -75,10 +75,10 @@ namespace weasel
 	};
 	
 	// 處理server端回應之物件
-	typedef boost::function<bool (LPWSTR buffer, UINT length)> ResponseHandler;
+	typedef std::function<bool (LPWSTR buffer, UINT length)> ResponseHandler;
 	
 	// 事件處理函數
-	typedef boost::function<bool ()> CommandHandler;
+	typedef std::function<bool ()> CommandHandler;
 
 	// 啟動服務進程之物件
 	typedef CommandHandler ServerLauncher;

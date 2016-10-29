@@ -19,7 +19,7 @@ Committer::~Committer()
 {
 }
 
-void Committer::Store(Deserializer::KeyType const& key, wstring const& value)
+void Committer::Store(Deserializer::KeyType const& key, std::wstring const& value)
 {
 	if (!m_pTarget->p_commit)
 		return;

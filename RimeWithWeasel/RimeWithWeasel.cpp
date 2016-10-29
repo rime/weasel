@@ -1,14 +1,13 @@
 ﻿#include "stdafx.h"
 #include <logging.h>
 #include <RimeWithWeasel.h>
+#include <StringAlgorithm.hpp>
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
+#include <algorithm>
 #include <list>
 #include <set>
 #include <string>
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
-#include <boost/format.hpp>
 
 #pragma warning(disable: 4005)
 #include <rime_api.h>
@@ -219,13 +218,14 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 		if (line == L".")
 			break;
 		const std::wstring kClientAppKey = L"session.client_app=";
-		if (boost::starts_with(line, kClientAppKey))
+		if (starts_with(line, kClientAppKey))
 		{
-			app_name = wcstoutf8(line.substr(kClientAppKey.length()).c_str());
-			boost::to_lower(app_name);
+			std::wstring lwr = line;
+			to_lower(lwr);
+			app_name = wcstoutf8(lwr.substr(kClientAppKey.length()).c_str());
 		}
 		const std::wstring kClientTypeKey = L"session.client_type=";
-		if (boost::starts_with(line, kClientTypeKey))
+		if (starts_with(line, kClientTypeKey))
 		{
 			client_type = wcstoutf8(line.substr(kClientTypeKey.length()).c_str());
 		}
@@ -238,11 +238,11 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 		if (m_app_options.find(app_name) != m_app_options.end())
 		{
 			AppOptions& options(m_app_options[app_name]);
-			for (AppOptions::const_iterator it = options.begin(); it != options.end(); ++it)
+			std::for_each(options.begin(), options.end(), [session_id](std::pair<const std::string, bool> &pair)
 			{
-				DLOG(INFO) << "set app option: " << it->first << " = " << it->second;
-				RimeSetOption(session_id, it->first.c_str(), Bool(it->second));
-			}
+				DLOG(INFO) << "set app option: " << pair.first << " = " << pair.second;
+				RimeSetOption(session_id, pair.first.c_str(), Bool(pair.second));
+			});
 		}
 	}
 	// ime | tsf
@@ -436,7 +436,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	if (RimeGetCommit(session_id, &commit))
 	{
 		actions.insert("commit");
-		messages.push_back(boost::str(boost::format("commit=%s\n") % commit.text));
+		messages.push_back(std::string("commit=") + commit.text + '\n');
 		RimeFreeCommit(&commit);
 	}
 	
@@ -446,9 +446,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	{
 		is_composing = !!status.is_composing;
 		actions.insert("status");
-		messages.push_back(boost::str(boost::format("status.ascii_mode=%d\n") % status.is_ascii_mode));
-		messages.push_back(boost::str(boost::format("status.composing=%d\n") % status.is_composing));
-		messages.push_back(boost::str(boost::format("status.disabled=%d\n") % status.is_disabled));
+		messages.push_back(std::string("status.ascii_mode=") + std::to_string(status.is_ascii_mode) + '\n');
+		messages.push_back(std::string("status.composing=") + std::to_string(status.is_composing) + '\n');
+		messages.push_back(std::string("status.disabled=") + std::to_string(status.is_disabled) + '\n');
 		RimeFreeStatus(&status);
 	}
 	
@@ -458,12 +458,12 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 		if (is_composing)
 		{
 			actions.insert("ctx");
-			messages.push_back(boost::str(boost::format("ctx.preedit=%s\n") % ctx.composition.preedit));
+			messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
 			if (ctx.composition.sel_start <= ctx.composition.sel_end)
 			{
-				messages.push_back(boost::str(boost::format("ctx.preedit.cursor=%d,%d\n") %
-					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start) %
-					utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)));
+				messages.push_back(std::string("ctx.preedit.cursor=") +
+					std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start)) + ',' +
+					std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + '\n');
 			}
 		}
 		RimeFreeContext(&ctx);
@@ -471,7 +471,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 
 	// configuration information
 	actions.insert("config");
-	messages.push_back(boost::str(boost::format("config.inline_preedit=%d\n") % (int) m_ui->style().inline_preedit));
+	messages.push_back(std::string("config.inline_preedit=") + std::to_string((int) m_ui->style().inline_preedit) + '\n');
 
 	// summarize
 
@@ -481,8 +481,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	}
 	else
 	{
-		std::string actionList(boost::join(actions, ","));
-		messages.insert(messages.begin(), boost::str(boost::format("action=%s\n") % actionList));
+		std::string actionList(join(actions, ","));
+		messages.insert(messages.begin(), std::string("action=") + actionList + '\n');
 	}
 
 	messages.push_back(std::string(".\n"));
@@ -492,7 +492,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 	memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
 	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
 
-	BOOST_FOREACH(const std::string &msg, messages)
+	return std::all_of(messages.begin(), messages.end(), [&bs](std::string &msg)
 	{
 		bs << utf8towcs(msg.c_str());
 		if (!bs.good())
@@ -500,9 +500,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 			// response text toooo long!
 			return false;
 		}
-	}
-
-	return true;
+		else
+			return true;
+	});
 }
 
 static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
