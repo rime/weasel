@@ -9,7 +9,7 @@
 
 授權條款：GPLv3
 
-項目主葉：http://rime.im/
+項目主頁：http://rime.im/
 
 您可能還需要 RIME 用於其他操作系統的發行版：
   * 【中州韻】用於 Linux + IBus 輸入法框架
@@ -102,13 +102,13 @@
 問題與反饋
 ----------
 
-發現程序有BUG，或建議，或感想，請到Rime項目網站[反饋] (https://github.com/rime/weasel/issues)。
+發現程序有BUG，或建議，或感想，請到Rime項目網站[反饋] (https://github.com/rime/weasel/issues) 。
 
 已知問題
 --------
 
   * 不支持 Windows 命令行和全屏遊戲
-  * 不兼容 Modern UI 模式（[#13] (https://github.com/rime/weasel/issues/13)、[#57] (https://github.com/rime/weasel/issues/57)）
+  * 不兼容 Modern UI 模式（[#13] (https://github.com/rime/weasel/issues/13) 、[#57] (https://github.com/rime/weasel/issues/57) ）
 
 聯繫方式
 --------
