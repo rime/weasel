@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "WeaselServerImpl.h"
 #include <Windows.h>
+#include <ShellScalingApi.h>
 
 using namespace weasel;
 
@@ -151,8 +152,21 @@ int ServerImpl::Stop()
 	return 0;
 }
 
+//void Test()
+//{
+//	RECT rc = { 100, 100, 200, 200 };
+//	POINT lt = { rc.left, rc.top };
+//	POINT rb = { rc.right, rc.bottom };
+//	PhysicalToLogicalPointForPerMonitorDPI(NULL, &lt);
+//	PhysicalToLogicalPointForPerMonitorDPI(NULL, &rb);
+//	RECT newRc = { lt.x, lt.y, rb.x, rb.y };
+//
+//	newRc.left += 1;
+//}
+
 int ServerImpl::Run()
 {
+//	Test();
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
 	int nRet = theLoop.Run();
@@ -234,7 +248,13 @@ LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lPara
 	int height = ((wParam >> 24) & 0x7f) << hi_res;
 	rc.right = rc.left + width;
 	rc.bottom = rc.top + height;
-	m_pRequestHandler->UpdateInputPosition(rc, lParam);
+
+	POINT lt = { rc.left, rc.top };
+	POINT rb = { rc.right, rc.bottom };
+	PhysicalToLogicalPointForPerMonitorDPI(NULL, &lt);
+	PhysicalToLogicalPointForPerMonitorDPI(NULL, &rb);
+
+	m_pRequestHandler->UpdateInputPosition({ lt.x, lt.y, rb.x, rb.y }, lParam);
 	return 0;
 }
 
