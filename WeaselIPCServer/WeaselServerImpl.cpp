@@ -152,21 +152,8 @@ int ServerImpl::Stop()
 	return 0;
 }
 
-//void Test()
-//{
-//	RECT rc = { 100, 100, 200, 200 };
-//	POINT lt = { rc.left, rc.top };
-//	POINT rb = { rc.right, rc.bottom };
-//	PhysicalToLogicalPointForPerMonitorDPI(NULL, &lt);
-//	PhysicalToLogicalPointForPerMonitorDPI(NULL, &rb);
-//	RECT newRc = { lt.x, lt.y, rb.x, rb.y };
-//
-//	newRc.left += 1;
-//}
-
 int ServerImpl::Run()
 {
-//	Test();
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
 	int nRet = theLoop.Run();

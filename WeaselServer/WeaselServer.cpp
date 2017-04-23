@@ -1,6 +1,6 @@
 ﻿// WeaselServer.cpp : main source file for WeaselServer.exe
 //
-//	WTL MessageLoop ��װ����Ϣѭ��. ʵ���� getmessage/dispatchmessage....
+//	WTL MessageLoop 封装了消息循环. 实现了 getmessage/dispatchmessage....
 
 #include "stdafx.h"
 #include "resource.h"
@@ -119,7 +119,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR 
 {
     UNREFERENCED_PARAMETER(hInstance);
 
-	// ��ֹ������̿������뷨
+	// 防止服务进程开启输入法
 	ImmDisableIME(-1);
 
 	{
