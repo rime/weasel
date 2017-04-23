@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
+#include "WeaselServer.h"
 #include <WeaselIPC.h>
 #include <WeaselUI.h>
 #include <RimeWithWeasel.h>
@@ -11,9 +12,9 @@
 #include <winsparkle.h>
 #include <functional>
 #include <memory>
+#include <shellapi.h>
 
 CAppModule _Module;
-
 
 class WeaselServerApp {
 public:
@@ -46,7 +47,7 @@ public:
 
 	static std::wstring install_dir()
 	{
-		WCHAR exe_path[MAX_PATH] = {0};
+		WCHAR exe_path[MAX_PATH] = { 0 };
 		GetModuleFileNameW(GetModuleHandle(NULL), exe_path, _countof(exe_path));
 		std::wstring dir(exe_path);
 		size_t pos = dir.find_last_of(L"\\");
@@ -114,13 +115,15 @@ void WeaselServerApp::SetupMenuHandlers()
 	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, std::bind(explore, WeaselUserDataPath()));
 }
 
-int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
+int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
+    UNREFERENCED_PARAMETER(hInstance);
+
 	// 防止服务进程开启输入法
 	ImmDisableIME(-1);
 
 	{
-		WCHAR user_name[20] = {0};
+		WCHAR user_name[20] = { 0 };
 		DWORD size = _countof(user_name);
 		GetUserName(user_name, &size);
 		if (!_wcsicmp(user_name, L"SYSTEM"))
