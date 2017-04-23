@@ -42,7 +42,7 @@
 
 修改詞庫、配置文件後，須「重新部署」方可生效。
 
-定製 Rime 的方法，請參考 Wiki [《定製指南》] (https://github.com/rime/home/wiki/CustomizationGuide)
+定製 Rime 的方法，請參考 Wiki [《定製指南》](https://github.com/rime/home/wiki/CustomizationGuide)
 
 致謝
 ----
@@ -102,23 +102,17 @@
 問題與反饋
 ----------
 
-發現程序有BUG，或建議，或感想，請到Rime項目網站[反饋] (https://github.com/rime/weasel/issues)。
+發現程序有BUG，或建議，或感想，請到Rime項目網站 [反饋] (https://github.com/rime/weasel/issues) 。
 
 已知問題
 --------
 
   * 不支持 Windows 命令行和全屏遊戲
-  * 不兼容 Modern UI 模式（[#13] (https://github.com/rime/weasel/issues/13)、[#57] (https://github.com/rime/weasel/issues/57)）
+  * 不兼容 Modern UI 模式（ [#13] (https://github.com/rime/weasel/issues/13) 、 [#57] (https://github.com/rime/weasel/issues/57) ）
 
 聯繫方式
 --------
 
-技術交流請寄 Rime 開發者 <rime-devel@googlegroups.com>
-
-或登錄 網上論壇：
-http://groups.google.com/group/rime-devel
-
-討論 Rime 輸入法的用法或其他相關話題，也可來訪 Rime 貼吧：
-http://tieba.baidu.com/f?kw=rime
+技術交流請寄 Rime 開發者 <rimeime@gmail.com>
 
 謝謝！
