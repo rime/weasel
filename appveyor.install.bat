@@ -9,6 +9,7 @@ git submodule init
 git submodule update brise
 appveyor DownloadFile https://ci.appveyor.com/api/projects/lotem/librime/artifacts/rime.zip
 7z x rime.zip * -olibrime\ | find "ing archive"
+copy /Y librime\build\include\rime_*.h include\
 copy /Y librime\build\lib\Release\rime.dll output\
 ren weasel-appveyor.props weasel.props
 
