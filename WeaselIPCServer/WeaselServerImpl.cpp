@@ -6,6 +6,7 @@ using namespace weasel;
 
 extern CAppModule _Module;
 
+typedef BOOL(STDAPICALLTYPE * PhysicalToLogicalPointForPerMonitorDPI_API)(HWND, LPPOINT);
 
 SharedMemory::SharedMemory()
 {
@@ -34,7 +35,7 @@ LPWSTR SharedMemory::GetBuffer()
 }
 
 ServerImpl::ServerImpl()
-: m_pRequestHandler(NULL), m_pSharedMemory()
+: m_pRequestHandler(NULL), m_pSharedMemory(), m_hUser32Module(NULL)
 {
 }
 
@@ -132,6 +133,8 @@ int ServerImpl::Start()
 		FreeLibrary(hMod);
 	}
 
+    m_hUser32Module = ::LoadLibrary(_T("user32.dll"));
+
 	return (int)hwnd;
 }
 
@@ -141,6 +144,10 @@ int ServerImpl::Stop()
 	{
 		m_pSharedMemory.reset();
 	}
+    if (m_hUser32Module != NULL)
+    {
+        FreeLibrary(m_hUser32Module);
+    }
 	if (!IsWindow())
 	{
 		return 0;
@@ -234,6 +241,20 @@ LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lPara
 	int height = ((wParam >> 24) & 0x7f) << hi_res;
 	rc.right = rc.left + width;
 	rc.bottom = rc.top + height;
+
+    if (m_hUser32Module != NULL)
+    {
+        PhysicalToLogicalPointForPerMonitorDPI_API p2lPonit = (PhysicalToLogicalPointForPerMonitorDPI_API)::GetProcAddress(m_hUser32Module, "PhysicalToLogicalPointForPerMonitorDPI");
+        if (p2lPonit)
+        {
+            POINT lt = { rc.left, rc.top };
+            POINT rb = { rc.right, rc.bottom };
+            p2lPonit(NULL, &lt);
+            p2lPonit(NULL, &rb);
+            rc = { lt.x, lt.y, rb.x, rb.y };
+        }
+    }
+
 	m_pRequestHandler->UpdateInputPosition(rc, lParam);
 	return 0;
 }

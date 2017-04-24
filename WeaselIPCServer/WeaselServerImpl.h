@@ -88,6 +88,7 @@ namespace weasel
 		RequestHandler *m_pRequestHandler;  // reference
 		std::map<UINT, CommandHandler> m_MenuHandlers;
 		std::unique_ptr<SharedMemory> m_pSharedMemory;
-	};
+        HMODULE m_hUser32Module;
+    };
 
 }
