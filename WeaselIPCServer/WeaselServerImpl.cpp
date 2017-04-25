@@ -70,9 +70,9 @@ LRESULT ServerImpl::OnQueryEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lPa
 LRESULT ServerImpl::OnEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	if (m_pRequestHandler)
-    {
-        m_pRequestHandler->Finalize();
-    }
+	{
+		m_pRequestHandler->Finalize();
+	}
 	return 0;
 }
 
@@ -133,7 +133,7 @@ int ServerImpl::Start()
 		FreeLibrary(hMod);
 	}
 
-    m_hUser32Module = ::LoadLibrary(_T("user32.dll"));
+	m_hUser32Module = ::LoadLibrary(_T("user32.dll"));
 
 	return (int)hwnd;
 }
@@ -144,10 +144,10 @@ int ServerImpl::Stop()
 	{
 		m_pSharedMemory.reset();
 	}
-    if (m_hUser32Module != NULL)
-    {
-        FreeLibrary(m_hUser32Module);
-    }
+	if (m_hUser32Module != NULL)
+	{
+		FreeLibrary(m_hUser32Module);
+	}
 	if (!IsWindow())
 	{
 		return 0;
@@ -242,18 +242,18 @@ LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lPara
 	rc.right = rc.left + width;
 	rc.bottom = rc.top + height;
 
-    if (m_hUser32Module != NULL)
-    {
-        PhysicalToLogicalPointForPerMonitorDPI_API p2lPonit = (PhysicalToLogicalPointForPerMonitorDPI_API)::GetProcAddress(m_hUser32Module, "PhysicalToLogicalPointForPerMonitorDPI");
-        if (p2lPonit)
-        {
-            POINT lt = { rc.left, rc.top };
-            POINT rb = { rc.right, rc.bottom };
-            p2lPonit(NULL, &lt);
-            p2lPonit(NULL, &rb);
-            rc = { lt.x, lt.y, rb.x, rb.y };
-        }
-    }
+	if (m_hUser32Module != NULL)
+	{
+		PhysicalToLogicalPointForPerMonitorDPI_API p2lPonit = (PhysicalToLogicalPointForPerMonitorDPI_API)::GetProcAddress(m_hUser32Module, "PhysicalToLogicalPointForPerMonitorDPI");
+		if (p2lPonit)
+		{
+			POINT lt = { rc.left, rc.top };
+			POINT rb = { rc.right, rc.bottom };
+			p2lPonit(NULL, &lt);
+			p2lPonit(NULL, &rb);
+			rc = { lt.x, lt.y, rb.x, rb.y };
+		}
+	}
 
 	m_pRequestHandler->UpdateInputPosition(rc, lParam);
 	return 0;
