@@ -6,8 +6,8 @@
 #pragma once
 
 // Change these values to use different versions
-#define WINVER		0x0500
-#define _WIN32_WINNT	0x0501
+#define WINVER		0x06030000
+#define _WIN32_WINNT	0x06030000
 #define _WIN32_IE	0x0501
 #define _RICHEDIT_VER	0x0200
 
@@ -23,6 +23,8 @@
 #endif // _WTL_SUPPORT_SDK_ATL3
 
 #include <atl.h>
+
+
 
 // Support for VS2005 Express & SDK ATL
 #ifdef _WTL_SUPPORT_SDK_ATL3
@@ -48,5 +50,8 @@
 #include <wtl/atldlgs.h>
 
 #pragma warning(default : 4996)
+
+#include <ShellScalingAPI.h>
+
 
 extern CAppModule _Module;

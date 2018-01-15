@@ -1,6 +1,11 @@
 Debug/
 Release/
 ReleaseHant/
+/output/*.exp
+/output/*.iobj
+/output/*.ipdb
+/output/*.pdb
+/output/*.lib
 /output/*.exe
 /output/*.dll
 /output/*.ime
@@ -23,4 +28,5 @@ weasel.props
 *~
 .*.swp
 *.swp
+.vs
 Thumbs.db

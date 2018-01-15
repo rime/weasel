@@ -4,6 +4,7 @@
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID pvReserved)
 {
+
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:

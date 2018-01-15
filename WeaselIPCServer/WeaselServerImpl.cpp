@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "WeaselServerImpl.h"
 #include <Windows.h>
+#include <boost/thread.hpp>
 
 using namespace weasel;
 
@@ -8,39 +9,19 @@ extern CAppModule _Module;
 
 typedef BOOL(STDAPICALLTYPE * PhysicalToLogicalPointForPerMonitorDPI_API)(HWND, LPPOINT);
 
-SharedMemory::SharedMemory()
-{
-	boost::interprocess::permissions perms;
-	perms.set_unrestricted();
-	m_pShm.reset(new windows_shared_memory(create_only, 
-										   WEASEL_IPC_SHARED_MEMORY, 
-										   read_write, 
-										   WEASEL_IPC_SHARED_MEMORY_SIZE,
-										   perms));
-	m_pRegion.reset(new mapped_region(*m_pShm, read_write));
-}
-
-SharedMemory::~SharedMemory()
-{
-}
-
-IPCMetadata* SharedMemory::GetMetadata()
-{
-	return reinterpret_cast<IPCMetadata*>(m_pRegion->get_address());
-}
-
-LPWSTR SharedMemory::GetBuffer()
-{
-	return reinterpret_cast<LPWSTR>((char*)m_pRegion->get_address() + WEASEL_IPC_METADATA_SIZE);
-}
 
 ServerImpl::ServerImpl()
-: m_pRequestHandler(NULL), m_pSharedMemory(), m_hUser32Module(NULL)
+: m_pRequestHandler(NULL), m_hUser32Module(NULL)
 {
+	_InitSecurityAttr();
+	//m_pSharedMemory = std::make_unique<SharedMemory>(&_sa);
+	_buffer = std::make_unique<char[]>(WEASEL_IPC_SHARED_MEMORY_SIZE);
 }
 
 ServerImpl::~ServerImpl()
 {
+	Stop();
+	m_pRequestHandler->Finalize();
 }
 
 LRESULT ServerImpl::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -88,35 +69,15 @@ LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	it->second();  // execute command
 	return 0;
 }
-
 extern "C" BOOL ( STDAPICALLTYPE *pChangeWindowMessageFilter )( UINT,DWORD ) = NULL;
 
 int ServerImpl::Start()
 {
 	// assure single instance
-	if (FindWindow(WEASEL_IPC_WINDOW, NULL) != NULL)
-	{
-		return 0;
-	}
-
-	HWND hwnd = Create(NULL);
-	try
-	{
-		m_pSharedMemory.reset(new SharedMemory());
-		IPCMetadata *metadata = m_pSharedMemory->GetMetadata();
-		if (metadata)
-		{
-			metadata->server_hwnd = reinterpret_cast<UINT32>(hwnd);
-			wcsncpy(metadata->server_window_class, WEASEL_IPC_WINDOW, IPCMetadata::WINDOW_CLASS_LENGTH);
-		}
-		else
-			return 0;
-	}
-	catch (interprocess_exception& /*ex*/)
-	{
-		m_pSharedMemory.reset();
-		return 0;
-	}
+	//if (FindWindow(WEASEL_IPC_WINDOW, NULL) != NULL)
+	//{
+	//	return 0;
+	//}
 
 	// 使用「消息免疫過濾」繞過IE9的用戶界面特權隔離機制
 	HMODULE hMod = 0;
@@ -135,73 +96,69 @@ int ServerImpl::Start()
 
 	m_hUser32Module = ::LoadLibrary(_T("user32.dll"));
 
-	return (int)hwnd;
+	return 1;
 }
 
 int ServerImpl::Stop()
 {
-	if (m_pSharedMemory)
-	{
-		m_pSharedMemory.reset();
-	}
 	if (m_hUser32Module != NULL)
 	{
 		FreeLibrary(m_hUser32Module);
 	}
-	if (!IsWindow())
-	{
-		return 0;
-	}
-	DestroyWindow();
-	//quit the server
 	::PostQuitMessage(0);
 	return 0;
 }
 
+
+
 int ServerImpl::Run()
 {
+	boost::thread pipeThread(boost::bind(&ServerImpl::_ListenPipe, this));
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
 	int nRet = theLoop.Run();
 	_Module.RemoveMessageLoop();
-	return nRet;
+	return -1;
 }
 
-LRESULT ServerImpl::OnEcho(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+
+DWORD ServerImpl::OnEcho(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (!m_pRequestHandler)
 		return 0;
 	return m_pRequestHandler->FindSession(lParam);
 }
 
-LRESULT ServerImpl::OnStartSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnStartSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (!m_pRequestHandler)
 		return 0;
-	return m_pRequestHandler->AddSession(m_pSharedMemory->GetBuffer());
+	return m_pRequestHandler->AddSession(reinterpret_cast<LPWSTR>(_buffer.get()));
 }
 
-LRESULT ServerImpl::OnEndSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnEndSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (!m_pRequestHandler)
 		return 0;
 	return m_pRequestHandler->RemoveSession(lParam);
 }
 
-LRESULT ServerImpl::OnKeyEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnKeyEvent(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
-	if (!m_pRequestHandler || !m_pSharedMemory)
+	LPWSTR buffer = reinterpret_cast<LPWSTR>((char *)_buffer.get() + sizeof(DWORD));
+	if (!m_pRequestHandler/* || !m_pSharedMemory*/)
 		return 0;
-	return m_pRequestHandler->ProcessKeyEvent(KeyEvent(wParam), lParam, m_pSharedMemory->GetBuffer());
+	hasResp = true;
+	return m_pRequestHandler->ProcessKeyEvent(KeyEvent(wParam), lParam, buffer);
 }
 
-LRESULT ServerImpl::OnShutdownServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnShutdownServer(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	Stop();
 	return 0;
 }
 
-LRESULT ServerImpl::OnFocusIn(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnFocusIn(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (!m_pRequestHandler)
 		return 0;
@@ -209,7 +166,7 @@ LRESULT ServerImpl::OnFocusIn(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return 0;
 }
 
-LRESULT ServerImpl::OnFocusOut(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnFocusOut(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (!m_pRequestHandler)
 		return 0;
@@ -217,7 +174,7 @@ LRESULT ServerImpl::OnFocusOut(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	return 0;
 }
 
-LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnUpdateInputPosition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (!m_pRequestHandler)
 		return 0;
@@ -259,33 +216,194 @@ LRESULT ServerImpl::OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
-LRESULT ServerImpl::OnStartMaintenance(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnStartMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (m_pRequestHandler)
 		m_pRequestHandler->StartMaintenance();
 	return 0;
 }
 
-LRESULT ServerImpl::OnEndMaintenance(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnEndMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (m_pRequestHandler)
 		m_pRequestHandler->EndMaintenance();
 	return 0;
 }
 
-LRESULT ServerImpl::OnCommitComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnCommitComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (m_pRequestHandler)
 		m_pRequestHandler->CommitComposition(lParam);
 	return 0;
 }
 
-LRESULT ServerImpl::OnClearComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+DWORD ServerImpl::OnClearComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
 {
 	if (m_pRequestHandler)
 		m_pRequestHandler->ClearComposition(lParam);
 	return 0;
 }
+
+#define MAP_PIPE_MSG_HANDLE(__msg, __wParam, __lParam, __handled) {\
+auto lParam = __lParam;\
+auto wParam = __wParam;\
+LRESULT _result;\
+BOOL& _has_resp = __handled;\
+switch (__msg) {\
+
+#define PIPE_MSG_HANDLE(__msg, __func) \
+case __msg:\
+	_result = __func(__msg, wParam, lParam, _has_resp);\
+	break;\
+
+#define END_MAP_PIPE_MSG_HANDLE(__result) }__result = _result; }
+
+void ServerImpl::_HandlePipeMessage(HANDLE _pipe)
+{
+	PipeMessage pipe_msg;
+	LRESULT result = 0;
+	DWORD bytes_read, bytes_written;
+	DWORD write_len;
+
+	for (;;) {
+		auto success = ReadFile(_pipe, (LPVOID)&pipe_msg, sizeof(PipeMessage), &bytes_read, NULL);
+		if (!success)
+		{
+			if ((GetLastError()) != ERROR_MORE_DATA) {
+				break;
+			}
+			memset(_buffer.get(), 0, WEASEL_IPC_BUFFER_SIZE);
+			success = ReadFile(_pipe, _buffer.get(), WEASEL_IPC_BUFFER_SIZE, &bytes_read, NULL);
+			if (!success) {
+				break;
+			}
+		}
+		BOOL has_resp = false;
+		MAP_PIPE_MSG_HANDLE(pipe_msg.Msg, pipe_msg.wParam, pipe_msg.lParam, has_resp)
+			PIPE_MSG_HANDLE(WEASEL_IPC_ECHO, OnEcho)
+			PIPE_MSG_HANDLE(WEASEL_IPC_START_SESSION, OnStartSession)
+			PIPE_MSG_HANDLE(WEASEL_IPC_END_SESSION, OnEndSession)
+			PIPE_MSG_HANDLE(WEASEL_IPC_PROCESS_KEY_EVENT, OnKeyEvent)
+			PIPE_MSG_HANDLE(WEASEL_IPC_SHUTDOWN_SERVER, OnShutdownServer)
+			PIPE_MSG_HANDLE(WEASEL_IPC_FOCUS_IN, OnFocusIn)
+			PIPE_MSG_HANDLE(WEASEL_IPC_FOCUS_OUT, OnFocusOut)
+			PIPE_MSG_HANDLE(WEASEL_IPC_UPDATE_INPUT_POS, OnUpdateInputPosition)
+			PIPE_MSG_HANDLE(WEASEL_IPC_START_MAINTENANCE, OnStartMaintenance)
+			PIPE_MSG_HANDLE(WEASEL_IPC_END_MAINTENANCE, OnEndMaintenance)
+			PIPE_MSG_HANDLE(WEASEL_IPC_COMMIT_COMPOSITION, OnCommitComposition)
+			PIPE_MSG_HANDLE(WEASEL_IPC_CLEAR_COMPOSITION, OnClearComposition);
+		END_MAP_PIPE_MSG_HANDLE(result);
+
+		// 这里本来是用 sizeof(LRESULT)，但是 64 位和 32 位的这个长度不统一。
+		write_len = has_resp ? WEASEL_IPC_BUFFER_SIZE + sizeof(DWORD) : sizeof(DWORD);
+		*(DWORD *)_buffer.get() = result;
+		if (!WriteFile(_pipe, _buffer.get(), write_len, &bytes_written, NULL)) {
+			break;
+		}
+		FlushFileBuffers(_pipe);
+	}
+	DisconnectNamedPipe(_pipe);
+	CloseHandle(_pipe);
+}
+
+void ServerImpl::_ListenPipe()
+{
+	DWORD err;
+	for (;;) {
+		HANDLE _pipe = _InitPipe();
+		BOOL connected = ConnectNamedPipe(_pipe, NULL);
+		if (!connected) {
+			err = GetLastError();
+			CloseHandle(_pipe);
+			continue;
+		}
+
+		// 前端的消息是串行的，这里使用线程是为了消息循环不中断
+		boost::thread pipe_t([_pipe, this]() {
+			_HandlePipeMessage(_pipe);
+		});
+	}
+
+}
+
+HANDLE ServerImpl::_InitPipe()
+{
+	auto pipe_name = GetPipeName();
+	HANDLE pipe = CreateNamedPipe(
+		pipe_name.c_str(),
+		PIPE_ACCESS_DUPLEX,
+		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+		PIPE_UNLIMITED_INSTANCES,
+		WEASEL_IPC_SHARED_MEMORY_SIZE,
+		WEASEL_IPC_SHARED_MEMORY_SIZE,
+		0,
+		&_sa);
+
+	return pipe;
+}
+
+// 为了在 winrt 应用中访问到 pipe 而进行权限设置
+
+void weasel::ServerImpl::_InitSecurityAttr()
+{
+	memset(&_ea, 0, sizeof(_ea));
+
+
+	// 对一般 desktop APP 的权限设置
+
+	SID_IDENTIFIER_AUTHORITY worldSidAuthority = SECURITY_WORLD_SID_AUTHORITY;
+	AllocateAndInitializeSid(&worldSidAuthority, 1,
+		SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &_sid_everyone);
+
+	_ea[0].grfAccessPermissions = GENERIC_ALL;
+	_ea[0].grfAccessMode = SET_ACCESS;
+	_ea[0].grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+	_ea[0].Trustee.pMultipleTrustee = NULL;
+	_ea[0].Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+	_ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+	_ea[0].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+	_ea[0].Trustee.ptstrName = (LPTSTR)_sid_everyone;
+
+
+	// 对 winrt (UWP) APP 的权限设置
+
+	SID_IDENTIFIER_AUTHORITY appPackageAuthority = SECURITY_APP_PACKAGE_AUTHORITY;
+	AllocateAndInitializeSid(&appPackageAuthority,
+		SECURITY_BUILTIN_APP_PACKAGE_RID_COUNT,
+		SECURITY_APP_PACKAGE_BASE_RID,
+		SECURITY_BUILTIN_PACKAGE_ANY_PACKAGE,
+		0, 0, 0, 0, 0, 0, &_sid_all_apps);
+
+	_ea[1].grfAccessPermissions = GENERIC_ALL;
+	_ea[1].grfAccessMode = SET_ACCESS;
+	_ea[1].grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+	_ea[1].Trustee.pMultipleTrustee = NULL;
+	_ea[1].Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+	_ea[1].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+	_ea[1].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+	_ea[1].Trustee.ptstrName = (LPTSTR)_sid_all_apps;
+
+	// create DACL
+	DWORD err = SetEntriesInAcl(2, _ea, NULL, &_pacl);
+	if (0 == err) {
+		// security descriptor
+		_pd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+		InitializeSecurityDescriptor(_pd, SECURITY_DESCRIPTOR_REVISION);
+
+		// Add the ACL to the security descriptor. 
+		SetSecurityDescriptorDacl(_pd, TRUE, _pacl, FALSE);
+	}
+
+	_sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	_sa.lpSecurityDescriptor = _pd;
+	_sa.bInheritHandle = TRUE;
+
+}
+
+
+
+
+
 
 // weasel::Server
 

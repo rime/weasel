@@ -2,6 +2,7 @@
 #include <WeaselCommon.h>
 #include <windows.h>
 #include <functional>
+#include <memory>
 
 #define WEASEL_IPC_WINDOW L"WeaselIPCWindow_1.0"
 #define WEASEL_IPC_SHARED_MEMORY "WeaselIPCSharedMemory_1.0"
@@ -9,7 +10,7 @@
 #define WEASEL_IPC_METADATA_SIZE 1024
 #define WEASEL_IPC_BUFFER_SIZE (4 * 1024)
 #define WEASEL_IPC_BUFFER_LENGTH (WEASEL_IPC_BUFFER_SIZE / sizeof(WCHAR))
-#define WEASEL_IPC_SHARED_MEMORY_SIZE (WEASEL_IPC_METADATA_SIZE + WEASEL_IPC_BUFFER_SIZE)
+#define WEASEL_IPC_SHARED_MEMORY_SIZE (sizeof(PipeMessage) + WEASEL_IPC_BUFFER_SIZE)
 
 enum WEASEL_IPC_COMMAND
 {	
@@ -30,6 +31,13 @@ enum WEASEL_IPC_COMMAND
 
 namespace weasel
 {
+	// 为了 32 位 server 和 64 位 TSF 的兼容，这里不用 LPARAM 和 WPARAM
+	// ServerImpl 处也有一样的问题。
+	struct PipeMessage {
+		UINT Msg;
+		UINT wParam;
+		UINT lParam;
+	};
 
 	struct IPCMetadata
 	{
@@ -154,4 +162,26 @@ namespace weasel
 		ServerImpl* m_pImpl;
 	};
 
+	inline std::wstring GetPipeName()
+	{
+		std::wstring pipe_name;
+		DWORD len = 0;
+		GetUserName(NULL, &len);
+
+		if (len <= 0) {
+			return pipe_name;
+		}
+
+		std::unique_ptr<wchar_t[]> username(new wchar_t[len]);
+
+		GetUserName(username.get(), &len);
+		if (len <= 0) {
+			return pipe_name;
+		}
+		pipe_name += L"\\\\.\\pipe\\";
+		pipe_name += username.get();
+		pipe_name += L"\\";
+		pipe_name += WEASEL_IPC_WINDOW;
+		return pipe_name;
+	}
 }

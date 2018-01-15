@@ -116,6 +116,7 @@ void WeaselServerApp::SetupMenuHandlers()
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
+	SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE);
 	// 防止服务进程开启输入法
 	ImmDisableIME(-1);
 

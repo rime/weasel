@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include <WeaselIPC.h>
+#include <RimeWithWeasel.h>
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 using namespace boost::interprocess;
@@ -50,7 +51,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 bool launch_server()
 {
-	int ret = (int)ShellExecute( NULL, L"open", L"TestWeaselIPC.exe", L"/start", NULL, SW_HIDE );
+	int ret = (int)ShellExecute( NULL, L"open", L"TestWeaselIPC.exe", L"/start", NULL, SW_NORMAL);
 	if (ret <= 32)
 	{
 		std::cerr << "failed to launch server." << std::endl;
@@ -112,8 +113,10 @@ int console_main()
 
 int client_main()
 {
+	launch_server();
+	Sleep(1000);
 	weasel::Client client;
-	if (!client.Connect(launch_server))
+	if (!client.Connect())
 	{
 		std::cerr << "failed to connect to server." << std::endl;
 		return -2;
@@ -183,7 +186,10 @@ int server_main()
 	ATLASSERT(SUCCEEDED(hRes));
 
 	weasel::Server server;
+	//weasel::UI ui;
+	//const std::unique_ptr<weasel::RequestHandler> handler(new RimeWithWeaselHandler(&ui));
 	const std::unique_ptr<weasel::RequestHandler> handler(new TestRequestHandler);
+
 	server.SetRequestHandler(handler.get());
 	if (!server.Start())
 		return -4;

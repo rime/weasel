@@ -93,6 +93,12 @@ private:
 	
 	BOOL _InsertText(ITfContext *pContext, const std::wstring& ext);
 
+	bool isImmersive() const {
+		return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;
+	}
+
+
+
 	ITfThreadMgr *_pThreadMgr;
 	TfClientId _tfClientId;
 	DWORD _dwThreadMgrEventSinkCookie;
@@ -116,4 +122,5 @@ private:
 
 	/* Weasel Related */
 	weasel::Client m_client;
+	DWORD _activateFlags;
 };
