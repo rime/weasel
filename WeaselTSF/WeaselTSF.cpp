@@ -150,6 +150,7 @@ STDAPI_(ULONG) WeaselTSF::Release()
 
 STDAPI WeaselTSF::Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId)
 {
+	//((ITfThreadMgr2 *)pThreadMgr)->GetActiveFlags(&_activateFlags);
 	_EnsureServerConnected();
 
 	_pThreadMgr = pThreadMgr;

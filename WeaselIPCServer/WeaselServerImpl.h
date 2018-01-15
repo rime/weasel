@@ -2,27 +2,23 @@
 #include <WeaselIPC.h>
 #include <map>
 #include <memory>
+#include <Winnt.h> // for security attributes constants
+#include <aclapi.h> // for ACL
+
+
+
 
 namespace weasel
 {
 
-	class SharedMemory
-	{
-	public:
-		SharedMemory();
-		~SharedMemory();
-		IPCMetadata* GetMetadata();
-		LPWSTR GetBuffer();
 
-	private:
-		std::shared_ptr<windows_shared_memory> m_pShm;
-		std::shared_ptr<mapped_region> m_pRegion;
-	};
+	#define WEASEL_MSG_HANDLER(__name) DWORD __name (WEASEL_IPC_COMMAND, DWORD, LPARAM, BOOL&);
 
 	typedef CWinTraits<WS_DISABLED, WS_EX_TRANSPARENT> ServerWinTraits;
 
 	class ServerImpl :
 		public CWindowImpl<ServerImpl, CWindow, ServerWinTraits>
+	//class ServerImpl
 	{
 	public:
 		DECLARE_WND_CLASS (WEASEL_IPC_WINDOW)
@@ -34,19 +30,10 @@ namespace weasel
 			MESSAGE_HANDLER(WM_QUERYENDSESSION, OnQueryEndSystemSession)
 			MESSAGE_HANDLER(WM_ENDSESSION, OnEndSystemSession)
 			MESSAGE_HANDLER(WM_COMMAND, OnCommand)
-			MESSAGE_HANDLER(WEASEL_IPC_ECHO, OnEcho)
-			MESSAGE_HANDLER(WEASEL_IPC_START_SESSION, OnStartSession)
-			MESSAGE_HANDLER(WEASEL_IPC_END_SESSION, OnEndSession)
-			MESSAGE_HANDLER(WEASEL_IPC_PROCESS_KEY_EVENT, OnKeyEvent)
-			MESSAGE_HANDLER(WEASEL_IPC_SHUTDOWN_SERVER, OnShutdownServer)
-			MESSAGE_HANDLER(WEASEL_IPC_FOCUS_IN, OnFocusIn)
-			MESSAGE_HANDLER(WEASEL_IPC_FOCUS_OUT, OnFocusOut)
-			MESSAGE_HANDLER(WEASEL_IPC_UPDATE_INPUT_POS, OnUpdateInputPosition)
-			MESSAGE_HANDLER(WEASEL_IPC_START_MAINTENANCE, OnStartMaintenance)
-			MESSAGE_HANDLER(WEASEL_IPC_END_MAINTENANCE, OnEndMaintenance)
-			MESSAGE_HANDLER(WEASEL_IPC_COMMIT_COMPOSITION, OnCommitComposition)
-			MESSAGE_HANDLER(WEASEL_IPC_CLEAR_COMPOSITION, OnClearComposition)
 		END_MSG_MAP()
+		// ������ WindowMessage ����Ϣ��ʱ�������
+		// WPARAM �� LPARAM ����ָ�����ͣ��� 64 λ�� 32 λ�³��Ȳ�һ��
+		// ��Ҫ��д
 
 		LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -54,18 +41,18 @@ namespace weasel
 		LRESULT OnQueryEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnEcho(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnStartSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnEndSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnKeyEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnShutdownServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnFocusIn(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnFocusOut(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnUpdateInputPosition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnStartMaintenance(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnEndMaintenance(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnCommitComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-		LRESULT OnClearComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		DWORD OnEcho(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnStartSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnEndSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnKeyEvent(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnShutdownServer(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnFocusIn(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnFocusOut(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnUpdateInputPosition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnStartMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnEndMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnCommitComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
+		DWORD OnClearComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp);
 
 	public:
 		ServerImpl();
@@ -85,9 +72,24 @@ namespace weasel
 		}
 
 	private:
+		void _ListenPipe();
+		HANDLE _InitPipe();
+		void _HandlePipeMessage(HANDLE _pipe);
+		void _InitSecurityAttr();
+
+		PSECURITY_DESCRIPTOR _pd;
+		SECURITY_ATTRIBUTES _sa;
+		PACL _pacl;
+		EXPLICIT_ACCESS _ea[2];
+		PSID _sid_everyone;
+		PSID _sid_all_apps;
+
+		std::unique_ptr<char[]> _buffer;
+
+
 		RequestHandler *m_pRequestHandler;  // reference
 		std::map<UINT, CommandHandler> m_MenuHandlers;
-		std::unique_ptr<SharedMemory> m_pSharedMemory;
+		//std::unique_ptr<SharedMemory> m_pSharedMemory;
 		HMODULE m_hUser32Module;
 	};
 

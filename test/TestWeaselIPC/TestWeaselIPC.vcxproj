@@ -38,6 +38,7 @@
     <ProjectGuid>{9C1CC4BA-18FF-4890-908E-E545881C5586}</ProjectGuid>
     <RootNamespace>TestWeaselIPC</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|Win32'" Label="Configuration">
@@ -62,7 +63,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseOfAtl>false</UseOfAtl>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -86,7 +87,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseOfAtl>false</UseOfAtl>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -140,7 +141,7 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|Win32'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
@@ -167,6 +168,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage\lib;$(PYTHON_HOME)\libs;$(SolutionDir)\librime\build\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>imm32.lib;usp10.lib;rime.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -249,6 +252,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage_x64\lib;$(PYTHON_HOME)\libs;$(SolutionDir)\librime\build\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -341,6 +345,9 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\RimeWithWeasel\RimeWithWeasel.vcxproj">
+      <Project>{1c497821-bd63-4f02-9094-32b185b62f23}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\WeaselIPCServer\WeaselIPCServer.vcxproj">
       <Project>{26930622-cfa2-43df-a9f3-4aa4a313b2a4}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -348,6 +355,9 @@
     <ProjectReference Include="..\..\WeaselIPC\WeaselIPC.vcxproj">
       <Project>{ce11a2df-8d20-4b07-a935-4b0d03f0303d}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\WeaselUI\WeaselUI.vcxproj">
+      <Project>{10b3b8bf-7294-4661-9a8a-2ffc920fa2f4}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
