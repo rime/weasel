@@ -202,7 +202,7 @@ void WeaselTSF::_SetCompositionPosition(const RECT &rc)
 class CInlinePreeditEditSession: public CEditSession
 {
 public:
-	CInlinePreeditEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, const weasel::Context &context)
+	CInlinePreeditEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, const std::shared_ptr<weasel::Context> context)
 		: CEditSession(pTextService, pContext), _pComposition(pComposition), _context(context)
 	{
 	}
@@ -212,12 +212,12 @@ public:
 
 private:
 	ITfComposition *_pComposition;
-	const weasel::Context &_context;
+	const std::shared_ptr<weasel::Context> _context;
 };
 
 STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 {
-	std::wstring preedit = _context.preedit.str;
+	std::wstring preedit = _context->preedit.str;
 
 	ITfRange *pRangeComposition = NULL;
 	if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
@@ -227,11 +227,11 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 		goto Exit;
 
 	int sel_start = 0, sel_end = 0; /* TODO: Check the availability and correctness of these values */
-	for (int i = 0; i < _context.preedit.attributes.size(); i++)
-		if (_context.preedit.attributes.at(i).type == weasel::HIGHLIGHTED)
+	for (int i = 0; i < _context->preedit.attributes.size(); i++)
+		if (_context->preedit.attributes.at(i).type == weasel::HIGHLIGHTED)
 		{
-			sel_start = _context.preedit.attributes.at(i).range.start;
-			sel_end = _context.preedit.attributes.at(i).range.end;
+			sel_start = _context->preedit.attributes.at(i).range.start;
+			sel_end = _context->preedit.attributes.at(i).range.end;
 			break;
 		}
 
@@ -252,7 +252,7 @@ Exit:
 	return S_OK;
 }
 
-BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const weasel::Context &context)
+BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const std::shared_ptr<weasel::Context> context)
 {
 	CInlinePreeditEditSession *pEditSession;
 	if ((pEditSession = new CInlinePreeditEditSession(this, pContext, _pComposition, context)) != NULL)
@@ -270,9 +270,12 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 	// get commit string from server
 	std::wstring commit;
 	weasel::Status status;
-	weasel::Context context;
 	weasel::Config config;
-	weasel::ResponseParser parser(&commit, &context, &status, &config);
+
+	auto context = std::make_shared<weasel::Context>();
+
+	weasel::ResponseParser parser(&commit, context.get(), &status, &config);
+
 	bool ok = m_client.GetResponseData(std::ref(parser));
 
 	if (ok)
