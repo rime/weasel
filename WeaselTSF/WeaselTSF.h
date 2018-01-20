@@ -60,7 +60,7 @@ public:
 	/* Composition */
 	void _StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnabled);
 	void _EndComposition(ITfContext *pContext);
-	BOOL _ShowInlinePreedit(ITfContext *pContext, const weasel::Context &context);
+	BOOL _ShowInlinePreedit(ITfContext * pContext, const std::shared_ptr<weasel::Context> context);
 	void _UpdateComposition(ITfContext *pContext);
 	BOOL _IsComposing();
 	void _SetComposition(ITfComposition *pComposition);
