@@ -14,66 +14,66 @@ static void error_message(const WCHAR *msg)
 	}
 }
 
-static bool launch_server()
-{
-	// 從註冊表取得server位置
-	HKEY hKey;
-	LSTATUS ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 0, KEY_READ | KEY_WOW64_32KEY, &hKey);
-	if (ret != ERROR_SUCCESS)
-	{
-		error_message(L"註冊表信息無影了");
-		return false;
-	}
-
-	WCHAR value[MAX_PATH];
-	DWORD len = sizeof(value);
-	DWORD type = 0;
-	ret = RegQueryValueEx(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
-	if (ret != ERROR_SUCCESS)
-	{
-		error_message(L"未設置 WeaselRoot");
-		RegCloseKey(hKey);
-		return false;
-	}
-	wpath weaselRoot(value);
-
-	len = sizeof(value);
-	type = 0;
-	ret = RegQueryValueEx(hKey, L"ServerExecutable", NULL, &type, (LPBYTE)value, &len);
-	if (ret != ERROR_SUCCESS)
-	{
-		error_message(L"未設置 ServerExecutable");
-		RegCloseKey(hKey);
-		return false;
-	}
-	wpath serverPath(weaselRoot / value);
-
-	RegCloseKey(hKey);
-
-	// 啓動服務進程
-	std::wstring exe = serverPath.wstring();
-	std::wstring dir = weaselRoot.wstring();
-
-	STARTUPINFO startup_info = {0};
-	PROCESS_INFORMATION process_info = {0};
-	startup_info.cb = sizeof(startup_info);
-
-	if (!CreateProcess(exe.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, dir.c_str(), &startup_info, &process_info))
-	{
-	//	EZDBGONLYLOGGERPRINT("ERROR: failed to launch weasel server.");
-		error_message(L"服務進程啓動不起來 :(");
-		return false;
-	}
-
-	if (!WaitForInputIdle(process_info.hProcess, 1500))
-	{
-//		EZDBGONLYLOGGERPRINT("WARNING: WaitForInputIdle() timed out; succeeding IPC messages might not be delivered.");
-	}
-	if (process_info.hProcess) CloseHandle(process_info.hProcess);
-	if (process_info.hThread) CloseHandle(process_info.hThread);
-
-	return true;
-}
+//static bool launch_server()
+//{
+//	// 從註冊表取得server位置
+//	HKEY hKey;
+//	LSTATUS ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 0, KEY_READ | KEY_WOW64_32KEY, &hKey);
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		error_message(L"註冊表信息無影了");
+//		return false;
+//	}
+//
+//	WCHAR value[MAX_PATH];
+//	DWORD len = sizeof(value);
+//	DWORD type = 0;
+//	ret = RegQueryValueEx(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		error_message(L"未設置 WeaselRoot");
+//		RegCloseKey(hKey);
+//		return false;
+//	}
+//	wpath weaselRoot(value);
+//
+//	len = sizeof(value);
+//	type = 0;
+//	ret = RegQueryValueEx(hKey, L"ServerExecutable", NULL, &type, (LPBYTE)value, &len);
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		error_message(L"未設置 ServerExecutable");
+//		RegCloseKey(hKey);
+//		return false;
+//	}
+//	wpath serverPath(weaselRoot / value);
+//
+//	RegCloseKey(hKey);
+//
+//	// 啓動服務進程
+//	std::wstring exe = serverPath.wstring();
+//	std::wstring dir = weaselRoot.wstring();
+//
+//	STARTUPINFO startup_info = {0};
+//	PROCESS_INFORMATION process_info = {0};
+//	startup_info.cb = sizeof(startup_info);
+//
+//	if (!CreateProcess(exe.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, dir.c_str(), &startup_info, &process_info))
+//	{
+//	//	EZDBGONLYLOGGERPRINT("ERROR: failed to launch weasel server.");
+//		error_message(L"服務進程啓動不起來 :(");
+//		return false;
+//	}
+//
+//	if (!WaitForInputIdle(process_info.hProcess, 1500))
+//	{
+////		EZDBGONLYLOGGERPRINT("WARNING: WaitForInputIdle() timed out; succeeding IPC messages might not be delivered.");
+//	}
+//	if (process_info.hProcess) CloseHandle(process_info.hProcess);
+//	if (process_info.hThread) CloseHandle(process_info.hThread);
+//
+//	return true;
+//}
 
 WeaselTSF::WeaselTSF()
 {
@@ -216,7 +216,7 @@ void WeaselTSF::_EnsureServerConnected()
 {
 	if (!m_client.Echo())
 	{
-		m_client.Connect(launch_server);
+		m_client.Connect(NULL);
 		m_client.StartSession();
 	}
 }

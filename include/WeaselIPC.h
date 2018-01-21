@@ -5,7 +5,7 @@
 #include <memory>
 
 #define WEASEL_IPC_WINDOW L"WeaselIPCWindow_1.0"
-#define WEASEL_IPC_SHARED_MEMORY "WeaselIPCSharedMemory_1.0"
+#define WEASEL_IPC_PIPE_NAME L"WeaselNamedPipe"
 
 #define WEASEL_IPC_METADATA_SIZE 1024
 #define WEASEL_IPC_BUFFER_SIZE (4 * 1024)
@@ -179,9 +179,7 @@ namespace weasel
 			return pipe_name;
 		}
 		pipe_name += L"\\\\.\\pipe\\";
-		pipe_name += username.get();
-		pipe_name += L"\\";
-		pipe_name += WEASEL_IPC_WINDOW;
+		pipe_name += WEASEL_IPC_PIPE_NAME;
 		return pipe_name;
 	}
 }
