@@ -12,107 +12,9 @@
 #include <functional>
 #include <memory>
 
+#include "WeaselService.h"
+
 CAppModule _Module;
-
-
-class WeaselServerApp {
-public:
-	static bool execute(const std::wstring &cmd, const std::wstring &args)
-	{
-		return (int)ShellExecuteW(NULL, NULL, cmd.c_str(), args.c_str(), NULL, SW_SHOWNORMAL) > 32;
-	}
-
-	static bool explore(const std::wstring &path)
-	{
-		return (int)ShellExecuteW(NULL, L"explore", path.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32;
-	}
-
-	static bool open(const std::wstring &path)
-	{
-		return (int)ShellExecuteW(NULL, L"open", path.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32;
-	}
-
-	static bool check_update()
-	{
-		// when checked manually, show testing versions too
-		std::string feed_url = GetCustomResource("ManualUpdateFeedURL", "APPCAST");
-		if (!feed_url.empty())
-		{
-			win_sparkle_set_appcast_url(feed_url.c_str());
-		}
-		win_sparkle_check_update_with_ui();
-		return true;
-	}
-
-	static std::wstring install_dir()
-	{
-		WCHAR exe_path[MAX_PATH] = {0};
-		GetModuleFileNameW(GetModuleHandle(NULL), exe_path, _countof(exe_path));
-		std::wstring dir(exe_path);
-		size_t pos = dir.find_last_of(L"\\");
-		dir.resize(pos);
-		return dir;
-	}
-
-public:
-	WeaselServerApp();
-	~WeaselServerApp();
-	int Run();
-
-protected:
-	void SetupMenuHandlers();
-
-	weasel::Server m_server;
-	weasel::UI m_ui;
-	std::unique_ptr<RimeWithWeaselHandler> m_handler;
-};
-
-WeaselServerApp::WeaselServerApp()
-{
-	m_handler.reset(new RimeWithWeaselHandler(&m_ui));
-	m_server.SetRequestHandler(m_handler.get());
-	SetupMenuHandlers();
-}
-
-WeaselServerApp::~WeaselServerApp()
-{
-}
-
-int WeaselServerApp::Run()
-{
-	if (!m_server.Start())
-		return -1;
-
-	//win_sparkle_set_appcast_url("http://localhost:8000/weasel/update/appcast.xml");
-	win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
-	win_sparkle_init();
-	m_ui.Create(m_server.GetHWnd());
-	m_handler->Initialize();
-
-	int ret = m_server.Run();
-
-	m_handler->Finalize();
-	m_ui.Destroy();
-	win_sparkle_cleanup();
-
-	return ret;
-}
-
-void WeaselServerApp::SetupMenuHandlers()
-{
-	std::wstring dir(install_dir());
-	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, [this] { return m_server.Stop() == 0; });
-	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
-	m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring()));
-	m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/dict")));
-	m_server.AddMenuHandler(ID_WEASELTRAY_SYNC, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/sync")));
-	m_server.AddMenuHandler(ID_WEASELTRAY_WIKI, std::bind(open, L"https://github.com/rime/home/wiki/UserGuide"));
-	m_server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, std::bind(open, L"http://rime.im/"));
-	m_server.AddMenuHandler(ID_WEASELTRAY_FORUM, std::bind(open, L"http://tieba.baidu.com/f?kw=rime"));
-	m_server.AddMenuHandler(ID_WEASELTRAY_CHECKUPDATE, check_update);
-	m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, std::bind(explore, dir));
-	m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG, std::bind(explore, WeaselUserDataPath()));
-}
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
@@ -178,9 +80,23 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 
 	int nRet = 0;
+
+	//std::wofstream o("o.txt");
+	//o << L"Service failed to run" << GetLastError();
+	//WeaselService service(TRUE, TRUE, FALSE);
+	//if (!WeaselService::Run(service)) {
+	//	//wprintf(L"Service failed to run w/err 0x%08lx\n", GetLastError());
+	//}
+	//if (!wcscmp(L"/service", lpstrCmdLine)) {
+	//	WeaselService service(TRUE, TRUE, FALSE);
+	//	WeaselService::Run(service);
+	//	return -1;
+	//}
+
 	try
 	{
 		WeaselServerApp app;
+		RegisterApplicationRestart(NULL, 0);
 		nRet = app.Run();
 	}
 	catch (...)

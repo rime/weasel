@@ -2,7 +2,7 @@
 #include "WeaselClientImpl.h"
 #include <StringAlgorithm.hpp>
 
-using namespace boost::interprocess;
+//using namespace boost::interprocess;
 using namespace weasel;
 using namespace std;
 
@@ -57,17 +57,9 @@ void ClientImpl::_InitializeClientInfo()
 bool ClientImpl::Connect(ServerLauncher const& launcher)
 {
 	auto pipe_name = GetPipeName();
-	//serverWnd = _GetServerWindow(WEASEL_IPC_WINDOW);
+
 	_ConnectPipe(pipe_name.c_str());
-	//if (pipe == INVALID_HANDLE_VALUE && launcher)
-	//{
-	//	// 启动服务进程
-	//	if (!launcher())
-	//	{
-	//		pipe = INVALID_HANDLE_VALUE;
-	//		return false;
-	//	}
-	//}
+
 	return _Connected();
 }
 
@@ -138,18 +130,18 @@ void ClientImpl::UpdateInputPosition(RECT const& rc)
 	int height = max(0, min(127, (rc.bottom - rc.top) >> hi_res));
 	DWORD compressed_rect = ((hi_res & 0x01) << 31) | ((height & 0x7f) << 24) | 
 		                    ((top & 0xfff) << 12) | (left & 0xfff);
-	_PostMessage(WEASEL_IPC_UPDATE_INPUT_POS, compressed_rect, _session_id);
+	_SendMessage(WEASEL_IPC_UPDATE_INPUT_POS, compressed_rect, _session_id);
 }
 
 void ClientImpl::FocusIn()
 {
 	DWORD client_caps = 0;  /* TODO */
-	_PostMessage(WEASEL_IPC_FOCUS_IN, client_caps, _session_id);
+	_SendMessage(WEASEL_IPC_FOCUS_IN, client_caps, _session_id);
 }
 
 void ClientImpl::FocusOut()
 {
-	_PostMessage(WEASEL_IPC_FOCUS_OUT, 0, _session_id);
+	_SendMessage(WEASEL_IPC_FOCUS_OUT, 0, _session_id);
 }
 
 void ClientImpl::StartSession()
@@ -169,7 +161,7 @@ void ClientImpl::StartSession()
 void ClientImpl::EndSession()
 {
 	if (_Connected())
-		_PostMessage(WEASEL_IPC_END_SESSION, 0, _session_id);
+		_SendMessage(WEASEL_IPC_END_SESSION, 0, _session_id);
 	_session_id = 0;
 }
 
@@ -198,21 +190,9 @@ bool ClientImpl::Echo()
 
 bool ClientImpl::GetResponseData(ResponseHandler const& handler)
 {
-	if (!handler)
-	{
+	if (!handler) {
 		return false;
 	}
-	//try
-	//{
-	//	windows_shared_memory shm(open_only, WEASEL_IPC_SHARED_MEMORY, read_only);
-	//	mapped_region region(shm, read_only, WEASEL_IPC_METADATA_SIZE,
-	//		WEASEL_IPC_SHARED_MEMORY_SIZE - WEASEL_IPC_METADATA_SIZE);
-	//	return handler((LPWSTR)region.get_address(), WEASEL_IPC_BUFFER_LENGTH);
-	//}
-	//catch (interprocess_exception& /*ex*/)
-	//{
-	//	return false;
-	//}
 
 	return handler((LPWSTR)_buffer.get(), WEASEL_IPC_BUFFER_LENGTH);
 }
@@ -260,32 +240,18 @@ void ClientImpl::_ConnectPipe(const wchar_t * pipeName)
 
 bool ClientImpl::_WriteClientInfo()
 {
-	WCHAR* buffer = reinterpret_cast<WCHAR*>((char *)_buffer.get() + sizeof(PipeMessage));
+	WCHAR* buffer = _GetSendBuffer();
 	DWORD written = 0;
-	try
+
+	memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
+	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
+	bs << L"action=session\n";
+	bs << L"session.client_app=" << app_name.c_str() << L"\n";
+	bs << L"session.client_type=" << (is_ime ? L"ime" : L"tsf") << L"\n";
+	bs << L".\n";
+	if (!bs.good())
 	{
-		//windows_shared_memory shm(open_only, WEASEL_IPC_SHARED_MEMORY, read_write);
-		//mapped_region region(shm, read_write, WEASEL_IPC_METADATA_SIZE,
-		//	WEASEL_IPC_SHARED_MEMORY_SIZE - WEASEL_IPC_METADATA_SIZE);
-		//buffer = (LPWSTR)region.get_address();
-		//if (!buffer)
-		//{
-		//	return false;
-		//}
-		memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
-		wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
-		bs << L"action=session\n";
-		bs << L"session.client_app=" << app_name.c_str() << L"\n";
-		bs << L"session.client_type=" << (is_ime ? L"ime" : L"tsf") << L"\n";
-		bs << L".\n";
-		if (!bs.good())
-		{
-			// response text toooo long!
-			return false;
-		}
-	}
-	catch (interprocess_exception& /*ex*/)
-	{
+		// response text toooo long!
 		return false;
 	}
 
@@ -327,42 +293,6 @@ LRESULT ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lPa
 	return result;
 }
 
-BOOL ClientImpl::_PostMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lParam)
-{
-	return _SendMessage(Msg, wParam, lParam);
-	//PipeMessage msg{ Msg, wParam,lParam };
-	//DWORD written;
-	//auto success = WriteFile(pipe, (LPVOID)&msg, sizeof(msg), &written, NULL);
-	//return success != 0;
-}
-
-
-
-//HWND ClientImpl::_GetServerWindow(LPCWSTR windowClass)
-//{
-//	if (!windowClass)
-//	{
-//		return NULL;
-//	}
-//	try
-//	{
-//		windows_shared_memory shm(open_only, WEASEL_IPC_SHARED_MEMORY, read_only);
-//		mapped_region region(shm, read_only, 0, WEASEL_IPC_METADATA_SIZE);
-//		IPCMetadata *metadata = reinterpret_cast<IPCMetadata*>(region.get_address());
-//		if (!metadata || wcsncmp(metadata->server_window_class, windowClass, IPCMetadata::WINDOW_CLASS_LENGTH))
-//		{
-//			return NULL;
-//		}
-//		return reinterpret_cast<HWND>(metadata->server_hwnd);
-//	}
-//	catch (interprocess_exception& /*ex*/)
-//	{
-//		return NULL;
-//	}
-//	return NULL;
-//}
-
-// weasel::Client
 
 Client::Client() 
 	: m_pImpl(new ClientImpl())

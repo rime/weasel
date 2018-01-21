@@ -5,8 +5,7 @@
 #include <Winnt.h> // for security attributes constants
 #include <aclapi.h> // for ACL
 
-
-
+#include <boost/thread.hpp>
 
 namespace weasel
 {
@@ -31,9 +30,6 @@ namespace weasel
 			MESSAGE_HANDLER(WM_ENDSESSION, OnEndSystemSession)
 			MESSAGE_HANDLER(WM_COMMAND, OnCommand)
 		END_MSG_MAP()
-		// ������ WindowMessage ����Ϣ��ʱ�������
-		// WPARAM �� LPARAM ����ָ�����ͣ��� 64 λ�� 32 λ�³��Ȳ�һ��
-		// ��Ҫ��д
 
 		LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -85,6 +81,7 @@ namespace weasel
 		PSID _sid_all_apps;
 
 		std::unique_ptr<char[]> _buffer;
+		std::unique_ptr<boost::thread> _pipeThread;
 
 
 		RequestHandler *m_pRequestHandler;  // reference

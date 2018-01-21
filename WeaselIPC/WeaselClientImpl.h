@@ -34,10 +34,13 @@ namespace weasel
 		bool _WriteClientInfo();
 
 		LRESULT _SendMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lParam);
-		BOOL _PostMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lParam);
 
 		bool _Connected() const { return _pipe != INVALID_HANDLE_VALUE; }
 		bool _Active() const { return _Connected() && _session_id != 0; }
+
+		inline WCHAR* _GetSendBuffer() const {
+			return reinterpret_cast<WCHAR*>((char *)_buffer.get() + sizeof(PipeMessage));
+		}
 
 	private:
 		UINT _session_id;

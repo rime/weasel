@@ -73,12 +73,6 @@ extern "C" BOOL ( STDAPICALLTYPE *pChangeWindowMessageFilter )( UINT,DWORD ) = N
 
 int ServerImpl::Start()
 {
-	// assure single instance
-	//if (FindWindow(WEASEL_IPC_WINDOW, NULL) != NULL)
-	//{
-	//	return 0;
-	//}
-
 	// 使用「消息免疫過濾」繞過IE9的用戶界面特權隔離機制
 	HMODULE hMod = 0;
 	if ( ( hMod = ::LoadLibrary( _T( "user32.dll" ) ) ) != 0 )
@@ -105,6 +99,9 @@ int ServerImpl::Stop()
 	{
 		FreeLibrary(m_hUser32Module);
 	}
+	if (_pipeThread != nullptr) {
+		_pipeThread->interrupt();
+	}
 	::PostQuitMessage(0);
 	return 0;
 }
@@ -113,7 +110,7 @@ int ServerImpl::Stop()
 
 int ServerImpl::Run()
 {
-	boost::thread pipeThread(boost::bind(&ServerImpl::_ListenPipe, this));
+	_pipeThread = std::make_unique<boost::thread>(boost::bind(&ServerImpl::_ListenPipe, this));
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
 	int nRet = theLoop.Run();
@@ -322,6 +319,9 @@ void ServerImpl::_ListenPipe()
 		boost::thread pipe_t([_pipe, this]() {
 			_HandlePipeMessage(_pipe);
 		});
+
+		// 允许线程在此处中断
+		boost::this_thread::interruption_point();
 	}
 
 }
