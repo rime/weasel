@@ -35,4 +35,6 @@ WeaselSetup.exe %WEASEL_INSTALL_OPTION%
 goto exit
 
 :exit
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run" /v Weasel /t REG_SZ /d "%CD%\WeaselServer.exe"
+WeaselServer.exe
 cd "%CD_BACK%"
