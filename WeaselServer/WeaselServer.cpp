@@ -16,9 +16,24 @@
 
 CAppModule _Module;
 
+// Dynamically load library to be compatible with old system version
+void InitDpiMode()
+{
+	using SetProcessDpiAwarenessType = HRESULT(__stdcall *)(PROCESS_DPI_AWARENESS);
+	auto shcore_module = ::LoadLibrary(_T("shcore.dll"));
+	if (shcore_module == NULL) {
+		return;
+	}
+	auto _SetProcessDpiAwareness = (SetProcessDpiAwarenessType)::GetProcAddress(shcore_module, "SetProcessDpiAwareness");
+
+	_SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE);
+
+}
+
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
-	SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE);
+	InitDpiMode();
+
 	// 防止服务进程开启输入法
 	ImmDisableIME(-1);
 
