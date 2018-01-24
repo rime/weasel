@@ -73,6 +73,14 @@ extern "C" BOOL ( STDAPICALLTYPE *pChangeWindowMessageFilter )( UINT,DWORD ) = N
 
 int ServerImpl::Start()
 {
+	// assure single instance
+	if (FindWindow(WEASEL_IPC_WINDOW, NULL) != NULL)
+	{
+		return 0;
+	}
+
+	HWND hwnd = Create(NULL);
+
 	// 使用「消息免疫過濾」繞過IE9的用戶界面特權隔離機制
 	HMODULE hMod = 0;
 	if ( ( hMod = ::LoadLibrary( _T( "user32.dll" ) ) ) != 0 )
@@ -90,7 +98,7 @@ int ServerImpl::Start()
 
 	m_hUser32Module = ::LoadLibrary(_T("user32.dll"));
 
-	return 1;
+	return (int)hwnd;
 }
 
 int ServerImpl::Stop()
@@ -102,6 +110,12 @@ int ServerImpl::Stop()
 	if (_pipeThread != nullptr) {
 		_pipeThread->interrupt();
 	}
+	if (!IsWindow())
+	{
+		return 0;
+	}
+	DestroyWindow();
+	//quit the server
 	::PostQuitMessage(0);
 	return 0;
 }
