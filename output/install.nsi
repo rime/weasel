@@ -155,12 +155,18 @@ program_files:
   ; run as user...
   ExecWait "$INSTDIR\WeaselDeployer.exe /install"
 
+
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "DisplayName" "小狼毫輸入法"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "UninstallString" '"$INSTDIR\uninstall.exe"'
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "NoRepair" 1
   WriteUninstaller "$INSTDIR\uninstall.exe"
+
+  ; Write autorun key
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer" "$INSTDIR\WeaselServer.exe"
+  ; Start WeaselServer
+  Exec "$INSTDIR\WeaselServer.exe"
 
 SectionEnd
 
@@ -202,6 +208,7 @@ Section "Uninstall"
 
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel"
+  DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer"
   DeleteRegKey HKLM SOFTWARE\Rime
 
   ; Remove files and uninstaller
