@@ -38,6 +38,7 @@
     <ProjectGuid>{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}</ProjectGuid>
     <RootNamespace>PyWeasel</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|Win32'" Label="Configuration">

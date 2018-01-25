@@ -14,6 +14,7 @@
     <ProjectGuid>{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>WeaselDeployer</RootNamespace>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

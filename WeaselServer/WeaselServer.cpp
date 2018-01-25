@@ -19,6 +19,23 @@ CAppModule _Module;
 // Dynamically load library to be compatible with old system version
 void InitDpiMode()
 {
+#ifndef DPI_ENUMS_DECLARED
+
+	typedef enum PROCESS_DPI_AWARENESS {
+		PROCESS_DPI_UNAWARE = 0,
+		PROCESS_SYSTEM_DPI_AWARE = 1,
+		PROCESS_PER_MONITOR_DPI_AWARE = 2
+	} PROCESS_DPI_AWARENESS;
+
+	typedef enum MONITOR_DPI_TYPE {
+		MDT_EFFECTIVE_DPI = 0,
+		MDT_ANGULAR_DPI = 1,
+		MDT_RAW_DPI = 2,
+		MDT_DEFAULT = MDT_EFFECTIVE_DPI
+	} MONITOR_DPI_TYPE;
+
+#define DPI_ENUMS_DECLARED
+#endif // (DPI_ENUMS_DECLARED)
 	using SetProcessDpiAwarenessType = HRESULT(__stdcall *)(PROCESS_DPI_AWARENESS);
 	auto shcore_module = ::LoadLibrary(_T("shcore.dll"));
 	if (shcore_module == NULL) {
@@ -111,7 +128,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	try
 	{
 		WeaselServerApp app;
-		RegisterApplicationRestart(NULL, 0);
+		//RegisterApplicationRestart(NULL, 0);
 		nRet = app.Run();
 	}
 	catch (...)
