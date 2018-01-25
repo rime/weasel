@@ -38,6 +38,7 @@
     <ProjectGuid>{CC642427-64D7-44D9-8543-8CBBF981FAE7}</ProjectGuid>
     <RootNamespace>TestResponseParser</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|Win32'" Label="Configuration">

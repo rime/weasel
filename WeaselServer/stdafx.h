@@ -6,8 +6,8 @@
 #pragma once
 
 // Change these values to use different versions
-#define WINVER		0x06030000
-#define _WIN32_WINNT	0x06030000
+#define WINVER		0x0500
+#define _WIN32_WINNT	0x0501
 #define _WIN32_IE	0x0501
 #define _RICHEDIT_VER	0x0200
 
@@ -51,7 +51,7 @@
 
 #pragma warning(default : 4996)
 
-#include <ShellScalingAPI.h>
+//#include <ShellScalingAPI.h>
 
 
 extern CAppModule _Module;

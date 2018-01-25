@@ -38,6 +38,7 @@
     <ProjectGuid>{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}</ProjectGuid>
     <RootNamespace>WeaselIPC</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|Win32'" Label="Configuration">
