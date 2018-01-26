@@ -77,7 +77,11 @@ void WeaselService::Start(DWORD dwArgc = 0, PWSTR * pszArgv = NULL)
 		SetServiceStatus(SERVICE_START_PENDING);
 
 		// Perform service-specific initialization.
-		RegisterApplicationRestart(NULL, 0);
+		if (IsWindowsVistaOrGreater())
+		{
+			PRAR RegisterApplicationRestart = (PRAR)::GetProcAddress(::GetModuleHandle(_T("kernel32.dll")), "RegisterApplicationRestart");
+			RegisterApplicationRestart(NULL, 0);
+		}
 		boost::thread{ [this] {
 			app.Run();
 		} };
@@ -115,7 +119,7 @@ void WeaselService::Stop()
 		// Tell SCM that the service is stopped.
 		SetServiceStatus(SERVICE_STOPPED);
 	}
-	catch (DWORD dwError)
+	catch (DWORD/* dwError */)
 	{
 		// Set the orginal service status.
 		SetServiceStatus(dwOriginalState);

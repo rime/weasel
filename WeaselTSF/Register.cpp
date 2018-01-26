@@ -8,13 +8,14 @@ static const char c_szTipKeyPrefix[] = "Software\\Microsft\\CTF\\TIP\\";
 static const char c_szInProcSvr32[] = "InprocServer32";
 static const char c_szModelName[] = "ThreadingModel";
 
-static BOOL IsWindows8OrHigher()
+inline bool IsWindows8OrGreater()
 {
-	OSVERSIONINFO osvi;
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&osvi);
-	return (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion >= 2) || osvi.dwMajorVersion > 6;
+	OSVERSIONINFOEX osvi = {sizeof(osvi), 6, 2, 0, 0, {0}, 0, 0};
+	return VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR,
+		VerSetConditionMask(VerSetConditionMask(VerSetConditionMask(
+			0, VER_MAJORVERSION, VER_GREATER_EQUAL),
+			   VER_MINORVERSION, VER_GREATER_EQUAL),
+			   VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL)) != FALSE;
 }
 
 BOOL RegisterProfiles()
@@ -85,7 +86,7 @@ BOOL RegisterCategories()
 	if (hr != S_OK)
 		goto Exit;
 
-	if (IsWindows8OrHigher())
+	if (IsWindows8OrGreater())
 	{
 		hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
 		if (hr != S_OK)
