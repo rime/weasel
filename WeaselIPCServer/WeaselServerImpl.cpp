@@ -110,14 +110,14 @@ int ServerImpl::Stop()
 	if (_pipeThread != nullptr) {
 		_pipeThread->interrupt();
 	}
-	if (!IsWindow())
+	if (IsWindow())
 	{
-		return 0;
+		DestroyWindow();
 	}
-	DestroyWindow();
+	
 	//quit the server
 	::PostQuitMessage(0);
-	return 0;
+	::exit(0);
 }
 
 
@@ -129,7 +129,7 @@ int ServerImpl::Run()
 	_Module.AddMessageLoop(&theLoop);
 	int nRet = theLoop.Run();
 	_Module.RemoveMessageLoop();
-	return -1;
+	return nRet;
 }
 
 
