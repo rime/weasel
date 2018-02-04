@@ -83,6 +83,7 @@
   * 佛振 <chen.sst@gmail.com>
   * 鄒旭 <zouivex@gmail.com>
   * BYVoid <byvoid.kcp@gmail.com>
+  * nameoverflow <i@hcyue.me>
   * wishstudio <wishstudio@gmail.com>
 
 ### 美術：
@@ -108,7 +109,6 @@
 --------
 
   * 不支持 Windows 命令行和全屏遊戲
-  * 不兼容 Modern UI 模式（ [#13] (https://github.com/rime/weasel/issues/13) 、 [#57] (https://github.com/rime/weasel/issues/57) ）
 
 聯繫方式
 --------
