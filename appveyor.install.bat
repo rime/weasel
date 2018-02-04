@@ -7,7 +7,8 @@ if not exist %BOOST_ROOT% set nocache=1
 
 git submodule init
 git submodule update brise
-appveyor DownloadFile https://ci.appveyor.com/api/projects/lotem/librime/artifacts/rime.zip
+rem Temporary workaround
+appveyor DownloadFile https://ci.appveyor.com/api/buildjobs/6f7om20ea95w2fmy/artifacts/rime.zip
 7z x rime.zip * -olibrime\ | find "ing archive"
 copy /Y librime\build\include\rime_*.h include\
 copy /Y librime\build\lib\Release\rime.dll output\
@@ -19,10 +20,10 @@ if %nocache% == 1 (
 	7z x boost_1_61_0.7z | find "ing archive"
 	cd boost_1_61_0
 	call .\bootstrap.bat
-	call .\b2.exe --prefix=%BOOST_ROOT% toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static --with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-system --with-thread -q -d0 install
+	call .\b2.exe --prefix=%BOOST_ROOT% toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static define=BOOST_USE_WINAPI_VERSION=0x0501 cxxflags="/Zc:threadSafeInit- " --with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-system --with-thread -q -d0 install
 	xcopy /e /i /y /q %BOOST_ROOT%\include\boost-1_61\boost %BOOST_ROOT%\boost
 	xcopy /e /i /y /q %BOOST_ROOT%\lib %BOOST_ROOT%\stage\lib
-	call .\b2.exe --prefix=%BOOST_ROOT%_x64 toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static address-model=64 --with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-system --with-thread -q -d0 install
+	call .\b2.exe --prefix=%BOOST_ROOT%_x64 toolset=msvc-14.0 variant=release link=static threading=multi runtime-link=static address-model=64 define=BOOST_USE_WINAPI_VERSION=0x0501 cxxflags="/Zc:threadSafeInit- " --with-date_time --with-filesystem --with-locale --with-regex --with-signals --with-system --with-thread -q -d0 install
 	xcopy /e /i /y /q %BOOST_ROOT%_x64\lib %BOOST_ROOT%\stage_x64\lib
 	popd
 	if %ERRORLEVEL% NEQ 0 goto ERROR

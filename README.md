@@ -91,19 +91,19 @@
   * 配色方案 Aben、P1461、Patricivs、skoj、佛振、五磅兔
 
 ### 本品引用了以下開源軟件：
-  * [Boost C++ Libraries] (http://www.boost.org/) (Boost Software License)
-  * [google-glog] (https://github.com/google/glog) (BSD 3-Clause License)
-  * [Google Test] (https://github.com/google/googletest) (BSD 3-Clause License)
-  * [LevelDB] (https://github.com/google/leveldb) (BSD 3-Clause License)
-  * [marisa-trie] (https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)
-  * [OpenCC / 開放中文轉換] (https://github.com/BYVoid/OpenCC) (Apache License 2.0)
-  * [WinSparkle] (https://github.com/vslavik/winsparkle) (MIT License)
-  * [yaml-cpp] (https://github.com/jbeder/yaml-cpp) (MIT License)
+  * [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
+  * [google-glog](https://github.com/google/glog) (BSD 3-Clause License)
+  * [Google Test](https://github.com/google/googletest) (BSD 3-Clause License)
+  * [LevelDB](https://github.com/google/leveldb) (BSD 3-Clause License)
+  * [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)
+  * [OpenCC / 開放中文轉換](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
+  * [WinSparkle](https://github.com/vslavik/winsparkle) (MIT License)
+  * [yaml-cpp](https://github.com/jbeder/yaml-cpp) (MIT License)
 
 問題與反饋
 ----------
 
-發現程序有BUG，或建議，或感想，請到Rime項目網站 [反饋] (https://github.com/rime/weasel/issues) 。
+發現程序有BUG，或建議，或感想，請到Rime項目網站 [反饋](https://github.com/rime/weasel/issues) 。
 
 已知問題
 --------
