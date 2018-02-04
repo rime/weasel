@@ -34,7 +34,7 @@ namespace weasel
 	// 为了 32 位 server 和 64 位 TSF 的兼容，这里不用 LPARAM 和 WPARAM
 	// ServerImpl 处也有一样的问题。
 	struct PipeMessage {
-		UINT Msg;
+		WEASEL_IPC_COMMAND Msg;
 		UINT wParam;
 		UINT lParam;
 	};

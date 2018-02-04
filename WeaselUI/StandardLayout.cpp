@@ -21,7 +21,7 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 	if (!preedit.empty())
 	{
 		dc.GetTextExtent(preedit.c_str(), preedit.length(), &size);
-		for (int i = 0; i < attrs.size(); i++)
+		for (size_t i = 0; i < attrs.size(); i++)
 		{
 			if (attrs[i].type == weasel::HIGHLIGHTED)
 			{

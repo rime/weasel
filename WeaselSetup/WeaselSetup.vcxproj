@@ -79,9 +79,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)output\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)output\</OutDir>
+    <TargetName>$(ProjectName)$(Platform)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -131,7 +134,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(SolutionDir)\output\$(ProjectName).exe</OutputFile>
+      <OutputFile>$(SolutionDir)output\$(ProjectName)$(TargetExt)</OutputFile>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
@@ -153,8 +156,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage_x64\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(SolutionDir)\output\$(ProjectName)x64.exe</OutputFile>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <OutputFile>$(SolutionDir)output\$(ProjectName)$(Platform)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

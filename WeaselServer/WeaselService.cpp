@@ -1,12 +1,7 @@
 #include "stdafx.h"
-
 #include "WeaselService.h"
 #include "WeaselServerApp.h"
-
 #include <boost/thread.hpp>
-
-
-using namespace std;
 
 WeaselService *WeaselService::_service = NULL;
 

@@ -40,7 +40,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 
 	/* Candidates */
 	int w = _style.margin_x, h = 0;
-	for (int i = 0; i < candidates.size(); i++)
+	for (size_t i = 0; i < candidates.size(); i++)
 	{
 		if (i > 0)
 			w += _style.candidate_spacing;

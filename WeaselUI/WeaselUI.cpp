@@ -33,7 +33,6 @@ public:
 
 bool UI::Create(HWND parent)
 {
-
 	if (pimpl_)
 		return true;
 

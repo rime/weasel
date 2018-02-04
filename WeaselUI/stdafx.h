@@ -18,8 +18,6 @@
 #include <wtl/atlgdi.h>
 #include <wtl/atlmisc.h>
 
-
-
 #pragma warning(default: 4996)
 
 #include <string>

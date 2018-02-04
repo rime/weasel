@@ -59,7 +59,7 @@ LRESULT UIStyleSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
 
 LRESULT UIStyleSettingsDialog::OnColorSchemeSelChange(WORD, WORD, HWND, BOOL&) {
 	int index = color_schemes_.GetCurSel();
-	if (index >= 0 && index < preset_.size()) {
+	if (index >= 0 && index < (int)preset_.size()) {
 		settings_->SelectColorScheme(preset_[index].color_scheme_id);
 		Preview(index);
 	}
@@ -67,7 +67,7 @@ LRESULT UIStyleSettingsDialog::OnColorSchemeSelChange(WORD, WORD, HWND, BOOL&) {
 }
 
 void UIStyleSettingsDialog::Preview(int index) {
-	if (index < 0 || index >= preset_.size()) return;
+	if (index < 0 || index >= (int)preset_.size()) return;
 	const std::string file_path(settings_->GetColorSchemePreview(preset_[index].color_scheme_id));
 	if (file_path.empty()) return;
 	image_.Destroy();

@@ -13,8 +13,8 @@ struct CompositionInfo
 	{
 		memset(this, 0, sizeof(*this));
 		cs.dwSize = sizeof(*this);
-		cs.dwCompStrOffset = (char*)&szCompStr - (char*)this;
-		cs.dwResultStrOffset = (char*)&szResultStr - (char*)this;
+		cs.dwCompStrOffset = (DWORD)((ptrdiff_t)&szCompStr - (ptrdiff_t)this);
+		cs.dwResultStrOffset = (DWORD)((ptrdiff_t)&szResultStr - (ptrdiff_t)this);
 	}
 };
 

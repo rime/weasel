@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "WeaselServerApp.h"
 
-
 WeaselServerApp::WeaselServerApp()
 	: m_handler(std::make_unique<RimeWithWeaselHandler>(&m_ui))
 {

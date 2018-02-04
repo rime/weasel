@@ -47,6 +47,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)output\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -81,7 +82,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>rime.lib;rime.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage\lib;$(SolutionDir)\librime\build\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <OutputFile>$(SolutionDir)\output\$(ProjectName).exe</OutputFile>
+      <OutputFile>$(SolutionDir)output\$(ProjectName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

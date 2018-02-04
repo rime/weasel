@@ -42,7 +42,7 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 	int comment_shift_width = 0;  /* distance to the left of the candidate text */
 	int max_candidate_width = 0;  /* label + text */
 	int max_comment_width = 0;    /* comment, or none */
-	for (int i = 0; i < candidates.size(); i++)
+	for (size_t i = 0; i < candidates.size(); i++)
 	{
 		if (i > 0 )
 			height += _style.candidate_spacing;
@@ -86,7 +86,7 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 	width = max(width, max_content_width + 2 * _style.margin_x);
 
 	/* Align comments */
-	for (int i = 0; i < candidates.size(); i++)
+	for (size_t i = 0; i < candidates.size(); i++)
 		_candidateCommentRects[i].OffsetRect(_style.margin_x + comment_shift_width, 0);
 
 	if (candidates.size())

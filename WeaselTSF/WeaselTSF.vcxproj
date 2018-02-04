@@ -85,7 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -129,10 +129,8 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)output\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|Win32'">$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|Win32'">$(SolutionDir)output\</OutDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|Win32'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|Win32'">$(Configuration)\</IntDir>
@@ -141,10 +139,8 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)output\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|x64'">$(SolutionDir)output\</OutDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|x64'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|x64'">$(Platform)\$(Configuration)\</IntDir>
@@ -154,7 +150,13 @@
     <TargetName>weasel</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>weaselx64</TargetName>
+    <TargetName>weasel$(Platform)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|Win32'">
+    <TargetName>weaselt</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|x64'">
+    <TargetName>weaselt$(Platform)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -193,7 +195,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>$(SolutionDir)output\weasel.dll</OutputFile>
+      <OutputFile>$(SolutionDir)output\weasel$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -220,7 +222,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>$(SolutionDir)\output\weaselt.dll</OutputFile>
+      <OutputFile>$(SolutionDir)output\weaselt$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -305,7 +307,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>$(SolutionDir)output\weaselx64.dll</OutputFile>
+      <OutputFile>$(SolutionDir)output\weasel$(Platform)$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage_x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -335,7 +337,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>$(SolutionDir)\output\weaseltx64.dll</OutputFile>
+      <OutputFile>$(SolutionDir)output\weaselt$(Platform)$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_HOME)\stage_x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>

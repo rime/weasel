@@ -4,12 +4,10 @@
 #include <memory>
 #include <Winnt.h> // for security attributes constants
 #include <aclapi.h> // for ACL
-
 #include <boost/thread.hpp>
 
 namespace weasel
 {
-
 
 	#define WEASEL_MSG_HANDLER(__name) DWORD __name (WEASEL_IPC_COMMAND, DWORD, LPARAM, BOOL&);
 
@@ -68,25 +66,23 @@ namespace weasel
 		}
 
 	private:
-		void _ListenPipe();
-		HANDLE _InitPipe();
-		void _HandlePipeMessage(HANDLE _pipe);
-		void _InitSecurityAttr();
+		void ListenPipe();
+		HANDLE InitPipe();
+		void HandlePipeMessage(HANDLE pipe);
+		void InitSecurityAttr();
 
-		PSECURITY_DESCRIPTOR _pd;
-		SECURITY_ATTRIBUTES _sa;
-		PACL _pacl;
-		EXPLICIT_ACCESS _ea[2];
-		PSID _sid_everyone;
-		PSID _sid_all_apps;
+		PSECURITY_DESCRIPTOR pd;
+		SECURITY_ATTRIBUTES sa;
+		PACL pacl;
+		EXPLICIT_ACCESS ea[2];
+		PSID sid_everyone;
+		PSID sid_all_apps;
 
-		std::unique_ptr<char[]> _buffer;
-		std::unique_ptr<boost::thread> _pipeThread;
-
+		std::unique_ptr<char[]> buffer;
+		std::unique_ptr<boost::thread> pipeThread;
 
 		RequestHandler *m_pRequestHandler;  // reference
 		std::map<UINT, CommandHandler> m_MenuHandlers;
-		//std::unique_ptr<SharedMemory> m_pSharedMemory;
 		HMODULE m_hUser32Module;
 	};
 

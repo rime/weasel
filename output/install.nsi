@@ -155,7 +155,6 @@ program_files:
   ; run as user...
   ExecWait "$INSTDIR\WeaselDeployer.exe /install"
 
-
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "DisplayName" "小狼毫輸入法"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "UninstallString" '"$INSTDIR\uninstall.exe"'

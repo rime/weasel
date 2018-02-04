@@ -227,7 +227,7 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 		goto Exit;
 
 	int sel_start = 0, sel_end = 0; /* TODO: Check the availability and correctness of these values */
-	for (int i = 0; i < _context->preedit.attributes.size(); i++)
+	for (size_t i = 0; i < _context->preedit.attributes.size(); i++)
 		if (_context->preedit.attributes.at(i).type == weasel::HIGHLIGHTED)
 		{
 			sel_start = _context->preedit.attributes.at(i).range.start;

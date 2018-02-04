@@ -24,8 +24,6 @@
 
 #include <atl.h>
 
-
-
 // Support for VS2005 Express & SDK ATL
 #ifdef _WTL_SUPPORT_SDK_ATL3
   namespace ATL

@@ -28,6 +28,7 @@ static void error_message(const WCHAR *msg)
 	}
 }
 
+/*
 static bool launch_server()
 {
 	EZDBGONLYLOGGERPRINT("Launching weasel server.");
@@ -90,6 +91,7 @@ static bool launch_server()
 
 	return true;
 }
+*/
 
 WeaselIME::WeaselIME(HIMC hIMC)
 : m_hIMC(hIMC)
@@ -227,7 +229,7 @@ LRESULT WeaselIME::OnIMESelect(BOOL fSelect)
 	if (fSelect)
 	{
 		// initialize weasel client
-		m_client.Connect(launch_server);
+		m_client.Connect(NULL);
 		m_client.StartSession();
 
 		return _Initialize();
@@ -404,7 +406,7 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 
 	if (!m_client.Echo())
 	{
-		m_client.Connect(launch_server);
+		m_client.Connect(NULL);
 		m_client.StartSession();
 	}
 
