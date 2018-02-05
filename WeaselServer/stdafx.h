@@ -51,7 +51,7 @@
 
 inline void _GetVersion(POSVERSIONINFOW osvi)
 {
-	typedef NTSYSAPI NTSTATUS (NTAPI *PRGV)(PRTL_OSVERSIONINFOW);
+	typedef NTSTATUS (NTAPI *PRGV)(PRTL_OSVERSIONINFOW);
 	PRGV RtlGetVersion = (PRGV)GetProcAddress(GetModuleHandle(TEXT("ntdll.dll")), "RtlGetVersion");
 	RtlGetVersion(osvi);
 }
