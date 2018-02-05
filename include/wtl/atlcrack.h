@@ -1,18 +1,19 @@
-// Windows Template Library - WTL version 8.0
-// Copyright (C) Microsoft Corporation. All rights reserved.
+// Windows Template Library - WTL version 9.10
+// Copyright (C) Microsoft Corporation, WTL Team. All rights reserved.
 //
 // This file is a part of the Windows Template Library.
 // The use and distribution terms for this software are covered by the
-// Common Public License 1.0 (http://opensource.org/osi3.0/licenses/cpl1.0.php)
-// which can be found in the file CPL.TXT at the root of this distribution.
-// By using this software in any fashion, you are agreeing to be bound by
-// the terms of this license. You must not remove this notice, or
-// any other, from this software.
+// Microsoft Public License (http://opensource.org/licenses/MS-PL)
+// which can be found in the file MS-PL.txt at the root folder.
 
 #ifndef __ATLCRACK_H__
 #define __ATLCRACK_H__
 
 #pragma once
+
+#ifndef __ATLAPP_H__
+	#error atlcrack.h requires atlapp.h to be included first
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,12 +46,12 @@ public: \
 	BOOL _ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID) \
 	{ \
 		BOOL bHandled = TRUE; \
-		hWnd; \
-		uMsg; \
-		wParam; \
-		lParam; \
-		lResult; \
-		bHandled; \
+		(hWnd); \
+		(uMsg); \
+		(wParam); \
+		(lParam); \
+		(lResult); \
+		(bHandled); \
 		switch(dwMsgMapID) \
 		{ \
 		case 0:
@@ -566,7 +567,7 @@ public: \
 			return TRUE; \
 	}
 
-// void OnNcPaint(CRgn rgn)
+// void OnNcPaint(CRgnHandle rgn)
 #define MSG_WM_NCPAINT(func) \
 	if (uMsg == WM_NCPAINT) \
 	{ \
@@ -795,7 +796,7 @@ public: \
 			return TRUE; \
 	}
 
-// void OnSysCommand(UINT nID, LPARAM lParam)
+// void OnSysCommand(UINT nID, CPoint point)
 #define MSG_WM_SYSCOMMAND(func) \
 	if (uMsg == WM_SYSCOMMAND) \
 	{ \
@@ -850,7 +851,7 @@ public: \
 			return TRUE; \
 	}
 
-// void OnInitMenu(CMenu menu)
+// void OnInitMenu(CMenuHandle menu)
 #define MSG_WM_INITMENU(func) \
 	if (uMsg == WM_INITMENU) \
 	{ \
@@ -861,7 +862,7 @@ public: \
 			return TRUE; \
 	}
 
-// void OnInitMenuPopup(CMenu menuPopup, UINT nIndex, BOOL bSysMenu)
+// void OnInitMenuPopup(CMenuHandle menuPopup, UINT nIndex, BOOL bSysMenu)
 #define MSG_WM_INITMENUPOPUP(func) \
 	if (uMsg == WM_INITMENUPOPUP) \
 	{ \
@@ -872,7 +873,7 @@ public: \
 			return TRUE; \
 	}
 
-// void OnMenuSelect(UINT nItemID, UINT nFlags, CMenu menu)
+// void OnMenuSelect(UINT nItemID, UINT nFlags, CMenuHandle menu)
 #define MSG_WM_MENUSELECT(func) \
 	if (uMsg == WM_MENUSELECT) \
 	{ \
@@ -883,7 +884,7 @@ public: \
 			return TRUE; \
 	}
 
-// LRESULT OnMenuChar(UINT nChar, UINT nFlags, CMenu menu)
+// LRESULT OnMenuChar(UINT nChar, UINT nFlags, CMenuHandle menu)
 #define MSG_WM_MENUCHAR(func) \
 	if (uMsg == WM_MENUCHAR) \
 	{ \
@@ -1151,7 +1152,7 @@ public: \
 	if (uMsg == WM_ASKCBFORMATNAME) \
 	{ \
 		SetMsgHandled(TRUE); \
-		func((DWORD)wParam, (LPTSTR)lParam); \
+		func((UINT)wParam, (LPTSTR)lParam); \
 		lResult = 0; \
 		if(IsMsgHandled()) \
 			return TRUE; \
@@ -1321,12 +1322,12 @@ public: \
 			return TRUE; \
 	}
 
-// BOOL OnDeviceChange(UINT nEventType, DWORD dwData)
+// BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 #define MSG_WM_DEVICECHANGE(func) \
 	if (uMsg == WM_DEVICECHANGE) \
 	{ \
 		SetMsgHandled(TRUE); \
-		lResult = (LRESULT)func((UINT)wParam, (DWORD)lParam); \
+		lResult = (LRESULT)func((UINT)wParam, (DWORD_PTR)lParam); \
 		if(IsMsgHandled()) \
 			return TRUE; \
 	}
@@ -1501,12 +1502,12 @@ public: \
 			return TRUE; \
 	}
 
-// BOOL OnPowerBroadcast(DWORD dwPowerEvent, DWORD dwData)
+// BOOL OnPowerBroadcast(DWORD dwPowerEvent, DWORD_PTR dwData)
 #define MSG_WM_POWERBROADCAST(func) \
 	if (uMsg == WM_POWERBROADCAST) \
 	{ \
 		SetMsgHandled(TRUE); \
-		lResult = (LRESULT)func((DWORD)wParam, (DWORD)lParam); \
+		lResult = (LRESULT)func((DWORD)wParam, (DWORD_PTR)lParam); \
 		if(IsMsgHandled()) \
 			return TRUE; \
 	}
@@ -1544,7 +1545,7 @@ public: \
 			return TRUE; \
 	}
 
-// void OnSetFont(CFont font, BOOL bRedraw)
+// void OnSetFont(CFontHandle font, BOOL bRedraw)
 #define MSG_WM_SETFONT(func) \
 	if (uMsg == WM_SETFONT) \
 	{ \
@@ -1610,7 +1611,7 @@ public: \
 ///////////////////////////////////////////////////////////////////////////////
 // New NT4 & NT5 messages
 
-#if(_WIN32_WINNT >= 0x0400)
+#if (_WIN32_WINNT >= 0x0400)
 
 // void OnMouseHover(WPARAM wParam, CPoint ptPos)
 #define MSG_WM_MOUSEHOVER(func) \
@@ -1634,11 +1635,11 @@ public: \
 			return TRUE; \
 	}
 
-#endif /* _WIN32_WINNT >= 0x0400 */
+#endif // _WIN32_WINNT >= 0x0400
 
-#if(WINVER >= 0x0500)
+#if (WINVER >= 0x0500)
 
-// void OnMenuRButtonUp(WPARAM wParam, CMenu menu)
+// void OnMenuRButtonUp(WPARAM wParam, CMenuHandle menu)
 #define MSG_WM_MENURBUTTONUP(func) \
 	if (uMsg == WM_MENURBUTTONUP) \
 	{ \
@@ -1649,7 +1650,7 @@ public: \
 			return TRUE; \
 	}
 
-// LRESULT OnMenuDrag(WPARAM wParam, CMenu menu)
+// LRESULT OnMenuDrag(WPARAM wParam, CMenuHandle menu)
 #define MSG_WM_MENUDRAG(func) \
 	if (uMsg == WM_MENUDRAG) \
 	{ \
@@ -1669,7 +1670,7 @@ public: \
 			return TRUE; \
 	}
 
-// void OnUnInitMenuPopup(UINT nID, CMenu menu)
+// void OnUnInitMenuPopup(UINT nID, CMenuHandle menu)
 #define MSG_WM_UNINITMENUPOPUP(func) \
 	if (uMsg == WM_UNINITMENUPOPUP) \
 	{ \
@@ -1680,7 +1681,7 @@ public: \
 			return TRUE; \
 	}
 
-// void OnMenuCommand(WPARAM nIndex, CMenu menu)
+// void OnMenuCommand(WPARAM nIndex, CMenuHandle menu)
 #define MSG_WM_MENUCOMMAND(func) \
 	if (uMsg == WM_MENUCOMMAND) \
 	{ \
@@ -1691,9 +1692,9 @@ public: \
 			return TRUE; \
 	}
 
-#endif /* WINVER >= 0x0500 */
+#endif // WINVER >= 0x0500
 
-#if(_WIN32_WINNT >= 0x0500)
+#if (_WIN32_WINNT >= 0x0500)
 
 // BOOL OnAppCommand(CWindow wndFocus, short cmd, WORD uDevice, int dwKeys)
 #define MSG_WM_APPCOMMAND(func) \
@@ -1842,7 +1843,7 @@ public: \
 			return TRUE; \
 	}
 
-// OnThemeChanged()
+// void OnThemeChanged()
 #define MSG_WM_THEMECHANGED(func) \
 	if (uMsg == WM_THEMECHANGED) \
 	{ \
@@ -1853,7 +1854,21 @@ public: \
 			return TRUE; \
 	}
 
-#endif /* _WIN32_WINNT >= 0x0501 */
+#endif // _WIN32_WINNT >= 0x0501
+
+#if (_WIN32_WINNT >= 0x0600)
+
+// BOOL OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt)
+#define MSG_WM_MOUSEHWHEEL(func) \
+	if (uMsg == WM_MOUSEHWHEEL) \
+	{ \
+		SetMsgHandled(TRUE); \
+		lResult = (LRESULT)func((UINT)LOWORD(wParam), (short)HIWORD(wParam), _WTYPES_NS::CPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))); \
+		if(IsMsgHandled()) \
+			return TRUE; \
+	}
+
+#endif // (_WIN32_WINNT >= 0x0600)
 
 ///////////////////////////////////////////////////////////////////////////////
 // ATL defined messages

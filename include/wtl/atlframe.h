@@ -1,22 +1,15 @@
-// Windows Template Library - WTL version 8.0
-// Copyright (C) Microsoft Corporation. All rights reserved.
+// Windows Template Library - WTL version 9.10
+// Copyright (C) Microsoft Corporation, WTL Team. All rights reserved.
 //
 // This file is a part of the Windows Template Library.
 // The use and distribution terms for this software are covered by the
-// Common Public License 1.0 (http://opensource.org/osi3.0/licenses/cpl1.0.php)
-// which can be found in the file CPL.TXT at the root of this distribution.
-// By using this software in any fashion, you are agreeing to be bound by
-// the terms of this license. You must not remove this notice, or
-// any other, from this software.
+// Microsoft Public License (http://opensource.org/licenses/MS-PL)
+// which can be found in the file MS-PL.txt at the root folder.
 
 #ifndef __ATLFRAME_H__
 #define __ATLFRAME_H__
 
 #pragma once
-
-#ifndef __cplusplus
-	#error ATL requires C++ compilation (use a .cpp suffix)
-#endif
 
 #ifndef __ATLAPP_H__
 	#error atlframe.h requires atlapp.h to be included first
@@ -38,6 +31,7 @@
 // CUpdateUIBase
 // CUpdateUI<T>
 // CDynamicUpdateUI<T>
+// CAutoUpdateUI<T>
 // CDialogResize<T>
 // CDoubleBufferImpl<T>
 // CDoubleBufferWindowImpl<T, TBase, TWinTraits>
@@ -93,8 +87,7 @@ public:
 					LPCTSTR lpsz = m_wc.lpszClassName;
 					WNDPROC proc = m_wc.lpfnWndProc;
 
-					WNDCLASSEX wc = { 0 };
-					wc.cbSize = sizeof(WNDCLASSEX);
+					WNDCLASSEX wc = { sizeof(WNDCLASSEX) };
 					// try process local class first
 					if(!::GetClassInfoEx(ModuleHelper::GetModuleInstance(), m_lpszOrigName, &wc))
 					{
@@ -133,8 +126,12 @@ public:
 				{
 					if(m_uCommonResourceID != 0)   // use it if not zero
 					{
-						m_wc.hIcon = (HICON)::LoadImage(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(m_uCommonResourceID), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-						m_wc.hIconSm = (HICON)::LoadImage(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(m_uCommonResourceID), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+						m_wc.hIcon = (HICON)::LoadImage(ModuleHelper::GetResourceInstance(), 
+							MAKEINTRESOURCE(m_uCommonResourceID), IMAGE_ICON, 
+							::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR);
+						m_wc.hIconSm = (HICON)::LoadImage(ModuleHelper::GetResourceInstance(), 
+							MAKEINTRESOURCE(m_uCommonResourceID), IMAGE_ICON, 
+							::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
 					}
 					m_atom = ::RegisterClassEx(&m_wc);
 				}
@@ -213,7 +210,9 @@ public:
 				if (m_atom == 0)
 				{
 					if(m_uCommonResourceID != 0)   // use it if not zero
-						m_wc.hIcon = (HICON)::LoadImage(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(m_uCommonResourceID), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+						m_wc.hIcon = (HICON)::LoadImage(ModuleHelper::GetResourceInstance(), 
+							MAKEINTRESOURCE(m_uCommonResourceID), IMAGE_ICON, 
+							::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR);
 					m_atom = ::RegisterClass(&m_wc);
 				}
 			}
@@ -375,29 +374,6 @@ class ATL_NO_VTABLE CFrameWindowImplBase : public ATL::CWindowImplBaseT< TBase, 
 public:
 	DECLARE_FRAME_WND_CLASS(NULL, 0)
 
-// Data members
-	HWND m_hWndToolBar;
-	HWND m_hWndStatusBar;
-	HWND m_hWndClient;
-
-	HACCEL m_hAccel;
-
-#ifdef _WIN32_WCE
-	HWND m_hWndCECommandBar;
-#endif // _WIN32_WCE
-
-	struct _AtlToolBarData
-	{
-		WORD wVersion;
-		WORD wWidth;
-		WORD wHeight;
-		WORD wItemCount;
-		//WORD aItems[wItemCount]
-
-		WORD* items()
-			{ return (WORD*)(this+1); }
-	};
-
 #if (_WIN32_IE >= 0x0500) && !defined(_WIN32_WCE)
 	struct _ChevronMenuInfo
 	{
@@ -407,14 +383,25 @@ public:
 	};
 #endif // (_WIN32_IE >= 0x0500) && !defined(_WIN32_WCE)
 
+// Data members
+	HWND m_hWndToolBar;
+	HWND m_hWndStatusBar;
+	HWND m_hWndClient;
+
+#ifdef _WIN32_WCE
+	HWND m_hWndCECommandBar;
+#endif // _WIN32_WCE
+
+	HACCEL m_hAccel;
+
 // Constructor
 	CFrameWindowImplBase() : 
-#ifdef _WIN32_WCE
-		m_hWndCECommandBar(NULL),
-#endif // _WIN32_WCE
 		m_hWndToolBar(NULL), 
 		m_hWndStatusBar(NULL), 
 		m_hWndClient(NULL), 
+#ifdef _WIN32_WCE
+		m_hWndCECommandBar(NULL),
+#endif // _WIN32_WCE
 		m_hAccel(NULL)
 	{ }
 
@@ -422,6 +409,16 @@ public:
 	HWND Create(HWND hWndParent, ATL::_U_RECT rect, LPCTSTR szWindowName, DWORD dwStyle, DWORD dwExStyle, ATL::_U_MENUorID MenuOrID, ATOM atom, LPVOID lpCreateParam)
 	{
 		ATLASSERT(m_hWnd == NULL);
+
+#if (_ATL_VER >= 0x0800)
+		// Allocate the thunk structure here, where we can fail gracefully.
+		BOOL bRet = m_thunk.Init(NULL, NULL);
+		if(bRet == FALSE)
+		{
+			::SetLastError(ERROR_OUTOFMEMORY);
+			return NULL;
+		}
+#endif // (_ATL_VER >= 0x0800)
 
 		if(atom == 0)
 			return NULL;
@@ -476,7 +473,7 @@ public:
 			pTBBtn[0].iBitmap = cxSeparator / 2;
 			pTBBtn[0].idCommand = 0;
 			pTBBtn[0].fsState = 0;
-			pTBBtn[0].fsStyle = TBSTYLE_SEP;
+			pTBBtn[0].fsStyle = BTNS_SEP;
 			pTBBtn[0].dwData = 0;
 			pTBBtn[0].iString = 0;
 		}
@@ -489,7 +486,7 @@ public:
 				pTBBtn[j].iBitmap = nBmp++;
 				pTBBtn[j].idCommand = pItems[i];
 				pTBBtn[j].fsState = TBSTATE_ENABLED;
-				pTBBtn[j].fsStyle = TBSTYLE_BUTTON;
+				pTBBtn[j].fsStyle = BTNS_BUTTON;
 				pTBBtn[j].dwData = 0;
 				pTBBtn[j].iString = 0;
 			}
@@ -498,7 +495,7 @@ public:
 				pTBBtn[j].iBitmap = cxSeparator;
 				pTBBtn[j].idCommand = 0;
 				pTBBtn[j].fsState = 0;
-				pTBBtn[j].fsStyle = TBSTYLE_SEP;
+				pTBBtn[j].fsStyle = BTNS_SEP;
 				pTBBtn[j].dwData = 0;
 				pTBBtn[j].iString = 0;
 			}
@@ -523,7 +520,7 @@ public:
 		// check if font is taller than our bitmaps
 		CFontHandle font = (HFONT)::SendMessage(hWnd, WM_GETFONT, 0, 0L);
 		if(font.IsNull())
-			font = AtlGetDefaultGuiFont();
+			font = (HFONT)::GetStockObject(SYSTEM_FONT);
 		LOGFONT lf = { 0 };
 		font.GetLogFont(lf);
 		WORD cyFontHeight = (WORD)abs(lf.lfHeight);
@@ -552,9 +549,9 @@ public:
 		}
 
 		::SendMessage(hWnd, TB_ADDBUTTONS, nItems, (LPARAM)pTBBtn);
-		::SendMessage(hWnd, TB_SETBITMAPSIZE, 0, MAKELONG(pData->wWidth, max(pData->wHeight, cyFontHeight)));
+		::SendMessage(hWnd, TB_SETBITMAPSIZE, 0, MAKELONG(pData->wWidth, __max(pData->wHeight, cyFontHeight)));
 		const int cxyButtonMargin = 7;
-		::SendMessage(hWnd, TB_SETBUTTONSIZE, 0, MAKELONG(pData->wWidth + cxyButtonMargin, max(pData->wHeight, cyFontHeight) + cxyButtonMargin));
+		::SendMessage(hWnd, TB_SETBUTTONSIZE, 0, MAKELONG(pData->wWidth + cxyButtonMargin, __max(pData->wHeight, cyFontHeight) + cxyButtonMargin));
 
 		return hWnd;
 	}
@@ -577,10 +574,8 @@ public:
 		}
 
 		// Initialize and send the REBARINFO structure
-		REBARINFO rbi = { 0 };
-		rbi.cbSize = sizeof(REBARINFO);
-		rbi.fMask  = 0;
-		if(!::SendMessage(hWndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi))
+		REBARINFO rbi = { sizeof(REBARINFO), 0 };
+		if(::SendMessage(hWndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi) == 0)
 		{
 			ATLTRACE2(atlTraceUI, 0, _T("Failed to initialize rebar.\n"));
 			::DestroyWindow(hWndReBar);
@@ -709,7 +704,7 @@ public:
 			rbBand.fMask = RBBIM_SIZE;
 			BOOL bRet = (BOOL)::SendMessage(m_hWndToolBar, RB_GETBANDINFO, i, (LPARAM)&rbBand);
 			ATLASSERT(bRet);
-			RECT rect = { 0, 0, 0, 0 };
+			RECT rect = { 0 };
 			::SendMessage(m_hWndToolBar, RB_GETBANDBORDERS, i, (LPARAM)&rect);
 			rbBand.cx += rect.left + rect.right;
 			bRet = (BOOL)::SendMessage(m_hWndToolBar, RB_SETBANDINFO, i, (LPARAM)&rbBand);
@@ -737,8 +732,7 @@ public:
 #endif // _WIN32_WCE
 	{
 		const int cchMax = 128;   // max text length is 127 for status bars (+1 for null)
-		TCHAR szText[cchMax];
-		szText[0] = 0;
+		TCHAR szText[cchMax] = { 0 };
 		::LoadString(ModuleHelper::GetResourceInstance(), nTextID, szText, cchMax);
 		return CreateSimpleStatusBar(szText, dwStyle, nID);
 	}
@@ -825,10 +819,10 @@ public:
 		// resize toolbar
 		if(m_hWndToolBar != NULL && ((DWORD)::GetWindowLong(m_hWndToolBar, GWL_STYLE) & WS_VISIBLE))
 		{
-			if(bResizeBars)
+			if(bResizeBars != FALSE)
 			{
 				::SendMessage(m_hWndToolBar, WM_SIZE, 0, 0);
-				::InvalidateRect(m_hWndToolBar, NULL, FALSE);
+				::InvalidateRect(m_hWndToolBar, NULL, TRUE);
 			}
 			RECT rectTB = { 0 };
 			::GetWindowRect(m_hWndToolBar, &rectTB);
@@ -838,7 +832,7 @@ public:
 		// resize status bar
 		if(m_hWndStatusBar != NULL && ((DWORD)::GetWindowLong(m_hWndStatusBar, GWL_STYLE) & WS_VISIBLE))
 		{
-			if(bResizeBars)
+			if(bResizeBars != FALSE)
 				::SendMessage(m_hWndStatusBar, WM_SIZE, 0, 0);
 			RECT rectSB = { 0 };
 			::GetWindowRect(m_hWndStatusBar, &rectSB);
@@ -891,8 +885,7 @@ public:
 		else
 		{
 			const int cchBuff = 256;
-			TCHAR szBuff[cchBuff];
-			szBuff[0] = 0;
+			TCHAR szBuff[cchBuff] = { 0 };
 			if(!(wFlags & MF_POPUP))
 			{
 				WORD wID = LOWORD(wParam);
@@ -944,13 +937,10 @@ public:
 	LRESULT OnToolTipTextA(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	{
 		LPNMTTDISPINFOA pDispInfo = (LPNMTTDISPINFOA)pnmh;
-		pDispInfo->szText[0] = 0;
-
 		if((idCtrl != 0) && !(pDispInfo->uFlags & TTF_IDISHWND))
 		{
 			const int cchBuff = 256;
-			char szBuff[cchBuff];
-			szBuff[0] = 0;
+			char szBuff[cchBuff] = { 0 };
 			int nRet = ::LoadStringA(ModuleHelper::GetResourceInstance(), idCtrl, szBuff, cchBuff);
 			for(int i = 0; i < nRet; i++)
 			{
@@ -972,13 +962,10 @@ public:
 	LRESULT OnToolTipTextW(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	{
 		LPNMTTDISPINFOW pDispInfo = (LPNMTTDISPINFOW)pnmh;
-		pDispInfo->szText[0] = 0;
-
 		if((idCtrl != 0) && !(pDispInfo->uFlags & TTF_IDISHWND))
 		{
 			const int cchBuff = 256;
-			wchar_t szBuff[cchBuff];
-			szBuff[0] = 0;
+			wchar_t szBuff[cchBuff] = { 0 };
 			int nRet = ::LoadStringW(ModuleHelper::GetResourceInstance(), idCtrl, szBuff, cchBuff);
 			for(int i = 0; i < nRet; i++)
 			{
@@ -1037,7 +1024,7 @@ public:
 			bRet = (BOOL)wnd.SendMessage(TB_GETITEMRECT, i, (LPARAM)&rcButton);
 			ATLASSERT(bRet);
 			bool bEnabled = ((tbb.fsState & TBSTATE_ENABLED) != 0);
-			if(rcButton.right > rcClient.right)
+			if((rcButton.right > rcClient.right) || (rcButton.bottom > rcClient.bottom))
 			{
 				if(tbb.fsStyle & BTNS_SEP)
 				{
@@ -1064,13 +1051,13 @@ public:
 					// get button's text
 					const int cchBuff = 200;
 					TCHAR szBuff[cchBuff] = { 0 };
-					LPTSTR lpstrText = szBuff;
+					LPCTSTR lpstrText = szBuff;
 					TBBUTTONINFO tbbi = { 0 };
 					tbbi.cbSize = sizeof(TBBUTTONINFO);
 					tbbi.dwMask = TBIF_TEXT;
 					tbbi.pszText = szBuff;
 					tbbi.cchText = cchBuff;
-					if(wnd.SendMessage(TB_GETBUTTONINFO, tbb.idCommand, (LPARAM)&tbbi) == -1 || lstrlen(szBuff) == 0)
+					if((wnd.SendMessage(TB_GETBUTTONINFO, tbb.idCommand, (LPARAM)&tbbi) == -1) || (szBuff[0] == 0))
 					{
 						// no text for this button, try a resource string
 						lpstrText = _T("");
@@ -1177,8 +1164,7 @@ public:
 	HWND CreateEx(HWND hWndParent = NULL, ATL::_U_RECT rect = NULL, DWORD dwStyle = 0, DWORD dwExStyle = 0, LPVOID lpCreateParam = NULL)
 	{
 		const int cchName = 256;
-		TCHAR szWindowName[cchName];
-		szWindowName[0] = 0;
+		TCHAR szWindowName[cchName] = { 0 };
 #ifndef _WIN32_WCE
 		::LoadString(ModuleHelper::GetResourceInstance(), T::GetWndClassInfo().m_uCommonResourceID, szWindowName, cchName);
 		HMENU hMenu = ::LoadMenu(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(T::GetWndClassInfo().m_uCommonResourceID));
@@ -1469,8 +1455,7 @@ public:
 	HWND CreateEx(HWND hWndParent = NULL, ATL::_U_RECT rect = NULL, DWORD dwStyle = 0, DWORD dwExStyle = 0, LPVOID lpCreateParam = NULL)
 	{
 		const int cchName = 256;
-		TCHAR szWindowName[cchName];
-		szWindowName[0] = 0;
+		TCHAR szWindowName[cchName] = { 0 };
 		::LoadString(ModuleHelper::GetResourceInstance(), T::GetWndClassInfo().m_uCommonResourceID, szWindowName, cchName);
 		HMENU hMenu = ::LoadMenu(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(T::GetWndClassInfo().m_uCommonResourceID));
 
@@ -1519,7 +1504,9 @@ public:
 		if(!bRet)
 		{
 			if(uMsg != WM_NCDESTROY)
+			{
 				lRes = pThis->DefWindowProc(uMsg, wParam, lParam);
+			}
 			else
 			{
 				// unsubclass, if needed
@@ -1543,11 +1530,11 @@ public:
 		if(pThis->m_dwState & WINSTATE_DESTROYED && pThis->m_pCurrentMsg == NULL)
 		{
 			// clear out window handle
-			HWND hWnd = pThis->m_hWnd;
+			HWND hWndThis = pThis->m_hWnd;
 			pThis->m_hWnd = NULL;
 			pThis->m_dwState &= ~WINSTATE_DESTROYED;
 			// clean up after window is destroyed
-			pThis->OnFinalMessage(hWnd);
+			pThis->OnFinalMessage(hWndThis);
 		}
 #endif // (_ATL_VER >= 0x0700)
 		return lRes;
@@ -1747,8 +1734,7 @@ public:
 	HWND CreateEx(HWND hWndParent, ATL::_U_RECT rect = NULL, LPCTSTR lpcstrWindowName = NULL, DWORD dwStyle = 0, DWORD dwExStyle = 0, LPVOID lpCreateParam = NULL)
 	{
 		const int cchName = 256;
-		TCHAR szWindowName[cchName];
-		szWindowName[0] = 0;
+		TCHAR szWindowName[cchName] = { 0 };
 		if(lpcstrWindowName == NULL)
 		{
 			::LoadString(ModuleHelper::GetResourceInstance(), T::GetWndClassInfo().m_uCommonResourceID, szWindowName, cchName);
@@ -1846,7 +1832,7 @@ public:
 
 		if(!(lpWndPos->flags & SWP_NOSIZE))
 		{
-			RECT rectClient;
+			RECT rectClient = { 0 };
 			if(UpdateClientEdge(&rectClient) && ((GetStyle() & WS_MAXIMIZE) != 0))
 			{
 				::AdjustWindowRectEx(&rectClient, GetStyle(), FALSE, GetExStyle());
@@ -2108,6 +2094,9 @@ public:
 	};
 
 	// instance data
+#pragma warning(push)
+#pragma warning(disable: 4201)   // nameless unions are part of C++
+
 	struct _AtlUpdateUIData
 	{
 		WORD m_wState;
@@ -2115,11 +2104,18 @@ public:
 		{
 			void* m_lpData;
 			LPTSTR m_lpstrText;
+			struct
+			{
+				WORD m_nIDFirst;
+				WORD m_nIDLast;
+			};
 		};
 
 		bool operator ==(const _AtlUpdateUIData& e) const
 		{ return (m_wState == e.m_wState && m_lpData == e.m_lpData); }
 	};
+
+#pragma warning(pop)
 
 	ATL::CSimpleArray<_AtlUpdateUIElement> m_UIElements;   // elements data
 	const _AtlUpdateUIMap* m_pUIMap;                       // static UI data
@@ -2223,7 +2219,12 @@ public:
 		while(pMap->m_nID != (WORD)-1)
 		{
 			if(pMap->m_wType & UPDUI_MENUPOPUP)
+			{
 				UIUpdateMenuBarElement(pMap->m_nID, pUIData, hMenu);
+
+				if((pUIData->m_wState & UPDUI_RADIO) != 0)
+					::CheckMenuRadioItem(hMenu, pUIData->m_nIDFirst, pUIData->m_nIDLast, pMap->m_nID, MF_BYCOMMAND);
+			}
 			pMap++;
 			pUIData++;
 		}
@@ -2377,6 +2378,46 @@ public:
 
 				break;   // found
 			}
+		}
+
+		return TRUE;
+	}
+
+	// for menu items
+	BOOL UISetRadioMenuItem(int nID, int nIDFirst, int nIDLast, BOOL bForceUpdate = FALSE)
+	{
+		const _AtlUpdateUIMap* pMap = m_pUIMap;
+		_AtlUpdateUIData* pUIData = m_pUIData;
+		if(pUIData == NULL)
+			return FALSE;
+
+		for( ; pMap->m_nID != (WORD)-1; pMap++, pUIData++)
+		{
+			if(nID == (int)pMap->m_nID)
+			{
+				pUIData->m_wState |= pMap->m_wType;
+				pUIData->m_wState |= UPDUI_RADIO;
+				pUIData->m_nIDFirst = (WORD)nIDFirst;
+				pUIData->m_nIDLast = (WORD)nIDLast;
+
+				if(bForceUpdate)
+					pUIData->m_wState |= pMap->m_wType;
+				if(pUIData->m_wState & pMap->m_wType)
+					m_wDirtyType |= pMap->m_wType;
+			}
+			else if(pMap->m_nID >= nIDFirst && pMap->m_nID <= nIDLast)
+			{
+				if(pUIData->m_wState & UPDUI_RADIO)
+				{
+					pUIData->m_wState &= ~pMap->m_wType;
+					pUIData->m_wState &= ~UPDUI_RADIO;
+					pUIData->m_nIDFirst = 0;
+					pUIData->m_nIDLast = 0;
+				}
+			}
+
+			if(pMap->m_nID == nIDLast)
+				break;
 		}
 
 		return TRUE;
@@ -2758,8 +2799,8 @@ public:
 		const _AtlUpdateUIMap* pMap = pT->GetUpdateUIMap();
 		m_pUIMap = pMap;
 		ATLASSERT(m_pUIMap != NULL);
-		int nCount;
-		for(nCount = 1; pMap->m_nID != (WORD)-1; nCount++)
+		int nCount = 1;
+		for( ; pMap->m_nID != (WORD)-1; nCount++)
 			pMap++;
 
 		// check for duplicates (debug only)
@@ -2907,6 +2948,9 @@ public:
 		{
 			if(m_arrUIMap[i].m_nID == nID)
 			{
+				if((m_arrUIData[i].m_wState & UPDUI_TEXT) != 0)
+					delete [] m_arrUIData[i].m_lpstrText;
+
 				BOOL bRet = m_arrUIMap.RemoveAt(i);
 				ATLASSERT(bRet);
 				bRet = m_arrUIData.RemoveAt(i);
@@ -2919,6 +2963,191 @@ public:
 
 		return bRetVal;
 	}
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// CAutoUpdateUI : Automatic mapping of UI elements
+
+template <class T>
+class CAutoUpdateUI : public CDynamicUpdateUI<T>
+{
+public:
+	LPCTSTR UIGetText(int nID)
+	{
+		for(int i = 0; i < m_arrUIMap.GetSize(); i++)
+		{
+			if(m_arrUIMap[i].m_nID == nID)
+ 				return m_arrUIData[i].m_lpstrText;
+		}
+
+		return NULL;
+	}
+
+// Element
+	template <WORD t_wType>
+	bool UIAddElement(UINT nID)
+	{
+		// check for existing UI map element
+		for(int i = 0; i < m_arrUIMap.GetSize(); i++)
+		{
+			if(m_arrUIMap[i].m_nID == nID)
+			{
+				// set requested type
+				m_arrUIMap[i].m_wType |= t_wType;
+				return true;
+			}
+		}
+
+		// Add element to UI map with requested type
+		return UIAddUpdateElement((WORD)nID, t_wType);
+	}
+
+	template <WORD t_wType>
+	bool UIRemoveElement(UINT nID)
+	{
+		for(int i = 0; i < m_arrUIMap.GetSize(); i++)
+		{
+			if(m_arrUIMap[i].m_nID == nID) // matching UI map element
+			{
+				WORD wType = m_arrUIMap[i].m_wType & ~t_wType;
+				if (wType != 0)   // has other types 
+				{
+					m_arrUIMap[i].m_wType = wType; // keep other types
+					return true;
+				}
+				else
+				{
+					return UIRemoveUpdateElement((WORD)nID);
+				}
+			}
+		}
+
+		return false;
+	}
+
+// Menu
+	bool UIAddMenu(HMENU hMenu, bool bSetText = false)
+	{
+#if defined(_WIN32_WCE) && (_ATL_VER >= 0x0800)
+		using ATL::GetMenuString;
+#endif
+		ATLASSERT(::IsMenu(hMenu));
+		MENUITEMINFO mii = {sizeof(MENUITEMINFO), MIIM_TYPE | MIIM_ID | MIIM_SUBMENU};
+
+		// Complete the UI map
+		for (INT uItem = 0; CMenuHandle(hMenu).GetMenuItemInfo(uItem, TRUE, &mii); uItem++)
+		{
+			if(mii.hSubMenu)
+			{
+				// Add submenu to UI map
+				UIAddMenu(mii.hSubMenu, bSetText);
+			}
+			else if (mii.wID != 0)
+			{
+				// Add element to UI map
+				UIAddElement<UPDUI_MENUPOPUP>(mii.wID);
+#if !defined(_WIN32_WCE) || (_ATL_VER >= 0x0800)
+				if (bSetText)
+				{
+					TCHAR sText[64] = { 0 };
+					if (GetMenuString(hMenu, uItem, sText, 64, MF_BYPOSITION))
+						UISetText(mii.wID, sText);
+				}
+#else
+				bSetText;
+#endif // !defined(_WIN32_WCE) || (_ATL_VER >= 0x0800)
+			}
+		}
+
+		return true;
+	}
+
+	bool UIAddMenu(UINT uID, bool bSetText = false)
+	{
+		CMenu menu;
+		ATLVERIFY(menu.LoadMenu(uID));
+		return UIAddMenu(menu, bSetText);
+	}
+
+// ToolBar
+#if !defined(_WIN32_WCE) || (defined(_AUTOUI_CE_TOOLBAR) && defined(TBIF_BYINDEX))
+	bool UIAddToolBar(HWND hWndToolBar)
+	{
+		ATLASSERT(::IsWindow(hWndToolBar));
+		TBBUTTONINFO tbbi = { sizeof(TBBUTTONINFO), TBIF_COMMAND | TBIF_STYLE | TBIF_BYINDEX };
+
+		// Add toolbar buttons
+		for (int uItem = 0; ::SendMessage(hWndToolBar, TB_GETBUTTONINFO, uItem, (LPARAM)&tbbi) != -1; uItem++)
+		{
+			if (tbbi.fsStyle ^ BTNS_SEP)
+				UIAddElement<UPDUI_TOOLBAR>(tbbi.idCommand);
+		}
+
+		// Add embedded controls if any
+		if (::GetWindow(hWndToolBar, GW_CHILD))
+			UIAddChildWindowContainer(hWndToolBar);
+
+		return (CUpdateUIBase::UIAddToolBar(hWndToolBar) != FALSE);
+	}
+#endif // !defined(_WIN32_WCE) || (defined(_AUTOUI_CE_TOOLBAR) && defined(TBIF_BYINDEX))
+
+// Container
+	bool UIAddChildWindowContainer(HWND hWnd)
+	{
+		ATLASSERT(::IsWindow(hWnd));
+
+		// Add children controls if any
+		for (ATL::CWindow wCtl = ::GetWindow(hWnd, GW_CHILD); wCtl.IsWindow(); wCtl = wCtl.GetWindow(GW_HWNDNEXT))
+		{
+			int id = wCtl.GetDlgCtrlID();
+			if(id != 0)
+				UIAddElement<UPDUI_CHILDWINDOW>(id);
+		}
+
+		return (CUpdateUIBase::UIAddChildWindowContainer(hWnd) != FALSE);
+	}
+
+// StatusBar
+	BOOL UIUpdateStatusBar(BOOL bForceUpdate = FALSE)
+	{
+		if(!(m_wDirtyType & UPDUI_STATUSBAR) && !bForceUpdate)
+			return TRUE;
+
+		for(int i = 0; i < m_arrUIMap.GetSize(); i++)
+		{
+			for(int e = 0; e < m_UIElements.GetSize(); e++)
+			{
+				if((m_UIElements[e].m_wType == UPDUI_STATUSBAR) && 
+				   (m_arrUIMap[i].m_wType & UPDUI_STATUSBAR) && 
+				   (m_arrUIData[i].m_wState & UPDUI_STATUSBAR))
+				{
+					UIUpdateStatusBarElement(m_arrUIMap[i].m_nID, &m_arrUIData[i], m_UIElements[e].m_hWnd);
+					m_arrUIData[i].m_wState &= ~UPDUI_STATUSBAR;
+					if(m_arrUIData[i].m_wState & UPDUI_TEXT)
+						m_arrUIData[i].m_wState &= ~UPDUI_TEXT;
+				}
+			}
+		}
+
+		m_wDirtyType &= ~UPDUI_STATUSBAR;
+		return TRUE;
+	}
+
+	bool UIAddStatusBar(HWND hWndStatusBar, INT nPanes = 1)
+	{
+		ATLASSERT(::IsWindow(hWndStatusBar));
+
+		// Add StatusBar panes
+		for (int iPane = 0; iPane < nPanes; iPane++)
+			UIAddElement<UPDUI_STATUSBAR>(ID_DEFAULT_PANE + iPane);
+
+		return (CUpdateUIBase::UIAddStatusBar(hWndStatusBar) != FALSE);
+	}
+
+// UI Map used if derived class has none
+	BEGIN_UPDATE_UI_MAP(CAutoUpdateUI)
+	END_UPDATE_UI_MAP()
 };
 
 
@@ -3044,6 +3273,7 @@ public:
 		if((dwStyle & dwForceStyle) != dwForceStyle)
 			pT->ModifyStyle(0, dwForceStyle);
 
+#ifndef _WIN32_WCE
 		// Adding this style removes an empty icon that dialogs with WS_THICKFRAME have.
 		// Setting icon to NULL is required when XP themes are active.
 		// Note: This will not prevent adding an icon for the dialog using SetIcon()
@@ -3053,6 +3283,7 @@ public:
 			if(pT->GetIcon(FALSE) == NULL)
 				pT->SetIcon(NULL, FALSE);
 		}
+#endif
 
 		// Cleanup in case of multiple initialization
 		// block: first check for the gripper control, destroy it if needed
@@ -3195,10 +3426,10 @@ public:
 				int j = 1;
 				for(j = 1; j < nGroupCount; j++)
 				{
-					rectGroup.left = min(rectGroup.left, m_arrData[i + j].m_rect.left);
-					rectGroup.top = min(rectGroup.top, m_arrData[i + j].m_rect.top);
-					rectGroup.right = max(rectGroup.right, m_arrData[i + j].m_rect.right);
-					rectGroup.bottom = max(rectGroup.bottom, m_arrData[i + j].m_rect.bottom);
+					rectGroup.left = __min(rectGroup.left, m_arrData[i + j].m_rect.left);
+					rectGroup.top = __min(rectGroup.top, m_arrData[i + j].m_rect.top);
+					rectGroup.right = __max(rectGroup.right, m_arrData[i + j].m_rect.right);
+					rectGroup.bottom = __max(rectGroup.bottom, m_arrData[i + j].m_rect.bottom);
 				}
 
 				for(j = 0; j < nGroupCount; j++)
@@ -3213,7 +3444,7 @@ public:
 			}
 			else // one control entry
 			{
-				RECT rectGroup = { 0, 0, 0, 0 };
+				RECT rectGroup = { 0 };
 				pT->DlgResize_PositionControl(cxWidth, cyHeight, rectGroup, m_arrData[i], false);
 			}
 		}

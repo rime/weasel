@@ -1,22 +1,15 @@
-// Windows Template Library - WTL version 8.0
-// Copyright (C) Microsoft Corporation. All rights reserved.
+// Windows Template Library - WTL version 9.10
+// Copyright (C) Microsoft Corporation, WTL Team. All rights reserved.
 //
 // This file is a part of the Windows Template Library.
 // The use and distribution terms for this software are covered by the
-// Common Public License 1.0 (http://opensource.org/osi3.0/licenses/cpl1.0.php)
-// which can be found in the file CPL.TXT at the root of this distribution.
-// By using this software in any fashion, you are agreeing to be bound by
-// the terms of this license. You must not remove this notice, or
-// any other, from this software.
+// Microsoft Public License (http://opensource.org/licenses/MS-PL)
+// which can be found in the file MS-PL.txt at the root folder.
 
 #ifndef __ATLCTRLW_H__
 #define __ATLCTRLW_H__
 
 #pragma once
-
-#ifndef __cplusplus
-	#error ATL requires C++ compilation (use a .cpp suffix)
-#endif
 
 #ifdef _WIN32_WCE
 	#error atlctrlw.h is not supported on Windows CE
@@ -44,6 +37,8 @@
 	#error _WTL_CMDBAR_VISTA_MENUS requires (_WIN32_WINNT >= 0x0501) && (_WIN32_IE >= 0x0501)
   #endif
 #endif
+
+// Note: Define _WTL_CMDBAR_VISTA_STD_MENUBAR to use Vista standard menubar look with Vista menus
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -539,7 +534,7 @@ public:
 
 			T* pT = static_cast<T*>(this);
 			pT;   // avoid level 4 warning
-			TCHAR szString[pT->_nMaxMenuItemTextLength];
+			TCHAR szString[pT->_nMaxMenuItemTextLength] = { 0 };
 			for(int i = 0; i < nItems; i++)
 			{
 				CMenuItemInfo mii;
@@ -564,7 +559,7 @@ public:
 				btn.iBitmap = 0;
 				btn.idCommand = i;
 				btn.fsState = (BYTE)(((mii.fState & MFS_DISABLED) == 0) ? TBSTATE_ENABLED : 0);
-				btn.fsStyle = TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE | TBSTYLE_DROPDOWN;
+				btn.fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE | BTNS_DROPDOWN;
 				btn.dwData = 0;
 				btn.iString = 0;
 
@@ -913,6 +908,7 @@ public:
 		MESSAGE_HANDLER(GetGetBarMessage(), OnInternalGetBar)
 		MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
 		MESSAGE_HANDLER(WM_MENUCHAR, OnMenuChar)
+		MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
 
 		MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
 		MESSAGE_HANDLER(WM_KEYUP, OnKeyUp)
@@ -1098,6 +1094,12 @@ public:
 #ifdef _CMDBAR_EXTRA_TRACE
 		ATLTRACE2(atlTraceUI, 0, _T("CmdBar - OnKeyDown\n"));
 #endif
+		if(m_bAttachedMenu)   // nothing to do in this mode
+		{
+			bHandled = FALSE;
+			return 1;
+		}
+
 		bHandled = FALSE;
 		// Simulate Alt+Space for the parent
 		if(wParam == VK_SPACE)
@@ -1132,8 +1134,15 @@ public:
 #ifdef _CMDBAR_EXTRA_TRACE
 		ATLTRACE2(atlTraceUI, 0, _T("CmdBar - OnKeyUp\n"));
 #endif
+		if(m_bAttachedMenu)   // nothing to do in this mode
+		{
+			bHandled = FALSE;
+			return 1;
+		}
+
 		if(wParam != VK_SPACE)
 			bHandled = FALSE;
+
 		return 0;
 	}
 
@@ -1142,6 +1151,12 @@ public:
 #ifdef _CMDBAR_EXTRA_TRACE
 		ATLTRACE2(atlTraceUI, 0, _T("CmdBar - OnChar\n"));
 #endif
+		if(m_bAttachedMenu)   // nothing to do in this mode
+		{
+			bHandled = FALSE;
+			return 1;
+		}
+
 		if(wParam != VK_SPACE)
 			bHandled = FALSE;
 		else
@@ -1291,7 +1306,7 @@ public:
 
 			T* pT = static_cast<T*>(this);
 			pT;   // avoid level 4 warning
-			TCHAR szString[pT->_nMaxMenuItemTextLength];
+			TCHAR szString[pT->_nMaxMenuItemTextLength] = { 0 };
 			BOOL bRet = FALSE;
 			for(int i = 0; i < menuPopup.GetMenuItemCount(); i++)
 			{
@@ -1423,9 +1438,9 @@ public:
 
 	LRESULT OnSettingChange(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
-#ifndef SPI_GETKEYBOARDCUES
+#ifndef SPI_SETKEYBOARDCUES
 		const UINT SPI_SETKEYBOARDCUES = 0x100B;
-#endif // !SPI_GETKEYBOARDCUES
+#endif // !SPI_SETKEYBOARDCUES
 #ifndef SPI_GETFLATMENU
 		const UINT SPI_SETFLATMENU = 0x1023;
 #endif // !SPI_GETFLATMENU
@@ -1473,7 +1488,7 @@ public:
 			int nCount = ::GetMenuItemCount(menu);
 			int nRetCode = MNC_EXECUTE;
 			BOOL bRet = FALSE;
-			TCHAR szString[pT->_nMaxMenuItemTextLength];
+			TCHAR szString[pT->_nMaxMenuItemTextLength] = { 0 };
 			WORD wMnem = 0;
 			bool bFound = false;
 			for(int i = 0; i < nCount; i++)
@@ -1575,6 +1590,15 @@ public:
 		}
 
 		return lRet;
+	}
+
+	LRESULT OnKillFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+	{
+		if(m_bUseKeyboardCues && m_bShowKeyboardCues)
+			ShowKeyboardCues(false);
+
+		bHandled = FALSE;
+		return 1;
 	}
 
 	LRESULT OnDrawItem(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
@@ -1807,52 +1831,87 @@ public:
 			}
 			else if(lpTBCustomDraw->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
 			{
-				if(m_bFlatMenus)
+#if _WTL_CMDBAR_VISTA_MENUS && defined(_WTL_CMDBAR_VISTA_STD_MENUBAR)
+				if(m_bVistaMenus)
 				{
-#ifndef COLOR_MENUHILIGHT
-					const int COLOR_MENUHILIGHT = 29;
-#endif // !COLOR_MENUHILIGHT
-					bool bDisabled = ((lpTBCustomDraw->nmcd.uItemState & CDIS_DISABLED) == CDIS_DISABLED);
-					if(!bDisabled && ((lpTBCustomDraw->nmcd.uItemState & CDIS_HOT) == CDIS_HOT || 
-						(lpTBCustomDraw->nmcd.uItemState & CDIS_SELECTED) == CDIS_SELECTED))
+					::SetRectEmpty(&lpTBCustomDraw->rcText);
+					lRet = CDRF_NOTIFYPOSTPAINT;
+					bHandled = TRUE;
+				}
+				else
+#endif // _WTL_CMDBAR_VISTA_MENUS && defined(_WTL_CMDBAR_VISTA_STD_MENUBAR)
+				{
+					if(m_bFlatMenus)
 					{
-						::FillRect(lpTBCustomDraw->nmcd.hdc, &lpTBCustomDraw->nmcd.rc, ::GetSysColorBrush(COLOR_MENUHILIGHT));
-						::FrameRect(lpTBCustomDraw->nmcd.hdc, &lpTBCustomDraw->nmcd.rc, ::GetSysColorBrush(COLOR_HIGHLIGHT));
-						lpTBCustomDraw->clrText = ::GetSysColor(m_bParentActive ? COLOR_HIGHLIGHTTEXT : COLOR_GRAYTEXT);
+#ifndef COLOR_MENUHILIGHT
+						const int COLOR_MENUHILIGHT = 29;
+#endif // !COLOR_MENUHILIGHT
+						bool bDisabled = ((lpTBCustomDraw->nmcd.uItemState & CDIS_DISABLED) == CDIS_DISABLED);
+						if(!bDisabled && ((lpTBCustomDraw->nmcd.uItemState & CDIS_HOT) == CDIS_HOT || 
+							(lpTBCustomDraw->nmcd.uItemState & CDIS_SELECTED) == CDIS_SELECTED))
+						{
+							::FillRect(lpTBCustomDraw->nmcd.hdc, &lpTBCustomDraw->nmcd.rc, ::GetSysColorBrush(COLOR_MENUHILIGHT));
+							::FrameRect(lpTBCustomDraw->nmcd.hdc, &lpTBCustomDraw->nmcd.rc, ::GetSysColorBrush(COLOR_HIGHLIGHT));
+							lpTBCustomDraw->clrText = ::GetSysColor(m_bParentActive ? COLOR_HIGHLIGHTTEXT : COLOR_GRAYTEXT);
+						}
+						else if(bDisabled || !m_bParentActive)
+						{
+							lpTBCustomDraw->clrText = ::GetSysColor(COLOR_GRAYTEXT);
+						}
+
+						_ParentCustomDrawHelper(lpTBCustomDraw);
+
+						lRet = CDRF_SKIPDEFAULT;
+						bHandled = TRUE;
 					}
-					else if(bDisabled || !m_bParentActive)
+					else if(!m_bParentActive)
 					{
 						lpTBCustomDraw->clrText = ::GetSysColor(COLOR_GRAYTEXT);
+						bHandled = TRUE;
 					}
-					CDCHandle dc = lpTBCustomDraw->nmcd.hdc;
-					dc.SetTextColor(lpTBCustomDraw->clrText);
-					dc.SetBkMode(lpTBCustomDraw->nStringBkMode);
-					HFONT hFont = GetFont();
-					HFONT hFontOld = NULL;
-					if(hFont != NULL)
-						hFontOld = dc.SelectFont(hFont);
-					const int cchText = 200;
-					TCHAR szText[cchText] = { 0 };
-					TBBUTTONINFO tbbi = { 0 };
-					tbbi.cbSize = sizeof(TBBUTTONINFO);
-					tbbi.dwMask = TBIF_TEXT;
-					tbbi.pszText = szText;
-					tbbi.cchText = cchText;
-					GetButtonInfo((int)lpTBCustomDraw->nmcd.dwItemSpec, &tbbi);
-					dc.DrawText(szText, -1, &lpTBCustomDraw->nmcd.rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER | (m_bShowKeyboardCues ? 0 : DT_HIDEPREFIX));
-					if(hFont != NULL)
-						dc.SelectFont(hFontOld);
-					lRet = CDRF_SKIPDEFAULT;
-					bHandled = TRUE;
-				}
-				else if(!m_bParentActive)
-				{
-					lpTBCustomDraw->clrText = ::GetSysColor(COLOR_GRAYTEXT);
-					bHandled = TRUE;
 				}
 			}
+#if _WTL_CMDBAR_VISTA_MENUS && defined(_WTL_CMDBAR_VISTA_STD_MENUBAR)
+			else if (lpTBCustomDraw->nmcd.dwDrawStage == CDDS_ITEMPOSTPAINT)
+			{
+				bool bDisabled = ((lpTBCustomDraw->nmcd.uItemState & CDIS_DISABLED) == CDIS_DISABLED);
+				if(bDisabled || !m_bParentActive)
+					lpTBCustomDraw->clrText = ::GetSysColor(COLOR_GRAYTEXT);
+
+				_ParentCustomDrawHelper(lpTBCustomDraw);
+
+				lRet = CDRF_SKIPDEFAULT;
+				bHandled = TRUE;
+			}
+#endif // _WTL_CMDBAR_VISTA_MENUS && defined(_WTL_CMDBAR_VISTA_STD_MENUBAR)
 		}
 		return lRet;
+	}
+
+	void _ParentCustomDrawHelper(LPNMTBCUSTOMDRAW lpTBCustomDraw)
+	{
+		CDCHandle dc = lpTBCustomDraw->nmcd.hdc;
+		dc.SetTextColor(lpTBCustomDraw->clrText);
+		dc.SetBkMode(lpTBCustomDraw->nStringBkMode);
+
+		HFONT hFont = GetFont();
+		HFONT hFontOld = NULL;
+		if(hFont != NULL)
+			hFontOld = dc.SelectFont(hFont);
+
+		const int cchText = 200;
+		TCHAR szText[cchText] = { 0 };
+		TBBUTTONINFO tbbi = { 0 };
+		tbbi.cbSize = sizeof(TBBUTTONINFO);
+		tbbi.dwMask = TBIF_TEXT;
+		tbbi.pszText = szText;
+		tbbi.cchText = cchText;
+		GetButtonInfo((int)lpTBCustomDraw->nmcd.dwItemSpec, &tbbi);
+
+		dc.DrawText(szText, -1, &lpTBCustomDraw->nmcd.rc, DT_SINGLELINE | DT_CENTER | DT_VCENTER | (m_bShowKeyboardCues ? 0 : DT_HIDEPREFIX));
+
+		if(hFont != NULL)
+			dc.SelectFont(hFontOld);
 	}
 
 // Message hook handlers
@@ -2000,7 +2059,7 @@ public:
 							ATL::AtlGetCommCtrlVersion(&dwMajor, &dwMinor);
 							if(dwMajor <= 4 || (dwMajor == 5 && dwMinor < 80))
 							{
-								RECT rect;
+								RECT rect = { 0 };
 								GetItemRect(nHot, &rect);
 								PostMessage(WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(rect.left, rect.top));
 							}
@@ -2328,7 +2387,8 @@ public:
 	void DrawMenuText(CDCHandle& dc, RECT& rc, LPCTSTR lpstrText, COLORREF color)
 	{
 		int nTab = -1;
-		for(int i = 0; i < lstrlen(lpstrText); i++)
+		const int nLen = lstrlen(lpstrText);
+		for(int i = 0; i < nLen; i++)
 		{
 			if(lpstrText[i] == _T('\t'))
 			{
@@ -2480,7 +2540,7 @@ public:
 			const DWORD ROP_DSna = 0x00220326L;
 
 			// draw mask
-			RECT rcSource = { 0, 0, min(size.cx, rc.right - rc.left), min(size.cy, rc.bottom - rc.top) };
+			RECT rcSource = { 0, 0, __min(size.cx, rc.right - rc.left), __min(size.cy, rc.bottom - rc.top) };
 			dcMask.DrawFrameControl(&rcSource, DFC_MENU, bRadio ? DFCS_MENUBULLET : DFCS_MENUCHECK);
 
 			// draw shadow if disabled
@@ -2582,7 +2642,7 @@ public:
 				hOldFont = dc.SelectFont(m_fontMenu);
 			}
 
-			RECT rcText = { 0, 0, 0, 0 };
+			RECT rcText = { 0 };
 			dc.DrawText(pmd->lpstrText, -1, &rcText, DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_CALCRECT);
 			int cx = rcText.right - rcText.left;
 			dc.SelectFont(hOldFont);
@@ -2596,7 +2656,7 @@ public:
 			cy += cyMargin;
 
 			// height of item is the bigger of these two
-			lpMeasureItemStruct->itemHeight = max(cy, (int)m_szButton.cy);
+			lpMeasureItemStruct->itemHeight = __max(cy, (int)m_szButton.cy);
 
 			// width is width of text plus a bunch of stuff
 			cx += 2 * s_kcxTextMargin;   // L/R margin for readability
@@ -2851,7 +2911,7 @@ public:
 		if(nBtn == -1)
 			return -1;
 #if (_WIN32_IE >= 0x0500)
-		RECT rcClient;
+		RECT rcClient = { 0 };
 		GetClientRect(&rcClient);
 #endif // (_WIN32_IE >= 0x0500)
 		int nNextBtn;
@@ -2862,7 +2922,7 @@ public:
 			TBBUTTON tbb = { 0 };
 			GetButton(nNextBtn, &tbb);
 #if (_WIN32_IE >= 0x0500)
-			RECT rcBtn;
+			RECT rcBtn = { 0 };
 			GetItemRect(nNextBtn, &rcBtn);
 			if(rcBtn.right > rcClient.right)
 			{
@@ -2976,7 +3036,7 @@ public:
 		// check if we need extra spacing for menu item text
 		CWindowDC dc(m_hWnd);
 		HFONT hFontOld = dc.SelectFont(m_fontMenu);
-		RECT rcText = { 0, 0, 0, 0 };
+		RECT rcText = { 0 };
 		dc.DrawText(_T("\t"), -1, &rcText, DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_CALCRECT);
 		if((rcText.right - rcText.left) < 4)
 		{
@@ -2991,11 +3051,17 @@ public:
 		dc.SelectFont(hFontOld);
 
 		// get Windows version
+#ifndef _versionhelpers_H_INCLUDED_
 		OSVERSIONINFO ovi = { sizeof(OSVERSIONINFO) };
 		::GetVersionEx(&ovi);
+#endif // !_versionhelpers_H_INCLUDED_
 
 		// query keyboard cues mode (Windows 2000 or later)
-		if(ovi.dwMajorVersion >= 5)
+#ifdef _versionhelpers_H_INCLUDED_
+		if(::IsWindowsVersionOrGreater(5, 0, 0))
+#else // !_versionhelpers_H_INCLUDED_
+		if (ovi.dwMajorVersion >= 5)
+#endif // _versionhelpers_H_INCLUDED_
 		{
 #ifndef SPI_GETKEYBOARDCUES
 			const UINT SPI_GETKEYBOARDCUES = 0x100A;
@@ -3008,7 +3074,11 @@ public:
 		}
 
 		// query flat menu mode (Windows XP or later)
-		if((ovi.dwMajorVersion == 5 && ovi.dwMinorVersion >= 1) || (ovi.dwMajorVersion > 5))
+#ifdef _versionhelpers_H_INCLUDED_
+		if(::IsWindowsXPOrGreater())
+#else // !_versionhelpers_H_INCLUDED_
+		if ((ovi.dwMajorVersion == 5 && ovi.dwMinorVersion >= 1) || (ovi.dwMajorVersion > 5))
+#endif // _versionhelpers_H_INCLUDED_
 		{
 #ifndef SPI_GETFLATMENU
 			const UINT SPI_GETFLATMENU = 0x1022;
@@ -3020,27 +3090,7 @@ public:
 
 #if _WTL_CMDBAR_VISTA_MENUS
 		// check if we should use Vista menus
-		bool bVistaMenus = (RunTimeHelper::IsVista() && RunTimeHelper::IsCommCtrl6() && ((m_dwExtendedStyle & CBR_EX_NOVISTAMENUS) == 0));
-
-		if(bVistaMenus)
-		{
-			HMODULE hThemeDLL = ::LoadLibrary(_T("uxtheme.dll"));
-			if(hThemeDLL != NULL)
-			{
-				typedef BOOL (STDAPICALLTYPE *PFN_IsThemeActive)();
-				PFN_IsThemeActive pfnIsThemeActive = (PFN_IsThemeActive)::GetProcAddress(hThemeDLL, "IsThemeActive");
-				ATLASSERT(pfnIsThemeActive != NULL);
-				bVistaMenus = bVistaMenus && (pfnIsThemeActive != NULL) && (pfnIsThemeActive() != FALSE);
-
-				typedef BOOL (STDAPICALLTYPE *PFN_IsAppThemed)();
-				PFN_IsAppThemed pfnIsAppThemed = (PFN_IsAppThemed)::GetProcAddress(hThemeDLL, "IsAppThemed");
-				ATLASSERT(pfnIsAppThemed != NULL);
-				bVistaMenus = bVistaMenus && (pfnIsAppThemed != NULL) && (pfnIsAppThemed() != FALSE);
-
-				::FreeLibrary(hThemeDLL);
-			}
-		}
-
+		bool bVistaMenus = (((m_dwExtendedStyle & CBR_EX_NOVISTAMENUS) == 0) && RunTimeHelper::IsVista() && RunTimeHelper::IsThemeAvailable());
 		if(!bVistaMenus && m_bVistaMenus && (m_hMenu != NULL) && (m_arrCommand.GetSize() > 0))
 		{
 			T* pT = static_cast<T*>(this);
@@ -3147,16 +3197,16 @@ public:
 	void _AddVistaBitmapsFromImageList(int nStartIndex, int nCount)
 	{
 		// Create display compatible memory DC
-		HDC hDC = ::GetDC(NULL);
+		CClientDC dc(NULL);
 		CDC dcMem;
-		dcMem.CreateCompatibleDC(hDC);
+		dcMem.CreateCompatibleDC(dc);
 		HBITMAP hBitmapSave = dcMem.GetCurrentBitmap();
 
 		T* pT = static_cast<T*>(this);
 		// Create bitmaps for all menu items
 		for(int i = 0; i < nCount; i++)
 		{
-			HBITMAP hBitmap = pT->_CreateVistaBitmapHelper(nStartIndex + i, hDC, dcMem);
+			HBITMAP hBitmap = pT->_CreateVistaBitmapHelper(nStartIndex + i, dc, dcMem);
 			dcMem.SelectBitmap(hBitmapSave);
 			m_arrVistaBitmap.Add(hBitmap);
 		}
@@ -3165,14 +3215,14 @@ public:
 	void _AddVistaBitmapFromImageList(int nIndex)
 	{
 		// Create display compatible memory DC
-		HDC hDC = ::GetDC(NULL);
+		CClientDC dc(NULL);
 		CDC dcMem;
-		dcMem.CreateCompatibleDC(hDC);
+		dcMem.CreateCompatibleDC(dc);
 		HBITMAP hBitmapSave = dcMem.GetCurrentBitmap();
 
 		// Create bitmap for menu item
 		T* pT = static_cast<T*>(this);
-		HBITMAP hBitmap = pT->_CreateVistaBitmapHelper(nIndex, hDC, dcMem);
+		HBITMAP hBitmap = pT->_CreateVistaBitmapHelper(nIndex, dc, dcMem);
 
 		// Select saved bitmap back and add bitmap to the array
 		dcMem.SelectBitmap(hBitmapSave);
@@ -3186,14 +3236,14 @@ public:
 			::DeleteObject(m_arrVistaBitmap[nIndex]);
 
 		// Create display compatible memory DC
-		HDC hDC = ::GetDC(NULL);
+		CClientDC dc(NULL);
 		CDC dcMem;
-		dcMem.CreateCompatibleDC(hDC);
+		dcMem.CreateCompatibleDC(dc);
 		HBITMAP hBitmapSave = dcMem.GetCurrentBitmap();
 
 		// Create bitmap for menu item
 		T* pT = static_cast<T*>(this);
-		HBITMAP hBitmap = pT->_CreateVistaBitmapHelper(nIndex, hDC, dcMem);
+		HBITMAP hBitmap = pT->_CreateVistaBitmapHelper(nIndex, dc, dcMem);
 
 		// Select saved bitmap back and replace bitmap in the array
 		dcMem.SelectBitmap(hBitmapSave);
@@ -3481,7 +3531,7 @@ public:
 
 		// get DC and window rectangle
 		CWindowDC dc(m_hWnd);
-		RECT rect;
+		RECT rect = { 0 };
 		GetWindowRect(&rect);
 		int cxWidth = rect.right - rect.left;
 		int cyHeight = rect.bottom - rect.top;
@@ -4069,7 +4119,7 @@ public:
 #ifndef _WTL_NO_AUTO_THEME
 		if(m_hTheme != NULL)
 		{
-#ifndef TMSCHEMA_H
+#if !defined(TMSCHEMA_H) && !defined(__VSSYM32_H__)
 			const int WP_MDICLOSEBUTTON = 20;
 			const int CBS_NORMAL = 1;
 			const int CBS_PUSHED = 3;
@@ -4082,7 +4132,7 @@ public:
 			const int MINBS_NORMAL = 1;
 			const int MINBS_PUSHED = 3;
 			const int MINBS_DISABLED = 4;
-#endif // TMSCHEMA_H
+#endif // !defined(TMSCHEMA_H) && !defined(__VSSYM32_H__)
 			if(nBtn == -1 || nBtn == 0)
 				m_pfnDrawThemeBackground(m_hTheme, dc, WP_MDICLOSEBUTTON, m_bParentActive ? ((m_nBtnPressed == 0) ? CBS_PUSHED : CBS_NORMAL) : CBS_DISABLED, &pRects[0], NULL);
 			if(nBtn == -1 || nBtn == 1)

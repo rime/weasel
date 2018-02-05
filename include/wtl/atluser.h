@@ -1,22 +1,15 @@
-// Windows Template Library - WTL version 8.0
-// Copyright (C) Microsoft Corporation. All rights reserved.
+// Windows Template Library - WTL version 9.10
+// Copyright (C) Microsoft Corporation, WTL Team. All rights reserved.
 //
 // This file is a part of the Windows Template Library.
 // The use and distribution terms for this software are covered by the
-// Common Public License 1.0 (http://opensource.org/osi3.0/licenses/cpl1.0.php)
-// which can be found in the file CPL.TXT at the root of this distribution.
-// By using this software in any fashion, you are agreeing to be bound by
-// the terms of this license. You must not remove this notice, or
-// any other, from this software.
+// Microsoft Public License (http://opensource.org/licenses/MS-PL)
+// which can be found in the file MS-PL.txt at the root folder.
 
 #ifndef __ATLUSER_H__
 #define __ATLUSER_H__
 
 #pragma once
-
-#ifndef __cplusplus
-	#error ATL requires C++ compilation (use a .cpp suffix)
-#endif
 
 #ifndef __ATLAPP_H__
 	#error atluser.h requires atlapp.h to be included first
@@ -35,6 +28,22 @@
 //
 // Global functions:
 //   AtlMessageBox()
+//
+//   AtlLoadAccelerators()
+//   AtlLoadMenu()
+//   AtlLoadBitmap()
+//   AtlLoadSysBitmap()
+//   AtlLoadCursor()
+//   AtlLoadSysCursor()
+//   AtlLoadIcon()
+//   AtlLoadSysIcon()
+//   AtlLoadBitmapImage()
+//   AtlLoadCursorImage()
+//   AtlLoadIconImage()
+//   AtlLoadSysBitmapImage()
+//   AtlLoadSysCursorImage()
+//   AtlLoadSysIconImage()
+//   AtlLoadString()
 
 
 namespace WTL
@@ -268,8 +277,7 @@ public:
 			HMONITOR hMonitorNear = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
 			if(hMonitorNear != NULL)
 			{
-				MONITORINFO mi = { 0 };
-				mi.cbSize = sizeof(MONITORINFO);
+				MONITORINFO mi = { sizeof(MONITORINFO) };
 				if(::GetMonitorInfo(hMonitorNear, &mi) != FALSE)
 				{
 					if(x < mi.rcWork.left)
@@ -401,7 +409,38 @@ public:
 		return (bstrText != NULL) ? TRUE : FALSE;
 	}
 #endif // !_ATL_NO_COM
-#endif // !_WIN32_WCE
+
+#elif (_ATL_VER >= 0x0800)
+	int GetMenuItemCount() const
+	{
+		ATLASSERT(::IsMenu(m_hMenu));
+		return ATL::GetMenuItemCount(m_hMenu);
+	}
+
+	UINT GetMenuItemID(int nPos) const
+	{
+		ATLASSERT(::IsMenu(m_hMenu));
+		return ATL::GetMenuItemID(m_hMenu, nPos);
+	}
+
+	UINT GetMenuState(UINT nID, UINT nFlags) const
+	{
+		ATLASSERT(::IsMenu(m_hMenu));
+		return ATL::GetMenuState(m_hMenu, nID, nFlags);
+	}
+
+	int GetMenuString(UINT nIDItem, LPTSTR lpString, int nMaxCount, UINT nFlags) const
+	{
+		ATLASSERT(::IsMenu(m_hMenu));
+		return ATL::GetMenuString(m_hMenu, nIDItem, lpString, nMaxCount, nFlags);
+	}
+
+	int GetMenuStringLen(UINT nIDItem, UINT nFlags) const
+	{
+		ATLASSERT(::IsMenu(m_hMenu));
+		return ATL::GetMenuString(m_hMenu, nIDItem, NULL, 0, nFlags);
+	}
+#endif // (_ATL_VER >= 0x0800)
 
 #if defined(_WTL_USE_CSTRING) || defined(__ATLSTR_H__)
 	int GetMenuString(UINT nIDItem, _CSTRING_NS::CString& strText, UINT nFlags) const
@@ -1110,12 +1149,12 @@ public:
 	}
 
 #ifndef _WIN32_WCE
-	bool LoadEx(ATL::_U_STRINGorID Type, ATL::_U_STRINGorID ID, WORD wLanguage)
+	bool LoadEx(ATL::_U_STRINGorID ID, ATL::_U_STRINGorID Type, WORD wLanguage)
 	{
 		ATLASSERT(m_hResource == NULL);
 		ATLASSERT(m_hGlobal == NULL);
 
-		m_hResource = ::FindResourceEx(ModuleHelper::GetResourceInstance(), ID.m_lpstr, Type.m_lpstr, wLanguage);
+		m_hResource = ::FindResourceEx(ModuleHelper::GetResourceInstance(), Type.m_lpstr, ID.m_lpstr, wLanguage);
 		if(m_hResource == NULL)
 			return false;
 
@@ -1156,6 +1195,192 @@ public:
 		}
 	}
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Toolbar resource descriptor
+
+struct _AtlToolBarData
+{
+	WORD wVersion;
+	WORD wWidth;
+	WORD wHeight;
+	WORD wItemCount;
+
+	WORD* items()
+		{ return (WORD*)(this+1); }
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Global functions for loading resources
+
+inline HACCEL AtlLoadAccelerators(ATL::_U_STRINGorID table)
+{
+	return ::LoadAccelerators(ModuleHelper::GetResourceInstance(), table.m_lpstr);
+}
+
+inline HMENU AtlLoadMenu(ATL::_U_STRINGorID menu)
+{
+	return ::LoadMenu(ModuleHelper::GetResourceInstance(), menu.m_lpstr);
+}
+
+inline HBITMAP AtlLoadBitmap(ATL::_U_STRINGorID bitmap)
+{
+	return ::LoadBitmap(ModuleHelper::GetResourceInstance(), bitmap.m_lpstr);
+}
+
+#ifdef OEMRESOURCE
+inline HBITMAP AtlLoadSysBitmap(ATL::_U_STRINGorID bitmap)
+{
+#ifdef _DEBUG
+	WORD wID = LOWORD(bitmap.m_lpstr);
+	ATLASSERT(wID >= 32734 && wID <= 32767);
+#endif // _DEBUG
+	return ::LoadBitmap(NULL, bitmap.m_lpstr);
+}
+#endif // OEMRESOURCE
+
+inline HCURSOR AtlLoadCursor(ATL::_U_STRINGorID cursor)
+{
+	return ::LoadCursor(ModuleHelper::GetResourceInstance(), cursor.m_lpstr);
+}
+
+inline HCURSOR AtlLoadSysCursor(LPCTSTR lpCursorName)
+{
+#if (WINVER >= 0x0500)
+	ATLASSERT(lpCursorName == IDC_ARROW || lpCursorName == IDC_IBEAM || lpCursorName == IDC_WAIT ||
+		lpCursorName == IDC_CROSS || lpCursorName == IDC_UPARROW || lpCursorName == IDC_SIZE ||
+		lpCursorName == IDC_ICON || lpCursorName == IDC_SIZENWSE || lpCursorName == IDC_SIZENESW ||
+		lpCursorName == IDC_SIZEWE || lpCursorName == IDC_SIZENS || lpCursorName == IDC_SIZEALL ||
+		lpCursorName == IDC_NO || lpCursorName == IDC_APPSTARTING || lpCursorName == IDC_HELP ||
+		lpCursorName == IDC_HAND);
+#else // !(WINVER >= 0x0500)
+	ATLASSERT(lpCursorName == IDC_ARROW || lpCursorName == IDC_IBEAM || lpCursorName == IDC_WAIT ||
+		lpCursorName == IDC_CROSS || lpCursorName == IDC_UPARROW || lpCursorName == IDC_SIZE ||
+		lpCursorName == IDC_ICON || lpCursorName == IDC_SIZENWSE || lpCursorName == IDC_SIZENESW ||
+		lpCursorName == IDC_SIZEWE || lpCursorName == IDC_SIZENS || lpCursorName == IDC_SIZEALL ||
+		lpCursorName == IDC_NO || lpCursorName == IDC_APPSTARTING || lpCursorName == IDC_HELP);
+#endif // !(WINVER >= 0x0500)
+	return ::LoadCursor(NULL, lpCursorName);
+}
+
+inline HICON AtlLoadIcon(ATL::_U_STRINGorID icon)
+{
+	return ::LoadIcon(ModuleHelper::GetResourceInstance(), icon.m_lpstr);
+}
+
+#ifndef _WIN32_WCE
+inline HICON AtlLoadSysIcon(LPCTSTR lpIconName)
+{
+#if (WINVER >= 0x0600)
+	ATLASSERT(lpIconName == IDI_APPLICATION || lpIconName == IDI_ASTERISK || lpIconName == IDI_EXCLAMATION ||
+	          lpIconName == IDI_HAND || lpIconName == IDI_QUESTION || lpIconName == IDI_WINLOGO ||
+	          lpIconName == IDI_SHIELD);
+#else // !(WINVER >= 0x0600)
+	ATLASSERT(lpIconName == IDI_APPLICATION || lpIconName == IDI_ASTERISK || lpIconName == IDI_EXCLAMATION ||
+	          lpIconName == IDI_HAND || lpIconName == IDI_QUESTION || lpIconName == IDI_WINLOGO);
+#endif // !(WINVER >= 0x0600)
+	return ::LoadIcon(NULL, lpIconName);
+}
+#endif // !_WIN32_WCE
+
+inline HBITMAP AtlLoadBitmapImage(ATL::_U_STRINGorID bitmap, UINT fuLoad = LR_DEFAULTCOLOR)
+{
+	return (HBITMAP)::LoadImage(ModuleHelper::GetResourceInstance(), bitmap.m_lpstr, IMAGE_BITMAP, 0, 0, fuLoad);
+}
+
+inline HCURSOR AtlLoadCursorImage(ATL::_U_STRINGorID cursor, UINT fuLoad = LR_DEFAULTCOLOR | LR_DEFAULTSIZE, int cxDesired = 0, int cyDesired = 0)
+{
+	return (HCURSOR)::LoadImage(ModuleHelper::GetResourceInstance(), cursor.m_lpstr, IMAGE_CURSOR, cxDesired, cyDesired, fuLoad);
+}
+
+inline HICON AtlLoadIconImage(ATL::_U_STRINGorID icon, UINT fuLoad = LR_DEFAULTCOLOR | LR_DEFAULTSIZE, int cxDesired = 0, int cyDesired = 0)
+{
+	return (HICON)::LoadImage(ModuleHelper::GetResourceInstance(), icon.m_lpstr, IMAGE_ICON, cxDesired, cyDesired, fuLoad);
+}
+
+#ifdef OEMRESOURCE
+inline HBITMAP AtlLoadSysBitmapImage(WORD wBitmapID, UINT fuLoad = LR_DEFAULTCOLOR)
+{
+	ATLASSERT(wBitmapID >= 32734 && wBitmapID <= 32767);
+	ATLASSERT((fuLoad & LR_LOADFROMFILE) == 0);   // this one doesn't load from a file
+	return (HBITMAP)::LoadImage(NULL, MAKEINTRESOURCE(wBitmapID), IMAGE_BITMAP, 0, 0, fuLoad);
+}
+#endif // OEMRESOURCE
+
+inline HCURSOR AtlLoadSysCursorImage(ATL::_U_STRINGorID cursor, UINT fuLoad = LR_DEFAULTCOLOR | LR_DEFAULTSIZE, int cxDesired = 0, int cyDesired = 0)
+{
+#ifdef _DEBUG
+	WORD wID = LOWORD(cursor.m_lpstr);
+	ATLASSERT((wID >= 32512 && wID <= 32516) || (wID >= 32640 && wID <= 32648) || (wID == 32650) || (wID == 32651));
+	ATLASSERT((fuLoad & LR_LOADFROMFILE) == 0);   // this one doesn't load from a file
+#endif // _DEBUG
+	return (HCURSOR)::LoadImage(NULL, cursor.m_lpstr, IMAGE_CURSOR, cxDesired, cyDesired, fuLoad);
+}
+
+inline HICON AtlLoadSysIconImage(ATL::_U_STRINGorID icon, UINT fuLoad = LR_DEFAULTCOLOR | LR_DEFAULTSIZE, int cxDesired = 0, int cyDesired = 0)
+{
+#ifdef _DEBUG
+	WORD wID = LOWORD(icon.m_lpstr);
+	ATLASSERT(wID >= 32512 && wID <= 32517);
+	ATLASSERT((fuLoad & LR_LOADFROMFILE) == 0);   // this one doesn't load from a file
+#endif // _DEBUG
+	return (HICON)::LoadImage(NULL, icon.m_lpstr, IMAGE_ICON, cxDesired, cyDesired, fuLoad);
+}
+
+#if (_ATL_VER < 0x0700)
+inline int AtlLoadString(UINT uID, LPTSTR lpBuffer, int nBufferMax)
+{
+	return ::LoadString(ModuleHelper::GetResourceInstance(), uID, lpBuffer, nBufferMax);
+}
+#else
+    
+using ATL::AtlLoadString;
+
+#endif // (_ATL_VER < 0x0700)
+
+#ifdef _WIN32_WCE // CE only direct access to the resource
+inline LPCTSTR AtlLoadString(UINT uID)
+{
+	LPCTSTR s = (LPCTSTR)::LoadString(ModuleHelper::GetResourceInstance(), uID, NULL, 0);
+#ifdef DEBUG // Check for null-termination
+	if(s != NULL)
+		// Note: RC -n <file.rc> compiles null-terminated resource strings
+		ATLASSERT(s[*((WORD*)s -1) - 1] == L'\0');
+#endif
+	return s;
+}
+#endif // _WIN32_WCE
+
+inline bool AtlLoadString(UINT uID, BSTR& bstrText)
+{
+	USES_CONVERSION;
+	ATLASSERT(bstrText == NULL);
+
+	LPTSTR lpstrText = NULL;
+	int nRes = 0;
+	for(int nLen = 256; ; nLen *= 2)
+	{
+		ATLTRY(lpstrText = new TCHAR[nLen]);
+		if(lpstrText == NULL)
+			break;
+		nRes = ::LoadString(ModuleHelper::GetResourceInstance(), uID, lpstrText, nLen);
+		if(nRes < nLen - 1)
+			break;
+		delete [] lpstrText;
+		lpstrText = NULL;
+	}
+
+	if(lpstrText != NULL)
+	{
+		if(nRes != 0)
+			bstrText = ::SysAllocString(T2OLE(lpstrText));
+		delete [] lpstrText;
+	}
+
+	return (bstrText != NULL) ? true : false;
+}
 
 }; // namespace WTL
 

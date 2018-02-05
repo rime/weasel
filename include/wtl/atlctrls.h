@@ -1,22 +1,15 @@
-// Windows Template Library - WTL version 8.0
-// Copyright (C) Microsoft Corporation. All rights reserved.
+// Windows Template Library - WTL version 9.10
+// Copyright (C) Microsoft Corporation, WTL Team. All rights reserved.
 //
 // This file is a part of the Windows Template Library.
 // The use and distribution terms for this software are covered by the
-// Common Public License 1.0 (http://opensource.org/osi3.0/licenses/cpl1.0.php)
-// which can be found in the file CPL.TXT at the root of this distribution.
-// By using this software in any fashion, you are agreeing to be bound by
-// the terms of this license. You must not remove this notice, or
-// any other, from this software.
+// Microsoft Public License (http://opensource.org/licenses/MS-PL)
+// which can be found in the file MS-PL.txt at the root folder.
 
 #ifndef __ATLCTRLS_H__
 #define __ATLCTRLS_H__
 
 #pragma once
-
-#ifndef __cplusplus
-	#error ATL requires C++ compilation (use a .cpp suffix)
-#endif
 
 #ifndef __ATLAPP_H__
 	#error atlctrls.h requires atlapp.h to be included first
@@ -24,10 +17,6 @@
 
 #ifndef __ATLWIN_H__
 	#error atlctrls.h requires atlwin.h to be included first
-#endif
-
-#if (_WIN32_IE < 0x0300)
-	#error atlctrls.h requires IE Version 3.0 or higher
 #endif
 
 #ifndef _WIN32_WCE
@@ -55,7 +44,7 @@
 // CEditCommands<T>
 // CScrollBarT<TBase> - CScrollBar
 //
-// CImageList
+// CImageListT<t_bManaged> - CImageList, CImageListManaged
 // CListViewCtrlT<TBase> - CListViewCtrl
 // CTreeViewCtrlT<TBase> - CTreeViewCtrl
 // CTreeItemT<TBase> - CTreeItem
@@ -1254,10 +1243,18 @@ public:
 		return (DWORD)::SendMessage(m_hWnd, EM_GETMARGINS, 0, 0L);
 	}
 
-	void SetMargins(UINT nLeft, UINT nRight)
+	void GetMargins(UINT& nLeft, UINT& nRight) const
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
-		::SendMessage(m_hWnd, EM_SETMARGINS, EC_LEFTMARGIN|EC_RIGHTMARGIN, MAKELONG(nLeft, nRight));
+		DWORD dwRet = (DWORD)::SendMessage(m_hWnd, EM_GETMARGINS, 0, 0L);
+		nLeft = LOWORD(dwRet);
+		nRight = HIWORD(dwRet);
+	}
+
+	void SetMargins(UINT nLeft, UINT nRight, WORD wFlags = EC_LEFTMARGIN | EC_RIGHTMARGIN)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		::SendMessage(m_hWnd, EM_SETMARGINS, wFlags, MAKELONG(nLeft, nRight));
 	}
 
 	UINT GetLimitText() const
@@ -1725,7 +1722,7 @@ public:
 	BOOL HasSelection() const
 	{
 		const T* pT = static_cast<const T*>(this);
-		int nMin, nMax;
+		int nMin = 0, nMax = 0;
 		::SendMessage(pT->m_hWnd, EM_GETSEL, (WPARAM)&nMin, (LPARAM)&nMax);
 		return (nMin != nMax);
 	}
@@ -1811,15 +1808,12 @@ public:
 #ifndef _WIN32_WCE
 	int GetScrollLimit() const
 	{
-		int nMin = 0, nMax = 0;
-		::GetScrollRange(m_hWnd, SB_CTL, &nMin, &nMax);
-		SCROLLINFO info = { 0 };
-		info.cbSize = sizeof(SCROLLINFO);
-		info.fMask = SIF_PAGE;
-		if(::GetScrollInfo(m_hWnd, SB_CTL, &info))
-			nMax -= ((info.nPage - 1) > 0) ? (info.nPage - 1) : 0;
+		SCROLLINFO info = { sizeof(SCROLLINFO), SIF_RANGE | SIF_PAGE };
+		::GetScrollInfo(m_hWnd, SB_CTL, &info);
+		if(info.nPage > 1)
+			info.nMax -= info.nPage - 1;
 
-		return nMax;
+		return info.nMax;
 	}
 
 #if (WINVER >= 0x0500)
@@ -1857,28 +1851,39 @@ typedef CScrollBarT<ATL::CWindow>   CScrollBar;
 ///////////////////////////////////////////////////////////////////////////////
 // CImageList
 
-class CImageList
+// forward declarations
+template <bool t_bManaged> class CImageListT;
+typedef CImageListT<false>   CImageList;
+typedef CImageListT<true>    CImageListManaged;
+
+
+template <bool t_bManaged>
+class CImageListT
 {
 public:
+// Data members
 	HIMAGELIST m_hImageList;
 
-// Constructor
-	CImageList(HIMAGELIST hImageList = NULL) : m_hImageList(hImageList)
+// Constructor/destructor/operators
+	CImageListT(HIMAGELIST hImageList = NULL) : m_hImageList(hImageList)
 	{ }
 
-// Operators, etc.
-	CImageList& operator =(HIMAGELIST hImageList)
+	~CImageListT()
 	{
-		m_hImageList = hImageList;
+		if(t_bManaged && (m_hImageList != NULL))
+			Destroy();
+	}
+
+	CImageListT<t_bManaged>& operator =(HIMAGELIST hImageList)
+	{
+		Attach(hImageList);
 		return *this;
 	}
 
-	operator HIMAGELIST() const { return m_hImageList; }
-
 	void Attach(HIMAGELIST hImageList)
 	{
-		ATLASSERT(m_hImageList == NULL);
-		ATLASSERT(hImageList != NULL);
+		if(t_bManaged && (m_hImageList != NULL) && (m_hImageList != hImageList))
+			ImageList_Destroy(m_hImageList);
 		m_hImageList = hImageList;
 	}
 
@@ -1888,6 +1893,8 @@ public:
 		m_hImageList = NULL;
 		return hImageList;
 	}
+
+	operator HIMAGELIST() const { return m_hImageList; }
 
 	bool IsNull() const { return (m_hImageList == NULL); }
 
@@ -2212,7 +2219,7 @@ public:
 class CToolInfo : public TOOLINFO
 {
 public:
-	CToolInfo(UINT nFlags, HWND hWnd, UINT nIDTool = 0, LPRECT lpRect = NULL, LPTSTR lpstrText = LPSTR_TEXTCALLBACK, LPARAM lUserParam = NULL)
+	CToolInfo(UINT nFlags, HWND hWnd, UINT_PTR nIDTool = 0, LPRECT lpRect = NULL, LPTSTR lpstrText = LPSTR_TEXTCALLBACK, LPARAM lUserParam = NULL)
 	{
 		Init(nFlags, hWnd, nIDTool, lpRect, lpstrText, lUserParam);
 	}
@@ -2221,11 +2228,11 @@ public:
 
 	operator LPARAM() { return (LPARAM)this; }
 
-	void Init(UINT nFlags, HWND hWnd, UINT nIDTool = 0, LPRECT lpRect = NULL, LPTSTR lpstrText = LPSTR_TEXTCALLBACK, LPARAM lUserParam = NULL)
+	void Init(UINT nFlags, HWND hWnd, UINT_PTR nIDTool = 0, LPRECT lpRect = NULL, LPTSTR lpstrText = LPSTR_TEXTCALLBACK, LPARAM lUserParam = NULL)
 	{
 		ATLASSERT(::IsWindow(hWnd));
 		memset(this, 0, sizeof(TOOLINFO));
-		cbSize = sizeof(TOOLINFO);
+		cbSize = RunTimeHelper::SizeOf_TOOLINFO();
 		uFlags = nFlags;
 		if(nIDTool == 0)
 		{
@@ -2279,7 +2286,7 @@ public:
 		::SendMessage(m_hWnd, TTM_GETTEXT, 0, (LPARAM)&lpToolInfo);
 	}
 
-	void GetText(LPTSTR lpstrText, HWND hWnd, UINT nIDTool = 0) const
+	void GetText(LPTSTR lpstrText, HWND hWnd, UINT_PTR nIDTool = 0) const
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		ATLASSERT(hWnd != NULL);
@@ -2293,7 +2300,7 @@ public:
 		return (BOOL)::SendMessage(m_hWnd, TTM_GETTOOLINFO, 0, (LPARAM)lpToolInfo);
 	}
 
-	BOOL GetToolInfo(HWND hWnd, UINT nIDTool, UINT* puFlags, LPRECT lpRect, LPTSTR lpstrText) const
+	BOOL GetToolInfo(HWND hWnd, UINT_PTR nIDTool, UINT* puFlags, LPRECT lpRect, LPTSTR lpstrText) const
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		ATLASSERT(hWnd != NULL);
@@ -2321,7 +2328,7 @@ public:
 		::SendMessage(m_hWnd, TTM_NEWTOOLRECT, 0, (LPARAM)lpToolInfo);
 	}
 
-	void SetToolRect(HWND hWnd, UINT nIDTool, LPCRECT lpRect)
+	void SetToolRect(HWND hWnd, UINT_PTR nIDTool, LPCRECT lpRect)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		ATLASSERT(hWnd != NULL);
@@ -2412,10 +2419,16 @@ public:
 		return size;
 	}
 
-	BOOL SetTitle(UINT uIcon, LPCTSTR lpstrTitle)
+	BOOL SetTitle(UINT_PTR uIcon, LPCTSTR lpstrTitle)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		return (BOOL)::SendMessage(m_hWnd, TTM_SETTITLE, uIcon, (LPARAM)lpstrTitle);
+	}
+
+	BOOL SetTitle(HICON hIcon, LPCTSTR lpstrTitle)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (BOOL)::SendMessage(m_hWnd, TTM_SETTITLE, (WPARAM)hIcon, (LPARAM)lpstrTitle);
 	}
 #endif // (_WIN32_IE >= 0x0500)
 
@@ -2446,7 +2459,7 @@ public:
 		return (BOOL)::SendMessage(m_hWnd, TTM_ADDTOOL, 0, (LPARAM)lpToolInfo);
 	}
 
-	BOOL AddTool(HWND hWnd, ATL::_U_STRINGorID text = LPSTR_TEXTCALLBACK, LPCRECT lpRectTool = NULL, UINT nIDTool = 0)
+	BOOL AddTool(HWND hWnd, ATL::_U_STRINGorID text = LPSTR_TEXTCALLBACK, LPCRECT lpRectTool = NULL, UINT_PTR nIDTool = 0)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		ATLASSERT(hWnd != NULL);
@@ -2463,7 +2476,7 @@ public:
 		::SendMessage(m_hWnd, TTM_DELTOOL, 0, (LPARAM)lpToolInfo);
 	}
 
-	void DelTool(HWND hWnd, UINT nIDTool = 0)
+	void DelTool(HWND hWnd, UINT_PTR nIDTool = 0)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		ATLASSERT(hWnd != NULL);
@@ -2485,7 +2498,7 @@ public:
 		ATLASSERT(lpToolInfo != NULL);
 
 		TTHITTESTINFO hti = { 0 };
-		hti.ti.cbSize = sizeof(TOOLINFO);
+		hti.ti.cbSize = RunTimeHelper::SizeOf_TOOLINFO();
 		hti.hwnd = hWnd;
 		hti.pt.x = pt.x;
 		hti.pt.y = pt.y;
@@ -2509,7 +2522,7 @@ public:
 		::SendMessage(m_hWnd, TTM_UPDATETIPTEXT, 0, (LPARAM)lpToolInfo);
 	}
 
-	void UpdateTipText(ATL::_U_STRINGorID text, HWND hWnd, UINT nIDTool = 0)
+	void UpdateTipText(ATL::_U_STRINGorID text, HWND hWnd, UINT_PTR nIDTool = 0)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		ATLASSERT(hWnd != NULL);
@@ -2518,7 +2531,7 @@ public:
 		::SendMessage(m_hWnd, TTM_UPDATETIPTEXT, 0, ti);
 	}
 
-	BOOL EnumTools(UINT nTool, LPTOOLINFO lpToolInfo) const
+	BOOL EnumTools(UINT_PTR nTool, LPTOOLINFO lpToolInfo) const
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		return (BOOL)::SendMessage(m_hWnd, TTM_ENUMTOOLS, nTool, (LPARAM)lpToolInfo);
@@ -2534,6 +2547,15 @@ public:
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		::SendMessage(m_hWnd, TTM_TRACKACTIVATE, bActivate, (LPARAM)lpToolInfo);
+	}
+
+	void TrackActivate(HWND hWnd, UINT_PTR nIDTool, BOOL bActivate)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		ATLASSERT(hWnd != NULL);
+
+		CToolInfo ti(0, hWnd, nIDTool);
+		::SendMessage(m_hWnd, TTM_TRACKACTIVATE, bActivate, ti);
 	}
 
 	void TrackPosition(int xPos, int yPos)
@@ -3675,10 +3697,19 @@ public:
 		return (BOOL)::SendMessage(m_hWnd, LVM_DELETEALLITEMS, 0, 0L);
 	}
 
-	int FindItem(LVFINDINFO* pFindInfo, int nStart) const
+	int FindItem(LVFINDINFO* pFindInfo, int nStart = -1) const
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		return (int)::SendMessage(m_hWnd, LVM_FINDITEM, nStart, (LPARAM)pFindInfo);
+	}
+
+	int FindItem(LPCTSTR lpstrFind, bool bPartial = true, bool bWrap = false, int nStart = -1) const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		LVFINDINFO lvfi = { 0 };
+		lvfi.flags = LVFI_STRING | (bWrap ? LVFI_WRAP : 0) | (bPartial ? LVFI_PARTIAL : 0);
+		lvfi.psz = lpstrFind;
+		return (int)::SendMessage(m_hWnd, LVM_FINDITEM, nStart, (LPARAM)&lvfi);
 	}
 
 	int HitTest(LVHITTESTINFO* pHitTestInfo) const
@@ -3780,7 +3811,7 @@ public:
 		return InsertColumn(nItem, &lvc);
 	}
 
-	int AddItem(int nItem, int nSubItem, LPCTSTR strItem, int nImageIndex = -1)
+	int AddItem(int nItem, int nSubItem, LPCTSTR strItem, int nImageIndex = -3)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		LVITEM lvItem = { 0 };
@@ -3788,7 +3819,7 @@ public:
 		lvItem.iItem = nItem;
 		lvItem.iSubItem = nSubItem;
 		lvItem.pszText = (LPTSTR)strItem;
-		if(nImageIndex != -1)
+		if(nImageIndex != -3)
 		{
 			lvItem.mask |= LVIF_IMAGE;
 			lvItem.iImage = nImageIndex;
@@ -3922,15 +3953,19 @@ public:
 	}
 #endif // (_WIN32_WINNT >= 0x0600)
 
-	// single-selection only
+	// Note: selects only one item
 	BOOL SelectItem(int nIndex)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
-		ATLASSERT((GetStyle() & LVS_SINGLESEL) != 0);
+
+		// multi-selection only: de-select all items
+		if((GetStyle() & LVS_SINGLESEL) == 0)
+			SetItemState(-1, 0, LVIS_SELECTED);
 
 		BOOL bRet = SetItemState(nIndex, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 		if(bRet)
 			bRet = EnsureVisible(nIndex, FALSE);
+
 		return bRet;
 	}
 };
@@ -4509,6 +4544,9 @@ public:
 #if (_WIN32_IE >= 0x0600)
 	HTREEITEM GetNextSelectedItem() const
 	{
+#ifndef TVGN_NEXTSELECTED
+		const WORD TVGN_NEXTSELECTED = 0x000B;
+#endif
 		ATLASSERT(::IsWindow(m_hWnd));
 		return (HTREEITEM)::SendMessage(m_hWnd, TVM_GETNEXTITEM, TVGN_NEXTSELECTED, 0L);
 	}
@@ -4878,6 +4916,9 @@ public:
 #if (_WIN32_IE >= 0x0600)
 	CTreeItemT<TBase> GetNextSelectedItem() const
 	{
+#ifndef TVGN_NEXTSELECTED
+		const WORD TVGN_NEXTSELECTED = 0x000B;
+#endif
 		ATLASSERT(::IsWindow(m_hWnd));
 		HTREEITEM hTreeItem = (HTREEITEM)::SendMessage(m_hWnd, TVM_GETNEXTITEM, TVGN_NEXTSELECTED, 0L);
 		return CTreeItemT<TBase>(hTreeItem, (CTreeViewCtrlExT<TBase>*)this);
@@ -5780,6 +5821,17 @@ public:
 		ATLASSERT(::IsWindow(m_hWnd));
 		return CImageList((HIMAGELIST)::SendMessage(m_hWnd, TB_SETPRESSEDIMAGELIST, nIndex, (LPARAM)hImageList));
 	}
+
+	void GetItemDropDownRect(int nIndex, LPRECT lpRect) const
+	{
+#ifndef TB_GETITEMDROPDOWNRECT
+		const int TB_GETITEMDROPDOWNRECT = WM_USER + 103;
+#endif
+		ATLASSERT(::IsWindow(m_hWnd));
+		BOOL bRet = (BOOL)::SendMessage(m_hWnd, TB_GETITEMDROPDOWNRECT, nIndex, (LPARAM)lpRect);
+		bRet;   // avoid level 4 warning
+		ATLASSERT(bRet != FALSE);
+	}
 #endif // (_WIN32_WINNT >= 0x0600)
 
 // Operations
@@ -5885,10 +5937,20 @@ public:
 		return (BOOL)::SendMessage(m_hWnd, TB_DELETEBUTTON, nIndex, 0L);
 	}
 
-	UINT CommandToIndex(UINT nID) const
+	BOOL InsertSeparator(int nIndex, int cxWidth = 8)
+	{
+		return InsertButton(nIndex, 0, BTNS_SEP, 0, cxWidth, (INT_PTR)0, 0);
+	}
+
+	BOOL AddSeparator(int cxWidth = 8)
+	{
+		return AddButton(0, BTNS_SEP, 0, cxWidth, (INT_PTR)0, 0);
+	}
+
+	int CommandToIndex(UINT nID) const
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
-		return (UINT)::SendMessage(m_hWnd, TB_COMMANDTOINDEX, nID, 0L);
+		return (int)::SendMessage(m_hWnd, TB_COMMANDTOINDEX, nID, 0L);
 	}
 
 #ifndef _WIN32_WCE
@@ -6338,17 +6400,24 @@ public:
 	}
 
 #ifndef _WIN32_WCE
-	CToolTipCtrl GetTooltips() const
+	CToolTipCtrl GetToolTips() const
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		return CToolTipCtrl((HWND)::SendMessage(m_hWnd, TCM_GETTOOLTIPS, 0, 0L));
 	}
 
-	void SetTooltips(HWND hWndToolTip)
+	// this method is deprecated, please use GetToolTips
+	CToolTipCtrl GetTooltips() const { return GetToolTips(); }
+
+	void SetToolTips(HWND hWndToolTip)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
 		::SendMessage(m_hWnd, TCM_SETTOOLTIPS, (WPARAM)hWndToolTip, 0L);
 	}
+
+	// this method is deprecated, please use SetToolTips
+	void SetTooltips(HWND hWndToolTip) { SetToolTips(hWndToolTip); }
+
 #endif // !_WIN32_WCE
 
 	int GetCurFocus() const
@@ -6590,10 +6659,10 @@ public:
 		return (int)::SendMessage(m_hWnd, TBM_GETSELSTART, 0, 0L);
 	}
 
-	void SetSelStart(int nMin)
+	void SetSelStart(int nMin, BOOL bRedraw = FALSE)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
-		::SendMessage(m_hWnd, TBM_SETSELSTART, 0, (LPARAM)nMin);
+		::SendMessage(m_hWnd, TBM_SETSELSTART, bRedraw, (LPARAM)nMin);
 	}
 
 	int GetSelEnd() const
@@ -6602,10 +6671,10 @@ public:
 		return (int)::SendMessage(m_hWnd, TBM_GETSELEND, 0, 0L);
 	}
 
-	void SetSelEnd(int nMax)
+	void SetSelEnd(int nMax, BOOL bRedraw = FALSE)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
-		::SendMessage(m_hWnd, TBM_SETSELEND, 0, (LPARAM)nMax);
+		::SendMessage(m_hWnd, TBM_SETSELEND, bRedraw, (LPARAM)nMax);
 	}
 
 	void GetSelection(int& nMin, int& nMax) const
@@ -6614,10 +6683,10 @@ public:
 		nMax = GetSelEnd();
 	}
 
-	void SetSelection(int nMin, int nMax)
+	void SetSelection(int nMin, int nMax, BOOL bRedraw = TRUE)
 	{
-		SetSelStart(nMin);
-		SetSelEnd(nMax);
+		SetSelStart(nMin, FALSE);
+		SetSelEnd(nMax, bRedraw);
 	}
 
 	void GetChannelRect(LPRECT lprc) const
@@ -7220,12 +7289,15 @@ typedef CAnimateCtrlT<ATL::CWindow>   CAnimateCtrl;
 
 #ifndef _WIN32_WCE
 
-#ifdef _UNICODE
-#if (_RICHEDIT_VER == 0x0100)
-#undef RICHEDIT_CLASS
-#define RICHEDIT_CLASS	L"RICHEDIT"
-#endif // (_RICHEDIT_VER == 0x0100)
-#endif // _UNICODE
+#if defined(_UNICODE) && (_RICHEDIT_VER == 0x0100)
+  #undef RICHEDIT_CLASS
+  #define RICHEDIT_CLASS	L"RICHEDIT"
+#endif
+
+#if !defined(_UNICODE) && (_RICHEDIT_VER >= 0x0500)
+  #undef MSFTEDIT_CLASS
+  #define MSFTEDIT_CLASS	"RICHEDIT50W"
+#endif
 
 template <class TBase>
 class CRichEditCtrlT : public TBase
@@ -7251,12 +7323,18 @@ public:
 // Attributes
 	static LPCTSTR GetWndClassName()
 	{
+#if (_RICHEDIT_VER >= 0x0500)
+		return MSFTEDIT_CLASS;
+#else
 		return RICHEDIT_CLASS;
+#endif
 	}
 
 	static LPCTSTR GetLibraryName()
 	{
-#if (_RICHEDIT_VER >= 0x0200)
+#if (_RICHEDIT_VER >= 0x0500)
+		return _T("MSFTEDIT.DLL");
+#elif (_RICHEDIT_VER >= 0x0200)
 		return _T("RICHED20.DLL");
 #else
 		return _T("RICHED32.DLL");
@@ -7561,6 +7639,13 @@ public:
 		return (int)::SendMessage(m_hWnd, EM_GETFIRSTVISIBLELINE, 0, 0L);
 	}
 
+	int GetTextRange(TEXTRANGE* pTextRange) const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (int)::SendMessage(m_hWnd, EM_GETTEXTRANGE, 0, (LPARAM)pTextRange);
+	}
+
+#if (_RICHEDIT_VER < 0x0200)
 	EDITWORDBREAKPROCEX GetWordBreakProcEx() const
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
@@ -7572,12 +7657,7 @@ public:
 		ATLASSERT(::IsWindow(m_hWnd));
 		return (EDITWORDBREAKPROCEX)::SendMessage(m_hWnd, EM_SETWORDBREAKPROCEX, 0, (LPARAM)pfnEditWordBreakProcEx);
 	}
-
-	int GetTextRange(TEXTRANGE* pTextRange) const
-	{
-		ATLASSERT(::IsWindow(m_hWnd));
-		return (int)::SendMessage(m_hWnd, EM_GETTEXTRANGE, 0, (LPARAM)pTextRange);
-	}
+#endif // (_RICHEDIT_VER < 0x0200)
 
 #if (_RICHEDIT_VER >= 0x0200)
 	int GetTextRange(LONG nStartChar, LONG nEndChar, LPTSTR lpstrText) const
@@ -7590,7 +7670,6 @@ public:
 		return (int)::SendMessage(m_hWnd, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
 	}
 #else // !(_RICHEDIT_VER >= 0x0200)
-
 	int GetTextRange(LONG nStartChar, LONG nEndChar, LPSTR lpstrText) const
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
@@ -7748,6 +7827,18 @@ public:
 		gtle.flags = dwFlags;
 		return (int)::SendMessage(m_hWnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtle, 0L);
 	}
+
+	EDITWORDBREAKPROC GetWordBreakProc() const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (EDITWORDBREAKPROC)::SendMessage(m_hWnd, EM_GETWORDBREAKPROC, 0, 0L);
+	}
+
+	void SetWordBreakProc(EDITWORDBREAKPROC ewbprc)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		::SendMessage(m_hWnd, EM_SETWORDBREAKPROC, 0, (LPARAM)ewbprc);
+	}
 #endif // (_RICHEDIT_VER >= 0x0200)
 
 #if (_RICHEDIT_VER >= 0x0300)
@@ -7820,6 +7911,12 @@ public:
 		ATLASSERT(::IsWindow(m_hWnd));
 		return (BOOL)::SendMessage(m_hWnd, EM_SETZOOM, 0, 0L);
 	}
+
+	void SetMargins(UINT nLeft, UINT nRight, WORD wFlags = EC_LEFTMARGIN | EC_RIGHTMARGIN)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		::SendMessage(m_hWnd, EM_SETMARGINS, wFlags, MAKELONG(nLeft, nRight));
+	}
 #endif // (_RICHEDIT_VER >= 0x0300)
 
 // Operations
@@ -7868,10 +7965,10 @@ public:
 		return (int)::SendMessage(m_hWnd, EM_LINELENGTH, nLine, 0L);
 	}
 
-	BOOL LineScroll(int nLines, int nChars = 0)
+	BOOL LineScroll(int nLines)
 	{
 		ATLASSERT(::IsWindow(m_hWnd));
-		return (BOOL)::SendMessage(m_hWnd, EM_LINESCROLL, nChars, nLines);
+		return (BOOL)::SendMessage(m_hWnd, EM_LINESCROLL, 0, nLines);
 	}
 
 	void ReplaceSel(LPCTSTR lpszNewText, BOOL bCanUndo = FALSE)
@@ -8065,6 +8162,116 @@ public:
 		return (BOOL)::SendMessage(m_hWnd, EM_SETTABSTOPS, 1, (LPARAM)(LPINT)&cxEachStop);
 	}
 #endif // (_RICHEDIT_VER >= 0x0300)
+
+#if (_RICHEDIT_VER >= 0x0800)
+	AutoCorrectProc GetAutoCorrectProc() const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (AutoCorrectProc)::SendMessage(m_hWnd, EM_GETAUTOCORRECTPROC, 0, 0L);
+	}
+
+	BOOL SetAutoCorrectProc(AutoCorrectProc pfn)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (BOOL)::SendMessage(m_hWnd, EM_SETAUTOCORRECTPROC, (WPARAM)pfn, 0L);
+	}
+
+	BOOL CallAutoCorrectProc(WCHAR ch)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (BOOL)::SendMessage(m_hWnd, EM_CALLAUTOCORRECTPROC, (WPARAM)ch, 0L);
+	}
+
+	DWORD GetEditStyleEx() const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (DWORD)::SendMessage(m_hWnd, EM_GETEDITSTYLEEX, 0, 0L);
+	}
+
+	DWORD SetEditStyleEx(DWORD dwStyleEx, DWORD dwMask)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (DWORD)::SendMessage(m_hWnd, EM_SETEDITSTYLEEX, dwStyleEx, dwMask);
+	}
+
+	DWORD GetStoryType(int nStoryIndex) const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (DWORD)::SendMessage(m_hWnd, EM_GETSTORYTYPE, nStoryIndex, 0L);
+	}
+
+	DWORD SetStoryType(int nStoryIndex, DWORD dwStoryType)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (DWORD)::SendMessage(m_hWnd, EM_SETSTORYTYPE, nStoryIndex, dwStoryType);
+	}
+
+	DWORD GetEllipsisMode() const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+
+		DWORD dwMode = 0;
+		BOOL bRet = (BOOL)::SendMessage(m_hWnd, EM_GETELLIPSISMODE, 0, (LPARAM)&dwMode);
+		bRet;   // avoid level 4 warning
+		ATLASSERT(bRet != FALSE);
+
+		return dwMode;
+	}
+
+	BOOL SetEllipsisMode(DWORD dwEllipsisMode)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (BOOL)::SendMessage(m_hWnd, EM_SETELLIPSISMODE, 0, dwEllipsisMode);
+	}
+
+	BOOL GetEllipsisState() const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (BOOL)::SendMessage(m_hWnd, EM_GETELLIPSISSTATE, 0, 0L);
+	}
+
+	BOOL GetTouchOptions(int nTouchOptions) const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (BOOL)::SendMessage(m_hWnd, EM_GETTOUCHOPTIONS, nTouchOptions, 0L);
+	}
+
+	void SetTouchOptions(int nTouchOptions, BOOL bEnable)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		::SendMessage(m_hWnd, EM_SETTOUCHOPTIONS, nTouchOptions, bEnable);
+	}
+
+	HRESULT InsertTable(TABLEROWPARMS* pRowParams, TABLECELLPARMS* pCellParams)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (HRESULT)::SendMessage(m_hWnd, EM_INSERTTABLE, (WPARAM)pRowParams, (LPARAM)pCellParams);
+	}
+
+	HRESULT GetTableParams(TABLEROWPARMS* pRowParams, TABLECELLPARMS* pCellParams) const
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (HRESULT)::SendMessage(m_hWnd, EM_GETTABLEPARMS, (WPARAM)pRowParams, (LPARAM)pCellParams);
+	}
+
+	HRESULT SetTableParams(TABLEROWPARMS* pRowParams, TABLECELLPARMS* pCellParams)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (HRESULT)::SendMessage(m_hWnd, EM_SETTABLEPARMS, (WPARAM)pRowParams, (LPARAM)pCellParams);
+	}
+
+	HRESULT InsertImage(RICHEDIT_IMAGE_PARAMETERS* pParams)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (HRESULT)::SendMessage(m_hWnd, EM_INSERTIMAGE, 0, (LPARAM)pParams);
+	}
+
+	BOOL SetUiaName(LPCTSTR lpstrName)
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return (BOOL)::SendMessage(m_hWnd, EM_SETUIANAME, 0, (LPARAM)lpstrName);
+	}
+#endif // (_RICHEDIT_VER >= 0x0800)
 };
 
 typedef CRichEditCtrlT<ATL::CWindow>   CRichEditCtrl;
@@ -8340,8 +8547,8 @@ public:
 		REBARINFO rbi = { 0 };
 		rbi.cbSize = sizeof(REBARINFO);
 		rbi.fMask = RBIM_IMAGELIST;
-		if( (BOOL)::SendMessage(m_hWnd, RB_GETBARINFO, 0, (LPARAM)&rbi) == FALSE ) return CImageList();
-		return CImageList(rbi.himl);
+		BOOL bRet = (BOOL)::SendMessage(m_hWnd, RB_GETBARINFO, 0, (LPARAM)&rbi);
+		return CImageList((bRet != FALSE) ? rbi.himl : NULL);
 	}
 
 	BOOL SetImageList(HIMAGELIST hImageList)
@@ -8486,12 +8693,18 @@ public:
 #if (_WIN32_IE >= 0x0600)
 	DWORD GetExtendedStyle() const
 	{
+#ifndef RB_GETEXTENDEDSTYLE
+	const UINT RB_GETEXTENDEDSTYLE = WM_USER + 42;
+#endif
 		ATLASSERT(::IsWindow(m_hWnd));
 		return (DWORD)::SendMessage(m_hWnd, RB_GETEXTENDEDSTYLE, 0, 0L);
 	}
 
 	DWORD SetExtendedStyle(DWORD dwStyle, DWORD dwMask)
 	{
+#ifndef RB_SETEXTENDEDSTYLE
+		const UINT RB_SETEXTENDEDSTYLE = WM_USER + 41;
+#endif
 		ATLASSERT(::IsWindow(m_hWnd));
 		return (DWORD)::SendMessage(m_hWnd, RB_SETEXTENDEDSTYLE, dwMask, dwStyle);
 	}
