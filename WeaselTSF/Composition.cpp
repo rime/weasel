@@ -280,7 +280,22 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 
 	if (ok)
 	{
-		if (status.composing && !_IsComposing())
+		bool composing = _IsComposing();
+		if (!commit.empty())
+		{
+			// 修复顶字上屏的吞字问题：
+			// 顶字上屏（如五笔 4 码上屏时），当候选词数 > 1 时，
+			// 第 5 码输入时会将首选项顶屏。
+			// 此时由于第五码的输入，composition 应是开启的，同时也要在输入处插入顶字。
+			// 这里先关闭上一个字的 composition，然后为后续输入开启一个新 composition。
+			// 有点 dirty 但是 it works ...
+			if (composing) {
+				_EndComposition(pContext);
+				composing = false;
+			}
+			_InsertText(pContext, commit);
+		}
+		if (status.composing && !composing)
 		{
 			if (!_fCUASWorkaroundTested)
 			{
@@ -294,14 +309,10 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 			}
 			_StartComposition(pContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 		}
-		else if (!status.composing && _IsComposing())
+		else if (!status.composing && composing)
 			_EndComposition(pContext);
-		if (_IsComposing() && config.inline_preedit)
+		if (composing && config.inline_preedit)
 			_ShowInlinePreedit(pContext, context);
-		if (!commit.empty())
-		{
-			_InsertText(pContext, commit);
-		}
 	}
 }
 
