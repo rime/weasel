@@ -18,7 +18,18 @@ ServerImpl::ServerImpl()
 
 ServerImpl::~ServerImpl()
 {
-	Stop();
+	if (m_hUser32Module != NULL)
+	{
+		FreeLibrary(m_hUser32Module);
+	}
+	if (pipeThread != nullptr) {
+		pipeThread->interrupt();
+	}
+	if (IsWindow())
+	{
+		DestroyWindow();
+	}
+
 	m_pRequestHandler->Finalize();
 }
 
@@ -113,8 +124,8 @@ int ServerImpl::Stop()
 		DestroyWindow();
 	}
 	
-	//quit the server
-	::PostQuitMessage(0);
+	// quit the server
+	::ExitProcess(0);
 	return 0;
 }
 
