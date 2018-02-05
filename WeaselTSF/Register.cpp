@@ -10,12 +10,11 @@ static const char c_szModelName[] = "ThreadingModel";
 
 inline bool IsWindows8OrGreater()
 {
-	OSVERSIONINFOEX osvi = {sizeof(osvi), 6, 2, 0, 0, {0}, 0, 0};
-	return VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR,
-		VerSetConditionMask(VerSetConditionMask(VerSetConditionMask(
-			0, VER_MAJORVERSION, VER_GREATER_EQUAL),
-			   VER_MINORVERSION, VER_GREATER_EQUAL),
-			   VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL)) != FALSE;
+	OSVERSIONINFOW osvi = {sizeof(osvi)};
+	using PRGV = LONG (NTAPI *)(PRTL_OSVERSIONINFOW);
+	PRGV RtlGetVersion = (PRGV)GetProcAddress(GetModuleHandle(TEXT("ntdll.dll")), "RtlGetVersion");
+	RtlGetVersion(&osvi);
+	return (osvi.dwMajorVersion > 6 || (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion >= 2));
 }
 
 BOOL RegisterProfiles()

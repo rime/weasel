@@ -30,12 +30,9 @@ typedef enum MONITOR_DPI_TYPE {
 
 inline bool IsWindows8Point1OrGreater()
 {
-	OSVERSIONINFOEX osvi = {sizeof(osvi), 6, 3, 0, 0, {0}, 0, 0};
-	return VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR,
-		VerSetConditionMask(VerSetConditionMask(VerSetConditionMask(
-			0, VER_MAJORVERSION, VER_GREATER_EQUAL),
-			   VER_MINORVERSION, VER_GREATER_EQUAL),
-			   VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL)) != FALSE;
+	OSVERSIONINFOW osvi = {sizeof(osvi)};
+	_GetVersion(&osvi);
+	return (osvi.dwMajorVersion > 6 || (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion >= 3));
 }
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
