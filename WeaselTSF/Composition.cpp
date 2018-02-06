@@ -309,8 +309,10 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 			}
 			_StartComposition(pContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 		}
-		else if (!status.composing && composing)
+		else if (!status.composing && composing) {
 			_EndComposition(pContext);
+			composing = false;
+		}
 		if (composing && config.inline_preedit)
 			_ShowInlinePreedit(pContext, context);
 	}
