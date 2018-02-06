@@ -12,12 +12,8 @@
 
 #include <windows.h>
 
-#include <atl.h>
-
-#pragma warning(disable : 4996)
+#include <atlbase.h>
 
 #include <wtl/atlapp.h>
-
-#pragma warning(default : 4996)
 
 extern CAppModule _Module;

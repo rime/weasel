@@ -12,10 +12,8 @@
 #include <windows.h>
 #include <ShellAPI.h>
 
-#include <atl.h>
-
-#pragma warning(disable : 4996)
-
+#include <atlbase.h>
+#include <atlwin.h>
 #include <atlimage.h>
 
 #include <wtl/atlapp.h>
@@ -23,7 +21,5 @@
 #include <wtl/atlctrlx.h>
 #include <wtl/atlmisc.h>
 #include <wtl/atldlgs.h>
-
-#pragma warning(default: 4996)
 
 #include <logging.h>

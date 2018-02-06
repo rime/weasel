@@ -1,7 +1,6 @@
 #pragma once
 #include <WeaselIPC.h>
 #include <map>
-#include <memory>
 #include <Winnt.h> // for security attributes constants
 #include <aclapi.h> // for ACL
 #include <boost/thread.hpp>

@@ -22,7 +22,8 @@
   #pragma comment(linker, "/NODEFAULTLIB:atlthunk.lib")
 #endif // _WTL_SUPPORT_SDK_ATL3
 
-#include <atl.h>
+#include <atlbase.h>
+#include <atlwin.h>
 
 // Support for VS2005 Express & SDK ATL
 #ifdef _WTL_SUPPORT_SDK_ATL3
@@ -40,14 +41,10 @@
   };
 #endif // _WTL_SUPPORT_SDK_ATL3
 
-#pragma warning(disable : 4996)
-
 #include <wtl/atlapp.h>
 #include <wtl/atlframe.h>
 #include <wtl/atlctrls.h>
 #include <wtl/atldlgs.h>
-
-#pragma warning(default : 4996)
 
 inline void _GetVersion(POSVERSIONINFOW osvi)
 {

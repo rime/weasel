@@ -11,12 +11,10 @@
 // Windows Header Files:
 #include <windows.h>
 #include <ShellAPI.h>
-#include "Imm.h"
+#include <Imm.h>
 
-#include <atl.h>
-
-#pragma warning(disable : 4996)
-
+#include <atlbase.h>
+#include <atlwin.h>
 #include <atlimage.h>
 
 #include <wtl/atlapp.h>
@@ -25,14 +23,6 @@
 #include <wtl/atlmisc.h>
 #include <wtl/atldlgs.h>
 
-#pragma warning(default: 4996)
-
-#pragma warning(disable : 4819)
-
 #include <boost/filesystem.hpp>
-
-#pragma warning(default : 4819)
-
-#include <memory>
 
 // TODO: reference additional headers your program requires here
