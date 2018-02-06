@@ -15,14 +15,10 @@
 #include <msctf.h>
 #include <assert.h>
 
-#pragma warning(disable : 4819)
-
-#include <boost/filesystem.hpp>
-
-#pragma warning(default : 4819)
+// #include <boost/filesystem.hpp>
 
 #include <map>
 #include <memory>
 #include <string>
 
-using boost::filesystem::wpath;
+// using boost::filesystem::wpath;

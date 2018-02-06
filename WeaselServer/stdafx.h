@@ -46,19 +46,7 @@
 #include <wtl/atlctrls.h>
 #include <wtl/atldlgs.h>
 
-inline void _GetVersion(POSVERSIONINFOW osvi)
-{
-	typedef NTSTATUS (NTAPI *PRGV)(PRTL_OSVERSIONINFOW);
-	PRGV RtlGetVersion = (PRGV)GetProcAddress(GetModuleHandle(TEXT("ntdll.dll")), "RtlGetVersion");
-	RtlGetVersion(osvi);
-}
-
-inline bool IsWindowsVistaOrGreater()
-{
-	OSVERSIONINFOW osvi = {sizeof(osvi)};
-	_GetVersion(&osvi);
-	return (osvi.dwMajorVersion >= 6);
-}
+#include <VersionHelpers.hpp>
 
 typedef HRESULT (WINAPI *PRAR)(PCWSTR, DWORD);
 

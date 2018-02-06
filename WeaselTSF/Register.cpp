@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Register.h"
+#include <VersionHelpers.hpp>
 
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
@@ -7,15 +8,6 @@ static const char c_szInfoKeyPrefix[] = "CLSID\\";
 static const char c_szTipKeyPrefix[] = "Software\\Microsft\\CTF\\TIP\\";
 static const char c_szInProcSvr32[] = "InprocServer32";
 static const char c_szModelName[] = "ThreadingModel";
-
-inline bool IsWindows8OrGreater()
-{
-	OSVERSIONINFOW osvi = {sizeof(osvi)};
-	using PRGV = LONG (NTAPI *)(PRTL_OSVERSIONINFOW);
-	PRGV RtlGetVersion = (PRGV)GetProcAddress(GetModuleHandle(TEXT("ntdll.dll")), "RtlGetVersion");
-	RtlGetVersion(&osvi);
-	return (osvi.dwMajorVersion > 6 || (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion >= 2));
-}
 
 BOOL RegisterProfiles()
 {
@@ -85,6 +77,7 @@ BOOL RegisterCategories()
 	if (hr != S_OK)
 		goto Exit;
 
+	InitVersion();
 	if (IsWindows8OrGreater())
 	{
 		hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
