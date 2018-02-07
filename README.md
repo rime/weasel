@@ -5,7 +5,7 @@
 
 式恕堂 版權所無
 
-[![Build status](https://ci.appveyor.com/api/projects/status/github/rime/weasel?svg=true)](https://ci.appveyor.com/project/lotem/weasel)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/rime/weasel?svg=true)](https://ci.appveyor.com/project/rime/weasel)
 
 授權條款：GPLv3
 
