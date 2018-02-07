@@ -1,7 +1,9 @@
-; weasel expansion installation script
+﻿; weasel expansion installation script
 !include FileFunc.nsh
 !include LogicLib.nsh
 !include x64.nsh
+
+Unicode true
 
 ; 擴展包標識
 !define PACKAGE_ID "weasel-expansion"

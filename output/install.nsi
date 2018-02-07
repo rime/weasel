@@ -1,7 +1,9 @@
-; weasel installation script
+﻿; weasel installation script
 !include FileFunc.nsh
 !include LogicLib.nsh
 !include x64.nsh
+
+Unicode true
 
 !define WEASEL_VERSION 0.9.30
 !define WEASEL_BUILD ${WEASEL_VERSION}.0
@@ -104,17 +106,28 @@ program_files:
   File "LICENSE.txt"
   File "README.txt"
   File "weasel.dll"
-  File "weaselx64.dll"
+  ${If} ${RunningX64}
+    File "weaselx64.dll"
+  ${EndIf}
   File "weaselt.dll"
-  File "weaseltx64.dll"
+  ${If} ${RunningX64}
+    File "weaseltx64.dll"
+  ${EndIf}
   File "weasel.ime"
-  File "weaselx64.ime"
+  ${If} ${RunningX64}
+    File "weaselx64.ime"
+  ${EndIf}
   File "weaselt.ime"
-  File "weaseltx64.ime"
+  ${If} ${RunningX64}
+    File "weaseltx64.ime"
+  ${EndIf}
   File "WeaselDeployer.exe"
   File "WeaselServer.exe"
-  File "WeaselSetup.exe"
-  File "WeaselSetupx64.exe"
+  ${If} ${RunningX64}
+    File "WeaselSetupx64.exe"
+  ${Else}
+    File "WeaselSetup.exe"
+  ${EndIf}
   File "rime.dll"
   File "WinSparkle.dll"
   ; shared data files

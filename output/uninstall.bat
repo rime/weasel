@@ -26,4 +26,5 @@ WeaselSetup.exe /u
 goto exit
 
 :exit
+reg delete "HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Run" /v WeaselServer /f
 cd "%CD_BACK%"

@@ -15,11 +15,9 @@ cache:
 
 init:
   - git --version
-  - msbuild /version
   - git config --global core.autocrlf true
 
 install:
-  - choco install nsis-unicode
   - .\appveyor.install.bat
 
 build_script:
