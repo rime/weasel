@@ -604,8 +604,14 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		{
 			style.hilited_candidate_back_color = style.hilited_back_color;
 		}
-		style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);
-		style.hilited_label_text_color = blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color);
+		if (!RimeConfigGetInt(config, (prefix + "/label_color").c_str(), &style.label_text_color))
+		{
+			style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);
+		}
+		if (!RimeConfigGetInt(config, (prefix + "/hilited_label_color").c_str(), &style.hilited_label_text_color))
+		{
+			style.hilited_label_text_color = blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color);
+		}
 		style.comment_text_color = style.label_text_color;
 		style.hilited_comment_text_color = style.hilited_label_text_color;
 		if (RimeConfigGetInt(config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color))
