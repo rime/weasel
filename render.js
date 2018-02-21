@@ -49,6 +49,7 @@ var variable;
 for (var i = 1; i < WScript.Arguments.length; i++) {
   variable = WScript.Arguments(i);
   params[variable] = env(variable);
+  WScript.Echo(variable + "=" + params[variable]);
 }
 Render(filename, params);
 WScript.Echo("Generated " + filename);
