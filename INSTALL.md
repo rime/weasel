@@ -29,6 +29,11 @@ Make sure `BOOST_ROOT` is set to `X:\path\to\boost_N_NN_N` in `weasel.props`.
 Forget about Python. It's not used anyway.
 
 Then, start a Developer Command Prompt window.
+Set `BOOST_ROOT` environmental variable:
+
+```batch
+set BOOST_ROOT=X:\path\to\boost_N_NN_N
+```
 
 ### Build
 
