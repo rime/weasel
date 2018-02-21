@@ -1,6 +1,6 @@
-setlocal
+@echo off
 
-if exist env.bat call env.bat
+setlocal
 
 set work=%cd%
 
@@ -37,6 +37,7 @@ if exist output\weaselserver.exe (
 
 if %build_boost% == 1 (
   call :build_boost
+  if errorlevel 1 exit /b 1
   cd %work%
 )
 
@@ -79,13 +80,39 @@ goto end
 
 :build_boost
 
-set boost_build_flags=toolset=msvc-%VisualStudioVersion%^
+if not defined BOOST_ROOT (
+  echo Error: Boost not found! Please set BOOST_ROOT in command line.
+  exit /b 1
+) else if not exist "%BOOST_ROOT%\boost" (
+  echo Error: Boost headers not found! Please ensure BOOST_ROOT points to libboost root directory.
+  exit /b 1
+)
+
+set BJAM_TOOLSET=msvc-%VisualStudioVersion%
+if %BJAM_TOOLSET% == msvc- (
+  echo Error: Please run Visual Studio Developer Command Prompt first.
+  exit /b 1
+) else if %BJAM_TOOLSET% == msvc-15.0 (
+  rem Visual Studio 2017
+  set BJAM_TOOLSET=msvc-14.1
+)
+
+set boost_build_flags_common=toolset=%BJAM_TOOLSET%^
  variant=release^
  link=static^
  threading=multi^
- runtime-link=static
+ runtime-link=static^
+ cxxflags="/Zc:threadSafeInit- "
 
- set boost_libs=--with-date_time^
+set boost_build_flags_x86=%boost_build_flags_common%^
+ define=BOOST_USE_WINAPI_VERSION=0x0501
+
+set boost_build_flags_x64=%boost_build_flags_common%^
+ define=BOOST_USE_WINAPI_VERSION=0x0502^
+ address-model=64^
+ --stagedir=stage_x64
+
+set boost_libs=--with-date_time^
  --with-filesystem^
  --with-locale^
  --with-regex^
@@ -93,13 +120,13 @@ set boost_build_flags=toolset=msvc-%VisualStudioVersion%^
  --with-system^
  --with-thread
 
- cd %BOOST_ROOT%
+cd %BOOST_ROOT%
 if not exist bjam.exe call bootstrap.bat
 if %ERRORLEVEL% NEQ 0 goto error
-bjam %boost_build_flags% stage %boost_libs%
+bjam %boost_build_flags_x86% stage %boost_libs%
 if %ERRORLEVEL% NEQ 0 goto error
 if %build_x64% == 1 (
-  bjam %boost_build_flags% address-model=64 --stagedir=stage_x64 stage %boost_libs%
+  bjam %boost_build_flags_x64% stage %boost_libs%
   if %ERRORLEVEL% NEQ 0 goto error
 )
 exit /b
