@@ -19,20 +19,23 @@
 })();
 
 // main
-var fso = WScript.CreateObject("Scripting.FileSystemObject");
+var objStream = WScript.CreateObject("ADODB.Stream");
 var shell = WScript.CreateObject("Wscript.Shell");
 var env = shell.Environment("Process");
 
 function Render(filename, params) {
-  var ForReading = 1;
-  var templateFile = fso.OpenTextFile(filename + '.template', ForReading);
-  var input = templateFile.ReadAll();
-  templateFile.Close();
+  objStream.Charset = "utf-8";
+  objStream.Open();
+  objStream.LoadFromFile(filename + '.template');
+  var input = objStream.ReadText();
+  objStream.Close();
 
   var output = input.template(params);
-  var outputFile = fso.CreateTextFile(filename, true);
-  outputFile.Write(output);
-  outputFile.Close();
+  objStream.Charset = "utf-8";
+  objStream.Open();
+  objStream.WriteText(output);
+  objStream.SaveToFile(filename, 2);
+  objStream.Close();
 }
 
 if (WScript.Arguments.length == 0) {
