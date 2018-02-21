@@ -9,9 +9,7 @@
 #include <set>
 #include <string>
 
-#pragma warning(disable: 4005)
 #include <rime_api.h>
-#pragma warning(default: 4005)
 
 int expand_ibus_modifier(int m)
 {
@@ -394,7 +392,7 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 		else if (m_message_value == "success")
 			tips = L"部署完成";
 		else if (m_message_value == "failure")
-			tips = L"有錯誤，請查看日誌 %TEMP%\rime.weasel.*.INFO";
+			tips = L"有錯誤，請查看日誌 %TEMP%\\rime.weasel.*.INFO";
 	}
 	else if (m_message_type == "schema") {
 		tips = /*L"【" + */status.schema_name/* + L"】"*/;
