@@ -11,7 +11,6 @@ appveyor DownloadFile https://ci.appveyor.com/api/projects/rime/librime/artifact
 7z x rime.zip * -olibrime\ | find "ing archive"
 copy /Y librime\build\include\rime_*.h include\
 copy /Y librime\build\lib\Release\rime.dll output\
-ren weasel-appveyor.props weasel.props
 
 if %nocache% == 1 (
 	pushd C:\Libraries

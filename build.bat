@@ -86,7 +86,7 @@ cd /d %WEASEL_ROOT
 set WEASEL_PROJECT_PROPERTIES=BOOST_ROOT PLATFORM_TOOLSET
 
 if not exist weasel.props (
-  cscript.exe render.js weasel.props.template %WEASEL_PROJECT_PROPERTIES%
+  cscript.exe render.js weasel.props %WEASEL_PROJECT_PROPERTIES%
 )
 
 del msbuild*.log
