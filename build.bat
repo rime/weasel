@@ -81,7 +81,7 @@ if %build_data% == 1 (
   call :build_data
 )
 
-cd /d %WEASEL_ROOT
+cd /d %WEASEL_ROOT%
 
 set WEASEL_PROJECT_PROPERTIES=BOOST_ROOT PLATFORM_TOOLSET
 
