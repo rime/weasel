@@ -81,6 +81,14 @@ if %build_data% == 1 (
   call :build_data
 )
 
+cd /d %WEASEL_ROOT
+
+set WEASEL_PROJECT_PROPERTIES=BOOST_ROOT PLATFORM_TOOLSET
+
+if not exist weasel.props (
+  cscript.exe render.js weasel.props.template %WEASEL_PROJECT_PROPERTIES%
+)
+
 del msbuild*.log
 
 if %build_hant% == 1 (

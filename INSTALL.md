@@ -2,10 +2,13 @@
 
 ## Preparation
 
-Assume we already have a default installation of **Visual Studio 2015**.
+Assume we already have an installation of **Visual Studio 2015** including the component
+"MFC and ATL support".
 
 Install dev tools: `git`, `cmake`
 Download third-party libraries: `boost(>=1.60.0)`
+
+Optional: install `python` for building OpenCC dictionaries
 
 ## Checkout source code
 
@@ -21,19 +24,17 @@ Locate `weasel` source directory.
 
 ### Setup build environment
 
-Edit `librime\env.bat.template`, save your copy as `librime\env.bat`.
-Make sure `BOOST_ROOT` is set to `X:\path\to\boost_N_NN_N` in `librime\env.bat`.
+Start a Developer Command Prompt window.
 
-Edit `weasel.props.template`, save your copy as `weasel.props`.
-Make sure `BOOST_ROOT` is set to `X:\path\to\boost_N_NN_N` in `weasel.props`.
-Forget about Python. It's not used anyway.
-
-Then, start a Developer Command Prompt window.
-Set `BOOST_ROOT` environmental variable:
+Set `BOOST_ROOT` environment variable:
 
 ```batch
 set BOOST_ROOT=X:\path\to\boost_N_NN_N
 ```
+
+Alternatively, save your build environment settings in `env.bat`.
+You can create the file by copying `env.bat.template` and make modifications.
+Make sure `BOOST_ROOT` is set to existing `X:\path\to\boost_N_NN_N` in your copy.
 
 ### Build
 

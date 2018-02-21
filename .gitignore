@@ -18,6 +18,7 @@ ReleaseHant/
 /lib/*.lib
 /include/glog
 /ipch
+env.bat
 weasel.props
 *.log
 *.user
