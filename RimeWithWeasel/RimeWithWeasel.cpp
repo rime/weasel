@@ -129,13 +129,13 @@ namespace ibus
 	};
 }
 
-BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer)
+BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, EatLine eat)
 {
 	DLOG(INFO) << "Process key event: keycode = " << keyEvent.keycode << ", mask = " << keyEvent.mask
 		 << ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
 	Bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
-	_Respond(session_id, buffer);
+	_Respond(session_id, eat);
 	_UpdateUI(session_id);
 	m_active_session = session_id;
 	return (BOOL)handled;
@@ -425,7 +425,7 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 	return true;
 }
 
-bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
+bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 {
 	std::set<std::string> actions;
 	std::list<std::string> messages;
@@ -487,21 +487,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, LPWSTR buffer)
 
 	messages.push_back(std::string(".\n"));
 
-	// printing to stream
-
-	memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
-	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
-
-	return std::all_of(messages.begin(), messages.end(), [&bs](std::string &msg)
+	return std::all_of(messages.begin(), messages.end(), [&eat](std::string &msg)
 	{
-		bs << utf8towcs(msg.c_str());
-		if (!bs.good())
-		{
-			// response text toooo long!
-			return false;
-		}
-		else
-			return true;
+		return eat(std::wstring(utf8towcs(msg.c_str())));
 	});
 }
 

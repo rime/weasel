@@ -18,7 +18,7 @@ public:
 	virtual UINT FindSession(UINT session_id);
 	virtual UINT AddSession(LPWSTR buffer);
 	virtual UINT RemoveSession(UINT session_id);
-	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer);
+	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, EatLine eat);
 	virtual void CommitComposition(UINT session_id);
 	virtual void ClearComposition(UINT session_id);
 	virtual void FocusIn(DWORD param, UINT session_id);
@@ -33,7 +33,7 @@ private:
 	void _UpdateUI(UINT session_id);
 	void _LoadSchemaSpecificSettings(const std::string& schema_id);
 	bool _ShowMessage(weasel::Context& ctx, weasel::Status& status);
-	bool _Respond(UINT session_id, LPWSTR buffer);
+	bool _Respond(UINT session_id, EatLine eat);
 	void _ReadClientInfo(UINT session_id, LPWSTR buffer);
 
 	AppOptionsByAppName m_app_options;

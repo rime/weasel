@@ -113,7 +113,7 @@ int console_main()
 
 int client_main()
 {
-	launch_server();
+	//launch_server();
 	Sleep(1000);
 	weasel::Client client;
 	if (!client.Connect())
@@ -168,12 +168,12 @@ public:
 		std::cerr << "RemoveClient: " << session_id << std::endl;
 		return 0;
 	}
-	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, LPWSTR buffer) {
+	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, EatLine eat) {
 		std::cerr << "ProcessKeyEvent: " << session_id 
 			  << " keycode: " << keyEvent.keycode 
 			  << " mask: " << keyEvent.mask 
 			  << std::endl;
-		wsprintf(buffer, L"Greeting=Hello, 小狼毫.\n");
+		eat(std::wstring(L"Greeting=Hello, 小狼毫.\n"));
 		return TRUE;
 	}
 private:

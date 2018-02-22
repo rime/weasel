@@ -65,6 +65,7 @@ namespace weasel
 	// 處理請求之物件
 	struct RequestHandler
 	{
+		using EatLine = std::function<bool(std::wstring&)>;
 		RequestHandler() {}
 		virtual ~RequestHandler() {}
 		virtual void Initialize() {}
@@ -72,7 +73,7 @@ namespace weasel
 		virtual UINT FindSession(UINT session_id) { return 0; }
 		virtual UINT AddSession(LPWSTR buffer) { return 0; }
 		virtual UINT RemoveSession(UINT session_id) { return 0; }
-		virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, LPWSTR buffer) { return FALSE; }
+		virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, EatLine eat) { return FALSE; }
 		virtual void CommitComposition(UINT session_id) {}
 		virtual void ClearComposition(UINT session_id) {}
 		virtual void FocusIn(DWORD param, UINT session_id) {}

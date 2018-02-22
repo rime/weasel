@@ -45,6 +45,9 @@
     <ClCompile Include="Configurator.cpp">
       <Filter>Source Files\Deserializer</Filter>
     </ClCompile>
+    <ClCompile Include="PipeChannel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Deserializer.h">
@@ -76,6 +79,9 @@
     </ClInclude>
     <ClInclude Include="Configurator.h">
       <Filter>Header Files\Deserializer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PipeChannel.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
