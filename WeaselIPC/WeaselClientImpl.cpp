@@ -51,11 +51,6 @@ void ClientImpl::_InitializeClientInfo()
 
 bool ClientImpl::Connect(ServerLauncher const& launcher)
 {
-	//auto pipe_name = GetPipeName();
-
-	//_ConnectPipe(pipe_name.c_str());
-
-	//return _Connected();
 	return channel.Connect();
 }
 
@@ -136,9 +131,6 @@ void ClientImpl::FocusOut()
 
 void ClientImpl::StartSession()
 {
-	//if (!channel._Connected())
-	//	return;
-
 	if (_Active() && Echo())
 		return;
 

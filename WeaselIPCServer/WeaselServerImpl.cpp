@@ -4,6 +4,26 @@
 #include <boost/thread.hpp>
 #include <VersionHelpers.hpp>
 
+namespace weasel {
+	class PipeServer : public PipeChannel<DWORD, PipeMessage>
+	{
+	public:
+		using ServerRunner = std::function<void()>;
+		using Respond = std::function<void(Msg)>;
+		using ServerHandler = std::function<void(PipeMessage, Respond)>;
+
+		PipeServer(std::wstring &pn_cmd, SECURITY_ATTRIBUTES *s);
+
+	public:
+		void Listen(ServerHandler const &handler);
+		/* Get a server runner */
+		ServerRunner GetServerRunner(ServerHandler const &handler);
+	private:
+		void _ProcessPipeThread(HANDLE pipe, ServerHandler const &handler);
+	};
+}
+
+
 using namespace weasel;
 
 extern CAppModule _Module;
@@ -13,8 +33,6 @@ ServerImpl::ServerImpl()
 	channel(std::make_unique<PipeServer>(GetPipeName(), sa.get_attr()))
 {
 	m_hUser32Module = GetModuleHandle(_T("user32.dll"));
-	//InitSecurityAttr();
-	//buffer = std::make_unique<char[]>(WEASEL_IPC_SHARED_MEMORY_SIZE);
 }
 
 ServerImpl::~ServerImpl()
@@ -278,7 +296,8 @@ case __msg:\
 
 #define END_MAP_PIPE_MSG_HANDLE(__result) }__result = _result; }
 
-void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, PipeServer::Respond resp)
+template<typename _Resp>
+void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, _Resp resp)
 {
 	DWORD result;
 

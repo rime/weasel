@@ -10,25 +10,7 @@
 
 namespace weasel
 {
-
-	#define WEASEL_MSG_HANDLER(__name) DWORD __name (WEASEL_IPC_COMMAND, DWORD, LPARAM, BOOL&);
-
-	class PipeServer : public PipeChannel<DWORD, PipeMessage>
-	{
-	public:
-		using ServerRunner = std::function<void()>;
-		using Respond = std::function<void(Msg)>;
-		using ServerHandler = std::function<void(PipeMessage, Respond)>;
-
-		PipeServer(std::wstring &pn_cmd, SECURITY_ATTRIBUTES *s);
-
-	public:
-		void Listen(ServerHandler const &handler);
-		/* Get a server runner */
-		ServerRunner GetServerRunner(ServerHandler const &handler);
-	private:
-		void _ProcessPipeThread(HANDLE pipe, ServerHandler const &handler);
-	};
+	class PipeServer;
 
 	typedef CWinTraits<WS_DISABLED, WS_EX_TRANSPARENT> ServerWinTraits;
 
@@ -85,7 +67,8 @@ namespace weasel
 		}
 
 	private:
-		void HandlePipeMessage(PipeMessage pipe_msg, PipeServer::Respond resp);
+		template<typename _Resp>
+		void HandlePipeMessage(PipeMessage pipe_msg, _Resp resp);
 
 		std::unique_ptr<PipeServer> channel;
 		std::unique_ptr<boost::thread> pipeThread;
