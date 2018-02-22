@@ -265,6 +265,7 @@
   <ItemGroup>
     <ClCompile Include="Configurator.cpp" />
     <ClCompile Include="Deserializer.cpp" />
+    <ClCompile Include="PipeChannel.cpp" />
     <ClCompile Include="ResponseParser.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -282,6 +283,7 @@
     <ClCompile Include="ContextUpdater.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\PipeChannel.h" />
     <ClInclude Include="Configurator.h" />
     <ClInclude Include="Deserializer.h" />
     <ClInclude Include="..\include\ResponseParser.h" />

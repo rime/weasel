@@ -9,11 +9,12 @@ using namespace weasel;
 extern CAppModule _Module;
 
 ServerImpl::ServerImpl()
-: m_pRequestHandler(NULL)
+	: m_pRequestHandler(NULL),
+	channel(std::make_unique<PipeServer>(GetPipeName(), sa.get_attr()))
 {
 	m_hUser32Module = GetModuleHandle(_T("user32.dll"));
-	InitSecurityAttr();
-	buffer = std::make_unique<char[]>(WEASEL_IPC_SHARED_MEMORY_SIZE);
+	//InitSecurityAttr();
+	//buffer = std::make_unique<char[]>(WEASEL_IPC_SHARED_MEMORY_SIZE);
 }
 
 ServerImpl::~ServerImpl()
@@ -118,7 +119,21 @@ int ServerImpl::Stop()
 
 int ServerImpl::Run()
 {
-	pipeThread = std::make_unique<boost::thread>(boost::bind(&ServerImpl::ListenPipe, this));
+	
+	// This workaround causes a VC internal error:
+	// void PipeServer::Listen(ServerHandler handler);
+	// 
+	// auto handler = boost::bind(&ServerImpl::HandlePipeMessage, this);
+	// auto listener = boost::bind(&PipeServer::Listen, channel.get(), handler);
+	//
+
+	auto listener = [this](PipeMessage msg, PipeServer::Respond resp) -> void {
+		HandlePipeMessage(msg, resp);
+	};
+	pipeThread = std::make_unique<boost::thread>([this, &listener]() {
+		channel->Listen(listener);
+	});
+
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
 	int nRet = theLoop.Run();
@@ -127,43 +142,46 @@ int ServerImpl::Run()
 }
 
 
-DWORD ServerImpl::OnEcho(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnEcho(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (!m_pRequestHandler)
 		return 0;
 	return m_pRequestHandler->FindSession(lParam);
 }
 
-DWORD ServerImpl::OnStartSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnStartSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (!m_pRequestHandler)
 		return 0;
-	return m_pRequestHandler->AddSession(reinterpret_cast<LPWSTR>(buffer.get()));
+	return m_pRequestHandler->AddSession(reinterpret_cast<LPWSTR>(channel->ReceiveBuffer()));
 }
 
-DWORD ServerImpl::OnEndSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnEndSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (!m_pRequestHandler)
 		return 0;
 	return m_pRequestHandler->RemoveSession(lParam);
 }
 
-DWORD ServerImpl::OnKeyEvent(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnKeyEvent(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
-	LPWSTR buffer_ptr = reinterpret_cast<LPWSTR>((char *)buffer.get() + sizeof(DWORD));
 	if (!m_pRequestHandler/* || !m_pSharedMemory*/)
 		return 0;
-	hasResp = true;
-	return m_pRequestHandler->ProcessKeyEvent(KeyEvent(wParam), lParam, buffer_ptr);
+
+	auto eat = [this](std::wstring &msg) -> bool {
+		*channel << msg;
+		return true;
+	};
+	return m_pRequestHandler->ProcessKeyEvent(KeyEvent(wParam), lParam, eat);
 }
 
-DWORD ServerImpl::OnShutdownServer(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnShutdownServer(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	Stop();
 	return 0;
 }
 
-DWORD ServerImpl::OnFocusIn(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnFocusIn(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (!m_pRequestHandler)
 		return 0;
@@ -171,7 +189,7 @@ DWORD ServerImpl::OnFocusIn(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam,
 	return 0;
 }
 
-DWORD ServerImpl::OnFocusOut(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnFocusOut(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (!m_pRequestHandler)
 		return 0;
@@ -179,7 +197,7 @@ DWORD ServerImpl::OnFocusOut(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam
 	return 0;
 }
 
-DWORD ServerImpl::OnUpdateInputPosition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnUpdateInputPosition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (!m_pRequestHandler)
 		return 0;
@@ -219,202 +237,115 @@ DWORD ServerImpl::OnUpdateInputPosition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, D
 	return 0;
 }
 
-DWORD ServerImpl::OnStartMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnStartMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (m_pRequestHandler)
 		m_pRequestHandler->StartMaintenance();
 	return 0;
 }
 
-DWORD ServerImpl::OnEndMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnEndMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (m_pRequestHandler)
 		m_pRequestHandler->EndMaintenance();
 	return 0;
 }
 
-DWORD ServerImpl::OnCommitComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnCommitComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (m_pRequestHandler)
 		m_pRequestHandler->CommitComposition(lParam);
 	return 0;
 }
 
-DWORD ServerImpl::OnClearComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam, BOOL& hasResp)
+DWORD ServerImpl::OnClearComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 {
 	if (m_pRequestHandler)
 		m_pRequestHandler->ClearComposition(lParam);
 	return 0;
 }
 
-#define MAP_PIPE_MSG_HANDLE(__msg, __wParam, __lParam, __handled) {\
+#define MAP_PIPE_MSG_HANDLE(__msg, __wParam, __lParam) {\
 auto lParam = __lParam;\
 auto wParam = __wParam;\
-LRESULT _result;\
-BOOL& _has_resp = __handled;\
+LRESULT _result = 0;\
 switch (__msg) {\
 
 #define PIPE_MSG_HANDLE(__msg, __func) \
 case __msg:\
-	_result = __func(__msg, wParam, lParam, _has_resp);\
+	_result = __func(__msg, wParam, lParam);\
 	break;\
 
 #define END_MAP_PIPE_MSG_HANDLE(__result) }__result = _result; }
 
-void ServerImpl::HandlePipeMessage(HANDLE pipe)
+void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, PipeServer::Respond resp)
 {
-	PipeMessage pipe_msg;
-	LRESULT result = 0;
-	DWORD bytes_read, bytes_written;
-	DWORD write_len;
+	DWORD result;
 
-	for (;;) {
-		auto success = ReadFile(pipe, (LPVOID)&pipe_msg, sizeof(PipeMessage), &bytes_read, NULL);
-		if (!success)
-		{
-			if ((GetLastError()) != ERROR_MORE_DATA) {
-				break;
-			}
-			memset(buffer.get(), 0, WEASEL_IPC_BUFFER_SIZE);
-			success = ReadFile(pipe, buffer.get(), WEASEL_IPC_BUFFER_SIZE, &bytes_read, NULL);
-			if (!success) {
-				break;
-			}
-		}
-		BOOL has_resp = false;
-		MAP_PIPE_MSG_HANDLE(pipe_msg.Msg, pipe_msg.wParam, pipe_msg.lParam, has_resp)
-			PIPE_MSG_HANDLE(WEASEL_IPC_ECHO, OnEcho)
-			PIPE_MSG_HANDLE(WEASEL_IPC_START_SESSION, OnStartSession)
-			PIPE_MSG_HANDLE(WEASEL_IPC_END_SESSION, OnEndSession)
-			PIPE_MSG_HANDLE(WEASEL_IPC_PROCESS_KEY_EVENT, OnKeyEvent)
-			PIPE_MSG_HANDLE(WEASEL_IPC_SHUTDOWN_SERVER, OnShutdownServer)
-			PIPE_MSG_HANDLE(WEASEL_IPC_FOCUS_IN, OnFocusIn)
-			PIPE_MSG_HANDLE(WEASEL_IPC_FOCUS_OUT, OnFocusOut)
-			PIPE_MSG_HANDLE(WEASEL_IPC_UPDATE_INPUT_POS, OnUpdateInputPosition)
-			PIPE_MSG_HANDLE(WEASEL_IPC_START_MAINTENANCE, OnStartMaintenance)
-			PIPE_MSG_HANDLE(WEASEL_IPC_END_MAINTENANCE, OnEndMaintenance)
-			PIPE_MSG_HANDLE(WEASEL_IPC_COMMIT_COMPOSITION, OnCommitComposition)
-			PIPE_MSG_HANDLE(WEASEL_IPC_CLEAR_COMPOSITION, OnClearComposition);
-		END_MAP_PIPE_MSG_HANDLE(result);
+	MAP_PIPE_MSG_HANDLE(pipe_msg.Msg, pipe_msg.wParam, pipe_msg.lParam)
+		PIPE_MSG_HANDLE(WEASEL_IPC_ECHO, OnEcho)
+		PIPE_MSG_HANDLE(WEASEL_IPC_START_SESSION, OnStartSession)
+		PIPE_MSG_HANDLE(WEASEL_IPC_END_SESSION, OnEndSession)
+		PIPE_MSG_HANDLE(WEASEL_IPC_PROCESS_KEY_EVENT, OnKeyEvent)
+		PIPE_MSG_HANDLE(WEASEL_IPC_SHUTDOWN_SERVER, OnShutdownServer)
+		PIPE_MSG_HANDLE(WEASEL_IPC_FOCUS_IN, OnFocusIn)
+		PIPE_MSG_HANDLE(WEASEL_IPC_FOCUS_OUT, OnFocusOut)
+		PIPE_MSG_HANDLE(WEASEL_IPC_UPDATE_INPUT_POS, OnUpdateInputPosition)
+		PIPE_MSG_HANDLE(WEASEL_IPC_START_MAINTENANCE, OnStartMaintenance)
+		PIPE_MSG_HANDLE(WEASEL_IPC_END_MAINTENANCE, OnEndMaintenance)
+		PIPE_MSG_HANDLE(WEASEL_IPC_COMMIT_COMPOSITION, OnCommitComposition)
+		PIPE_MSG_HANDLE(WEASEL_IPC_CLEAR_COMPOSITION, OnClearComposition);
+	END_MAP_PIPE_MSG_HANDLE(result);
 
-		// 这里本来是用 sizeof(LRESULT)，但是 64 位和 32 位的这个长度不统一。
-		write_len = has_resp ? WEASEL_IPC_BUFFER_SIZE + sizeof(DWORD) : sizeof(DWORD);
-		*(DWORD *)buffer.get() = result;
-		if (!WriteFile(pipe, buffer.get(), write_len, &bytes_written, NULL)) {
-			break;
-		}
-		FlushFileBuffers(pipe);
-	}
-	DisconnectNamedPipe(pipe);
-	CloseHandle(pipe);
+	resp(result);
 }
 
-void ServerImpl::ListenPipe()
+PipeServer::PipeServer(std::wstring &pn_cmd, SECURITY_ATTRIBUTES *s)
+	: PipeChannel(pn_cmd, s)
+{}
+
+void PipeServer::Listen(ServerHandler const &handler)
 {
-	DWORD err;
 	for (;;) {
-		HANDLE pipe = InitPipe();
-		BOOL connected = ConnectNamedPipe(pipe, NULL);
-		if (!connected) {
-			err = GetLastError();
-			CloseHandle(pipe);
-			continue;
+		HANDLE pipe = INVALID_HANDLE_VALUE;
+		try {
+			boost::this_thread::interruption_point();
+			pipe = _ConnectServerPipe(msg_name);
+			boost::thread th([&handler, pipe, this] {
+				_ProcessPipeThread(pipe, handler);
+			});
 		}
-
-		// 前端的消息是串行的，这里使用线程是为了消息循环不中断
-		boost::thread pipe_t([pipe, this]() {
-			HandlePipeMessage(pipe);
-		});
-
-		// 允许线程在此处中断
+		catch (...) {
+			_FinalizePipe(pipe);
+		}
 		boost::this_thread::interruption_point();
 	}
 }
 
-HANDLE ServerImpl::InitPipe()
+PipeServer::ServerRunner PipeServer::GetServerRunner(ServerHandler const &handler)
 {
-	std::wstring pipe_name = GetPipeName();
-	HANDLE pipe = CreateNamedPipe(
-		pipe_name.c_str(),
-		PIPE_ACCESS_DUPLEX,
-		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-		PIPE_UNLIMITED_INSTANCES,
-		WEASEL_IPC_SHARED_MEMORY_SIZE,
-		WEASEL_IPC_SHARED_MEMORY_SIZE,
-		0,
-		&sa);
-
-	return pipe;
+	return [&handler, this]() {
+		Listen(handler);
+	};
 }
 
-// 为了在 winrt 应用中访问到 pipe 而进行权限设置
-
-void weasel::ServerImpl::InitSecurityAttr()
+void PipeServer::_ProcessPipeThread(HANDLE pipe, ServerHandler const &handler)
 {
-	memset(&ea, 0, sizeof(ea));
-
-	// 对一般 desktop APP 的权限设置
-
-	SID_IDENTIFIER_AUTHORITY worldSidAuthority = SECURITY_WORLD_SID_AUTHORITY;
-	AllocateAndInitializeSid(&worldSidAuthority, 1,
-		SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &sid_everyone);
-
-	ea[0].grfAccessPermissions = GENERIC_ALL;
-	ea[0].grfAccessMode = SET_ACCESS;
-	ea[0].grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
-	ea[0].Trustee.pMultipleTrustee = NULL;
-	ea[0].Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
-	ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
-	ea[0].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-	ea[0].Trustee.ptstrName = (LPTSTR)sid_everyone;
-
-	// 对 winrt (UWP) APP 的权限设置
-	//
-	// Application Package Authority.
-	//
-
-#define SECURITY_APP_PACKAGE_AUTHORITY              {0,0,0,0,0,15}
-#define SECURITY_APP_PACKAGE_BASE_RID               (0x00000002L)
-#define SECURITY_BUILTIN_APP_PACKAGE_RID_COUNT      (2L)
-#define SECURITY_APP_PACKAGE_RID_COUNT              (8L)
-#define SECURITY_CAPABILITY_BASE_RID                (0x00000003L)
-#define SECURITY_BUILTIN_CAPABILITY_RID_COUNT       (2L)
-#define SECURITY_CAPABILITY_RID_COUNT               (5L)
-#define SECURITY_PARENT_PACKAGE_RID_COUNT           (SECURITY_APP_PACKAGE_RID_COUNT)
-#define SECURITY_CHILD_PACKAGE_RID_COUNT            (12L)
-#define SECURITY_BUILTIN_PACKAGE_ANY_PACKAGE        (0x00000001L)
-
-	SID_IDENTIFIER_AUTHORITY appPackageAuthority = SECURITY_APP_PACKAGE_AUTHORITY;
-	AllocateAndInitializeSid(&appPackageAuthority,
-		SECURITY_BUILTIN_APP_PACKAGE_RID_COUNT,
-		SECURITY_APP_PACKAGE_BASE_RID,
-		SECURITY_BUILTIN_PACKAGE_ANY_PACKAGE,
-		0, 0, 0, 0, 0, 0, &sid_all_apps);
-
-	ea[1].grfAccessPermissions = GENERIC_ALL;
-	ea[1].grfAccessMode = SET_ACCESS;
-	ea[1].grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
-	ea[1].Trustee.pMultipleTrustee = NULL;
-	ea[1].Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
-	ea[1].Trustee.TrusteeForm = TRUSTEE_IS_SID;
-	ea[1].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
-	ea[1].Trustee.ptstrName = (LPTSTR)sid_all_apps;
-
-	// create DACL
-	DWORD err = SetEntriesInAcl(2, ea, NULL, &pacl);
-	if (0 == err) {
-		// security descriptor
-		pd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
-		InitializeSecurityDescriptor(pd, SECURITY_DESCRIPTOR_REVISION);
-
-		// Add the ACL to the security descriptor. 
-		SetSecurityDescriptorDacl(pd, TRUE, pacl, FALSE);
+	try {
+		for (;;) {
+			Res msg;
+			_Receive(pipe, &msg, sizeof(msg));
+			handler(msg, [this, pipe](Msg resp) {
+				_Send(pipe, resp);
+			});
+		}
 	}
-
-	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-	sa.lpSecurityDescriptor = pd;
-	sa.bInheritHandle = TRUE;
+	catch (...) {
+		_FinalizePipe(pipe);
+	}
 }
+
+
 
 // weasel::Server
 

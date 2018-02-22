@@ -6,17 +6,15 @@ using namespace weasel;
 
 ClientImpl::ClientImpl()
 	: session_id(0),
-	  pipe(INVALID_HANDLE_VALUE),
-	  is_ime(false),
-	  has_cnt(false)
+	  channel(GetPipeName()),
+	  is_ime(false)
 {
-	buffer = std::make_unique<char[]>(WEASEL_IPC_SHARED_MEMORY_SIZE);
 	_InitializeClientInfo();
 }
 
 ClientImpl::~ClientImpl()
 {
-	if (_Connected())
+	if (channel.Connected())
 		Disconnect();
 }
 
@@ -53,28 +51,23 @@ void ClientImpl::_InitializeClientInfo()
 
 bool ClientImpl::Connect(ServerLauncher const& launcher)
 {
-	auto pipe_name = GetPipeName();
+	//auto pipe_name = GetPipeName();
 
-	_ConnectPipe(pipe_name.c_str());
+	//_ConnectPipe(pipe_name.c_str());
 
-	return _Connected();
+	//return _Connected();
+	return channel.Connect();
 }
 
 void ClientImpl::Disconnect()
 {
 	if (_Active())
 		EndSession();
-	DisconnectNamedPipe(pipe);
-	CloseHandle(pipe);
-	pipe = INVALID_HANDLE_VALUE;
 }
 
 void ClientImpl::ShutdownServer()
 {
-	if (_Connected())
-	{
-		_SendMessage(WEASEL_IPC_SHUTDOWN_SERVER, 0, 0);
-	}
+	_SendMessage(WEASEL_IPC_SHUTDOWN_SERVER, 0, 0);
 }
 
 bool ClientImpl::ProcessKeyEvent(KeyEvent const& keyEvent)
@@ -143,36 +136,32 @@ void ClientImpl::FocusOut()
 
 void ClientImpl::StartSession()
 {
-	if (!_Connected())
-		return;
+	//if (!channel._Connected())
+	//	return;
 
 	if (_Active() && Echo())
 		return;
 
 	_WriteClientInfo();
-	has_cnt = true;
 	UINT ret = _SendMessage(WEASEL_IPC_START_SESSION, 0, 0);
 	session_id = ret;
 }
 
 void ClientImpl::EndSession()
 {
-	if (_Connected())
-		_SendMessage(WEASEL_IPC_END_SESSION, 0, session_id);
+	_SendMessage(WEASEL_IPC_END_SESSION, 0, session_id);
 	session_id = 0;
 }
 
 void ClientImpl::StartMaintenance()
 {
-	if (_Connected())
-		_SendMessage(WEASEL_IPC_START_MAINTENANCE, 0, 0);
+	_SendMessage(WEASEL_IPC_START_MAINTENANCE, 0, 0);
 	session_id = 0;
 }
 
 void ClientImpl::EndMaintenance()
 {
-	if (_Connected())
-		_SendMessage(WEASEL_IPC_END_MAINTENANCE, 0, 0);
+	_SendMessage(WEASEL_IPC_END_MAINTENANCE, 0, 0);
 	session_id = 0;
 }
 
@@ -191,103 +180,29 @@ bool ClientImpl::GetResponseData(ResponseHandler const& handler)
 		return false;
 	}
 
-	return handler((LPWSTR)buffer.get(), WEASEL_IPC_BUFFER_LENGTH);
-}
-
-void ClientImpl::_ConnectPipe(const wchar_t * pipeName)
-{
-	bool err = false;
-	DWORD connectErr;
-	for (;;) {
-		pipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-
-		if (pipe != INVALID_HANDLE_VALUE) {
-			// connected to the pipe
-			break;
-		}
-		// being busy is not really an error since we just need to wait.
-		if ((connectErr = GetLastError()) != ERROR_PIPE_BUSY) {
-			
-			err = true; // otherwise, pipe creation fails
-			break;
-		}
-		// All pipe instances are busy, so wait for 2 seconds.
-		if (!WaitNamedPipe(pipeName, 2000)) {
-			err = true;
-			break;
-		}
-	}
-
-	if (!err) {
-		// The pipe is connected; change to message-read mode.
-		DWORD mode = PIPE_READMODE_MESSAGE;
-		if (!SetNamedPipeHandleState(pipe, &mode, NULL, NULL)) {
-			err = true;
-		}
-	}
-
-	// the pipe is created, but errors happened, destroy it.
-	if (err && pipe != INVALID_HANDLE_VALUE) {
-		DisconnectNamedPipe(pipe);
-		CloseHandle(pipe);
-		pipe = INVALID_HANDLE_VALUE;
-	}
+	return channel.HandleResponseData(handler);
 }
 
 
 bool ClientImpl::_WriteClientInfo()
 {
-	WCHAR* buffer = _GetSendBuffer();
-	DWORD written = 0;
-
-	memset(buffer, 0, WEASEL_IPC_BUFFER_SIZE);
-	wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
-	bs << L"action=session\n";
-	bs << L"session.client_app=" << app_name.c_str() << L"\n";
-	bs << L"session.client_type=" << (is_ime ? L"ime" : L"tsf") << L"\n";
-	bs << L".\n";
-	if (!bs.good())
-	{
-		// response text toooo long!
-		return false;
-	}
-
+	channel << L"action=session\n";
+	channel << L"session.client_app=" << app_name.c_str() << L"\n";
+	channel << L"session.client_type=" << (is_ime ? L"ime" : L"tsf") << L"\n";
+	channel << L".\n";
 	return true;
 }
 
 
 LRESULT ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lParam)
 {
-	PipeMessage msg{ Msg, wParam, lParam };
-	DWORD result = 0;
-	DWORD read = 0, written = 0;
-	DWORD errCode;
-	char *buffer_ptr = buffer.get();
-	DWORD write_len = has_cnt ? WEASEL_IPC_SHARED_MEMORY_SIZE : sizeof(PipeMessage);
-
-	//memcpy(buffer, &msg, sizeof(PipeMessage));
-	*reinterpret_cast<PipeMessage *>(buffer_ptr) = msg;
-
-	if (!WriteFile(pipe, buffer_ptr, write_len, &written, NULL)) {
+	try {
+		PipeMessage req{ Msg, wParam, lParam };
+		return channel.Transact(req);
+	}
+	catch (...) {
 		return 0;
 	}
-	has_cnt = false;
-
-	FlushFileBuffers(pipe);
-
-	if (!ReadFile(pipe, (LPVOID)&result, sizeof(DWORD), &read, NULL))
-	{
-		if ((errCode = GetLastError()) != ERROR_MORE_DATA) {
-			return 0;
-		}
-		char *buffer_ptr = buffer.get();
-		memset(buffer_ptr, 0, WEASEL_IPC_BUFFER_SIZE);
-		if (!ReadFile(pipe, buffer_ptr, WEASEL_IPC_BUFFER_SIZE, &read, NULL)) {
-			return 0;
-		}
-	}
-
-	return result;
 }
 
 
