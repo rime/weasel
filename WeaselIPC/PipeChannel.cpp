@@ -11,41 +11,35 @@ using namespace boost;
 #define _ThrowIfNot(__c) { DWORD err; if ((err = ::GetLastError()) != __c) throw __c; }
 
 PipeChannelBase::PipeChannelBase(std::wstring &pn_cmd, size_t bs = 4 * 1024, SECURITY_ATTRIBUTES *s = NULL)
-	: cmd_name(pn_cmd),
-	msg_name(pn_cmd), // TBD: request msg pipe from cmd pipe
+	: pname(pn_cmd),
 	write_stream(nullptr),
 	buff_size(bs),
 	buffer(std::make_unique<char[]>(bs)),
-	msg_pipe(INVALID_HANDLE_VALUE),
-	cmd_pipe(INVALID_HANDLE_VALUE),
+	hpipe(INVALID_HANDLE_VALUE),
 	has_body(false),
 	sa(s) {};
 
 PipeChannelBase::PipeChannelBase(PipeChannelBase &&r)
-	: cmd_name(r.cmd_name),
-	write_stream(std::move(r.write_stream)),
+	: write_stream(std::move(r.write_stream)),
+	pname(std::move(r.pname)),
 	buff_size(r.buff_size),
 	buffer(std::move(r.buffer)),
-	msg_pipe(r.msg_pipe),
-	cmd_pipe(r.cmd_pipe),
+	hpipe(r.hpipe),
 	has_body(r.has_body),
 	sa(r.sa) {};
 
 
 PipeChannelBase::~PipeChannelBase()
 {
-	_FinalizePipe(msg_pipe);
-	_FinalizePipe(cmd_pipe);
+	_FinalizePipe(hpipe);
 }
 
 bool PipeChannelBase::_Ensure()
 {
 	try {
-		/* TBD: Request message pipe from command pipe */
-		if (_Invalid(msg_pipe)) {
-			//msg_pipe = _Connect(msg_name.c_str());
-			msg_pipe = _Connect(cmd_name.c_str());
-			return !_Invalid(msg_pipe);
+		if (_Invalid(hpipe)) {
+			hpipe = _Connect(pname.c_str());
+			return !_Invalid(hpipe);
 		}
 	}
 	catch (...) {
@@ -58,7 +52,7 @@ bool PipeChannelBase::_Ensure()
 HANDLE PipeChannelBase::_Connect(const wchar_t *name)
 {
 	HANDLE pipe = INVALID_HANDLE_VALUE;
-	while (_Invalid(pipe = _TryConnect(name)))
+	while (_Invalid(pipe = _TryConnect()))
 		::WaitNamedPipe(name, 500);
 	DWORD mode = PIPE_READMODE_MESSAGE;
 	if (!SetNamedPipeHandleState(pipe, &mode, NULL, NULL)) {
@@ -67,15 +61,15 @@ HANDLE PipeChannelBase::_Connect(const wchar_t *name)
 	return pipe;
 }
 
-void PipeChannelBase::_Reconnect(HANDLE pipe)
+void PipeChannelBase::_Reconnect()
 {
-	_FinalizePipe(pipe);
+	_FinalizePipe(hpipe);
 	_Ensure();
 }
 
-HANDLE PipeChannelBase::_TryConnect(const wchar_t *name)
+HANDLE PipeChannelBase::_TryConnect()
 {
-	auto pipe = ::CreateFile(name, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	auto pipe = ::CreateFile(pname.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (!_Invalid(pipe)) {
 		// connected to the pipe
 		return pipe;
@@ -86,24 +80,23 @@ HANDLE PipeChannelBase::_TryConnect(const wchar_t *name)
 	return INVALID_HANDLE_VALUE;
 }
 
-size_t PipeChannelBase::_WritePipe(HANDLE p, size_t s, char *b)
+size_t PipeChannelBase::_WritePipe(HANDLE pipe, size_t s, char *b)
 {
 	DWORD lwritten;
-	if (!::WriteFile(p, b, s, &lwritten, NULL) || lwritten <= 0) {
+	if (!::WriteFile(pipe, b, s, &lwritten, NULL) || lwritten <= 0) {
 		_ThrowLastError;
 	}
-	::FlushFileBuffers(p);
+	::FlushFileBuffers(pipe);
 	return lwritten;
 }
 
-void PipeChannelBase::_FinalizePipe(HANDLE &pipe)
+void PipeChannelBase::_FinalizePipe(HANDLE &p)
 {
-	if (!_Invalid(pipe)) {
-		DisconnectNamedPipe(pipe);
-		CloseHandle(pipe);
-		pipe = INVALID_HANDLE_VALUE;
+	if (!_Invalid(p)) {
+		DisconnectNamedPipe(p);
+		CloseHandle(p);
 	}
-
+	p = INVALID_HANDLE_VALUE;
 }
 
 void PipeChannelBase::_Receive(HANDLE pipe, LPVOID msg, size_t rec_len)

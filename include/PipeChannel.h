@@ -15,10 +15,6 @@ namespace weasel {
 		PipeChannelBase(PipeChannelBase &&r);
 		~PipeChannelBase();
 
-		bool Connect() { return _Ensure(); }
-		bool Connected() const { return !_Invalid(msg_pipe); }
-		void Disconnect() { _FinalizePipe(msg_pipe); }
-
 	protected:
 
 		/* To ensure connection before operation */
@@ -26,21 +22,19 @@ namespace weasel {
 		/* Connect pipe as client */
 		HANDLE _Connect(const wchar_t *name);
 		/* To reconnect message pipe */
-		void _Reconnect(HANDLE pipe);
+		void _Reconnect();
 		/* Try to connect for one time */
-		HANDLE _TryConnect(const wchar_t *name);
+		HANDLE _TryConnect();
 		size_t _WritePipe(HANDLE p, size_t s, char *b);
-		void _FinalizePipe(HANDLE &pipe);
+		void _FinalizePipe(HANDLE &p);
 		void _Receive(HANDLE pipe, LPVOID msg, size_t rec_len);
 		/* Try to get a connection from client */
 		HANDLE _ConnectServerPipe(std::wstring &pn);
 		inline bool _Invalid(HANDLE p) const { return p == INVALID_HANDLE_VALUE; }
 
 	protected:
-		std::wstring msg_name;
-		std::wstring cmd_name;
-		HANDLE msg_pipe;
-		HANDLE cmd_pipe;
+		std::wstring pname;
+		HANDLE hpipe;
 
 		bool has_body;
 		const size_t buff_size;
@@ -83,7 +77,12 @@ namespace weasel {
 	public:
 		/* Common pipe operations */
 
+		bool Connect() { return _Ensure(); }
+		bool Connected() const { return !_Invalid(hpipe); }
+		void Disconnect() { _FinalizePipe(hpipe); }
+
 		/* Write data to buffer */
+
 		template<typename _TyWrite>
 		void Write(_TyWrite cnt)
 		{
@@ -102,7 +101,7 @@ namespace weasel {
 		_TyRes Transact(Msg &msg)
 		{
 			_Ensure();
-			_Send(msg_pipe, msg);
+			_Send(hpipe, msg);
 			return _ReceiveResponse();
 		}
 
@@ -142,14 +141,20 @@ namespace weasel {
 			*reinterpret_cast<Msg *>(pbuff) = msg;
 			size_t data_sz = has_body ? buff_size : _MsgSize;
 
-			_WritePipe(pipe, data_sz, pbuff);
+			try {
+				_WritePipe(pipe, data_sz, pbuff);
+			}
+			catch (...) {
+				_Reconnect();
+				_WritePipe(pipe, data_sz, pbuff);
+			}
 			ClearBufferStream();
 		}
 
 		_TyRes _ReceiveResponse()
 		{
 			_TyRes result;
-			_Receive(msg_pipe, &result, sizeof(result));
+			_Receive(hpipe, &result, sizeof(result));
 			return result;
 		}
 
