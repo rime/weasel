@@ -334,7 +334,7 @@ void PipeServer::Listen(ServerHandler const &handler)
 				_ProcessPipeThread(pipe, handler);
 			});
 		}
-		catch (...) {
+		catch (DWORD ex) {
 			_FinalizePipe(pipe);
 		}
 		boost::this_thread::interruption_point();
