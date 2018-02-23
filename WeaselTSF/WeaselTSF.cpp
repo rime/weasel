@@ -216,6 +216,7 @@ void WeaselTSF::_EnsureServerConnected()
 {
 	if (!m_client.Echo())
 	{
+		m_client.Disconnect();
 		m_client.Connect(NULL);
 		m_client.StartSession();
 	}

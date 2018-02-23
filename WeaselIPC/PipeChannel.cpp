@@ -6,8 +6,9 @@ using namespace weasel;
 using namespace std;
 using namespace boost;
 
-#define _ThrowLastError throw GetLastError()
-
+#define _ThrowLastError throw ::GetLastError()
+#define _ThrowCode(__c) throw __c
+#define _ThrowIfNot(__c) { DWORD err; if ((err = ::GetLastError()) != __c) throw __c; }
 
 PipeChannelBase::PipeChannelBase(std::wstring &pn_cmd, size_t bs = 4 * 1024, SECURITY_ATTRIBUTES *s = NULL)
 	: cmd_name(pn_cmd),
@@ -74,18 +75,13 @@ void PipeChannelBase::_Reconnect(HANDLE pipe)
 
 HANDLE PipeChannelBase::_TryConnect(const wchar_t *name)
 {
-	DWORD connectErr;
 	auto pipe = ::CreateFile(name, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-
 	if (!_Invalid(pipe)) {
 		// connected to the pipe
 		return pipe;
 	}
 	// being busy is not really an error since we just need to wait.
-	if ((connectErr = ::GetLastError()) != ERROR_PIPE_BUSY) {
-
-		throw connectErr; // otherwise, pipe creation fails
-	}
+	_ThrowIfNot(ERROR_PIPE_BUSY);
 	// All pipe instances are busy
 	return INVALID_HANDLE_VALUE;
 }
@@ -100,7 +96,7 @@ size_t PipeChannelBase::_WritePipe(HANDLE p, size_t s, char *b)
 	return lwritten;
 }
 
-void PipeChannelBase::_FinalizePipe(HANDLE pipe)
+void PipeChannelBase::_FinalizePipe(HANDLE &pipe)
 {
 	if (!_Invalid(pipe)) {
 		DisconnectNamedPipe(pipe);
@@ -115,9 +111,8 @@ void PipeChannelBase::_Receive(HANDLE pipe, LPVOID msg, size_t rec_len)
 	DWORD lread;
 	BOOL success = ::ReadFile(pipe, msg, rec_len, &lread, NULL);
 	if (!success) {
-		if (GetLastError() != ERROR_MORE_DATA) {
-			_ThrowLastError;
-		}
+		_ThrowIfNot(ERROR_MORE_DATA);
+
 		memset(buffer.get(), 0, buff_size);
 		success = ::ReadFile(pipe, buffer.get(), buff_size, &lread, NULL);
 		if (!success) {

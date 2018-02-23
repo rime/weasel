@@ -15,6 +15,10 @@ namespace weasel {
 		PipeChannelBase(PipeChannelBase &&r);
 		~PipeChannelBase();
 
+		bool Connect() { return _Ensure(); }
+		bool Connected() const { return !_Invalid(msg_pipe); }
+		void Disconnect() { _FinalizePipe(msg_pipe); }
+
 	protected:
 
 		/* To ensure connection before operation */
@@ -26,7 +30,7 @@ namespace weasel {
 		/* Try to connect for one time */
 		HANDLE _TryConnect(const wchar_t *name);
 		size_t _WritePipe(HANDLE p, size_t s, char *b);
-		void _FinalizePipe(HANDLE pipe);
+		void _FinalizePipe(HANDLE &pipe);
 		void _Receive(HANDLE pipe, LPVOID msg, size_t rec_len);
 		/* Try to get a connection from client */
 		HANDLE _ConnectServerPipe(std::wstring &pn);
@@ -127,8 +131,6 @@ namespace weasel {
 			return handler((LPWSTR)buffer.get(), buff_size * sizeof(char) / sizeof(wchar_t));
 		}
 
-		bool Connect() { return _Ensure(); }
-		bool Connected() const { return !_Invalid(msg_pipe); }
 
 	protected:
 
