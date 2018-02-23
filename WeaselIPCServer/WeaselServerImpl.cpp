@@ -329,7 +329,7 @@ void PipeServer::Listen(ServerHandler const &handler)
 		HANDLE pipe = INVALID_HANDLE_VALUE;
 		try {
 			boost::this_thread::interruption_point();
-			pipe = _ConnectServerPipe(msg_name);
+			pipe = _ConnectServerPipe(pname);
 			boost::thread th([&handler, pipe, this] {
 				_ProcessPipeThread(pipe, handler);
 			});
