@@ -553,7 +553,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	}
 	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
 	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
-	RimeConfigGetInt(config, "style/layout/border", &style.border);
+	if (!RimeConfigGetInt(config, "style/layout/border", &style.border)) {
+		RimeConfigGetInt(config, "style/layout/border_width", &style.border);
+	}
 	RimeConfigGetInt(config, "style/layout/margin_x", &style.margin_x);
 	RimeConfigGetInt(config, "style/layout/margin_y", &style.margin_y);
 	RimeConfigGetInt(config, "style/layout/spacing", &style.spacing);
