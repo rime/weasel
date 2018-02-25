@@ -280,7 +280,6 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 
 	if (ok)
 	{
-		bool composing = _IsComposing();
 		if (!commit.empty())
 		{
 			// 修复顶字上屏的吞字问题：
@@ -289,13 +288,12 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 			// 此时由于第五码的输入，composition 应是开启的，同时也要在输入处插入顶字。
 			// 这里先关闭上一个字的 composition，然后为后续输入开启一个新 composition。
 			// 有点 dirty 但是 it works ...
-			if (composing) {
+			if (_IsComposing()) {
 				_EndComposition(pContext);
-				composing = false;
 			}
 			_InsertText(pContext, commit);
 		}
-		if (status.composing && !composing)
+		if (status.composing && !_IsComposing())
 		{
 			if (!_fCUASWorkaroundTested)
 			{
@@ -309,12 +307,14 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 			}
 			_StartComposition(pContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 		}
-		else if (!status.composing && composing) {
+		else if (!status.composing && _IsComposing())
+		{
 			_EndComposition(pContext);
-			composing = false;
 		}
-		if (composing && config.inline_preedit)
+		if (_IsComposing() && config.inline_preedit)
+		{
 			_ShowInlinePreedit(pContext, context);
+		}
 	}
 }
 

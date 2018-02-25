@@ -18,11 +18,18 @@ namespace weasel
 		INLINE_PREEDIT_CAPABLE = 1,
 	};
 
+	enum PreeditType
+	{
+		COMPOSITION,
+		PREVIEW
+	};
+
 	struct UIStyle
 	{
 		std::wstring font_face;
 		int font_point;
 		bool inline_preedit;
+		PreeditType preedit_type;
 		bool display_tray_icon;
 		// layout
 		LayoutType layout_type;
@@ -55,6 +62,7 @@ namespace weasel
 		UIStyle() : font_face(), 
 			        font_point(0),
 					inline_preedit(false),
+					preedit_type(COMPOSITION),
 					display_tray_icon(false),
 					layout_type(LAYOUT_VERTICAL),
 					min_width(0),

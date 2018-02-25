@@ -14,6 +14,7 @@ style:
   horizontal: false
   fullscreen: false
   inline_preedit: false
+  preedit_type: composition
   display_tray_icon: false
   layout:
     min_width: 160

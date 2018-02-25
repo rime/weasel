@@ -458,12 +458,28 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		if (is_composing)
 		{
 			actions.insert("ctx");
-			messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
-			if (ctx.composition.sel_start <= ctx.composition.sel_end)
+			switch (m_ui->style().preedit_type)
 			{
-				messages.push_back(std::string("ctx.preedit.cursor=") +
-					std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start)) + ',' +
-					std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + '\n');
+			case weasel::PREVIEW:
+				if (ctx.menu.num_candidates > 0)
+				{
+					std::string first = ctx.menu.candidates[0].text;
+					messages.push_back(std::string("ctx.preedit=") + first + '\n');
+					messages.push_back(std::string("ctx.preedit.cursor=") +
+						std::to_string(utf8towcslen(first.c_str(), 0)) + ',' +
+						std::to_string(utf8towcslen(first.c_str(), first.size())) + '\n');
+					break;
+				}
+				// no candidates, fall back to composition
+			case weasel::COMPOSITION:
+				messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
+				if (ctx.composition.sel_start <= ctx.composition.sel_end)
+				{
+					messages.push_back(std::string("ctx.preedit.cursor=") +
+						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start)) + ',' +
+						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + '\n');
+				}
+				break;
 			}
 		}
 		RimeFreeContext(&ctx);
@@ -471,7 +487,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 
 	// configuration information
 	actions.insert("config");
-	messages.push_back(std::string("config.inline_preedit=") + std::to_string((int) m_ui->style().inline_preedit) + '\n');
+	messages.push_back(std::string("config.inline_preedit=") + std::to_string((int)m_ui->style().inline_preedit) + '\n');
 
 	// summarize
 
@@ -519,6 +535,14 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit) || initialize)
 	{
 		style.inline_preedit = !!inline_preedit;
+	}
+	char preedit_type[20] = { 0 };
+	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
+	{
+		if (!std::strcmp(preedit_type, "composition"))
+			style.preedit_type = weasel::COMPOSITION;
+		else if (!std::strcmp(preedit_type, "preview"))
+			style.preedit_type = weasel::PREVIEW;
 	}
 	Bool display_tray_icon = False;
 	if (RimeConfigGetBool(config, "style/display_tray_icon", &display_tray_icon) || initialize)
