@@ -73,7 +73,7 @@ void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnab
 	if ((pStartCompositionEditSession = new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled)) != NULL)
 	{
 		HRESULT hr;
-		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_SYNC | TF_ES_READWRITE, &hr);
+		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 		pStartCompositionEditSession->Release();
 	}
 }
@@ -114,7 +114,7 @@ void WeaselTSF::_EndComposition(ITfContext *pContext)
 
 	if ((pEditSession = new CEndCompositionEditSession(this, pContext, _pComposition)) != NULL)
 	{
-		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_SYNC | TF_ES_READWRITE, &hr);
+		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 		pEditSession->Release();
 	}
 }
