@@ -463,7 +463,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 			case weasel::PREVIEW:
 				if (ctx.menu.num_candidates > 0)
 				{
-					std::string first = ctx.menu.candidates[0].text;
+					std::string first = ctx.menu.candidates[ctx.menu.highlighted_candidate_index].text;
 					messages.push_back(std::string("ctx.preedit=") + first + '\n');
 					messages.push_back(std::string("ctx.preedit.cursor=") +
 						std::to_string(utf8towcslen(first.c_str(), 0)) + ',' +
