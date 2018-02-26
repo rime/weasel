@@ -67,6 +67,7 @@ namespace weasel
 		}
 
 	private:
+		void _Finailize();
 		template<typename _Resp>
 		void HandlePipeMessage(PipeMessage pipe_msg, _Resp resp);
 

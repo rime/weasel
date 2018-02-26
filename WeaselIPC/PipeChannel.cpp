@@ -8,7 +8,7 @@ using namespace boost;
 
 #define _ThrowLastError throw ::GetLastError()
 #define _ThrowCode(__c) throw __c
-#define _ThrowIfNot(__c) { DWORD err; if ((err = ::GetLastError()) != __c) throw __c; }
+#define _ThrowIfNot(__c) { DWORD err; if ((err = ::GetLastError()) != __c) throw err; }
 
 PipeChannelBase::PipeChannelBase(std::wstring &pn_cmd, size_t bs = 4 * 1024, SECURITY_ATTRIBUTES *s = NULL)
 	: pname(pn_cmd),

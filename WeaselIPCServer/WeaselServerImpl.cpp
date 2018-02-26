@@ -37,6 +37,11 @@ ServerImpl::ServerImpl()
 
 ServerImpl::~ServerImpl()
 {
+	_Finailize();
+}
+
+void ServerImpl::_Finailize()
+{
 	if (pipeThread != nullptr) {
 		pipeThread->interrupt();
 	}
@@ -120,14 +125,7 @@ int ServerImpl::Start()
 
 int ServerImpl::Stop()
 {
-	if (pipeThread != nullptr) {
-		pipeThread->interrupt();
-	}
-	if (IsWindow())
-	{
-		DestroyWindow();
-	}
-	
+	_Finailize();
 	// quit the server
 	::ExitProcess(0);
 	return 0;
@@ -158,6 +156,7 @@ int ServerImpl::Run()
 	_Module.RemoveMessageLoop();
 	return nRet;
 }
+
 
 
 DWORD ServerImpl::OnEcho(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
