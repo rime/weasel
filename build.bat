@@ -26,6 +26,8 @@ if not defined PLATFORM_TOOLSET (
   set PLATFORM_TOOLSET=v140_xp
 )
 
+if defined DEVTOOLS_PATH set PATH=%DEVTOOLS_PATH%%PATH%
+
 set build_option=/t:Build
 set build_boost=0
 set build_data=0
@@ -148,13 +150,9 @@ exit /b
 rem call :build_essay
 copy %WEASEL_ROOT%\LICENSE.txt output\
 copy %WEASEL_ROOT%\README.md output\README.txt
-copy %WEASEL_ROOT%\brise\essay.txt output\data\
-copy %WEASEL_ROOT%\brise\default.yaml output\data\
-copy %WEASEL_ROOT%\brise\symbols.yaml output\data\
-copy %WEASEL_ROOT%\brise\preset\*.yaml output\data\
-copy %WEASEL_ROOT%\brise\supplement\*.yaml output\data\
-if not exist output\expansion mkdir output\expansion
-copy %WEASEL_ROOT%\brise\extra\*.yaml output\expansion\
+set brise_dir=brise
+set rime_dir=output/data
+bash brise/rime-install
 call :build_opencc_data
 exit /b
 

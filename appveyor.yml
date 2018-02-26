@@ -29,6 +29,3 @@ after_build:
 artifacts:
   - path: output\archives\weasel-0.9.30.0-installer.exe
     name: Weasel
-
-  - path: output\archives\weasel-expansion-0.9.19.0.exe
-    name: Weasel Expansion
