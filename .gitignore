@@ -17,7 +17,9 @@ ReleaseHant/
 /output/archives
 /lib/*.lib
 /include/glog
+/include/rime*.h
 /ipch
+env.bat
 weasel.props
 *.log
 *.user
