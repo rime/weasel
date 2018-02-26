@@ -459,7 +459,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 			switch (m_ui->style().preedit_type)
 			{
 			case weasel::PREVIEW:
-				if (ctx.menu.num_candidates > 0)
+				if (ctx.commit_text_preview != NULL)
 				{
 					std::string first = ctx.commit_text_preview;
 					messages.push_back(std::string("ctx.preedit=") + first + '\n');
@@ -468,7 +468,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 						std::to_string(utf8towcslen(first.c_str(), first.size())) + '\n');
 					break;
 				}
-				// no candidates, fall back to composition
+				// no preview, fall back to composition
 			case weasel::COMPOSITION:
 				messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
 				if (ctx.composition.sel_start <= ctx.composition.sel_end)
