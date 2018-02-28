@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
 <channel>
-    <title>【小狼毫】輸入法更新</title>
-    <link>http://rimeime.github.io/weasel-update/appcast.xml</link>
-    <description>小狼毫Appcast更新頻道</description>
+    <title>【小狼毫】輸入法更新頻道</title>
+    <link>http://rime.github.io/release/weasel/appcast.xml</link>
+    <description>小狼毫 Appcast 更新頻道</description>
     <language>zh</language>
     <item>
       <title>小狼毫 0.9.30</title>
-      <sparkle:releaseNotesLink>http://rimeime.github.io/weasel-update/</sparkle:releaseNotesLink>
+      <sparkle:releaseNotesLink>http://rime.github.io/release/weasel/</sparkle:releaseNotesLink>
       <pubDate>Tue, 1 Apr 2014 00:00:00 +0800</pubDate>
-      <enclosure url="http://dl.bintray.com/lotem/rime/weasel-0.9.30-installer.exe?direct"
+      <enclosure url="http://dl.bintray.com/lotem/rime/weasel-0.9.30.0-installer.exe?direct"
                  sparkle:version="0.9.30"
                  type="application/octet-stream"/>
     </item>
