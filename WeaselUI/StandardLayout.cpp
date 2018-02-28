@@ -8,9 +8,11 @@ StandardLayout::StandardLayout(const UIStyle &style, const Context &context, con
 {
 }
 
-std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int id) const
+std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const
 {
-	return labels.at(id).str + L'.';
+	wchar_t buffer[128];
+	swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
+	return std::wstring(buffer);
 }
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
