@@ -227,7 +227,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			dc.SetTextColor(m_style.label_text_color);
 
 		// Draw label
-		std::wstring label = m_layout->GetLabelText(labels, i);
+		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(i);
 		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length());
 

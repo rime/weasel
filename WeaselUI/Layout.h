@@ -22,7 +22,7 @@ namespace weasel
 		virtual CRect GetCandidateCommentRect(int id) const = 0;
 		virtual CRect GetStatusIconRect() const = 0;
 
-		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id) const = 0;
+		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const = 0;
 		virtual bool IsInlinePreedit() const = 0;
 		virtual bool ShouldDisplayStatusIcon() const = 0;
 

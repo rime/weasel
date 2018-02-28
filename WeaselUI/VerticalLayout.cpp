@@ -50,7 +50,7 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 		int w = _style.margin_x, h = 0;
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
-		std::wstring label = GetLabelText(labels, i);
+		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		dc.GetTextExtent(label.c_str(), label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx + space, h = max(h, size.cy);
