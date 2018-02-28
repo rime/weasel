@@ -59,7 +59,7 @@ void FullScreenLayout::DoLayout(CDCHandle dc)
 	_auxiliaryRect.OffsetRect(offsetX, offsetY);
 	_highlightRect = m_layout->GetHighlightRect();
 	_highlightRect.OffsetRect(offsetX, offsetY);
-	for (int i = 0, n = (int)_context.cinfo.candies.size(); i < n; ++i)
+	for (int i = 0, n = (int)_context.cinfo.candies.size(); i < n && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		_candidateLabelRects[i] = m_layout->GetCandidateLabelRect(i);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
