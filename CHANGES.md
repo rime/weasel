@@ -1,7 +1,7 @@
 ﻿【小狼毫】更新日誌
 ===
 
-RIME 主葉： http://rime.github.io/
+RIME 主葉： http://rime.im
 
 小狼毫 0.9.30 <2014-04-01>
 ---
