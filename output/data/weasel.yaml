@@ -505,3 +505,19 @@ preset_color_schemes:
     hilited_comment_text_color: 0x0000b0
     hilited_candidate_back_color: 0xffffff
 
+  metroblue:
+    name: "现代蓝／Metro Blue"
+    author: "Prcuvu <prcuvu@gmail.com>"
+    text_color: 0x000000
+    back_color: 0xffffff
+    border_color: 0xd77800
+    label_color: 0x838383
+    hilited_text_color: 0x000000
+    hilited_back_color: 0xffffff
+    candidate_text_color: 0x000000
+    comment_text_color: 0x000000
+    hilited_candidate_text_color: 0xffffff
+    hilited_comment_text_color: 0xffffff
+    hilited_candidate_back_color: 0xd77800
+    hilited_label_color: 0xffffff
+
