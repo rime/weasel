@@ -1,6 +1,7 @@
 ﻿; weasel installation script
 !include FileFunc.nsh
 !include LogicLib.nsh
+!include MUI2.nsh
 !include x64.nsh
 
 Unicode true
@@ -24,7 +25,7 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyleft RIME Developers"
 VIAddVersionKey /LANG=2052 "FileDescription" "小狼毫輸入法"
 VIAddVersionKey /LANG=2052 "FileVersion" "${WEASEL_VERSION}"
 
-Icon ..\resource\weasel.ico
+!define MUI_ICON ..\resource\weasel.ico
 SetCompressor /SOLID lzma
 
 ; The default installation directory
@@ -37,18 +38,24 @@ InstallDirRegKey HKLM "Software\Rime\Weasel" "InstallDir"
 ; Request application privileges for Windows Vista
 RequestExecutionLevel admin
 
-LoadLanguageFile "${NSISDIR}\Contrib\Language Files\SimpChinese.nlf"
-
 ;--------------------------------
 
 ; Pages
 
-;Page components
-Page directory
-Page instfiles
+!insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
 
-UninstPage uninstConfirm
-UninstPage instfiles
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES
+!insertmacro MUI_UNPAGE_FINISH
+
+;--------------------------------
+
+; Languages
+
+!insertmacro MUI_LANGUAGE "SimpChinese"
 
 ;--------------------------------
 
@@ -58,6 +65,7 @@ Function .onInit
   "UninstallString"
   StrCmp $R0 "" done
 
+  StrCpy $0 "Upgrade"
   IfSilent uninst 0
   MessageBox MB_OKCANCEL|MB_ICONINFORMATION \
   "安裝前，我打盤先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。" \
@@ -180,6 +188,10 @@ program_files:
   ; Start WeaselServer
   Exec "$INSTDIR\WeaselServer.exe"
 
+  ; Prompt reboot
+  StrCmp $0 "Upgrade" 0 +2
+  SetRebootFlag true
+
 SectionEnd
 
 ; Optional section (can be disabled by the user)
@@ -236,5 +248,8 @@ Section "Uninstall"
   SetShellVarContext all
   Delete /REBOOTOK "$SMPROGRAMS\小狼毫輸入法\*.*"
   RMDir /REBOOTOK "$SMPROGRAMS\小狼毫輸入法"
+
+  ; Prompt reboot
+  SetRebootFlag true
 
 SectionEnd
