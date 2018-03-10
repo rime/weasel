@@ -1,5 +1,5 @@
-<a name="0.10"></a>
-## 小狼毫 0.10 (2018-03-01)
+<a name="0.10.0"></a>
+## 0.10.0 (2018-03-10)
 
 
 #### 主要更新
@@ -8,32 +8,34 @@
 * 介面風格選項
   * 在內嵌編碼行預覽結果文字
   * 可指定候選序號的樣式
-* 升級核心算法庫 [librime=1.2.10](https://github.com/rime/librime/blob/master/CHANGELOG.md#1210-2018-02-21)
+* 升級核心算法庫 [librime 1.3.0](https://github.com/rime/librime/blob/master/CHANGELOG.md#130-2018-03-09)
   * 支持 YAML 節點引用，方便模塊化配置
   * 改進部署流程，在 `build` 子目錄集中存放生成的數據文件
 * 精簡安裝包預裝的輸入方案，更多方案可由 [東風破](https://github.com/rime/brise) 取得
 
-#### Bug Fixes
-
-*   inline_preedit && fullscreen causing dead lock when there's no candidates. ([deb0bb24](https://github.com/rime/weasel/commit/deb0bb24b3f3aeaf73aef344968b7f15b471443f))
-* **RimeWithWeasel:**  fix wild pointer ([ae2e3c4a](https://github.com/rime/weasel/commit/ae2e3c4a256fb9a2f7851c54114822d1bfbf0316))
-* **ServerImpl:**  do finalization before exit process ([b1bae01e](https://github.com/rime/weasel/commit/b1bae01eb25c5e24e074807b7b3cb8a6d8401276))
-* **WeaselUI:**  limit to subscript range when processing candidates ([6b686c71](https://github.com/rime/weasel/commit/6b686c717bfab141469c3d48ec1c6acbeb79921e), closes [#121](https://github.com/rime/weasel/issues/121))
-* **composition:**
-  *  fix crashes in notebook with inline preedit ([5e257088](https://github.com/rime/weasel/commit/5e257088be823a2569609f0b3591af3a51d47a46))
-  *  fix crashes in notebook with inline preedit ([892930ce](https://github.com/rime/weasel/commit/892930cebc4235a0a1ef58803fe88c32ccc8b4e9))
-* **install.bat:**  run in elevate cmd; detach WeaselServer process ([2194d9fb](https://github.com/rime/weasel/commit/2194d9fbd7d0341fef94efdbe9268af8a6237438))
-* **ipc:**  try to reconnect when failed ([3c286b6a](https://github.com/rime/weasel/commit/3c286b6a942769abf13188d88f9ab5e4c125807b))
-* **librime:**  make rime_api.h available in librime\build\include\ ([3793e22c](https://github.com/rime/weasel/commit/3793e22c47b34c61d305ca80567dfdafe08b2302))
-* **tsf:**  use commmit text preview to show inline preview ([b1d1ec43](https://github.com/rime/weasel/commit/b1d1ec43e132998ea8764d8dac2098a2b3d9a3e8))
-
 #### Features
 
-* **build.bat:**  customize PLATFORM_TOOLSET settings ([c7a9a4fb](https://github.com/rime/weasel/commit/c7a9a4fb530e0274450e4296cb0db2906d2f1fb4))
-* **config:**  alias `style/layout/border_width` to `style/layout/border` ([013eefeb](https://github.com/rime/weasel/commit/013eefebaa4474e7814b6cfb6c905bcc12543a7f))
+* **build.bat:**  customize PLATFORM_TOOLSET settings ([c7a9a4fb](c7a9a4fb))
+* **config:**
+  *  enable customization of label format ([76b08bae](76b08bae))
+  *  alias `style/layout/border_width` to `style/layout/border` ([013eefeb](013eefeb))
 * **tsf:**
-  *  fix candidate selecting in preview preedit mode ([206efd69](https://github.com/rime/weasel/commit/206efd692124339d0e256198360c1860c72cd807))
-  *  support user defined preedit display type ([f76379b0](https://github.com/rime/weasel/commit/f76379b01abe9d3971d68e2e272067e0bb855cc9))
+  *  fix candidate selecting in preview preedit mode ([206efd69](206efd69))
+  *  support user defined preedit display type ([f76379b0](f76379b0))
+
+#### Bug Fixes
+
+*   inline_preedit && fullscreen causing dead lock when there's no candidates. ([deb0bb24](deb0bb24))
+* **RimeWithWeasel:**  fix wild pointer ([ae2e3c4a](ae2e3c4a))
+* **ServerImpl:**  do finalization before exit process ([b1bae01e](b1bae01e))
+* **WeaselUI:**  limit to subscript range when processing candidates ([6b686c71](6b686c71), closes [#121](121))
+* **composition:**
+  *  fix crashes in notebook with inline preedit ([5e257088](5e257088))
+  *  fix crashes in notebook with inline preedit ([892930ce](892930ce))
+* **install.bat:**  run in elevate cmd; detach WeaselServer process ([2194d9fb](2194d9fb))
+* **ipc:**  try to reconnect when failed ([3c286b6a](3c286b6a))
+* **librime:**  make rime_api.h available in librime\build\include\ ([3793e22c](3793e22c))
+* **tsf:**  use commmit text preview to show inline preview ([b1d1ec43](b1d1ec43))
 
 
 
