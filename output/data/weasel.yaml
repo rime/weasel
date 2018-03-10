@@ -16,6 +16,7 @@ style:
   inline_preedit: false
   preedit_type: composition
   display_tray_icon: false
+  label_format: "%s."
   layout:
     min_width: 160
     min_height: 0

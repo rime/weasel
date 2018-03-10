@@ -7,8 +7,8 @@ if not exist %BOOST_ROOT% set nocache=1
 
 git submodule init
 git submodule update brise
-rem librime 1.2.10
-appveyor DownloadFile https://ci.appveyor.com/api/buildjobs/a952q4qoye3ebufj/artifacts/rime.zip
+rem librime v1.3.0
+appveyor DownloadFile https://ci.appveyor.com/api/buildjobs/2gmg5qv6s2ykl04x/artifacts/rime.zip
 7z x rime.zip * -olibrime\ | find "ing archive"
 copy /Y librime\build\include\rime_*.h include\
 copy /Y librime\build\lib\Release\rime.dll output\

@@ -31,6 +31,7 @@ namespace weasel
 		bool inline_preedit;
 		PreeditType preedit_type;
 		bool display_tray_icon;
+		std::wstring label_text_format;
 		// layout
 		LayoutType layout_type;
 		int min_width;
@@ -64,6 +65,7 @@ namespace weasel
 					inline_preedit(false),
 					preedit_type(COMPOSITION),
 					display_tray_icon(false),
+					label_text_format(),
 					layout_type(LAYOUT_VERTICAL),
 					min_width(0),
 					min_height(0),

@@ -46,7 +46,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 			w += _style.candidate_spacing;
 
 		/* Label */
-		std::wstring label = GetLabelText(labels, i);
+		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		dc.GetTextExtent(label.c_str(), label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
