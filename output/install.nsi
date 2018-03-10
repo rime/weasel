@@ -65,6 +65,7 @@ Function .onInit
   "UninstallString"
   StrCmp $R0 "" done
 
+  StrCpy $0 "Upgrade"
   IfSilent uninst 0
   MessageBox MB_OKCANCEL|MB_ICONINFORMATION \
   "安裝前，我打盤先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。" \
@@ -188,6 +189,7 @@ program_files:
   Exec "$INSTDIR\WeaselServer.exe"
 
   ; Prompt reboot
+  StrCmp $0 "Upgrade" 0 +2
   SetRebootFlag true
 
 SectionEnd
