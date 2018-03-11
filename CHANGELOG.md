@@ -5,6 +5,7 @@
 #### 主要更新
 
 * 兼容 Windows 8 ~ Windows 10
+* 支持高分辨率顯示屏
 * 介面風格選項
   * 在內嵌編碼行預覽結果文字
   * 可指定候選序號的樣式
@@ -25,11 +26,24 @@
 
 #### Bug Fixes
 
-* **WeaselUI:**  limit to subscript range when processing candidates ([6b686c71](6b686c71), closes [#121](121))
-* **install.bat:**  run in elevate cmd; detach WeaselServer process ([2194d9fb](2194d9fb))
-* **librime:**  make rime_api.h available in librime\build\include\ ([3793e22c](3793e22c))
-* **tsf:**  use commmit text preview to show inline preview ([b1d1ec43](b1d1ec43))
+*   Support High DPI Display [#28](https://github.com/rime/weasel/issues/28)
+* **WeaselUI:**  limit to subscript range when processing candidates ([6b686c71](https://github.com/rime/weasel/commit/6b686c717bfab141469c3d48ec1c6acbeb79921e), closes [#121](https://github.com/rime/weasel/issues/121))
+* **install.bat:**  run in elevate cmd; detach WeaselServer process ([2194d9fb](https://github.com/rime/weasel/commit/2194d9fbd7d0341fef94efdbe9268af8a6237438))
+* **librime:**  make rime_api.h available in librime\build\include\ ([3793e22c](https://github.com/rime/weasel/commit/3793e22c47b34c61d305ca80567dfdafe08b2302))
+* **tsf:**
+  *  Results of auto-selection cleared by subsequent manual selection [#107](https://github.com/rime/weasel/issues/107)
+  *  use commmit text preview to show inline preview ([b1d1ec43](https://github.com/rime/weasel/commit/b1d1ec43e132998ea8764d8dac2098a2b3d9a3e8))
 
+
+#### Features
+
+* **build.bat:**  customize PLATFORM_TOOLSET settings ([c7a9a4fb](https://github.com/rime/weasel/commit/c7a9a4fb530e0274450e4296cb0db2906d2f1fb4))
+* **config:**
+  *  enable customization of label format ([76b08bae](https://github.com/rime/weasel/commit/76b08bae810735c5f1c8626ec39a7afd463f0269))
+  *  alias `style/layout/border_width` to `style/layout/border` ([013eefeb](https://github.com/rime/weasel/commit/013eefebaa4474e7814b6cfb6c905bcc12543a7f))
+* **tsf:**
+  *  fix candidate selecting in preview preedit mode ([206efd69](https://github.com/rime/weasel/commit/206efd692124339d0e256198360c1860c72cd807))
+  *  support user defined preedit display type ([f76379b0](https://github.com/rime/weasel/commit/f76379b01abe9d3971d68e2e272067e0bb855cc9))
 
 
 <a name="0.9.30"></a>
