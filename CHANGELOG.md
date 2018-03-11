@@ -1,5 +1,5 @@
 <a name="0.10.0"></a>
-## 0.10.0 (2018-03-10)
+## 小狼毫 0.10.0 (2018-03-10)
 
 
 #### 主要更新
@@ -25,15 +25,8 @@
 
 #### Bug Fixes
 
-*   inline_preedit && fullscreen causing dead lock when there's no candidates. ([deb0bb24](deb0bb24))
-* **RimeWithWeasel:**  fix wild pointer ([ae2e3c4a](ae2e3c4a))
-* **ServerImpl:**  do finalization before exit process ([b1bae01e](b1bae01e))
 * **WeaselUI:**  limit to subscript range when processing candidates ([6b686c71](6b686c71), closes [#121](121))
-* **composition:**
-  *  fix crashes in notebook with inline preedit ([5e257088](5e257088))
-  *  fix crashes in notebook with inline preedit ([892930ce](892930ce))
 * **install.bat:**  run in elevate cmd; detach WeaselServer process ([2194d9fb](2194d9fb))
-* **ipc:**  try to reconnect when failed ([3c286b6a](3c286b6a))
 * **librime:**  make rime_api.h available in librime\build\include\ ([3793e22c](3793e22c))
 * **tsf:**  use commmit text preview to show inline preview ([b1d1ec43](b1d1ec43))
 
