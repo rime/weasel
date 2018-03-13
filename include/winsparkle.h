@@ -1,7 +1,7 @@
 /*
  *  This file is part of WinSparkle (https://winsparkle.org)
  *
- *  Copyright (C) 2009-2016 Vaclav Slavik
+ *  Copyright (C) 2009-2018 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -158,6 +158,25 @@ WIN_SPARKLE_API void __cdecl win_sparkle_set_langid(unsigned short lang);
           more information about appcast feeds.
  */
 WIN_SPARKLE_API void __cdecl win_sparkle_set_appcast_url(const char *url);
+
+/**
+    Sets DSA public key.
+
+    Only PEM format is supported.
+
+    Public key will be used to verify DSA signature of the update file.
+    PEM data will be set only if it contains valid DSA public key.
+
+    If this function isn't called by the app, public key is obtained from
+    Windows resource named "DSAPub" of type "DSAPEM".
+
+    @param dsa_pub_pem  DSA public key in PEM format.
+
+    @return  1 if valid DSA public key provided, 0 otherwise.
+
+    @since 0.6.0
+ */
+WIN_SPARKLE_API int __cdecl win_sparkle_set_dsa_pub_pem(const char *dsa_pub_pem);
 
 /**
     Sets application metadata.
@@ -449,7 +468,7 @@ WIN_SPARKLE_API void __cdecl win_sparkle_check_update_with_ui_and_install();
     @since 0.4
 
     @see win_sparkle_check_update_with_ui()
-*/
+ */
 WIN_SPARKLE_API void __cdecl win_sparkle_check_update_without_ui();
 
 //@}
