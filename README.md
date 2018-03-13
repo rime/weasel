@@ -9,16 +9,17 @@
 
 授權條款：GPLv3
 
-項目主葉：http://rime.im/
+項目主葉：http://rime.im
 
 您可能還需要 RIME 用於其他操作系統的發行版：
+
   * 【中州韻】用於 Linux + IBus 輸入法框架
-  * 【鼠鬚管】用於 Mac OS X 10.7+（64位）
+  * 【鼠鬚管】用於 macOS （64位）
 
 安裝輸入法
 ----------
 
-本品適用於 Windows XP SP3, 32/64位 Windows 7
+本品適用於 Windows XP SP3, Windows 7 ~ Windows 10
 
 初次安裝時，安裝程序將顯示「安裝選項」對話框。
 
@@ -48,53 +49,43 @@
 ----
 
 ### 輸入方案設計：
+
   * 【朙月拼音】系列及【八股文】詞典
-    - 數據來源於 CC-CEDICT、Android 拼音、新酷音、opencc 等開源項目
-    - 維護者 佛振 瑾昀
+    - 部分數據來源於 CC-CEDICT、Android 拼音、新酷音、opencc 等開源項目
+    - 維護者：佛振、瑾昀
   * 【注音／地球拼音】
-    - 維護者 佛振 瑾昀
+    - 維護者：佛振、瑾昀
   * 【倉頡五代】
-    - 發明人 朱邦復先生
+    - 發明人：朱邦復先生
     - 碼表源自 www.chinesecj.com
-    - 構詞碼表作者 惜緣
-    - 輸入方案作者 佛振
-  * 【五笔86】
-    - 發明人 王永民先生
-    - 碼表源自 ibus-table
-  * 【粵拼】
-    - 採用《香港語言學學會粵語拼音方案》
-    - http://www.lshk.org/
-    - 碼表源自 ibus-table
-  * 【上海吳語】【蘇州吳語】
-    - 採用《吳語拉丁式注音法》
-    - http://input.foruto.com/wu/method.html
-    - 作者 上海閒話abc、吳語越音、寒寒豆
-  * 【中古全拼／三拼】
-    - 採用《廣韻》音系的中古漢語拼音，亦稱「古韻羅馬字」。
-    - 韻典網·廣韻 http://ytenx.org/kyonh/
-    - https://zh.wikipedia.org/wiki/User:Polyhedron/中古漢語拼音
-    - 作者 Polyhedron
-  * 【X-SAMPA】
-    - 國際音標輸入法
-    - https://zh.wikipedia.org/wiki/X-SAMPA
-    - 作者 Patrick Tschang、佛振
+    - 構詞碼表作者：惜緣
+
+  【五笔】【粵拼】【上海／蘇州吳語】【中古漢語拼音】【國際音標】等衆多方案
+  不再以安裝包預裝形式提供。可由 <https://github.com/rime/brise> 下載安裝。
 
 ### 程序設計：
-  * 佛振 <chen.sst@gmail.com>
-  * 鄒旭 <zouivex@gmail.com>
-  * BYVoid <byvoid.kcp@gmail.com>
-  * nameoverflow <i@hcyue.me>
-  * wishstudio <wishstudio@gmail.com>
+
+  * [佛振](https://github.com/lotem)
+  * [鄒旭](https://github.com/zouxu09)
+  * [Xiangyan Sun](https://github.com/wishstudio)
+  * [Prcuvu](https://github.com/Prcuvu)
+  * [nameoverflow](https://github.com/nameoverflow)
+
+  查看更多 [代碼貢獻者](https://github.com/rime/weasel/graphs/contributors)
 
 ### 美術：
-  * 圖標設計 Patricivs
-  * 配色方案 Aben、P1461、Patricivs、skoj、佛振、五磅兔
+
+  * 圖標設計／[Patricivs](https://github.com/Patricivs)
+  * 配色方案／Aben、P1461、Patricivs、skoj、佛振、五磅兔
 
 ### 本品引用了以下開源軟件：
+
   * [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
+  * [brise](https://github.com/rime/brise) (GNU General Public License v3.0)
   * [google-glog](https://github.com/google/glog) (BSD 3-Clause License)
   * [Google Test](https://github.com/google/googletest) (BSD 3-Clause License)
   * [LevelDB](https://github.com/google/leveldb) (BSD 3-Clause License)
+  * [librime](https://github.com/rime/librime) (BSD 3-Clause License)
   * [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)
   * [OpenCC / 開放中文轉換](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
   * [WinSparkle](https://github.com/vslavik/winsparkle) (MIT License)
@@ -103,16 +94,21 @@
 問題與反饋
 ----------
 
-發現程序有BUG，或建議，或感想，請到Rime項目網站 [反饋](https://github.com/rime/weasel/issues) 。
+發現程序有 bug，請到 GitHub 反饋
+<https://github.com/rime/weasel/issues>
 
-已知問題
---------
+歡迎提交 pull request
+<https://github.com/rime/weasel/pulls>
 
-  * 不支持 Windows 命令行和全屏遊戲
+Rime 輸入法（不限於 Windows 平臺）功能、使用方法與配置相關的問題，請反饋到
+<https://github.com/rime/home/issues>
 
 聯繫方式
 --------
 
-技術交流請寄 Rime 開發者 <rimeime@gmail.com>
+加入聊天室，提出疑問，發表建議或感想
+[![Join the chat at https://gitter.im/rime/home](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rime/home?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+其他技術交流請寄 Rime 開發者 <rimeime@gmail.com>
 
 謝謝！

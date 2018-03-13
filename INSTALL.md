@@ -2,13 +2,14 @@
 
 ## Preparation
 
-Assume we already have an installation of **Visual Studio 2015** including the component
-"MFC and ATL support".
+Assume we already have an installation of **Visual Studio 2015** including the component "MFC and ATL support".
 
 Install dev tools: `git`, `cmake`
 Download third-party libraries: `boost(>=1.60.0)`
 
-Optional: install `python` for building OpenCC dictionaries
+Optional:
+install `bash` (available via Git for Windows) for installing data files from `brise`;
+install `python` for building OpenCC dictionaries.
 
 ## Checkout source code
 
@@ -67,6 +68,7 @@ install.bat
 Rime comes with a REPL application which can be used to test if the library is working.
 
 Windows command line does not use UTF-8 character encoding, thus we save the output to a file.
+
 ```batch
 cd librime
 copy /Y thirdparty\bin\*.dll build\bin\
@@ -79,6 +81,6 @@ echo zhongzhouyunshurufa | Release\rime_api_console.exe > output.txt
 
 To create installer packages, you need to download and install [Unicode NSIS] (https://github.com/jimpark/unsis/releases).
 
-Then go to `output` directory, right-click and choose "Compile Unicode NSIS Script" with `install.nsi` and `expansion.nsi`.
+Then go to `output` directory, right-click and choose "Compile Unicode NSIS Script" with `install.nsi`.
 
 Installers will be generated in `output\archives` directory.
