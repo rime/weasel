@@ -137,6 +137,7 @@ program_files:
     File "WeaselSetup.exe"
   ${EndIf}
   File "rime.dll"
+  File "zlib1.dll"
   File "WinSparkle.dll"
   ; shared data files
   SetOutPath $INSTDIR\data

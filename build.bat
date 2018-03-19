@@ -75,6 +75,7 @@ if %build_rime% == 1 (
   rem copy /Y librime\thirdparty\lib\*.lib lib\
   copy /Y librime\build\include\rime_*.h include\
   copy /Y librime\build\lib\Release\rime.dll output\
+  copy /Y librime\thirdparty\bin\zlib1.dll output\
 )
 
 if %build_data% == 1 (
