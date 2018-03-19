@@ -84,6 +84,7 @@
   * [brise](https://github.com/rime/brise) (GNU General Public License v3.0)
   * [google-glog](https://github.com/google/glog) (BSD 3-Clause License)
   * [Google Test](https://github.com/google/googletest) (BSD 3-Clause License)
+  - [Kyoto Cabinet](http://fallabs.com/kyotocabinet/) (GNU General Public License)
   * [LevelDB](https://github.com/google/leveldb) (BSD 3-Clause License)
   * [librime](https://github.com/rime/librime) (BSD 3-Clause License)
   * [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)
