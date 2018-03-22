@@ -109,17 +109,6 @@ int ServerImpl::Start()
 
 	HWND hwnd = Create(NULL);
 
-	// 使用「消息免疫過濾」繞過IE9的用戶界面特權隔離機制
-	if (IsWindowsVistaOrGreater())
-	{
-		using PCWMF = BOOL (WINAPI *)(UINT, DWORD);
-		PCWMF ChangeWindowMessageFilter = (PCWMF)::GetProcAddress(m_hUser32Module, "ChangeWindowMessageFilter");
-		for (UINT cmd = WEASEL_IPC_ECHO; cmd < WEASEL_IPC_LAST_COMMAND; ++cmd)
-		{
-			ChangeWindowMessageFilter(cmd, MSGFLT_ADD);
-		}
-	}
-
 	return (int)hwnd;
 }
 
