@@ -69,6 +69,16 @@ Exit:
 
 void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnabled)
 {
+	if (!_fCUASWorkaroundTested)
+	{
+		/* Test if we need to apply the workaround */
+		_UpdateCompositionWindow(_pEditSessionContext);
+	}
+	else if (!fCUASWorkaroundEnabled)
+	{
+		/* Workaround not applied, update candidate window position at this point. */
+		_UpdateCompositionWindow(_pEditSessionContext);
+	}
 	CStartCompositionEditSession *pStartCompositionEditSession;
 	if ((pStartCompositionEditSession = new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled)) != NULL)
 	{
@@ -82,8 +92,8 @@ void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnab
 class CEndCompositionEditSession: public CEditSession
 {
 public:
-	CEndCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition)
-		: CEditSession(pTextService, pContext)
+	CEndCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, bool clear = true)
+		: CEditSession(pTextService, pContext), _clear(clear)
 	{
 		_pComposition = pComposition;
 	}
@@ -93,13 +103,14 @@ public:
 
 private:
 	ITfComposition *_pComposition;
+	bool _clear;
 };
 
 STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 {
 	/* Clear the dummy text we set before, if any. */
 	ITfRange *pCompositionRange;
-	if (_pComposition->GetRange(&pCompositionRange) == S_OK)
+	if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
 		pCompositionRange->SetText(ec, 0, L"", 0);
 	
 	_pComposition->EndComposition(ec);
@@ -107,12 +118,12 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 	return S_OK;
 }
 
-void WeaselTSF::_EndComposition(ITfContext *pContext)
+void WeaselTSF::_EndComposition(ITfContext *pContext, BOOL clear)
 {
 	CEndCompositionEditSession *pEditSession;
 	HRESULT hr;
 
-	if ((pEditSession = new CEndCompositionEditSession(this, pContext, _pComposition)) != NULL)
+	if ((pEditSession = new CEndCompositionEditSession(this, pContext, _pComposition, clear)) != NULL)
 	{
 		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 		pEditSession->Release();
@@ -265,57 +276,73 @@ BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const std::shared_ptr<w
 }
 
 /* Update Composition */
+class CInsertTextEditSession : public CEditSession
+{
+public:
+	CInsertTextEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, const std::wstring &text)
+		: CEditSession(pTextService, pContext), _text(text), _pComposition(pComposition)
+	{
+	}
+
+	/* ITfEditSession */
+	STDMETHODIMP DoEditSession(TfEditCookie ec);
+
+private:
+	std::wstring _text;
+	ITfComposition *_pComposition;
+};
+
+STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec)
+{
+	ITfRange *pRange;
+	TF_SELECTION tfSelection;
+	HRESULT hRet = S_OK;
+
+	if ((hRet = _pComposition->GetRange(&pRange)) != S_OK)
+		goto Exit;
+
+	if ((hRet = pRange->SetText(ec, 0, _text.c_str(), _text.length())) != S_OK)
+		goto Exit;
+
+	/* update the selection to an insertion point just past the inserted text. */
+	pRange->Collapse(ec, TF_ANCHOR_END);
+
+	tfSelection.range = pRange;
+	tfSelection.style.ase = TF_AE_NONE;
+	tfSelection.style.fInterimChar = FALSE;
+
+	_pContext->SetSelection(ec, 1, &tfSelection);
+
+Exit:
+	if (pRange != NULL)
+		pRange->Release();
+
+	return hRet;
+
+}
+
+BOOL WeaselTSF::_InsertText(ITfContext *pContext, const std::wstring& text)
+{
+	CInsertTextEditSession *pEditSession;
+	HRESULT hr;
+
+	if ((pEditSession = new CInsertTextEditSession(this, pContext, _pComposition, text)) != NULL)
+	{
+		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+		pEditSession->Release();
+	}
+
+	return TRUE;
+}
+
 void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 {
-	// get commit string from server
-	std::wstring commit;
-	weasel::Status status;
-	weasel::Config config;
+	HRESULT hr;
 
-	auto context = std::make_shared<weasel::Context>();
+	_pEditSessionContext = pContext;
+	
+	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 
-	weasel::ResponseParser parser(&commit, context.get(), &status, &config);
-
-	bool ok = m_client.GetResponseData(std::ref(parser));
-
-	if (ok)
-	{
-		if (!commit.empty())
-		{
-			// 修复顶字上屏的吞字问题：
-			// 顶字上屏（如五笔 4 码上屏时），当候选词数 > 1 时，
-			// 第 5 码输入时会将首选项顶屏。
-			// 此时由于第五码的输入，composition 应是开启的，同时也要在输入处插入顶字。
-			// 这里先关闭上一个字的 composition，然后为后续输入开启一个新 composition。
-			// 有点 dirty 但是 it works ...
-			if (_IsComposing()) {
-				_EndComposition(pContext);
-			}
-			_InsertText(pContext, commit);
-		}
-		if (status.composing && !_IsComposing())
-		{
-			if (!_fCUASWorkaroundTested)
-			{
-				/* Test if we need to apply the workaround */
-				_UpdateCompositionWindow(pContext);
-			}
-			else if (!_fCUASWorkaroundEnabled || config.inline_preedit)
-			{
-				/* Workaround not applied, update candidate window position at this point. */
-				_UpdateCompositionWindow(pContext);
-			}
-			_StartComposition(pContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
-		}
-		else if (!status.composing && _IsComposing())
-		{
-			_EndComposition(pContext);
-		}
-		if (_IsComposing() && config.inline_preedit)
-		{
-			_ShowInlinePreedit(pContext, context);
-		}
-	}
 }
 
 /* Composition State */
