@@ -169,6 +169,7 @@ void RimeWithWeaselHandler::FocusOut(DWORD param, UINT session_id)
 {
 	DLOG(INFO) << "Focus out: session_id = " << session_id;
 	if (m_ui) m_ui->Hide();
+	RimeDestroySession(session_id);
 	m_active_session = 0;
 }
 
