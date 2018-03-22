@@ -19,32 +19,21 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	{
 		if (!commit.empty())
 		{
-			// 顶字上屏（如五笔 4 码上屏时），
-			// 第 5 码输入时会将首选项顶屏。
-			// 此时由于第五码的输入，composition 应是开启的，同时也要在输入处插入顶字。
-			// 这里先关闭上一个字的 composition，然后为后续输入开启一个新 composition。
-			if (_IsComposing()) {
-				_EndComposition(_pEditSessionContext);
+			// For auto-selecting, commit and preedit can both exist.
+			// Commit and close the original composition first.
+			if (!_IsComposing()) {
+				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 			}
 			_InsertText(_pEditSessionContext, commit);
+			_EndComposition(_pEditSessionContext, false);
 		}
 		if (status.composing && !_IsComposing())
 		{
-			if (!_fCUASWorkaroundTested)
-			{
-				/* Test if we need to apply the workaround */
-				_UpdateCompositionWindow(_pEditSessionContext);
-			}
-			else if (!_fCUASWorkaroundEnabled || config.inline_preedit)
-			{
-				/* Workaround not applied, update candidate window position at this point. */
-				_UpdateCompositionWindow(_pEditSessionContext);
-			}
 			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 		}
 		else if (!status.composing && _IsComposing())
 		{
-			_EndComposition(_pEditSessionContext);
+			_EndComposition(_pEditSessionContext, true);
 		}
 		if (_IsComposing() && config.inline_preedit)
 		{

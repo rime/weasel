@@ -69,6 +69,16 @@ Exit:
 
 void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnabled)
 {
+	if (!_fCUASWorkaroundTested)
+	{
+		/* Test if we need to apply the workaround */
+		_UpdateCompositionWindow(_pEditSessionContext);
+	}
+	else if (!fCUASWorkaroundEnabled)
+	{
+		/* Workaround not applied, update candidate window position at this point. */
+		_UpdateCompositionWindow(_pEditSessionContext);
+	}
 	CStartCompositionEditSession *pStartCompositionEditSession;
 	if ((pStartCompositionEditSession = new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled)) != NULL)
 	{
@@ -82,8 +92,8 @@ void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnab
 class CEndCompositionEditSession: public CEditSession
 {
 public:
-	CEndCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition)
-		: CEditSession(pTextService, pContext)
+	CEndCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, bool clear = true)
+		: CEditSession(pTextService, pContext), _clear(clear)
 	{
 		_pComposition = pComposition;
 	}
@@ -93,13 +103,14 @@ public:
 
 private:
 	ITfComposition *_pComposition;
+	bool _clear;
 };
 
 STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 {
 	/* Clear the dummy text we set before, if any. */
 	ITfRange *pCompositionRange;
-	if (_pComposition->GetRange(&pCompositionRange) == S_OK)
+	if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
 		pCompositionRange->SetText(ec, 0, L"", 0);
 	
 	_pComposition->EndComposition(ec);
@@ -107,12 +118,12 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 	return S_OK;
 }
 
-void WeaselTSF::_EndComposition(ITfContext *pContext)
+void WeaselTSF::_EndComposition(ITfContext *pContext, BOOL clear)
 {
 	CEndCompositionEditSession *pEditSession;
 	HRESULT hr;
 
-	if ((pEditSession = new CEndCompositionEditSession(this, pContext, _pComposition)) != NULL)
+	if ((pEditSession = new CEndCompositionEditSession(this, pContext, _pComposition, clear)) != NULL)
 	{
 		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 		pEditSession->Release();
@@ -268,8 +279,8 @@ BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const std::shared_ptr<w
 class CInsertTextEditSession : public CEditSession
 {
 public:
-	CInsertTextEditSession(WeaselTSF *pTextService, ITfContext *pContext, const std::wstring &text)
-		: CEditSession(pTextService, pContext), _text(text)
+	CInsertTextEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, const std::wstring &text)
+		: CEditSession(pTextService, pContext), _text(text), _pComposition(pComposition)
 	{
 	}
 
@@ -278,23 +289,20 @@ public:
 
 private:
 	std::wstring _text;
+	ITfComposition *_pComposition;
 };
 
 STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec)
 {
-	ITfInsertAtSelection *pInsertAtSelection;
 	ITfRange *pRange;
 	TF_SELECTION tfSelection;
+	HRESULT hRet = S_OK;
 
-	if (_pContext->QueryInterface(IID_ITfInsertAtSelection, (LPVOID *)&pInsertAtSelection) != S_OK)
-		return E_FAIL;
+	if ((hRet = _pComposition->GetRange(&pRange)) != S_OK)
+		goto Exit;
 
-	/* insert the text */
-	if (pInsertAtSelection->InsertTextAtSelection(ec, 0, _text.c_str(), _text.length(), &pRange) != S_OK)
-	{
-		pInsertAtSelection->Release();
-		return E_FAIL;
-	}
+	if ((hRet = pRange->SetText(ec, 0, _text.c_str(), _text.length())) != S_OK)
+		goto Exit;
 
 	/* update the selection to an insertion point just past the inserted text. */
 	pRange->Collapse(ec, TF_ANCHOR_END);
@@ -305,10 +313,11 @@ STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec)
 
 	_pContext->SetSelection(ec, 1, &tfSelection);
 
-	pRange->Release();
-	pInsertAtSelection->Release();
+Exit:
+	if (pRange != NULL)
+		pRange->Release();
 
-	return S_OK;
+	return hRet;
 
 }
 
@@ -317,16 +326,11 @@ BOOL WeaselTSF::_InsertText(ITfContext *pContext, const std::wstring& text)
 	CInsertTextEditSession *pEditSession;
 	HRESULT hr;
 
-	//_pEditSessionContext = pContext;
-	//_editSessionText = text;
-
-	if ((pEditSession = new CInsertTextEditSession(this, pContext, text)) != NULL)
+	if ((pEditSession = new CInsertTextEditSession(this, pContext, _pComposition, text)) != NULL)
 	{
 		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
 		pEditSession->Release();
 	}
-	//if (_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr) != S_OK || hr != S_OK)
-	//	return FALSE;
 
 	return TRUE;
 }
