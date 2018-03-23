@@ -65,7 +65,7 @@ namespace weasel
 					inline_preedit(false),
 					preedit_type(COMPOSITION),
 					display_tray_icon(false),
-					label_text_format(),
+					label_text_format(L"%s."),
 					layout_type(LAYOUT_VERTICAL),
 					min_width(0),
 					min_height(0),
