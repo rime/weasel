@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "WeaselTSF.h"
+#include "CandidateList.h"
 #include "ResponseParser.h"
 
 STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
@@ -14,6 +15,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	weasel::ResponseParser parser(&commit, context.get(), &status, &config);
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
+	_cand->UpdateUI(*context, status);
 
 	if (ok)
 	{

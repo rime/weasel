@@ -1,29 +1,6 @@
 #include "stdafx.h"
 #include <string>
 
-const char* wcstoutf8(const WCHAR* wstr)
-{
-	const int buffer_len = 1024;
-	static char buffer[buffer_len];
-	memset(buffer, 0, sizeof(buffer));
-	WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buffer, buffer_len - 1, NULL, NULL);
-	return buffer;
-}
-
-const WCHAR* utf8towcs(const char* utf8_str)
-{
-	const int buffer_len = 4096;
-	static WCHAR buffer[buffer_len];
-	memset(buffer, 0, sizeof(buffer));
-	MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, buffer, buffer_len - 1);
-	return buffer;
-}
-
-int utf8towcslen(const char* utf8_str, int utf8_len)
-{
-	return MultiByteToWideChar(CP_UTF8, 0, utf8_str, utf8_len, NULL, 0);
-}
-
 std::wstring WeaselUserDataPath() {
 	WCHAR path[MAX_PATH] = {0};
 	const WCHAR KEY[] = L"Software\\Rime\\Weasel";

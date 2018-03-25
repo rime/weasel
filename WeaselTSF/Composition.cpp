@@ -2,6 +2,7 @@
 #include "WeaselTSF.h"
 #include "EditSession.h"
 #include "ResponseParser.h"
+#include "CandidateList.h"
 
 /* Start Composition */
 class CStartCompositionEditSession: public CEditSession
@@ -206,7 +207,8 @@ void WeaselTSF::_SetCompositionPosition(const RECT &rc)
 	RECT _rc;
 	_rc.left = _rc.right = rc.left;
 	_rc.top = _rc.bottom = rc.bottom;
-	m_client.UpdateInputPosition(rc);
+	//m_client.UpdateInputPosition(rc);
+	_cand->UpdateInputPosition(rc);
 }
 
 /* Inline Preedit */

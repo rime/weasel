@@ -3,6 +3,10 @@
 #include "Globals.h"
 #include "WeaselIPC.h"
 
+namespace weasel {
+	class CandidateList;
+}
+
 class WeaselTSF:
 	public ITfTextInputProcessor,
 	public ITfThreadMgrEventSink,
@@ -75,6 +79,8 @@ public:
 	void _EnsureServerConnected();
 
 private:
+	friend class weasel::CandidateList;
+
 	/* TSF Related */
 	BOOL _InitThreadMgrEventSink();
 	void _UninitThreadMgrEventSink();
@@ -112,6 +118,8 @@ private:
 	ITfComposition *_pComposition;
 
 	ITfLangBarItemButton *_pLangBarButton;
+
+	std::unique_ptr<weasel::CandidateList> _cand;
 
 	LONG _cRef;	// COM ref count
 

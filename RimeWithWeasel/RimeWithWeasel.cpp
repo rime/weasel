@@ -4,10 +4,6 @@
 #include <StringAlgorithm.hpp>
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
-#include <algorithm>
-#include <list>
-#include <set>
-#include <string>
 
 #include <rime_api.h>
 
@@ -252,6 +248,35 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
 }
 
+void RimeWithWeaselHandler::_GetCandidateInfo(weasel::CandidateInfo & cinfo, RimeContext & ctx)
+{
+	cinfo.candies.resize(ctx.menu.num_candidates);
+	cinfo.comments.resize(ctx.menu.num_candidates);
+	cinfo.labels.resize(ctx.menu.num_candidates);
+	for (int i = 0; i < ctx.menu.num_candidates; ++i)
+	{
+		cinfo.candies[i].str = utf8towcs(ctx.menu.candidates[i].text);
+		if (ctx.menu.candidates[i].comment)
+		{
+			cinfo.comments[i].str = utf8towcs(ctx.menu.candidates[i].comment);
+		}
+		if (RIME_STRUCT_HAS_MEMBER(ctx, ctx.select_labels) && ctx.select_labels)
+		{
+			cinfo.labels[i].str = utf8towcs(ctx.select_labels[i]);
+		}
+		else if (ctx.menu.select_keys)
+		{
+			cinfo.labels[i].str = std::wstring(1, ctx.menu.select_keys[i]);
+		}
+		else
+		{
+			cinfo.labels[i].str = std::to_wstring((i + 1) % 10);
+		}
+	}
+	cinfo.highlighted = ctx.menu.highlighted_candidate_index;
+	cinfo.currentPage = ctx.menu.page_no;
+}
+
 void RimeWithWeaselHandler::StartMaintenance()
 {
 	Finalize();
@@ -281,6 +306,7 @@ bool RimeWithWeaselHandler::_IsDeployerRunning()
 
 void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 {
+	return;
 	weasel::Status weasel_status;
 	weasel::Context weasel_context;
 
@@ -322,31 +348,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		if (ctx.menu.num_candidates)
 		{
 			weasel::CandidateInfo &cinfo(weasel_context.cinfo);
-			cinfo.candies.resize(ctx.menu.num_candidates);
-			cinfo.comments.resize(ctx.menu.num_candidates);
-			cinfo.labels.resize(ctx.menu.num_candidates);
-			for (int i = 0; i < ctx.menu.num_candidates; ++i)
-			{
-				cinfo.candies[i].str = utf8towcs(ctx.menu.candidates[i].text);
-				if (ctx.menu.candidates[i].comment)
-				{
-					cinfo.comments[i].str = utf8towcs(ctx.menu.candidates[i].comment);
-				}
-				if (RIME_STRUCT_HAS_MEMBER(ctx, ctx.select_labels) && ctx.select_labels)
-				{
-					cinfo.labels[i].str = utf8towcs(ctx.select_labels[i]);
-				}
-				else if (ctx.menu.select_keys)
-				{
-					cinfo.labels[i].str = std::wstring(1, ctx.menu.select_keys[i]);
-				}
-				else
-				{
-					cinfo.labels[i].str = std::to_wstring((i + 1) % 10);
-				}
-			}
-			cinfo.highlighted = ctx.menu.highlighted_candidate_index;
-			cinfo.currentPage = ctx.menu.page_no;
+			_GetCandidateInfo(cinfo, ctx);
 		}
 		RimeFreeContext(&ctx);
 	}
@@ -458,7 +460,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 			actions.insert("ctx");
 			switch (m_ui->style().preedit_type)
 			{
-			case weasel::PREVIEW:
+			case weasel::UIStyle::PREVIEW:
 				if (ctx.commit_text_preview != NULL)
 				{
 					std::string first = ctx.commit_text_preview;
@@ -469,7 +471,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 					break;
 				}
 				// no preview, fall back to composition
-			case weasel::COMPOSITION:
+			case weasel::UIStyle::COMPOSITION:
 				messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
 				if (ctx.composition.sel_start <= ctx.composition.sel_end)
 				{
@@ -479,6 +481,17 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				}
 				break;
 			}
+		}
+		if (ctx.menu.num_candidates)
+		{
+			weasel::CandidateInfo cinfo;
+			std::wstringstream ss;
+			boost::archive::text_woarchive oa(ss);
+			_GetCandidateInfo(cinfo, ctx);
+
+			oa << cinfo;
+
+			messages.push_back(std::string("ctx.cand=") + wcstoutf8(ss.str().c_str()) + '\n');
 		}
 		RimeFreeContext(&ctx);
 	}
@@ -538,9 +551,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
 	{
 		if (!std::strcmp(preedit_type, "composition"))
-			style.preedit_type = weasel::COMPOSITION;
+			style.preedit_type = weasel::UIStyle::COMPOSITION;
 		else if (!std::strcmp(preedit_type, "preview"))
-			style.preedit_type = weasel::PREVIEW;
+			style.preedit_type = weasel::UIStyle::PREVIEW;
 	}
 	Bool display_tray_icon = False;
 	if (RimeConfigGetBool(config, "style/display_tray_icon", &display_tray_icon) || initialize)
@@ -550,13 +563,13 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	Bool horizontal = False;
 	if (RimeConfigGetBool(config, "style/horizontal", &horizontal) || initialize)
 	{
-		style.layout_type = horizontal ? weasel::LAYOUT_HORIZONTAL : weasel::LAYOUT_VERTICAL;
+		style.layout_type = horizontal ? weasel::UIStyle::LAYOUT_HORIZONTAL : weasel::UIStyle::LAYOUT_VERTICAL;
 	}
 	Bool fullscreen = False;
 	if (RimeConfigGetBool(config, "style/fullscreen", &fullscreen) && fullscreen)
 	{
-		style.layout_type = (style.layout_type == weasel::LAYOUT_HORIZONTAL)
-			 ? weasel::LAYOUT_HORIZONTAL_FULLSCREEN : weasel::LAYOUT_VERTICAL_FULLSCREEN;
+		style.layout_type = (style.layout_type == weasel::UIStyle::LAYOUT_HORIZONTAL)
+			 ? weasel::UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN : weasel::UIStyle::LAYOUT_VERTICAL_FULLSCREEN;
 	}
 	char label_text_format[128] = { 0 };
 	if (RimeConfigGetString(config, "style/label_format", label_text_format, sizeof(label_text_format) - 1))
@@ -568,13 +581,13 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetString(config, "style/layout/type", layout_type, sizeof(layout_type) - 1))
 	{
 		if (!std::strcmp(layout_type, "vertical"))
-			style.layout_type = weasel::LAYOUT_VERTICAL;
+			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL;
 		else if (!std::strcmp(layout_type, "horizontal"))
-			style.layout_type = weasel::LAYOUT_HORIZONTAL;
+			style.layout_type = weasel::UIStyle::LAYOUT_HORIZONTAL;
 		if (!std::strcmp(layout_type, "vertical+fullscreen"))
-			style.layout_type = weasel::LAYOUT_VERTICAL_FULLSCREEN;
+			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL_FULLSCREEN;
 		else if (!std::strcmp(layout_type, "horizontal+fullscreen"))
-			style.layout_type = weasel::LAYOUT_HORIZONTAL_FULLSCREEN;
+			style.layout_type = weasel::UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN;
 		else
 			LOG(WARNING) << "Invalid style type: " << layout_type;
 	}

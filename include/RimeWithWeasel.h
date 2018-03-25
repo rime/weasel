@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 
+#include <rime_api.h>
+
 typedef std::map<std::string, bool> AppOptions;
 typedef std::map<std::string, AppOptions> AppOptionsByAppName;
 
@@ -35,6 +37,7 @@ private:
 	bool _ShowMessage(weasel::Context& ctx, weasel::Status& status);
 	bool _Respond(UINT session_id, EatLine eat);
 	void _ReadClientInfo(UINT session_id, LPWSTR buffer);
+	void _GetCandidateInfo(weasel::CandidateInfo &cinfo, RimeContext &ctx);
 
 	AppOptionsByAppName m_app_options;
 	weasel::UI* m_ui;  // reference
