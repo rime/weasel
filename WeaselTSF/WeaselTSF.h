@@ -71,6 +71,7 @@ public:
 	void _SetComposition(ITfComposition *pComposition);
 	void _SetCompositionPosition(const RECT &rc);
 	BOOL _UpdateCompositionWindow(ITfContext *pContext);
+	void _FinalizeComposition();
 
 	/* Language bar */
 	HWND _GetFocusedContextWindow();
@@ -102,6 +103,7 @@ private:
 	void _UninitLanguageBar();
 	
 	BOOL _InsertText(ITfContext *pContext, const std::wstring& ext);
+	void _UnFocus();
 
 	bool isImmersive() const {
 		return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;

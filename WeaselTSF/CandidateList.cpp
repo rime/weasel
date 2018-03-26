@@ -6,18 +6,18 @@
 using namespace std;
 using namespace weasel;
 
-weasel::CandidateList::CandidateList(WeaselTSF * pTextService)
+CandidateList::CandidateList(WeaselTSF * pTextService)
 	: _ui(make_unique<UI>())
 {
 	//_ui->Create(NULL);
 	_tsf = pTextService;
 }
 
-weasel::CandidateList::~CandidateList()
+CandidateList::~CandidateList()
 {
 }
 
-STDMETHODIMP weasel::CandidateList::QueryInterface(REFIID riid, void ** ppvObj)
+STDMETHODIMP CandidateList::QueryInterface(REFIID riid, void ** ppvObj)
 {
 	if (ppvObj == nullptr)
 	{
@@ -46,12 +46,12 @@ STDMETHODIMP weasel::CandidateList::QueryInterface(REFIID riid, void ** ppvObj)
 	return E_NOINTERFACE;
 }
 
-STDMETHODIMP_(ULONG) weasel::CandidateList::AddRef(void)
+STDMETHODIMP_(ULONG) CandidateList::AddRef(void)
 {
 	return ++_cRef;
 }
 
-STDMETHODIMP_(ULONG) weasel::CandidateList::Release(void)
+STDMETHODIMP_(ULONG) CandidateList::Release(void)
 {
 	LONG cr = --_cRef;
 
@@ -65,7 +65,7 @@ STDMETHODIMP_(ULONG) weasel::CandidateList::Release(void)
 	return cr;
 }
 
-STDMETHODIMP weasel::CandidateList::GetDescription(BSTR * pbstr)
+STDMETHODIMP CandidateList::GetDescription(BSTR * pbstr)
 {
 	static auto str = SysAllocString(L"Candidate List");
 	if (pbstr)
@@ -75,29 +75,48 @@ STDMETHODIMP weasel::CandidateList::GetDescription(BSTR * pbstr)
 	return S_OK;
 }
 
-STDMETHODIMP weasel::CandidateList::GetGUID(GUID * pguid)
+STDMETHODIMP CandidateList::GetGUID(GUID * pguid)
 {
 	/// 36c3c795-7159-45aa-ab12-30229a51dbd3
 	*pguid = { 0x36c3c795, 0x7159, 0x45aa, { 0xab, 0x12, 0x30, 0x22, 0x9a, 0x51, 0xdb, 0xd3 } };
 	return S_OK;
 }
 
-STDMETHODIMP weasel::CandidateList::Show(BOOL showCandidateWindow)
+STDMETHODIMP CandidateList::Show(BOOL showCandidateWindow)
 {
-	if (showCandidateWindow)
+	BOOL pbShow = true;
+	ITfUIElementMgr *emgr = nullptr;
+
+	if (FAILED(_tsf->_pThreadMgr->QueryInterface(IID_ITfUIElementMgr, (void **)&emgr)) || emgr == nullptr) {
+		return E_FAIL;
+	}
+
+	emgr->BeginUIElement(this, &pbShow, &uiid);
+	if (!pbShow) {
+		emgr->UpdateUIElement(uiid);
+	}
+
+	if (pbShow && showCandidateWindow)
 		_ui->Show();
 	else
 		_ui->Hide();
+
+	if (!showCandidateWindow) {
+		emgr->EndUIElement(uiid);
+	}
+
+	emgr->Release();
+
 	return S_OK;
 }
 
-STDMETHODIMP weasel::CandidateList::IsShown(BOOL * pIsShow)
+STDMETHODIMP CandidateList::IsShown(BOOL * pIsShow)
 {
 	*pIsShow = _ui->IsShown();
 	return S_OK;
 }
 
-STDMETHODIMP weasel::CandidateList::GetUpdatedFlags(DWORD * pdwFlags)
+STDMETHODIMP CandidateList::GetUpdatedFlags(DWORD * pdwFlags)
 {
 	if (!pdwFlags)
 		return E_INVALIDARG;
@@ -106,7 +125,7 @@ STDMETHODIMP weasel::CandidateList::GetUpdatedFlags(DWORD * pdwFlags)
 	return S_OK;
 }
 
-STDMETHODIMP weasel::CandidateList::GetDocumentMgr(ITfDocumentMgr ** ppdim)
+STDMETHODIMP CandidateList::GetDocumentMgr(ITfDocumentMgr ** ppdim)
 {
 	*ppdim = nullptr;
 	if ((_tsf->_pThreadMgr->GetFocus(ppdim) == S_OK) && (*ppdim != nullptr))
@@ -117,19 +136,19 @@ STDMETHODIMP weasel::CandidateList::GetDocumentMgr(ITfDocumentMgr ** ppdim)
 	return E_FAIL;
 }
 
-STDMETHODIMP weasel::CandidateList::GetCount(UINT * pCandidateCount)
+STDMETHODIMP CandidateList::GetCount(UINT * pCandidateCount)
 {
 	*pCandidateCount = _ui->ctx().cinfo.candies.size();
 	return S_OK;
 }
 
-STDMETHODIMP weasel::CandidateList::GetSelection(UINT * pSelectedCandidateIndex)
+STDMETHODIMP CandidateList::GetSelection(UINT * pSelectedCandidateIndex)
 {
 	*pSelectedCandidateIndex = _ui->ctx().cinfo.highlighted;
 	return S_OK;
 }
 
-STDMETHODIMP weasel::CandidateList::GetString(UINT uIndex, BSTR * pbstr)
+STDMETHODIMP CandidateList::GetString(UINT uIndex, BSTR * pbstr)
 {
 	*pbstr = nullptr;
 	if (!_ui->ctx().cinfo.empty()) {
@@ -140,42 +159,39 @@ STDMETHODIMP weasel::CandidateList::GetString(UINT uIndex, BSTR * pbstr)
 	return S_OK;
 }
 
-STDMETHODIMP weasel::CandidateList::GetPageIndex(UINT * pIndex, UINT uSize, UINT * puPageCnt)
+STDMETHODIMP CandidateList::GetPageIndex(UINT * pIndex, UINT uSize, UINT * puPageCnt)
 {
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP weasel::CandidateList::SetPageIndex(UINT * pIndex, UINT uPageCnt)
+STDMETHODIMP CandidateList::SetPageIndex(UINT * pIndex, UINT uPageCnt)
 {
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP weasel::CandidateList::GetCurrentPage(UINT * puPage)
+STDMETHODIMP CandidateList::GetCurrentPage(UINT * puPage)
 {
 	*puPage = _ui->ctx().cinfo.currentPage;
 	return S_OK;
 }
 
-STDMETHODIMP weasel::CandidateList::SetSelection(UINT nIndex)
+STDMETHODIMP CandidateList::SetSelection(UINT nIndex)
 {
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP weasel::CandidateList::Finalize(void)
+STDMETHODIMP CandidateList::Finalize(void)
 {
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP weasel::CandidateList::Abort(void)
+STDMETHODIMP CandidateList::Abort(void)
 {
 	return E_NOTIMPL;
 }
 
-void weasel::CandidateList::UpdateUI(const Context & ctx, const Status & status)
+void CandidateList::UpdateUI(const Context & ctx, const Status & status)
 {
-	ITfUIElementMgr *emgr = nullptr;
-	BOOL pbShow = true;
-
 	if (_ui->style().inline_preedit) {
 		_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
 	}
@@ -193,45 +209,25 @@ void weasel::CandidateList::UpdateUI(const Context & ctx, const Status & status)
 	}
 	_ui->Update(ctx, status);
 
-	if (FAILED(_tsf->_pThreadMgr->QueryInterface(IID_ITfUIElementMgr, (void **)&emgr))) {
-		return;
-	}
-	if (emgr) {
-		emgr->BeginUIElement(this, &pbShow, &uiid);
-		if (!pbShow) {
-			emgr->UpdateUIElement(uiid);
-		}
-	}
-
-	if (pbShow && status.composing) {
-		_ui->Show();
-	}
-	else {
-		_ui->Hide();
-		if (pbShow) {
-			emgr->EndUIElement(uiid);
-		}
-	}
-	if (emgr)
-		emgr->Release();
+	Show(status.composing);
 }
 
-void weasel::CandidateList::UpdateStyle(const UIStyle & sty)
+void CandidateList::UpdateStyle(const UIStyle & sty)
 {
 	_ui->style() = sty;
 }
 
-void weasel::CandidateList::UpdateInputPosition(RECT const & rc)
+void CandidateList::UpdateInputPosition(RECT const & rc)
 {
 	_ui->UpdateInputPosition(rc);
 }
 
-UIStyle & weasel::CandidateList::style()
+UIStyle & CandidateList::style()
 {
 	return _ui->style();
 }
 
-HWND weasel::CandidateList::_GetActiveWnd()
+HWND CandidateList::_GetActiveWnd()
 {
 	ITfDocumentMgr *dmgr = nullptr;
 	ITfContext *ctx = nullptr;

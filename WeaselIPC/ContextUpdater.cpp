@@ -15,7 +15,7 @@ Deserializer::Ptr ContextUpdater::Create(ResponseParser* pTarget)
 }
 
 ContextUpdater::ContextUpdater(ResponseParser* pTarget)
-: Deserializer(pTarget)
+	: Deserializer(pTarget)
 {
 }
 

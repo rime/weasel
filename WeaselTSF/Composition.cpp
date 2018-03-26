@@ -115,7 +115,7 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 		pCompositionRange->SetText(ec, 0, L"", 0);
 	
 	_pComposition->EndComposition(ec);
-	_pTextService->OnCompositionTerminated(ec, _pComposition);
+	_pTextService->_FinalizeComposition();
 	return S_OK;
 }
 
@@ -350,12 +350,26 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 /* Composition State */
 STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition)
 {
+	_UnFocus();
+	return S_OK;
+}
+
+void WeaselTSF::_UnFocus()
+{
+	m_client.ClearComposition();
+	if (_IsComposing()) {
+		_EndComposition(_pEditSessionContext, true);
+	}
+	_cand->Show(false);
+}
+
+void WeaselTSF::_FinalizeComposition()
+{
 	if (_pComposition != NULL)
 	{
 		_pComposition->Release();
 		_pComposition = NULL;
 	}
-	return S_OK;
 }
 
 void WeaselTSF::_SetComposition(ITfComposition *pComposition)
