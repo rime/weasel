@@ -16,7 +16,6 @@ static void error_message(const WCHAR *msg)
 }
 
 WeaselTSF::WeaselTSF()
-	: _cand(std::make_unique<weasel::CandidateList>(this))
 {
 	_cRef = 1;
 
@@ -33,6 +32,8 @@ WeaselTSF::WeaselTSF()
 	_pComposition = NULL;
 
 	_fCUASWorkaroundTested = _fCUASWorkaroundEnabled = FALSE;
+
+	_cand = std::make_unique<weasel::CandidateList>(this);
 
 	DllAddRef();
 }
