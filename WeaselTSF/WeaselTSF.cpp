@@ -122,8 +122,6 @@ STDAPI WeaselTSF::Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId)
 	if (!_IsKeyboardOpen())
 		_SetKeyboardOpen(TRUE);
 
-	_cand->Create();
-
 	return S_OK;
 
 ExitError:

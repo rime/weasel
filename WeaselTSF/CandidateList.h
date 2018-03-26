@@ -39,14 +39,20 @@ namespace weasel {
 		STDMETHODIMP Finalize(void);
 		STDMETHODIMP Abort(void);
 
+		/* Update */
 		void UpdateUI(const Context &ctx, const Status &status);
+		void UpdateStyle(const UIStyle &sty);
 		void UpdateInputPosition(RECT const& rc);
-		void Create();
 
 	private:
+		HWND _GetActiveWnd();
+
 		std::unique_ptr<UI> _ui;
 		DWORD _cRef;
 		WeaselTSF *_tsf;
 		DWORD uiid;
+
+		/* The parent of current candidate window */
+		HWND _curp;
 	};
 }

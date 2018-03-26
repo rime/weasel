@@ -15,7 +15,8 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	weasel::ResponseParser parser(&commit, context.get(), &status, &config);
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
-	_cand->UpdateUI(*context, status);
+
+	_UpdateUI(*context, status);
 
 	if (ok)
 	{

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <WeaselCommon.h>
 #include "Globals.h"
 #include "WeaselIPC.h"
 
@@ -77,6 +78,9 @@ public:
 
 	/* IPC */
 	void _EnsureServerConnected();
+
+	/* UI */
+	void _UpdateUI(const weasel::Context & ctx, const weasel::Status & status);
 
 private:
 	friend class weasel::CandidateList;

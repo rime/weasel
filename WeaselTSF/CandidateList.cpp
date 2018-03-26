@@ -11,13 +11,10 @@ weasel::CandidateList::CandidateList(WeaselTSF * pTextService)
 {
 	//_ui->Create(NULL);
 	_tsf = pTextService;
-	_tsf->AddRef();
-	_cRef = 1;
 }
 
 weasel::CandidateList::~CandidateList()
 {
-	_tsf->Release();
 }
 
 STDMETHODIMP weasel::CandidateList::QueryInterface(REFIID riid, void ** ppvObj)
@@ -80,7 +77,9 @@ STDMETHODIMP weasel::CandidateList::GetDescription(BSTR * pbstr)
 
 STDMETHODIMP weasel::CandidateList::GetGUID(GUID * pguid)
 {
-	return E_NOTIMPL;
+	/// 36c3c795-7159-45aa-ab12-30229a51dbd3
+	*pguid = { 0x36c3c795, 0x7159, 0x45aa, { 0xab, 0x12, 0x30, 0x22, 0x9a, 0x51, 0xdb, 0xd3 } };
+	return S_OK;
 }
 
 STDMETHODIMP weasel::CandidateList::Show(BOOL showCandidateWindow)
@@ -184,9 +183,17 @@ void weasel::CandidateList::UpdateUI(const Context & ctx, const Status & status)
 		_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
 	}
 
+	/// In UWP, candidate window will only be shown
+	/// if it is owned by active view window
+	HWND actw = _GetActiveWnd();
+	if (actw != _curp) {
+		_ui->Destroy();
+		_ui->Create(actw);
+		_curp = actw;
+	}
 	_ui->Update(ctx, status);
 
-	if (!FAILED(_tsf->_pThreadMgr->QueryInterface(IID_ITfUIElementMgr, (void **)&emgr))) {
+	if (FAILED(_tsf->_pThreadMgr->QueryInterface(IID_ITfUIElementMgr, (void **)&emgr))) {
 		return;
 	}
 	if (emgr) {
@@ -205,7 +212,13 @@ void weasel::CandidateList::UpdateUI(const Context & ctx, const Status & status)
 			emgr->EndUIElement(uiid);
 		}
 	}
-	emgr->Release();
+	if (emgr)
+		emgr->Release();
+}
+
+void weasel::CandidateList::UpdateStyle(const UIStyle & sty)
+{
+	_ui->style() = sty;
 }
 
 void weasel::CandidateList::UpdateInputPosition(RECT const & rc)
@@ -213,11 +226,12 @@ void weasel::CandidateList::UpdateInputPosition(RECT const & rc)
 	_ui->UpdateInputPosition(rc);
 }
 
-void weasel::CandidateList::Create()
+HWND weasel::CandidateList::_GetActiveWnd()
 {
 	ITfDocumentMgr *dmgr = nullptr;
 	ITfContext *ctx = nullptr;
 	ITfContextView *view = nullptr;
+	HWND w = NULL;
 
 	if (FAILED(_tsf->_pThreadMgr->GetFocus(&dmgr))) {
 		goto Exit;
@@ -229,10 +243,7 @@ void weasel::CandidateList::Create()
 		goto Exit;
 	}
 
-	HWND w = NULL;
-
 	view->GetWnd(&w);
-	_ui->Create(w);
 
 Exit:
 	if (dmgr)
@@ -241,4 +252,12 @@ Exit:
 		ctx->Release();
 	if (view)
 		view->Release();
+
+	if (w == NULL) w = ::GetFocus();
+	return w;
+}
+
+void WeaselTSF::_UpdateUI(const Context & ctx, const Status & status)
+{
+	_cand->UpdateUI(ctx, status);
 }
