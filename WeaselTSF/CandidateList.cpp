@@ -10,11 +10,14 @@ CandidateList::CandidateList(WeaselTSF * pTextService)
 	: _ui(make_unique<UI>())
 {
 	//_ui->Create(NULL);
+	_cRef = 1;
 	_tsf = pTextService;
+	_tsf->AddRef();
 }
 
 CandidateList::~CandidateList()
 {
+	_tsf->Release();
 }
 
 STDMETHODIMP CandidateList::QueryInterface(REFIID riid, void ** ppvObj)
