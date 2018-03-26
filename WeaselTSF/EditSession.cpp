@@ -12,7 +12,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 
 	auto context = std::make_shared<weasel::Context>();
 
-	weasel::ResponseParser parser(&commit, context.get(), &status, &config);
+	weasel::ResponseParser parser(&commit, context.get(), &status, &config, &_cand->style());
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
 

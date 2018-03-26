@@ -226,6 +226,11 @@ void weasel::CandidateList::UpdateInputPosition(RECT const & rc)
 	_ui->UpdateInputPosition(rc);
 }
 
+UIStyle & weasel::CandidateList::style()
+{
+	return _ui->style();
+}
+
 HWND weasel::CandidateList::_GetActiveWnd()
 {
 	ITfDocumentMgr *dmgr = nullptr;
