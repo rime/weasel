@@ -13,7 +13,9 @@ int expand_ibus_modifier(int m)
 }
 
 RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
-	: m_ui(ui), m_active_session(0), m_disabled(true)
+	: m_ui(ui)
+	, m_active_session(0)
+	, m_disabled(true)
 {
 	_Setup();
 }
@@ -306,7 +308,6 @@ bool RimeWithWeaselHandler::_IsDeployerRunning()
 
 void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 {
-	return;
 	weasel::Status weasel_status;
 	weasel::Context weasel_context;
 
@@ -328,6 +329,13 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		weasel_status.disabled = !!status.is_disabled;
 		RimeFreeStatus(&status);
 	}
+
+	static char client_type[20] = { 0 };
+	RimeGetProperty(session_id, "client_type", client_type, sizeof(client_type) - 1);
+	if (std::string(client_type) == "tsf") {
+		return; // Do not show UI by server
+	}
+
 
 	RIME_STRUCT(RimeContext, ctx);
 	if (RimeGetContext(session_id, &ctx))
@@ -500,6 +508,17 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	actions.insert("config");
 	messages.push_back(std::string("config.inline_preedit=") + std::to_string((int)m_ui->style().inline_preedit) + '\n');
 
+	// style
+	// TODO: only update style when necessary
+	{
+		std::wstringstream ss;
+		boost::archive::text_woarchive oa(ss);
+		oa << m_ui->style();
+
+		actions.insert("style");
+		messages.push_back(std::string("style=") + wcstoutf8(ss.str().c_str()) + '\n');
+	}
+
 	// summarize
 
 	if (actions.empty())
@@ -531,7 +550,6 @@ static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
 
 static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 {
-	if (!ui) return;
 	weasel::UIStyle &style(ui->style());
 
 	const int BUF_SIZE = 99;

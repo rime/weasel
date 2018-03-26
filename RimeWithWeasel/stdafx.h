@@ -14,10 +14,9 @@
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 #include <boost/archive/text_woarchive.hpp>
-#include <boost/archive/text_wiarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 #pragma warning(default : 4819)
-
 #include <algorithm>
 #include <list>
 #include <set>
