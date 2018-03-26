@@ -23,8 +23,14 @@ int WeaselServerApp::Run()
 	win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
 	win_sparkle_init();
 	m_ui.Create(m_server.GetHWnd());
+
 	tray_icon.Create(m_server.GetHWnd());
+	tray_icon.Refresh();
+
 	m_handler->Initialize();
+	m_handler->OnUpdateUI([this]() {
+		tray_icon.Refresh();
+	});
 
 	int ret = m_server.Run();
 

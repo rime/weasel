@@ -16,6 +16,7 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
 	: m_ui(ui)
 	, m_active_session(0)
 	, m_disabled(true)
+	, _UpdateUICallback(NULL)
 {
 	_Setup();
 }
@@ -294,6 +295,12 @@ void RimeWithWeaselHandler::EndMaintenance()
 	}
 }
 
+void RimeWithWeaselHandler::OnUpdateUI(std::function<void()> const &cb)
+{
+	_UpdateUICallback = cb;
+}
+
+
 bool RimeWithWeaselHandler::_IsDeployerRunning()
 {
 	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
@@ -330,13 +337,6 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		RimeFreeStatus(&status);
 	}
 
-	static char client_type[20] = { 0 };
-	RimeGetProperty(session_id, "client_type", client_type, sizeof(client_type) - 1);
-	if (std::string(client_type) == "tsf") {
-		return; // Do not show UI by server
-	}
-
-
 	RIME_STRUCT(RimeContext, ctx);
 	if (RimeGetContext(session_id, &ctx))
 	{
@@ -366,16 +366,23 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		m_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
 	else
 		m_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
-	if (weasel_status.composing)
+
+	static char client_type[20] = { 0 };
+	RimeGetProperty(session_id, "client_type", client_type, sizeof(client_type) - 1);
+	bool show_ui = std::string(client_type) != "tsf"; // Do not show UI by server
+
+	if (show_ui && weasel_status.composing)
 	{
 		m_ui->Update(weasel_context, weasel_status);
 		m_ui->Show();
 	}
-	else if (!_ShowMessage(weasel_context, weasel_status))
+	else if (show_ui && !_ShowMessage(weasel_context, weasel_status))
 	{
 		m_ui->Hide();
 		m_ui->Update(weasel_context, weasel_status);
 	}
+	
+	if (_UpdateUICallback) _UpdateUICallback();
 
 	m_message_type.clear();
 	m_message_value.clear();

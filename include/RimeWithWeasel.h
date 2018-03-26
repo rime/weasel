@@ -29,6 +29,8 @@ public:
 	virtual void StartMaintenance();
 	virtual void EndMaintenance();
 
+	void OnUpdateUI(std::function<void()> const &cb);
+
 private:
 	void _Setup();
 	bool _IsDeployerRunning();
@@ -45,6 +47,8 @@ private:
 	bool m_disabled;
 	std::string m_last_schema_id;
 	weasel::UIStyle m_base_style;
+
+	std::function<void()> _UpdateUICallback;
 
 	static void OnNotify(void* context_object,
 		                 uintptr_t session_id,
