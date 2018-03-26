@@ -1,21 +1,18 @@
 #include "stdafx.h"
 #include <WeaselUI.h>
 #include "WeaselPanel.h"
-#include "WeaselTrayIcon.h"
 
 using namespace weasel;
 
 class weasel::UIImpl {
 public:
 	WeaselPanel panel;
-	WeaselTrayIcon tray_icon;
 
 	UIImpl(weasel::UI &ui)
-		: panel(ui), tray_icon(ui), shown(false) {}
+		: panel(ui), shown(false) {}
 
 	void Refresh() {
 		panel.Refresh();
-		tray_icon.Refresh();
 	}
 	void Show();
 	void Hide();
@@ -51,7 +48,6 @@ void UI::Destroy()
 {
 	if (pimpl_)
 	{
-		pimpl_->tray_icon.RemoveIcon();
 		pimpl_->panel.DestroyWindow();
 		delete pimpl_;
 		pimpl_ = 0;
