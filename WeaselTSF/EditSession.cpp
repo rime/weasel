@@ -9,8 +9,12 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	std::wstring commit;
 	weasel::Status status;
 	weasel::Config config;
-
 	auto context = std::make_shared<weasel::Context>();
+
+	auto _NewComposition = [this, &config]() {
+		_UpdateCompositionWindow(_pEditSessionContext);
+		_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+	};
 
 	weasel::ResponseParser parser(&commit, context.get(), &status, &config, &_cand->style());
 
@@ -25,14 +29,14 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			// For auto-selecting, commit and preedit can both exist.
 			// Commit and close the original composition first.
 			if (!_IsComposing()) {
-				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+				_NewComposition();
 			}
 			_InsertText(_pEditSessionContext, commit);
 			_EndComposition(_pEditSessionContext, false);
 		}
 		if (status.composing && !_IsComposing())
 		{
-			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+			_NewComposition();
 		}
 		else if (!status.composing && _IsComposing())
 		{
@@ -43,6 +47,8 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			_ShowInlinePreedit(_pEditSessionContext, context);
 		}
 	}
+
+
 	return TRUE;
 }
 

@@ -206,9 +206,11 @@ void CandidateList::UpdateUI(const Context & ctx, const Status & status)
 	/// if it is owned by active view window
 	HWND actw = _GetActiveWnd();
 	if (actw != _curp) {
+		UIStyle sty = _ui->style();
 		_ui->Destroy();
 		_ui->Create(actw);
 		_curp = actw;
+		_ui->style() = sty;
 	}
 	_ui->Update(ctx, status);
 
@@ -223,6 +225,12 @@ void CandidateList::UpdateStyle(const UIStyle & sty)
 void CandidateList::UpdateInputPosition(RECT const & rc)
 {
 	_ui->UpdateInputPosition(rc);
+}
+
+void CandidateList::Destroy()
+{
+	_ui->Destroy();
+	_curp = NULL;
 }
 
 UIStyle & CandidateList::style()

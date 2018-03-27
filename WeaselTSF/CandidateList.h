@@ -43,6 +43,7 @@ namespace weasel {
 		void UpdateUI(const Context &ctx, const Status &status);
 		void UpdateStyle(const UIStyle &sty);
 		void UpdateInputPosition(RECT const& rc);
+		void Destroy();
 		UIStyle &style();
 
 	private:

@@ -318,47 +318,15 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	weasel::Status weasel_status;
 	weasel::Context weasel_context;
 
+	bool is_tsf = _IsSessionTSF(session_id);
+
 	if (session_id == 0)
 		weasel_status.disabled = m_disabled;
 
-	RIME_STRUCT(RimeStatus, status);
-	if (RimeGetStatus(session_id, &status))
-	{
-		std::string schema_id = status.schema_id;
-		if (schema_id != m_last_schema_id)
-		{
-			m_last_schema_id = schema_id;
-			_LoadSchemaSpecificSettings(schema_id);
-		}
-		weasel_status.schema_name = utf8towcs(status.schema_name);
-		weasel_status.ascii_mode = !!status.is_ascii_mode;
-		weasel_status.composing = !!status.is_composing;
-		weasel_status.disabled = !!status.is_disabled;
-		RimeFreeStatus(&status);
-	}
+	_GetStatus(weasel_status, session_id);
 
-	RIME_STRUCT(RimeContext, ctx);
-	if (RimeGetContext(session_id, &ctx))
-	{
-		if (ctx.composition.length > 0)
-		{
-			weasel_context.preedit.str = utf8towcs(ctx.composition.preedit);
-			if (ctx.composition.sel_start < ctx.composition.sel_end)
-			{
-				weasel::TextAttribute attr;
-				attr.type = weasel::HIGHLIGHTED;
-				attr.range.start = utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start);
-				attr.range.end = utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end);
-			
-				weasel_context.preedit.attributes.push_back(attr);
-			}
-		}
-		if (ctx.menu.num_candidates)
-		{
-			weasel::CandidateInfo &cinfo(weasel_context.cinfo);
-			_GetCandidateInfo(cinfo, ctx);
-		}
-		RimeFreeContext(&ctx);
+	if (!is_tsf) {
+		_GetContext(weasel_context, session_id);
 	}
 
 	if (!m_ui) return;
@@ -367,16 +335,13 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	else
 		m_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
 
-	static char client_type[20] = { 0 };
-	RimeGetProperty(session_id, "client_type", client_type, sizeof(client_type) - 1);
-	bool show_ui = std::string(client_type) != "tsf"; // Do not show UI by server
 
-	if (show_ui && weasel_status.composing)
+	if (weasel_status.composing)
 	{
 		m_ui->Update(weasel_context, weasel_status);
-		m_ui->Show();
+		if (!is_tsf) m_ui->Show();
 	}
-	else if (show_ui && !_ShowMessage(weasel_context, weasel_status))
+	else if (!_ShowMessage(weasel_context, weasel_status))
 	{
 		m_ui->Hide();
 		m_ui->Update(weasel_context, weasel_status);
@@ -516,14 +481,15 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	messages.push_back(std::string("config.inline_preedit=") + std::to_string((int)m_ui->style().inline_preedit) + '\n');
 
 	// style
-	// TODO: only update style when necessary
-	{
+	bool has_synced = RimeGetOption(session_id, "__synced");
+	if (!has_synced) {
 		std::wstringstream ss;
 		boost::archive::text_woarchive oa(ss);
 		oa << m_ui->style();
 
 		actions.insert("style");
 		messages.push_back(std::string("style=") + wcstoutf8(ss.str().c_str()) + '\n');
+		RimeSetOption(session_id, "__synced", true);
 	}
 
 	// summarize
@@ -557,6 +523,8 @@ static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
 
 static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 {
+	if (!ui) return;
+
 	weasel::UIStyle &style(ui->style());
 
 	const int BUF_SIZE = 99;
@@ -695,4 +663,58 @@ static void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options
 		RimeConfigEnd(&option_iter);
 	}
 	RimeConfigEnd(&app_iter);
+}
+
+void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
+{
+	RIME_STRUCT(RimeStatus, status);
+	if (RimeGetStatus(session_id, &status))
+	{
+		std::string schema_id = status.schema_id;
+		if (schema_id != m_last_schema_id)
+		{
+			m_last_schema_id = schema_id;
+			_LoadSchemaSpecificSettings(schema_id);
+		}
+		stat.schema_name = utf8towcs(status.schema_name);
+		stat.ascii_mode = !!status.is_ascii_mode;
+		stat.composing = !!status.is_composing;
+		stat.disabled = !!status.is_disabled;
+		RimeFreeStatus(&status);
+	}
+
+}
+
+void RimeWithWeaselHandler::_GetContext(weasel::Context & weasel_context, UINT session_id)
+{
+	RIME_STRUCT(RimeContext, ctx);
+	if (RimeGetContext(session_id, &ctx))
+	{
+		if (ctx.composition.length > 0)
+		{
+			weasel_context.preedit.str = utf8towcs(ctx.composition.preedit);
+			if (ctx.composition.sel_start < ctx.composition.sel_end)
+			{
+				weasel::TextAttribute attr;
+				attr.type = weasel::HIGHLIGHTED;
+				attr.range.start = utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start);
+				attr.range.end = utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end);
+
+				weasel_context.preedit.attributes.push_back(attr);
+			}
+		}
+		if (ctx.menu.num_candidates)
+		{
+			weasel::CandidateInfo &cinfo(weasel_context.cinfo);
+			_GetCandidateInfo(cinfo, ctx);
+		}
+		RimeFreeContext(&ctx);
+	}
+}
+
+bool RimeWithWeaselHandler::_IsSessionTSF(UINT session_id)
+{
+	static char client_type[20] = { 0 };
+	RimeGetProperty(session_id, "client_type", client_type, sizeof(client_type) - 1);
+	return std::string(client_type) == "tsf";
 }

@@ -40,6 +40,10 @@ private:
 	bool _Respond(UINT session_id, EatLine eat);
 	void _ReadClientInfo(UINT session_id, LPWSTR buffer);
 	void _GetCandidateInfo(weasel::CandidateInfo &cinfo, RimeContext &ctx);
+	void _GetStatus(weasel::Status &stat, UINT session_id);
+	void _GetContext(weasel::Context &ctx, UINT session_id);
+
+	bool _IsSessionTSF(UINT session_id);
 
 	AppOptionsByAppName m_app_options;
 	weasel::UI* m_ui;  // reference
