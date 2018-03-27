@@ -9,7 +9,7 @@ namespace weasel {
 		SECURITY_ATTRIBUTES sa;
 		void _Init();
 	public:
-		SecurityAttribute() { _Init(); }
+		SecurityAttribute() : pd(NULL) { _Init(); }
 		SECURITY_ATTRIBUTES *get_attr();
 	};
 };
