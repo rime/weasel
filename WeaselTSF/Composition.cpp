@@ -158,7 +158,7 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	if ((pInsertAtSelection->InsertTextAtSelection(ec, TF_IAS_QUERYONLY, NULL, 0, &pRangeComposition)) != S_OK)
 		goto Exit;
 
-	if ((_pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped)) == S_OK)
+	if ((_pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped)) == S_OK && (rc.left != 0 || rc.top != 0))
 		_pTextService->_SetCompositionPosition(rc);
 
 Exit:
@@ -179,7 +179,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext *pContext)
 	if ((pEditSession = new CGetTextExtentEditSession(this, pContext, pContextView, _pComposition)) != NULL)
 	{
 		HRESULT hr;
-		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READ, &hr);
+		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_SYNC | TF_ES_READ, &hr);
 		pEditSession->Release();
 		pContextView->Release();
 		return TRUE;
