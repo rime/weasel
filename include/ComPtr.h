@@ -1,6 +1,11 @@
 #ifndef __COMPTR_H__
 #define __COMPTR_H__
 
+#ifndef ASSERT
+#include <cassert>
+#define ASSERT assert
+#endif // ASSERT
+
 template <typename Interface>
 class ComPtr
 {

@@ -15,6 +15,7 @@ class WeaselTSF:
 	public ITfTextLayoutSink,
 	public ITfKeyEventSink,
 	public ITfCompositionSink,
+	public ITfThreadFocusSink,
 	public ITfEditSession
 {
 public:
@@ -50,6 +51,10 @@ public:
 	STDMETHODIMP OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParm, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten);
+
+	// ITfThreadFocusSink
+	STDMETHODIMP OnSetThreadFocus();
+	STDMETHODIMP OnKillThreadFocus();
 
 	/* ITfCompositionSink */
 	STDMETHODIMP OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition);

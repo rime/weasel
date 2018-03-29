@@ -63,7 +63,9 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void **ppvObject)
 	else if (IsEqualIID(riid, IID_ITfCompositionSink))
 		*ppvObject = (ITfCompositionSink *) this;
 	else if (IsEqualIID(riid, IID_ITfEditSession))
-		*ppvObject = (ITfEditSession *) this;
+		*ppvObject = (ITfEditSession *)this;
+	else if (IsEqualIID(riid, IID_ITfThreadFocusSink))
+		*ppvObject = (ITfThreadFocusSink *)this;
 
 	if (*ppvObject)
 	{
@@ -153,6 +155,17 @@ STDAPI WeaselTSF::Deactivate()
 
 	return S_OK;
 }
+
+STDMETHODIMP WeaselTSF::OnSetThreadFocus()
+{
+	return S_OK;
+}
+STDMETHODIMP WeaselTSF::OnKillThreadFocus()
+{
+	_UnFocus();
+	return S_OK;
+}
+
 
 void WeaselTSF::_EnsureServerConnected()
 {

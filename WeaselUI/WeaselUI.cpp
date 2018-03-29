@@ -12,6 +12,7 @@ public:
 		: panel(ui), shown(false) {}
 
 	void Refresh() {
+		if (!panel.IsWindow()) return;
 		panel.Refresh();
 	}
 	void Show();
@@ -46,7 +47,7 @@ bool UI::Create(HWND parent)
 
 void UI::Destroy()
 {
-	if (pimpl_)
+	if (pimpl_ && pimpl_->panel.IsWindow())
 	{
 		pimpl_->panel.DestroyWindow();
 		delete pimpl_;
@@ -115,6 +116,7 @@ UINT_PTR UIImpl::timer = 0;
 
 void UIImpl::Show()
 {
+	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_SHOWNA);
 	shown = true;
 	if (timer)
@@ -126,6 +128,7 @@ void UIImpl::Show()
 
 void UIImpl::Hide()
 {
+	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_HIDE);
 	shown = false;
 	if (timer)
@@ -137,6 +140,7 @@ void UIImpl::Hide()
 
 void UIImpl::ShowWithTimeout(DWORD millisec)
 {
+	if (!panel.IsWindow()) return;
 	DLOG(INFO) << "ShowWithTimeout: " << millisec;
 	panel.ShowWindow(SW_SHOWNA);
 	SetTimer(panel.m_hWnd, AUTOHIDE_TIMER, millisec, &UIImpl::OnTimer);
