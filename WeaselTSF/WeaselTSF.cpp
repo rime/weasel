@@ -51,17 +51,19 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void **ppvObject)
 	*ppvObject = NULL;
 
 	if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfTextInputProcessor))
-		*ppvObject = (ITfTextInputProcessor *) this;
+		*ppvObject = (ITfTextInputProcessor *)this;
+	else if (IsEqualIID(riid, IID_ITfTextInputProcessorEx))
+		*ppvObject = (ITfTextInputProcessorEx *)this;
 	else if (IsEqualIID(riid, IID_ITfThreadMgrEventSink))
-		*ppvObject = (ITfThreadMgrEventSink *) this;
+		*ppvObject = (ITfThreadMgrEventSink *)this;
 	else if (IsEqualIID(riid, IID_ITfTextEditSink))
-		*ppvObject = (ITfTextEditSink *) this;
+		*ppvObject = (ITfTextEditSink *)this;
 	else if (IsEqualIID(riid, IID_ITfTextLayoutSink))
-		*ppvObject = (ITfTextLayoutSink *) this;
+		*ppvObject = (ITfTextLayoutSink *)this;
 	else if (IsEqualIID(riid, IID_ITfKeyEventSink))
-		*ppvObject = (ITfKeyEventSink *) this;
+		*ppvObject = (ITfKeyEventSink *)this;
 	else if (IsEqualIID(riid, IID_ITfCompositionSink))
-		*ppvObject = (ITfCompositionSink *) this;
+		*ppvObject = (ITfCompositionSink *)this;
 	else if (IsEqualIID(riid, IID_ITfEditSession))
 		*ppvObject = (ITfEditSession *)this;
 	else if (IsEqualIID(riid, IID_ITfThreadFocusSink))
@@ -94,7 +96,36 @@ STDAPI_(ULONG) WeaselTSF::Release()
 
 STDAPI WeaselTSF::Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId)
 {
-	//((ITfThreadMgr2 *)pThreadMgr)->GetActiveFlags(&_activateFlags);
+	return ActivateEx(pThreadMgr, tfClientId, 0U);
+}
+
+STDAPI WeaselTSF::Deactivate()
+{
+	m_client.EndSession();
+
+	_InitTextEditSink(NULL);
+
+	_UninitThreadMgrEventSink();
+
+	_UninitKeyEventSink();
+	_UninitPreservedKey();
+
+	_UninitLanguageBar();
+
+	if (_pThreadMgr != NULL)
+	{
+		_pThreadMgr->Release();
+		_pThreadMgr = NULL;
+	}
+
+	_tfClientId = TF_CLIENTID_NULL;
+
+	return S_OK;
+}
+
+STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DWORD dwFlags)
+{
+	_activateFlags = dwFlags;
 	_EnsureServerConnected();
 
 	_pThreadMgr = pThreadMgr;
@@ -132,37 +163,13 @@ ExitError:
 	return E_FAIL;
 }
 
-STDAPI WeaselTSF::Deactivate()
-{
-	m_client.EndSession();
-
-	_InitTextEditSink(NULL);
-
-	_UninitThreadMgrEventSink();
-
-	_UninitKeyEventSink();
-	_UninitPreservedKey();
-
-	_UninitLanguageBar();
-
-	if (_pThreadMgr != NULL)
-	{
-		_pThreadMgr->Release();
-		_pThreadMgr = NULL;
-	}
-	
-	_tfClientId = TF_CLIENTID_NULL;
-
-	return S_OK;
-}
-
 STDMETHODIMP WeaselTSF::OnSetThreadFocus()
 {
 	return S_OK;
 }
 STDMETHODIMP WeaselTSF::OnKillThreadFocus()
 {
-	_AbordComposition();
+	_AbortComposition();
 	return S_OK;
 }
 

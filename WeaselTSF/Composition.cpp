@@ -89,7 +89,7 @@ void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnab
 class CEndCompositionEditSession: public CEditSession
 {
 public:
-	CEndCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, bool clear = true)
+	CEndCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, BOOL clear = TRUE)
 		: CEditSession(pTextService, pContext), _clear(clear)
 	{
 		_pComposition = pComposition;
@@ -100,7 +100,7 @@ public:
 
 private:
 	ITfComposition *_pComposition;
-	bool _clear;
+	BOOL _clear;
 };
 
 STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
@@ -351,11 +351,11 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *
 	// Even if it is closed normally.
 	// Silly M$.
 
-	_AbordComposition();
+	_AbortComposition();
 	return S_OK;
 }
 
-void WeaselTSF::_AbordComposition(bool clear)
+void WeaselTSF::_AbortComposition(bool clear)
 {
 	m_client.ClearComposition();
 	if (_IsComposing()) {

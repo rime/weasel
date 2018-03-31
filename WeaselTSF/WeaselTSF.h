@@ -9,7 +9,7 @@ namespace weasel {
 }
 
 class WeaselTSF:
-	public ITfTextInputProcessor,
+	public ITfTextInputProcessorEx,
 	public ITfThreadMgrEventSink,
 	public ITfTextEditSink,
 	public ITfTextLayoutSink,
@@ -31,6 +31,9 @@ public:
 	STDMETHODIMP Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId);
 	STDMETHODIMP Deactivate();
 
+	/* ITfTextInputProcessorEx */
+	STDMETHODIMP ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DWORD dwFlags);
+
 	/* ITfThreadMgrEventSink */
 	STDMETHODIMP OnInitDocumentMgr(ITfDocumentMgr *pDocMgr);
 	STDMETHODIMP OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr);
@@ -49,7 +52,7 @@ public:
 	STDMETHODIMP OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
-	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParm, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten);
 
 	// ITfThreadFocusSink
@@ -108,7 +111,7 @@ private:
 	void _UninitLanguageBar();
 	
 	BOOL _InsertText(ITfContext *pContext, const std::wstring& ext);
-	void _AbordComposition(bool clear = true);
+	void _AbortComposition(bool clear = true);
 
 	bool isImmersive() const {
 		return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;
