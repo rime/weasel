@@ -204,7 +204,7 @@ void WeaselTSF::_SetCompositionPosition(const RECT &rc)
 	RECT _rc;
 	_rc.left = _rc.right = rc.left;
 	_rc.top = _rc.bottom = rc.bottom;
-	//m_client.UpdateInputPosition(rc);
+	m_client.UpdateInputPosition(rc);
 	_cand->UpdateInputPosition(rc);
 }
 
