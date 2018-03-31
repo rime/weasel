@@ -204,7 +204,7 @@ STDMETHODIMP CandidateList::Finalize(void)
 
 STDMETHODIMP CandidateList::Abort(void)
 {
-	_tsf->_AbordComposition(true);
+	_tsf->_AbortComposition(true);
 	return S_OK;
 }
 
