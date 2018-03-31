@@ -219,7 +219,7 @@ STDMETHODIMP CandidateList::ShowCandidateNumbers(BOOL * pIsShow)
 
 STDMETHODIMP CandidateList::FinalizeExactCompositionString()
 {
-	_tsf->_AbordComposition(false);
+	_tsf->_AbortComposition(false);
 	return E_NOTIMPL;
 }
 

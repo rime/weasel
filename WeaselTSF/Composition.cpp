@@ -351,11 +351,11 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *
 	// Even if it is closed normally.
 	// Silly M$.
 
-	_AbordComposition();
+	_AbortComposition();
 	return S_OK;
 }
 
-void WeaselTSF::_AbordComposition(bool clear)
+void WeaselTSF::_AbortComposition(bool clear)
 {
 	m_client.ClearComposition();
 	if (_IsComposing()) {
