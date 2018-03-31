@@ -89,6 +89,9 @@
     <ClInclude Include="CandidateList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ctffunc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

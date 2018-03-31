@@ -13,7 +13,7 @@ STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr)
 
 STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus)
 {
-	_UnFocus();
+	_AbordComposition();
 	_InitTextEditSink(pDocMgrFocus);
 
 	return S_OK;

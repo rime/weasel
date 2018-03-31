@@ -108,7 +108,7 @@ private:
 	void _UninitLanguageBar();
 	
 	BOOL _InsertText(ITfContext *pContext, const std::wstring& ext);
-	void _UnFocus();
+	void _AbordComposition(bool clear = true);
 
 	bool isImmersive() const {
 		return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;

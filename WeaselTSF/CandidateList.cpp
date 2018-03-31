@@ -185,11 +185,41 @@ STDMETHODIMP CandidateList::SetSelection(UINT nIndex)
 
 STDMETHODIMP CandidateList::Finalize(void)
 {
-	return E_NOTIMPL;
+	Destroy();
+	return S_OK;
 }
 
 STDMETHODIMP CandidateList::Abort(void)
 {
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CandidateList::SetIntegrationStyle(GUID guidIntegrationStyle)
+{
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CandidateList::GetSelectionStyle(TfIntegratableCandidateListSelectionStyle * ptfSelectionStyle)
+{
+	*ptfSelectionStyle = _selectionStyle;
+	return S_OK;
+}
+
+STDMETHODIMP CandidateList::OnKeyDown(WPARAM wParam, LPARAM lParam, BOOL * pIsEaten)
+{
+	*pIsEaten = TRUE;
+	return S_OK;
+}
+
+STDMETHODIMP CandidateList::ShowCandidateNumbers(BOOL * pIsShow)
+{
+	*pIsShow = TRUE;
+	return S_OK;
+}
+
+STDMETHODIMP CandidateList::FinalizeExactCompositionString()
+{
+	_tsf->_AbordComposition(false);
 	return E_NOTIMPL;
 }
 
@@ -229,6 +259,7 @@ void CandidateList::UpdateInputPosition(RECT const & rc)
 
 void CandidateList::Destroy()
 {
+	Show(false);
 	_ui->Destroy();
 	_curp = NULL;
 }

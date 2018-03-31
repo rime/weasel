@@ -162,7 +162,7 @@ STDMETHODIMP WeaselTSF::OnSetThreadFocus()
 }
 STDMETHODIMP WeaselTSF::OnKillThreadFocus()
 {
-	_UnFocus();
+	_AbordComposition();
 	return S_OK;
 }
 

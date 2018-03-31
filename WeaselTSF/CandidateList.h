@@ -1,13 +1,13 @@
 #pragma once
 #include <WeaselUI.h>
+#include "ctffunc.h"
 
 class WeaselTSF;
 
 namespace weasel {
 	class CandidateList :
-		public ITfCandidateListUIElementBehavior,
-		public ITfCandidateListUIElement,
-		public ITfUIElement
+		public ITfIntegratableCandidateListUIElement,
+		public ITfCandidateListUIElementBehavior
 	{
 	public:
 		CandidateList(WeaselTSF *pTextService);
@@ -39,6 +39,13 @@ namespace weasel {
 		STDMETHODIMP Finalize(void);
 		STDMETHODIMP Abort(void);
 
+		// ITfIntegratableCandidateListUIElement methods
+		STDMETHODIMP SetIntegrationStyle(GUID guidIntegrationStyle);
+		STDMETHODIMP GetSelectionStyle(_Out_ TfIntegratableCandidateListSelectionStyle *ptfSelectionStyle);
+		STDMETHODIMP OnKeyDown(_In_ WPARAM wParam, _In_ LPARAM lParam, _Out_ BOOL *pIsEaten);
+		STDMETHODIMP ShowCandidateNumbers(_Out_ BOOL *pIsShow);
+		STDMETHODIMP FinalizeExactCompositionString();
+
 		/* Update */
 		void UpdateUI(const Context &ctx, const Status &status);
 		void UpdateStyle(const UIStyle &sty);
@@ -53,6 +60,7 @@ namespace weasel {
 		DWORD _cRef;
 		WeaselTSF *_tsf;
 		DWORD uiid;
+		TfIntegratableCandidateListSelectionStyle _selectionStyle = STYLE_ACTIVE_SELECTION;
 
 		/* The parent of current candidate window */
 		HWND _curp;

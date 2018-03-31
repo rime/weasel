@@ -351,15 +351,15 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *
 	// Even if it is closed normally.
 	// Silly M$.
 
-	_UnFocus();
+	_AbordComposition();
 	return S_OK;
 }
 
-void WeaselTSF::_UnFocus()
+void WeaselTSF::_AbordComposition(bool clear)
 {
 	m_client.ClearComposition();
 	if (_IsComposing()) {
-		_EndComposition(_pEditSessionContext, true);
+		_EndComposition(_pEditSessionContext, clear);
 	}
 	_cand->Show(false);
 }
