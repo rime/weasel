@@ -57,6 +57,9 @@
     <ClCompile Include="LanguageBar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CandidateList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -81,6 +84,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CandidateList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ctffunc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

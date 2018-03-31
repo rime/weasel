@@ -2,6 +2,7 @@
 #include "WeaselTSF.h"
 #include "EditSession.h"
 #include "ResponseParser.h"
+#include "CandidateList.h"
 
 /* Start Composition */
 class CStartCompositionEditSession: public CEditSession
@@ -44,11 +45,17 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		 *   So we insert a dummy space character here.
 		 *   This is the same workaround used by Microsoft Pinyin IME (New Experience).
 		 */
-		if (_fCUASWorkaroundEnabled)
-		{
-			pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
-			pRangeComposition->Collapse(ec, TF_ANCHOR_START);
-		}
+		//if (_fCUASWorkaroundEnabled)
+		//{
+		//	pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
+		//	pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+		//}
+
+		// NOTE: Seems that `OnCompositionTerminated` will be triggered even when
+		//       normally end a composition if not put any string in it.
+		//       So just insert a blank here.
+		pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
+		pRangeComposition->Collapse(ec, TF_ANCHOR_START);
 		TF_SELECTION tfSelection;
 		tfSelection.range = pRangeComposition;
 		tfSelection.style.ase = TF_AE_NONE;
@@ -69,21 +76,11 @@ Exit:
 
 void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnabled)
 {
-	if (!_fCUASWorkaroundTested)
-	{
-		/* Test if we need to apply the workaround */
-		_UpdateCompositionWindow(_pEditSessionContext);
-	}
-	else if (!fCUASWorkaroundEnabled)
-	{
-		/* Workaround not applied, update candidate window position at this point. */
-		_UpdateCompositionWindow(_pEditSessionContext);
-	}
 	CStartCompositionEditSession *pStartCompositionEditSession;
 	if ((pStartCompositionEditSession = new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled)) != NULL)
 	{
 		HRESULT hr;
-		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_SYNC | TF_ES_READWRITE, &hr);
 		pStartCompositionEditSession->Release();
 	}
 }
@@ -92,7 +89,7 @@ void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnab
 class CEndCompositionEditSession: public CEditSession
 {
 public:
-	CEndCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, bool clear = true)
+	CEndCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, BOOL clear = TRUE)
 		: CEditSession(pTextService, pContext), _clear(clear)
 	{
 		_pComposition = pComposition;
@@ -103,18 +100,19 @@ public:
 
 private:
 	ITfComposition *_pComposition;
-	bool _clear;
+	BOOL _clear;
 };
 
 STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 {
 	/* Clear the dummy text we set before, if any. */
+	if (_pComposition == nullptr) return S_OK;
 	ITfRange *pCompositionRange;
 	if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
 		pCompositionRange->SetText(ec, 0, L"", 0);
 	
 	_pComposition->EndComposition(ec);
-	_pTextService->OnCompositionTerminated(ec, _pComposition);
+	_pTextService->_FinalizeComposition();
 	return S_OK;
 }
 
@@ -125,7 +123,7 @@ void WeaselTSF::_EndComposition(ITfContext *pContext, BOOL clear)
 
 	if ((pEditSession = new CEndCompositionEditSession(this, pContext, _pComposition, clear)) != NULL)
 	{
-		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_SYNC | TF_ES_READWRITE, &hr);
 		pEditSession->Release();
 	}
 }
@@ -160,7 +158,7 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	if ((pInsertAtSelection->InsertTextAtSelection(ec, TF_IAS_QUERYONLY, NULL, 0, &pRangeComposition)) != S_OK)
 		goto Exit;
 
-	if ((_pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped)) == S_OK)
+	if ((_pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped)) == S_OK && (rc.left != 0 || rc.top != 0))
 		_pTextService->_SetCompositionPosition(rc);
 
 Exit:
@@ -181,7 +179,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext *pContext)
 	if ((pEditSession = new CGetTextExtentEditSession(this, pContext, pContextView, _pComposition)) != NULL)
 	{
 		HRESULT hr;
-		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READ, &hr);
+		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_SYNC | TF_ES_READ, &hr);
 		pEditSession->Release();
 		pContextView->Release();
 		return TRUE;
@@ -207,6 +205,7 @@ void WeaselTSF::_SetCompositionPosition(const RECT &rc)
 	_rc.left = _rc.right = rc.left;
 	_rc.top = _rc.bottom = rc.bottom;
 	m_client.UpdateInputPosition(rc);
+	_cand->UpdateInputPosition(rc);
 }
 
 /* Inline Preedit */
@@ -318,7 +317,6 @@ Exit:
 		pRange->Release();
 
 	return hRet;
-
 }
 
 BOOL WeaselTSF::_InsertText(ITfContext *pContext, const std::wstring& text)
@@ -348,12 +346,31 @@ void WeaselTSF::_UpdateComposition(ITfContext *pContext)
 /* Composition State */
 STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition)
 {
+	// NOTE:
+	// This will be called when an edit session ended up with an empty composition string,
+	// Even if it is closed normally.
+	// Silly M$.
+
+	_AbortComposition();
+	return S_OK;
+}
+
+void WeaselTSF::_AbortComposition(bool clear)
+{
+	m_client.ClearComposition();
+	if (_IsComposing()) {
+		_EndComposition(_pEditSessionContext, clear);
+	}
+	_cand->Show(false);
+}
+
+void WeaselTSF::_FinalizeComposition()
+{
 	if (_pComposition != NULL)
 	{
 		_pComposition->Release();
 		_pComposition = NULL;
 	}
-	return S_OK;
 }
 
 void WeaselTSF::_SetComposition(ITfComposition *pComposition)

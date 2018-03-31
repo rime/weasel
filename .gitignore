@@ -32,3 +32,5 @@ weasel.props
 *.swp
 .vs
 Thumbs.db
+/.idea
+/cmake-build-debug

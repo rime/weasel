@@ -26,8 +26,11 @@ STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 {
 	if (fForeground)
 		m_client.FocusIn();
-	else
+	else {
 		m_client.FocusOut();
+		_AbortComposition();
+	}
+
 	return S_OK;
 }
 

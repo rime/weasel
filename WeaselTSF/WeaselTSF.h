@@ -1,15 +1,21 @@
 #pragma once
 
+#include <WeaselCommon.h>
 #include "Globals.h"
 #include "WeaselIPC.h"
 
+namespace weasel {
+	class CandidateList;
+}
+
 class WeaselTSF:
-	public ITfTextInputProcessor,
+	public ITfTextInputProcessorEx,
 	public ITfThreadMgrEventSink,
 	public ITfTextEditSink,
 	public ITfTextLayoutSink,
 	public ITfKeyEventSink,
 	public ITfCompositionSink,
+	public ITfThreadFocusSink,
 	public ITfEditSession
 {
 public:
@@ -24,6 +30,9 @@ public:
 	/* ITfTextInputProcessor */
 	STDMETHODIMP Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId);
 	STDMETHODIMP Deactivate();
+
+	/* ITfTextInputProcessorEx */
+	STDMETHODIMP ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DWORD dwFlags);
 
 	/* ITfThreadMgrEventSink */
 	STDMETHODIMP OnInitDocumentMgr(ITfDocumentMgr *pDocMgr);
@@ -43,8 +52,12 @@ public:
 	STDMETHODIMP OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnTestKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
-	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParm, LPARAM lParam, BOOL *pfEaten);
+	STDMETHODIMP OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten);
 	STDMETHODIMP OnPreservedKey(ITfContext *pContext, REFGUID rguid, BOOL *pfEaten);
+
+	// ITfThreadFocusSink
+	STDMETHODIMP OnSetThreadFocus();
+	STDMETHODIMP OnKillThreadFocus();
 
 	/* ITfCompositionSink */
 	STDMETHODIMP OnCompositionTerminated(TfEditCookie ecWrite, ITfComposition *pComposition);
@@ -66,6 +79,7 @@ public:
 	void _SetComposition(ITfComposition *pComposition);
 	void _SetCompositionPosition(const RECT &rc);
 	BOOL _UpdateCompositionWindow(ITfContext *pContext);
+	void _FinalizeComposition();
 
 	/* Language bar */
 	HWND _GetFocusedContextWindow();
@@ -74,7 +88,12 @@ public:
 	/* IPC */
 	void _EnsureServerConnected();
 
+	/* UI */
+	void _UpdateUI(const weasel::Context & ctx, const weasel::Status & status);
+
 private:
+	friend class weasel::CandidateList;
+
 	/* TSF Related */
 	BOOL _InitThreadMgrEventSink();
 	void _UninitThreadMgrEventSink();
@@ -92,6 +111,7 @@ private:
 	void _UninitLanguageBar();
 	
 	BOOL _InsertText(ITfContext *pContext, const std::wstring& ext);
+	void _AbortComposition(bool clear = true);
 
 	bool isImmersive() const {
 		return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;
@@ -112,6 +132,8 @@ private:
 	ITfComposition *_pComposition;
 
 	ITfLangBarItemButton *_pLangBarButton;
+
+	std::unique_ptr<weasel::CandidateList> _cand;
 
 	LONG _cRef;	// COM ref count
 

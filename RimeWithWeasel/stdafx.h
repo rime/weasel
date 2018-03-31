@@ -13,7 +13,14 @@
 #pragma warning(disable : 4819)
 
 #include <boost/interprocess/streams/bufferstream.hpp>
+#include <boost/archive/text_woarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 #pragma warning(default : 4819)
+#include <algorithm>
+#include <list>
+#include <set>
+#include <string>
+#include <sstream>
 
 using boost::interprocess::wbufferstream;

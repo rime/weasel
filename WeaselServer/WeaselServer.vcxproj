@@ -459,15 +459,19 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SystemTraySDK.cpp" />
     <ClCompile Include="WeaselServer.cpp" />
     <ClCompile Include="WeaselServerApp.cpp" />
     <ClCompile Include="WeaselService.cpp" />
+    <ClCompile Include="WeaselTrayIcon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="SystemTraySDK.h" />
     <ClInclude Include="WeaselServerApp.h" />
     <ClInclude Include="WeaselService.h" />
+    <ClInclude Include="WeaselTrayIcon.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WeaselServer.rc" />

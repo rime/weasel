@@ -5,6 +5,7 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{53F79A24-5390-4640-84B5-19984EB3353B}"
 	ProjectSection(SolutionItems) = preProject
+		include\ComPtr.h = include\ComPtr.h
 		include\PipeChannel.h = include\PipeChannel.h
 		include\PyWeasel.h = include\PyWeasel.h
 		include\ResponseParser.h = include\ResponseParser.h
@@ -16,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		include\WeaselUI.h = include\WeaselUI.h
 		include\WeaselUtility.h = include\WeaselUtility.h
 		include\WeaselVersion.h = include\WeaselVersion.h
+		include\winapifamily.h = include\winapifamily.h
+		include\winpackagefamily.h = include\winpackagefamily.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselTSF", "WeaselTSF\WeaselTSF.vcxproj", "{FF9B3625-BBD6-4972-8F23-7BA57F3127E8}"
@@ -69,11 +72,15 @@ Global
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Debug|Win32.ActiveCfg = Debug|Win32
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Debug|Win32.Build.0 = Debug|Win32
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Debug|x64.ActiveCfg = Debug|x64
+		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Debug|x64.Build.0 = Debug|x64
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Release|Win32.ActiveCfg = Release|Win32
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Release|Win32.Build.0 = Release|Win32
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Release|x64.ActiveCfg = Release|x64
+		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.Release|x64.Build.0 = Release|x64
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.ReleaseHant|Win32.ActiveCfg = ReleaseHant|Win32
+		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.ReleaseHant|Win32.Build.0 = ReleaseHant|Win32
 		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.ReleaseHant|x64.ActiveCfg = ReleaseHant|x64
+		{10B3B8BF-7294-4661-9A8A-2FFC920FA2F4}.ReleaseHant|x64.Build.0 = ReleaseHant|x64
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}.Debug|Win32.ActiveCfg = Debug|Win32
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}.Debug|Win32.Build.0 = Debug|Win32
 		{CE11A2DF-8D20-4B07-A935-4B0D03F0303D}.Debug|x64.ActiveCfg = Debug|x64

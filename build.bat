@@ -118,7 +118,8 @@ set BOOST_COMPILED_LIBS=--with-date_time^
  --with-regex^
  --with-signals^
  --with-system^
- --with-thread
+ --with-thread^
+ --with-serialization
 
 set BJAM_OPTIONS_COMMON=toolset=%BJAM_TOOLSET%^
  variant=release^

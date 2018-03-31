@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 
+#include <rime_api.h>
+
 typedef std::map<std::string, bool> AppOptions;
 typedef std::map<std::string, AppOptions> AppOptionsByAppName;
 
@@ -27,6 +29,8 @@ public:
 	virtual void StartMaintenance();
 	virtual void EndMaintenance();
 
+	void OnUpdateUI(std::function<void()> const &cb);
+
 private:
 	void _Setup();
 	bool _IsDeployerRunning();
@@ -35,6 +39,11 @@ private:
 	bool _ShowMessage(weasel::Context& ctx, weasel::Status& status);
 	bool _Respond(UINT session_id, EatLine eat);
 	void _ReadClientInfo(UINT session_id, LPWSTR buffer);
+	void _GetCandidateInfo(weasel::CandidateInfo &cinfo, RimeContext &ctx);
+	void _GetStatus(weasel::Status &stat, UINT session_id);
+	void _GetContext(weasel::Context &ctx, UINT session_id);
+
+	bool _IsSessionTSF(UINT session_id);
 
 	AppOptionsByAppName m_app_options;
 	weasel::UI* m_ui;  // reference
@@ -42,6 +51,8 @@ private:
 	bool m_disabled;
 	std::string m_last_schema_id;
 	weasel::UIStyle m_base_style;
+
+	std::function<void()> _UpdateUICallback;
 
 	static void OnNotify(void* context_object,
 		                 uintptr_t session_id,

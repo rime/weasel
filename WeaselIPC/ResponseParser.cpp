@@ -5,8 +5,8 @@
 
 using namespace weasel;
 
-ResponseParser::ResponseParser(std::wstring* commit, Context* context, Status* status, Config* config)
- : p_commit(commit), p_context(context), p_status(status), p_config(config)
+ResponseParser::ResponseParser(std::wstring* commit, Context* context, Status* status, Config* config, UIStyle* style)
+ : p_commit(commit), p_context(context), p_status(status), p_config(config), p_style(style)
 {
 	Deserializer::Initialize(this);
 }
