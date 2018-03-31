@@ -154,22 +154,35 @@ STDMETHODIMP CandidateList::GetSelection(UINT * pSelectedCandidateIndex)
 STDMETHODIMP CandidateList::GetString(UINT uIndex, BSTR * pbstr)
 {
 	*pbstr = nullptr;
-	if (!_ui->ctx().cinfo.empty()) {
-		auto &str = _ui->ctx().cinfo.candies[_ui->ctx().cinfo.highlighted].str;
-		*pbstr = SysAllocStringLen(str.c_str(), str.size() + 1);
-	}
+	auto &cinfo = _ui->ctx().cinfo;
+	if (uIndex >= cinfo.candies.size())
+		return E_INVALIDARG;
+
+	auto &str = cinfo.candies[uIndex].str;
+	*pbstr = SysAllocStringLen(str.c_str(), str.size() + 1);
 
 	return S_OK;
 }
 
 STDMETHODIMP CandidateList::GetPageIndex(UINT * pIndex, UINT uSize, UINT * puPageCnt)
 {
-	return E_NOTIMPL;
+	if (!puPageCnt)
+		return E_INVALIDARG;
+	*puPageCnt = 1;
+	if (pIndex) {
+		if (uSize < *puPageCnt) {
+			return E_INVALIDARG;
+		}
+		*pIndex = 0;
+	}
+	return S_OK;
 }
 
 STDMETHODIMP CandidateList::SetPageIndex(UINT * pIndex, UINT uPageCnt)
 {
-	return E_NOTIMPL;
+	if (!pIndex)
+		return E_INVALIDARG;
+	return S_OK;
 }
 
 STDMETHODIMP CandidateList::GetCurrentPage(UINT * puPage)
@@ -180,7 +193,7 @@ STDMETHODIMP CandidateList::GetCurrentPage(UINT * puPage)
 
 STDMETHODIMP CandidateList::SetSelection(UINT nIndex)
 {
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 STDMETHODIMP CandidateList::Finalize(void)
@@ -191,12 +204,13 @@ STDMETHODIMP CandidateList::Finalize(void)
 
 STDMETHODIMP CandidateList::Abort(void)
 {
-	return E_NOTIMPL;
+	_tsf->_AbordComposition(true);
+	return S_OK;
 }
 
 STDMETHODIMP CandidateList::SetIntegrationStyle(GUID guidIntegrationStyle)
 {
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 STDMETHODIMP CandidateList::GetSelectionStyle(TfIntegratableCandidateListSelectionStyle * ptfSelectionStyle)
