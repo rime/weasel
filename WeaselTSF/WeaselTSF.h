@@ -9,7 +9,7 @@ namespace weasel {
 }
 
 class WeaselTSF:
-	public ITfTextInputProcessor,
+	public ITfTextInputProcessorEx,
 	public ITfThreadMgrEventSink,
 	public ITfTextEditSink,
 	public ITfTextLayoutSink,
@@ -30,6 +30,9 @@ public:
 	/* ITfTextInputProcessor */
 	STDMETHODIMP Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId);
 	STDMETHODIMP Deactivate();
+
+	/* ITfTextInputProcessorEx */
+	STDMETHODIMP ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DWORD dwFlags);
 
 	/* ITfThreadMgrEventSink */
 	STDMETHODIMP OnInitDocumentMgr(ITfDocumentMgr *pDocMgr);
