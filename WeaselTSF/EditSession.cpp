@@ -10,12 +10,6 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	weasel::Status status;
 	weasel::Config config;
 	auto context = std::make_shared<weasel::Context>();
-
-	auto _NewComposition = [this, &config]() {
-		_UpdateCompositionWindow(_pEditSessionContext);
-		_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
-	};
-
 	weasel::ResponseParser parser(&commit, context.get(), &status, &config, &_cand->style());
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
@@ -29,22 +23,20 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			// For auto-selecting, commit and preedit can both exist.
 			// Commit and close the original composition first.
 			if (!_IsComposing()) {
-				_NewComposition();
+				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 			}
 			_InsertText(_pEditSessionContext, commit);
 			_EndComposition(_pEditSessionContext, false);
 		}
 		if (status.composing && !_IsComposing())
 		{
-			_NewComposition();
+			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 		}
 		else if (!status.composing && _IsComposing())
 		{
 			_EndComposition(_pEditSessionContext, true);
 		}
-		if (status.composing) {
-			_UpdateCompositionWindow(_pEditSessionContext);
-		}
+		_UpdateCompositionWindow(_pEditSessionContext);
 		if (_IsComposing() && config.inline_preedit)
 		{
 			_ShowInlinePreedit(_pEditSessionContext, context);
