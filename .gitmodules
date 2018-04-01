@@ -1,6 +1,6 @@
 [submodule "librime"]
 	path = librime
 	url = https://github.com/rime/librime.git
-[submodule "brise"]
-	path = brise
-	url = https://github.com/rime/brise.git
+[submodule "plum"]
+	path = plum
+	url = https://github.com/rime/plum.git
