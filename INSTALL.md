@@ -8,12 +8,12 @@ Install dev tools: `git`, `cmake`
 Download third-party libraries: `boost(>=1.60.0)`
 
 Optional:
-install `bash` (available via Git for Windows) for installing data files from `brise`;
+install `bash` (available via Git for Windows) for installing data files from `plum`;
 install `python` for building OpenCC dictionaries.
 
 ## Checkout source code
 
-Make sure you also checkout submodules `brise` and `librime` under `weasel` directory.
+Make sure you also checkout submodules `librime` and `plum` under `weasel` directory.
 
 ```batch
 git clone --recursive https://github.com/rime/weasel.git

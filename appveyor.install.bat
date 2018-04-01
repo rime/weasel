@@ -6,7 +6,7 @@ if not exist boost.cached set nocache=1
 if not exist %BOOST_ROOT% set nocache=1
 
 git submodule init
-git submodule update brise
+git submodule update plum
 rem librime v1.3.0
 appveyor DownloadFile https://ci.appveyor.com/api/buildjobs/2gmg5qv6s2ykl04x/artifacts/rime.zip
 7z x rime.zip * -olibrime\ | find "ing archive"

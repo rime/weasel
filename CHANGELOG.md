@@ -12,7 +12,7 @@
 * 升級核心算法庫 [librime 1.3.0](https://github.com/rime/librime/blob/master/CHANGELOG.md#130-2018-03-09)
   * 支持 YAML 節點引用，方便模塊化配置
   * 改進部署流程，在 `build` 子目錄集中存放生成的數據文件
-* 精簡安裝包預裝的輸入方案，更多方案可由 [東風破](https://github.com/rime/brise) 取得
+* 精簡安裝包預裝的輸入方案，更多方案可由 [東風破](https://github.com/rime/plum) 取得
 
 #### Features
 

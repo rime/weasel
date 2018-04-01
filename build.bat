@@ -151,17 +151,17 @@ exit /b
 rem call :build_essay
 copy %WEASEL_ROOT%\LICENSE.txt output\
 copy %WEASEL_ROOT%\README.md output\README.txt
-set brise_dir=brise
+set plum_dir=plum
 set rime_dir=output/data
-bash brise/rime-install
+bash plum/rime-install
 call :build_opencc_data
 exit /b
 
 :build_essay
 rem essay.kct is deprecated.
-copy %WEASEL_ROOT%\librime\thirdparty\bin\kctreemgr.exe %WEASEL_ROOT%\brise\
-copy %WEASEL_ROOT%\librime\thirdparty\bin\zlib1.dll %WEASEL_ROOT%\brise\
-cd %WEASEL_ROOT%\brise
+cd %WEASEL_ROOT%\plum
+copy %WEASEL_ROOT%\librime\thirdparty\bin\kctreemgr.exe .\
+copy %WEASEL_ROOT%\librime\thirdparty\bin\zlib1.dll .\
 call make_essay.bat
 cd %WEASEL_ROOT%
 exit /b
