@@ -61,7 +61,7 @@
     - 構詞碼表作者：惜緣
 
   【五笔】【粵拼】【上海／蘇州吳語】【中古漢語拼音】【國際音標】等衆多方案
-  不再以安裝包預裝形式提供。可由 <https://github.com/rime/brise> 下載安裝。
+  不再以安裝包預裝形式提供。可由 <https://github.com/rime/plum> 下載安裝。
 
 ### 程序設計：
 
@@ -81,7 +81,6 @@
 ### 本品引用了以下開源軟件：
 
   * [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
-  * [brise](https://github.com/rime/brise) (GNU General Public License v3.0)
   * [google-glog](https://github.com/google/glog) (BSD 3-Clause License)
   * [Google Test](https://github.com/google/googletest) (BSD 3-Clause License)
   - [Kyoto Cabinet](http://fallabs.com/kyotocabinet/) (GNU General Public License)
@@ -89,6 +88,7 @@
   * [librime](https://github.com/rime/librime) (BSD 3-Clause License)
   * [marisa-trie](https://github.com/s-yata/marisa-trie) (BSD 2-Clause License, LGPL 2.1)
   * [OpenCC / 開放中文轉換](https://github.com/BYVoid/OpenCC) (Apache License 2.0)
+  * [plum](https://github.com/rime/plum) (GNU Lesser General Public License v3.0)
   * [WinSparkle](https://github.com/vslavik/winsparkle) (MIT License)
   * [yaml-cpp](https://github.com/jbeder/yaml-cpp) (MIT License)
 

@@ -56,6 +56,7 @@ RequestExecutionLevel admin
 ; Languages
 
 !insertmacro MUI_LANGUAGE "SimpChinese"
+!insertmacro MUI_LANGUAGE "TradChinese"
 
 ;--------------------------------
 

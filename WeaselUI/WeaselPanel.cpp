@@ -15,7 +15,7 @@ using namespace weasel;
 static LPCWSTR DEFAULT_FONT_FACE = L"";
 static const int DEFAULT_FONT_POINT = 16;
 
-static const LayoutType LAYOUT_TYPE = LAYOUT_VERTICAL;
+static const UIStyle::LayoutType LAYOUT_TYPE = UIStyle::LAYOUT_VERTICAL;
 static const int MIN_WIDTH = 160;
 static const int MIN_HEIGHT = 0;
 static const int BORDER = 3;
@@ -100,18 +100,18 @@ void WeaselPanel::_CreateLayout()
 		delete m_layout;
 
 	Layout* layout = NULL;
-	if (m_style.layout_type == LAYOUT_VERTICAL ||
-		m_style.layout_type == LAYOUT_VERTICAL_FULLSCREEN)
+	if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL ||
+		m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
 		layout = new VerticalLayout(m_style, m_ctx, m_status);
 	}
-	else if (m_style.layout_type == LAYOUT_HORIZONTAL ||
-		m_style.layout_type == LAYOUT_HORIZONTAL_FULLSCREEN)
+	else if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL ||
+		m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 	{
 		layout = new HorizontalLayout(m_style, m_ctx, m_status);
 	}
-	if (m_style.layout_type == LAYOUT_VERTICAL_FULLSCREEN ||
-		m_style.layout_type == LAYOUT_HORIZONTAL_FULLSCREEN)
+	if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||
+		m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 	{
 		layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout);
 	}

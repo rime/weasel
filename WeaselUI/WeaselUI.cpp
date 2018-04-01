@@ -1,25 +1,24 @@
 #include "stdafx.h"
 #include <WeaselUI.h>
 #include "WeaselPanel.h"
-#include "WeaselTrayIcon.h"
 
 using namespace weasel;
 
 class weasel::UIImpl {
 public:
 	WeaselPanel panel;
-	WeaselTrayIcon tray_icon;
 
 	UIImpl(weasel::UI &ui)
-		: panel(ui), tray_icon(ui) {}
+		: panel(ui), shown(false) {}
 
 	void Refresh() {
+		if (!panel.IsWindow()) return;
 		panel.Refresh();
-		tray_icon.Refresh();
 	}
 	void Show();
 	void Hide();
 	void ShowWithTimeout(DWORD millisec);
+	bool IsShown() const { return shown; }
 
 	static VOID CALLBACK OnTimer(
 		  _In_  HWND hwnd,
@@ -29,6 +28,7 @@ public:
 	);
 	static const int AUTOHIDE_TIMER = 20121220;
 	static UINT_PTR timer;
+	bool shown;
 };
 
 bool UI::Create(HWND parent)
@@ -40,16 +40,15 @@ bool UI::Create(HWND parent)
 	if (!pimpl_)
 		return false;
 
-	pimpl_->panel.Create(NULL);
-	pimpl_->tray_icon.Create(parent);
+	pimpl_->panel.Create(parent, 0, 0, WS_POPUP | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW | WS_EX_TOPMOST, 0U, 0);
+	//pimpl_->tray_icon.Create(parent);
 	return true;
 }
 
 void UI::Destroy()
 {
-	if (pimpl_)
+	if (pimpl_ && pimpl_->panel.IsWindow())
 	{
-		pimpl_->tray_icon.RemoveIcon();
 		pimpl_->panel.DestroyWindow();
 		delete pimpl_;
 		pimpl_ = 0;
@@ -85,6 +84,11 @@ bool UI::IsCountingDown() const
 	return pimpl_ && pimpl_->timer != 0;
 }
 
+bool UI::IsShown() const
+{
+	return pimpl_ && pimpl_->IsShown();
+}
+
 void UI::Refresh()
 {
 	if (pimpl_)
@@ -112,7 +116,9 @@ UINT_PTR UIImpl::timer = 0;
 
 void UIImpl::Show()
 {
+	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_SHOWNA);
+	shown = true;
 	if (timer)
 	{
 		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
@@ -122,7 +128,9 @@ void UIImpl::Show()
 
 void UIImpl::Hide()
 {
+	if (!panel.IsWindow()) return;
 	panel.ShowWindow(SW_HIDE);
+	shown = false;
 	if (timer)
 	{
 		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
@@ -132,6 +140,7 @@ void UIImpl::Hide()
 
 void UIImpl::ShowWithTimeout(DWORD millisec)
 {
+	if (!panel.IsWindow()) return;
 	DLOG(INFO) << "ShowWithTimeout: " << millisec;
 	panel.ShowWindow(SW_SHOWNA);
 	SetTimer(panel.m_hWnd, AUTOHIDE_TIMER, millisec, &UIImpl::OnTimer);

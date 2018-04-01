@@ -36,16 +36,8 @@ namespace weasel
 		bool _Connected() const { return channel.Connected(); }
 		bool _Active() const { return channel.Connected() && session_id != 0; }
 
-		//inline WCHAR* _GetSendBuffer() const {
-		//	return reinterpret_cast<WCHAR *>(channel.GetBuffer());
-		//}
-
 	private:
 		UINT session_id;
-		//HANDLE pipe;
-		//bool has_cnt;
-
-		//std::unique_ptr<char[]> buffer;
 		std::wstring app_name;
 		bool is_ime;
 

@@ -4,6 +4,7 @@
 #include "Committer.h"
 #include "ContextUpdater.h"
 #include "Configurator.h"
+#include "Styler.h"
 
 using namespace weasel;
 
@@ -22,6 +23,7 @@ void Deserializer::Initialize(ResponseParser* pTarget)
 		Define(L"ctx", ContextUpdater::Create);
 		Define(L"status", StatusUpdater::Create);
 		Define(L"config", Configurator::Create);
+		Define(L"style", Styler::Create);
 	}
 
 	// loaded by default

@@ -33,7 +33,7 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEd
 				if (_pComposition->GetRange(&pRangeComposition) == S_OK)
 				{
 					if (!IsRangeCovered(ecReadOnly, tfSelection.range, pRangeComposition))
-						_EndComposition(pContext);
+						_EndComposition(pContext, true);
 					pRangeComposition->Release();
 				}
 			}

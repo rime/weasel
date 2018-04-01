@@ -178,6 +178,8 @@ namespace weasel
 			return pipe_name;
 		}
 		pipe_name += L"\\\\.\\pipe\\";
+		pipe_name += username.get();
+		pipe_name += L"\\";
 		pipe_name += WEASEL_IPC_PIPE_NAME;
 		return pipe_name;
 	}

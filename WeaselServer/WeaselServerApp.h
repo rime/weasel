@@ -9,6 +9,8 @@
 #include <functional>
 #include <memory>
 
+#include "WeaselTrayIcon.h"
+
 class WeaselServerApp {
 public:
 	static bool execute(const std::wstring &cmd, const std::wstring &args)
@@ -58,5 +60,6 @@ protected:
 
 	weasel::Server m_server;
 	weasel::UI m_ui;
+	WeaselTrayIcon tray_icon;
 	std::unique_ptr<RimeWithWeaselHandler> m_handler;
 };

@@ -1,10 +1,12 @@
 # Weasel settings
 # encoding: utf-8
 
-config_version: "0.20"
+config_version: "0.21"
 
 app_options:
   cmd.exe:
+    ascii_mode: true
+  conhost.exe:
     ascii_mode: true
 
 style:
