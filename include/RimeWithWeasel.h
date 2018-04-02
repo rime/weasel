@@ -49,6 +49,7 @@ private:
 	weasel::UI* m_ui;  // reference
 	UINT m_active_session;
 	bool m_disabled;
+	bool m_vista_greater;
 	std::string m_last_schema_id;
 	weasel::UIStyle m_base_style;
 

@@ -4,6 +4,7 @@
 #include <StringAlgorithm.hpp>
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
+#include <VersionHelpers.hpp>
 
 #include <rime_api.h>
 
@@ -17,6 +18,7 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
 	, m_active_session(0)
 	, m_disabled(true)
 	, _UpdateUICallback(NULL)
+	, m_vista_greater(IsWindowsVistaOrGreater())
 {
 	_Setup();
 }
@@ -347,7 +349,18 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		m_ui->Update(weasel_context, weasel_status);
 	}
 	
-	if (_UpdateUICallback) _UpdateUICallback();
+	// Dangerous, don't touch
+	static char app_name[50];
+	RimeGetProperty(session_id, "client_app", app_name, sizeof(app_name) - 1);
+	if (utf8towcs(app_name) == std::wstring(L"explorer.exe") && m_vista_greater) {
+		boost::thread th([=]() {
+			::Sleep(100);
+			if (_UpdateUICallback) _UpdateUICallback();
+		});
+	}
+	else {
+		if (_UpdateUICallback) _UpdateUICallback();
+	}
 
 	m_message_type.clear();
 	m_message_value.clear();
