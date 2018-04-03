@@ -59,11 +59,14 @@ public:
 	STDMETHODIMP AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCookie);
 	STDMETHODIMP UnadviseSink(DWORD dwCookie);
 
+	void UpdateStatus(weasel::Status stat);
+
 private:
 	GUID _guid;
 	WeaselTSF *_pTextService;
 	ITfLangBarItemSink *_pLangBarItemSink;
 	LONG _cRef; /* COM Reference count */
+	bool ascii_mode;
 };
 
 CLangBarItemButton::CLangBarItemButton(WeaselTSF *pTextService, REFGUID guid)
@@ -74,6 +77,7 @@ CLangBarItemButton::CLangBarItemButton(WeaselTSF *pTextService, REFGUID guid)
 	_cRef = 1;
 	_pTextService = pTextService;
 	_guid = guid;
+	ascii_mode = false;
 }
 
 CLangBarItemButton::~CLangBarItemButton()
@@ -180,7 +184,7 @@ STDAPI CLangBarItemButton::OnMenuSelect(UINT wID)
 
 STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 {
-	*phIcon = (HICON) LoadImageW(g_hInst, MAKEINTRESOURCEW(IDI_ZH), IMAGE_ICON, 16, 16, LR_SHARED);
+	*phIcon = (HICON) LoadImageW(g_hInst, MAKEINTRESOURCEW(ascii_mode ? IDI_EN : IDI_ZH), IMAGE_ICON, 16, 16, LR_SHARED);
 	return (*phIcon == NULL)? E_FAIL: S_OK;
 }
 
@@ -215,22 +219,21 @@ STDAPI CLangBarItemButton::UnadviseSink(DWORD dwCookie)
 	return S_OK;
 }
 
+void CLangBarItemButton::UpdateStatus(weasel::Status stat)
+{
+	if (stat.ascii_mode != ascii_mode) {
+		ascii_mode = stat.ascii_mode;
+		if (_pLangBarItemSink) {
+			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
+		}
+	}
+}
+
+
+
 void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 {
-	switch (wID)
-	{
-	case ID_WEASELTRAY_QUIT:
-	case ID_WEASELTRAY_DEPLOY:
-	case ID_WEASELTRAY_SETTINGS:
-	case ID_WEASELTRAY_DICT_MANAGEMENT:
-	case ID_WEASELTRAY_WIKI:
-	case ID_WEASELTRAY_FORUM:
-	case ID_WEASELTRAY_CHECKUPDATE:
-	case ID_WEASELTRAY_INSTALLDIR:
-	case ID_WEASELTRAY_USERCONFIG:
-		/* TODO */
-        break;
-	}
+	m_client.TrayCommand(wID);
 }
 
 HWND WeaselTSF::_GetFocusedContextWindow()
@@ -303,4 +306,10 @@ void WeaselTSF::_UninitLanguageBar()
 
 	_pLangBarButton->Release();
 	_pLangBarButton = NULL;
+}
+
+void WeaselTSF::_UpdateLanguageBar(weasel::Status stat)
+{
+	if (!_pLangBarButton) return;
+	_pLangBarButton->UpdateStatus(stat);
 }

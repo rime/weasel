@@ -26,6 +26,7 @@ enum WEASEL_IPC_COMMAND
 	WEASEL_IPC_END_MAINTENANCE,
 	WEASEL_IPC_COMMIT_COMPOSITION,
 	WEASEL_IPC_CLEAR_COMPOSITION,
+	WEASEL_IPC_TRAY_COMMAND,
 	WEASEL_IPC_LAST_COMMAND
 };
 
@@ -133,6 +134,8 @@ namespace weasel
 		void FocusIn();
 		// 输入窗口失去焦点
 		void FocusOut();
+		// 托盤菜單
+		void TrayCommand(UINT menuId);
 		// 读取server返回的数据
 		bool GetResponseData(ResponseHandler handler);
 

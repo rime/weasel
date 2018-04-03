@@ -99,6 +99,13 @@ LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return 0;
 }
 
+DWORD ServerImpl::OnCommand(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
+{
+	BOOL handled = TRUE;
+	OnCommand(uMsg, wParam, lParam, handled);
+	return handled;
+}
+
 int ServerImpl::Start()
 {
 	// assure single instance
@@ -302,6 +309,7 @@ void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, _Resp resp)
 		PIPE_MSG_HANDLE(WEASEL_IPC_END_MAINTENANCE, OnEndMaintenance)
 		PIPE_MSG_HANDLE(WEASEL_IPC_COMMIT_COMPOSITION, OnCommitComposition)
 		PIPE_MSG_HANDLE(WEASEL_IPC_CLEAR_COMPOSITION, OnClearComposition);
+		PIPE_MSG_HANDLE(WEASEL_IPC_TRAY_COMMAND, OnCommand);
 	END_MAP_PIPE_MSG_HANDLE(result);
 
 	resp(result);
