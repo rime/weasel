@@ -166,7 +166,13 @@ DWORD ServerImpl::OnStartSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lP
 {
 	if (!m_pRequestHandler)
 		return 0;
-	return m_pRequestHandler->AddSession(reinterpret_cast<LPWSTR>(channel->ReceiveBuffer()));
+	return m_pRequestHandler->AddSession(
+		reinterpret_cast<LPWSTR>(channel->ReceiveBuffer()),
+		[this](std::wstring &msg) -> bool {
+			*channel << msg;
+			return true;
+		}
+	);
 }
 
 DWORD ServerImpl::OnEndSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)

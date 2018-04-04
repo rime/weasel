@@ -70,7 +70,7 @@ namespace weasel
 		virtual void Initialize() {}
 		virtual void Finalize() {}
 		virtual UINT FindSession(UINT session_id) { return 0; }
-		virtual UINT AddSession(LPWSTR buffer) { return 0; }
+		virtual UINT AddSession(LPWSTR buffer, EatLine eat = 0) { return 0; }
 		virtual UINT RemoveSession(UINT session_id) { return 0; }
 		virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, EatLine eat) { return FALSE; }
 		virtual void CommitComposition(UINT session_id) {}

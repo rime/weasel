@@ -92,7 +92,7 @@ UINT RimeWithWeaselHandler::FindSession(UINT session_id)
 	return found ? session_id : 0;
 }
 
-UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
+UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 {
 	if (m_disabled)
 	{
@@ -104,6 +104,9 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 	// show session's welcome message :-) if any
+	if (eat) {
+		_Respond(session_id, eat);
+	}
 	_UpdateUI(session_id);
 	m_active_session = session_id;
 	return session_id;

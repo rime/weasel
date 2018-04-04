@@ -3,6 +3,7 @@
 #include "WeaselTSF.h"
 #include "WeaselCommon.h"
 #include "CandidateList.h"
+#include "ResponseParser.h"
 
 static void error_message(const WCHAR *msg)
 {
@@ -128,7 +129,6 @@ STDAPI WeaselTSF::Deactivate()
 STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DWORD dwFlags)
 {
 	_activateFlags = dwFlags;
-	_EnsureServerConnected();
 
 	_pThreadMgr = pThreadMgr;
 	_pThreadMgr->AddRef();
@@ -158,6 +158,8 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	if (!_IsKeyboardOpen())
 		_SetKeyboardOpen(TRUE);
 
+	_EnsureServerConnected();
+
 	return S_OK;
 
 ExitError:
@@ -183,5 +185,11 @@ void WeaselTSF::_EnsureServerConnected()
 		m_client.Disconnect();
 		m_client.Connect(NULL);
 		m_client.StartSession();
+		weasel::Status status;
+		weasel::ResponseParser parser(NULL, NULL, &status, NULL, &_cand->style());
+		bool ok = m_client.GetResponseData(std::ref(parser));
+		if (ok) {
+			_UpdateLanguageBar(status);
+		}
 	}
 }
