@@ -36,7 +36,7 @@ BOOL WeaselTrayIcon::Create(HWND hTargetWnd)
 
 void WeaselTrayIcon::Refresh()
 {
-	if (!m_style.display_tray_icon)
+	if (!m_style.display_tray_icon && !m_status.disabled) // display notification when deploying
 	{
 		if (m_mode != INITIAL)
 		{
