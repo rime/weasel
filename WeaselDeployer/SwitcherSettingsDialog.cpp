@@ -84,6 +84,9 @@ LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	
 	hotkeys_.Attach(GetDlgItem(IDC_HOTKEYS));
 	hotkeys_.EnableWindow(FALSE);
+
+	get_schemata_.Attach(GetDlgItem(IDC_GET_SCHEMATA));
+	get_schemata_.EnableWindow(TRUE);
 	
 	Populate();
 	

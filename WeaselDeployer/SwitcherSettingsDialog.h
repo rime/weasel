@@ -35,6 +35,7 @@ protected:
 
 	CCheckListViewCtrl schema_list_;
 	CStatic description_;
-	CEdit hotkeys_; 
+	CEdit hotkeys_;
+	CButton get_schemata_;
 };
 
