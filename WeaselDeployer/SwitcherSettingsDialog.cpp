@@ -96,6 +96,11 @@ LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 	return 0;
 }
 
+LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
+	ShellExecute(hWndCtl, _T("open"), _T("rime-install.bat"), NULL, NULL, SW_SHOW);
+	return 0;
+}
+
 LRESULT SwitcherSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
 	if (modified_ && settings_ && schema_list_.GetItemCount() != 0) {
 		const char** selection = new const char*[schema_list_.GetItemCount()];
