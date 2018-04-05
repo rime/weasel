@@ -202,6 +202,7 @@ int Configurator::SyncUserData() {
 		if (!rime->sync_user_data())
 		{
 			LOG(ERROR) << "Error synching user data.";
+			CloseHandle(hMutex);
 			return 1;
 		}
 		rime->join_maintenance_thread();

@@ -433,7 +433,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		RimeFreeCommit(&commit);
 	}
 	
-	bool is_composing;
+	bool is_composing = false;
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{

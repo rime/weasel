@@ -29,7 +29,7 @@ namespace weasel
 
 	struct TextAttribute
 	{
-		TextAttribute() {}
+		TextAttribute() : type(NONE) {}
 		TextAttribute(int _start, int _end, TextAttributeType _type) : range(_start, _end), type(_type) {}
 		TextRange range;
 		TextAttributeType type;
