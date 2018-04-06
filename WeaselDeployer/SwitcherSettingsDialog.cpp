@@ -101,7 +101,6 @@ LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 }
 
 LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
-	std::wstring parameter = std::wstring(L"/k (set plum_dir=") + WeaselUserDataPath() + L"\\plum) && (set git_mirror=taobao) && cd \"";
 	HKEY hKey;
 	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("Software\\Rime\\Weasel"), &hKey);
 	if (ret == ERROR_SUCCESS) {
@@ -110,9 +109,8 @@ LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
 		DWORD type = 0;
 		DWORD data = 0;
 		ret = RegQueryValueExW(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
-		if (ret == ERROR_SUCCESS && type == REG_SZ)
-		{
-			ShellExecuteW(hWndCtl, L"open", L"cmd", (parameter + value + L"\" && rime-install.bat").c_str(), NULL, SW_SHOW);
+		if (ret == ERROR_SUCCESS && type == REG_SZ) {
+			ShellExecuteW(hWndCtl, L"open", L"cmd", (std::wstring(L"/k \"") + value + L"\\rime-install.bat\" --select :all").c_str(), NULL, SW_SHOW);
 		}
 	}
 	RegCloseKey(hKey);
