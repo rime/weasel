@@ -114,6 +114,8 @@ Section "Weasel"
 program_files:
   File "LICENSE.txt"
   File "README.txt"
+  File "rime-install.bat"
+  File "rime-install-config.bat"
   File "weasel.dll"
   ${If} ${RunningX64}
     File "weaselx64.dll"
