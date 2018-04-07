@@ -6,7 +6,7 @@
 
 Unicode true
 
-!define WEASEL_VERSION 0.10.0
+!define WEASEL_VERSION 0.11.0
 !define WEASEL_BUILD ${WEASEL_VERSION}.0
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
