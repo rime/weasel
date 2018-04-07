@@ -8,7 +8,7 @@
 #include "FullScreenLayout.h"
 
 // for IDI_ZH, IDI_EN
-#include "../WeaselServer/resource.h"
+#include <resource.h>
 
 using namespace weasel;
 

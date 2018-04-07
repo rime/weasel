@@ -1,5 +1,5 @@
 ﻿#include "stdafx.h"
-#include "resource.h"
+#include <resource.h>
 #include "WeaselTSF.h"
 
 static const DWORD LANGBARITEMSINK_COOKIE = 0x42424242;
