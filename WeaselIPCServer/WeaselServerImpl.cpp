@@ -1,8 +1,8 @@
 ﻿#include "stdafx.h"
 #include "WeaselServerImpl.h"
 #include <Windows.h>
-#include <boost/thread.hpp>
 #include <VersionHelpers.hpp>
+#include <resource.h>
 
 namespace weasel {
 	class PipeServer : public PipeChannel<DWORD, PipeMessage>
@@ -89,6 +89,16 @@ LRESULT ServerImpl::OnEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	UINT uID = LOWORD(wParam);
+	switch (uID) {
+	case ID_WEASELTRAY_ENABLE_ASCII:
+		m_pRequestHandler->SetOption(lParam, "ascii_mode", true);
+		return 0;
+	case ID_WEASELTRAY_DISABLE_ASCII:
+		m_pRequestHandler->SetOption(lParam, "ascii_mode", false);
+		return 0;
+	default:;
+	}
+
 	std::map<UINT, CommandHandler>::iterator it = m_MenuHandlers.find(uID);
 	if (it == m_MenuHandlers.end())
 	{
@@ -97,6 +107,13 @@ LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	}
 	it->second();  // execute command
 	return 0;
+}
+
+DWORD ServerImpl::OnCommand(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
+{
+	BOOL handled = TRUE;
+	OnCommand(uMsg, wParam, lParam, handled);
+	return handled;
 }
 
 int ServerImpl::Start()
@@ -159,7 +176,13 @@ DWORD ServerImpl::OnStartSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lP
 {
 	if (!m_pRequestHandler)
 		return 0;
-	return m_pRequestHandler->AddSession(reinterpret_cast<LPWSTR>(channel->ReceiveBuffer()));
+	return m_pRequestHandler->AddSession(
+		reinterpret_cast<LPWSTR>(channel->ReceiveBuffer()),
+		[this](std::wstring &msg) -> bool {
+			*channel << msg;
+			return true;
+		}
+	);
 }
 
 DWORD ServerImpl::OnEndSession(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
@@ -302,6 +325,7 @@ void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, _Resp resp)
 		PIPE_MSG_HANDLE(WEASEL_IPC_END_MAINTENANCE, OnEndMaintenance)
 		PIPE_MSG_HANDLE(WEASEL_IPC_COMMIT_COMPOSITION, OnCommitComposition)
 		PIPE_MSG_HANDLE(WEASEL_IPC_CLEAR_COMPOSITION, OnClearComposition);
+		PIPE_MSG_HANDLE(WEASEL_IPC_TRAY_COMMAND, OnCommand);
 	END_MAP_PIPE_MSG_HANDLE(result);
 
 	resp(result);

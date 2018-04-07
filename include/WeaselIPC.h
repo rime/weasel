@@ -26,6 +26,7 @@ enum WEASEL_IPC_COMMAND
 	WEASEL_IPC_END_MAINTENANCE,
 	WEASEL_IPC_COMMIT_COMPOSITION,
 	WEASEL_IPC_CLEAR_COMPOSITION,
+	WEASEL_IPC_TRAY_COMMAND,
 	WEASEL_IPC_LAST_COMMAND
 };
 
@@ -69,7 +70,7 @@ namespace weasel
 		virtual void Initialize() {}
 		virtual void Finalize() {}
 		virtual UINT FindSession(UINT session_id) { return 0; }
-		virtual UINT AddSession(LPWSTR buffer) { return 0; }
+		virtual UINT AddSession(LPWSTR buffer, EatLine eat = 0) { return 0; }
 		virtual UINT RemoveSession(UINT session_id) { return 0; }
 		virtual BOOL ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, EatLine eat) { return FALSE; }
 		virtual void CommitComposition(UINT session_id) {}
@@ -79,6 +80,7 @@ namespace weasel
 		virtual void UpdateInputPosition(RECT const& rc, UINT session_id) {}
 		virtual void StartMaintenance() {}
 		virtual void EndMaintenance() {}
+		virtual void SetOption(UINT session_id, const std::string &opt, bool val) {}
 	};
 	
 	// 處理server端回應之物件
@@ -133,6 +135,8 @@ namespace weasel
 		void FocusIn();
 		// 输入窗口失去焦点
 		void FocusOut();
+		// 托盤菜單
+		void TrayCommand(UINT menuId);
 		// 读取server返回的数据
 		bool GetResponseData(ResponseHandler handler);
 

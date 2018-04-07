@@ -7,6 +7,7 @@
 namespace weasel {
 	class CandidateList;
 }
+class CLangBarItemButton;
 
 class WeaselTSF:
 	public ITfTextInputProcessorEx,
@@ -109,6 +110,7 @@ private:
 
 	BOOL _InitLanguageBar();
 	void _UninitLanguageBar();
+	void _UpdateLanguageBar(weasel::Status stat);
 	
 	BOOL _InsertText(ITfContext *pContext, const std::wstring& ext);
 	void _AbortComposition(bool clear = true);
@@ -131,7 +133,7 @@ private:
 
 	ITfComposition *_pComposition;
 
-	ITfLangBarItemButton *_pLangBarButton;
+	CLangBarItemButton *_pLangBarButton;
 
 	std::unique_ptr<weasel::CandidateList> _cand;
 

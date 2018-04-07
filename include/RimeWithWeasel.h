@@ -18,7 +18,7 @@ public:
 	virtual void Initialize();
 	virtual void Finalize();
 	virtual UINT FindSession(UINT session_id);
-	virtual UINT AddSession(LPWSTR buffer);
+	virtual UINT AddSession(LPWSTR buffer, EatLine eat = 0);
 	virtual UINT RemoveSession(UINT session_id);
 	virtual BOOL ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, EatLine eat);
 	virtual void CommitComposition(UINT session_id);
@@ -28,6 +28,7 @@ public:
 	virtual void UpdateInputPosition(RECT const& rc, UINT session_id);
 	virtual void StartMaintenance();
 	virtual void EndMaintenance();
+	virtual void SetOption(UINT session_id, const std::string &opt, bool val);
 
 	void OnUpdateUI(std::function<void()> const &cb);
 

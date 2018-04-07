@@ -15,6 +15,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 	bool ok = m_client.GetResponseData(std::ref(parser));
 
 	_UpdateUI(*context, status);
+	_UpdateLanguageBar(status);
 
 	if (ok)
 	{
