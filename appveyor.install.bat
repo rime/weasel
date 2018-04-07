@@ -13,6 +13,7 @@ appveyor DownloadFile https://ci.appveyor.com/api/buildjobs/glhuyu45adhy12iy/art
 7z x rime.zip * -olibrime\ | find "ing archive"
 copy /Y librime\build\include\rime_*.h include\
 copy /Y librime\build\lib\Release\rime.dll output\
+copy /Y librime\thirdparty\bin\zlib1.dll output\
 
 if %nocache% == 1 (
 	pushd C:\Libraries
