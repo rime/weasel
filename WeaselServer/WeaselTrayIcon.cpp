@@ -2,7 +2,7 @@
 #include "WeaselTrayIcon.h"
 
 // nasty
-#include "../WeaselServer/resource.h"
+#include <resource.h>
 
 static UINT mode_icon[] = { IDI_ZH, IDI_ZH, IDI_EN, IDI_RELOAD };
 static const WCHAR *mode_label[] = { NULL, /*L"中文"*/ NULL, /*L"西文"*/ NULL, L"維護中" };
@@ -36,7 +36,7 @@ BOOL WeaselTrayIcon::Create(HWND hTargetWnd)
 
 void WeaselTrayIcon::Refresh()
 {
-	if (!m_style.display_tray_icon)
+	if (!m_style.display_tray_icon && !m_status.disabled) // display notification when deploying
 	{
 		if (m_mode != INITIAL)
 		{

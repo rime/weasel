@@ -54,7 +54,11 @@ namespace weasel {
 		UIStyle &style();
 
 	private:
+		void _UpdateOwner();
 		HWND _GetActiveWnd();
+
+		void _StartUI();
+		void _EndUI();
 
 		std::unique_ptr<UI> _ui;
 		DWORD _cRef;

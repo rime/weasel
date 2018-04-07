@@ -2,12 +2,14 @@
 
 #include "WeaselTSF.h"
 #include "CandidateList.h"
+#include <ComPtr.h>
 
 using namespace std;
 using namespace weasel;
 
 CandidateList::CandidateList(WeaselTSF * pTextService)
 	: _ui(make_unique<UI>())
+	, _curp(NULL)
 {
 	//_ui->Create(NULL);
 	_cRef = 1;
@@ -30,14 +32,15 @@ STDMETHODIMP CandidateList::QueryInterface(REFIID riid, void ** ppvObj)
 	*ppvObj = nullptr;
 
 	if (IsEqualIID(riid, IID_ITfUIElement) ||
-		IsEqualIID(riid, IID_ITfCandidateListUIElement))
-	{
-		*ppvObj = (ITfCandidateListUIElement*)this;
-	}
-	else if (IsEqualIID(riid, IID_IUnknown) ||
+		IsEqualIID(riid, IID_ITfCandidateListUIElement) ||
 		IsEqualIID(riid, IID_ITfCandidateListUIElementBehavior))
 	{
 		*ppvObj = (ITfCandidateListUIElementBehavior*)this;
+	}
+	else if (IsEqualIID(riid, IID_IUnknown) ||
+		IsEqualIID(riid, __uuidof(ITfIntegratableCandidateListUIElement)))
+	{
+		*ppvObj = (ITfIntegratableCandidateListUIElement*)this;
 	}
 
 	if (*ppvObj)
@@ -87,29 +90,10 @@ STDMETHODIMP CandidateList::GetGUID(GUID * pguid)
 
 STDMETHODIMP CandidateList::Show(BOOL showCandidateWindow)
 {
-	BOOL pbShow = true;
-	ITfUIElementMgr *emgr = nullptr;
-
-	if (FAILED(_tsf->_pThreadMgr->QueryInterface(IID_ITfUIElementMgr, (void **)&emgr)) || emgr == nullptr) {
-		return E_FAIL;
-	}
-
-	emgr->BeginUIElement(this, &pbShow, &uiid);
-	if (!pbShow) {
-		emgr->UpdateUIElement(uiid);
-	}
-
-	if (pbShow && showCandidateWindow)
+	if (showCandidateWindow)
 		_ui->Show();
 	else
 		_ui->Hide();
-
-	if (!showCandidateWindow) {
-		emgr->EndUIElement(uiid);
-	}
-
-	emgr->Release();
-
 	return S_OK;
 }
 
@@ -205,6 +189,7 @@ STDMETHODIMP CandidateList::Finalize(void)
 STDMETHODIMP CandidateList::Abort(void)
 {
 	_tsf->_AbortComposition(true);
+	Destroy();
 	return S_OK;
 }
 
@@ -248,17 +233,13 @@ void CandidateList::UpdateUI(const Context & ctx, const Status & status)
 
 	/// In UWP, candidate window will only be shown
 	/// if it is owned by active view window
-	HWND actw = _GetActiveWnd();
-	if (actw != _curp) {
-		UIStyle sty = _ui->style();
-		_ui->Destroy();
-		_ui->Create(actw);
-		_curp = actw;
-		_ui->style() = sty;
-	}
+	_UpdateOwner();
 	_ui->Update(ctx, status);
 
-	Show(status.composing);
+	if (status.composing)
+		_StartUI();
+	else
+		_EndUI();
 }
 
 void CandidateList::UpdateStyle(const UIStyle & sty)
@@ -283,35 +264,65 @@ UIStyle & CandidateList::style()
 	return _ui->style();
 }
 
+void CandidateList::_UpdateOwner()
+{
+	HWND actw = _GetActiveWnd();
+	if (actw != _curp) {
+		UIStyle sty = _ui->style();
+		_ui->Destroy();
+		_ui->Create(actw);
+		_curp = actw;
+		_ui->style() = sty;
+	}
+}
+
 HWND CandidateList::_GetActiveWnd()
 {
-	ITfDocumentMgr *dmgr = nullptr;
-	ITfContext *ctx = nullptr;
-	ITfContextView *view = nullptr;
+	ComPtr<ITfDocumentMgr> dmgr;
+	ComPtr<ITfContext> ctx;
+	ComPtr<ITfContextView> view;
 	HWND w = NULL;
 
-	if (FAILED(_tsf->_pThreadMgr->GetFocus(&dmgr))) {
+	if (FAILED(_tsf->_pThreadMgr->GetFocus(dmgr.GetAddressOf()))) {
 		goto Exit;
 	}
-	if (FAILED(dmgr->GetTop(&ctx))) {
+	if (FAILED(dmgr->GetTop(ctx.GetAddressOf()))) {
 		goto Exit;
 	}
-	if (FAILED(ctx->GetActiveView(&view))) {
+	if (FAILED(ctx->GetActiveView(view.GetAddressOf()))) {
 		goto Exit;
 	}
 
 	view->GetWnd(&w);
 
 Exit:
-	if (dmgr)
-		dmgr->Release();
-	if (ctx)
-		ctx->Release();
-	if (view)
-		view->Release();
-
 	if (w == NULL) w = ::GetFocus();
 	return w;
+}
+
+void CandidateList::_StartUI()
+{
+	BOOL pbShow = TRUE;
+	ComPtr<ITfUIElementMgr> emgr;
+	_tsf->_pThreadMgr->QueryInterface(emgr.GetAddressOf());
+
+	if (emgr) {
+		if (!_ui->IsShown())
+			emgr->BeginUIElement(this, &pbShow, &uiid);
+		emgr->UpdateUIElement(uiid);
+	}
+
+	Show(pbShow);
+}
+
+void CandidateList::_EndUI()
+{
+	ComPtr<ITfUIElementMgr> emgr;
+	_tsf->_pThreadMgr->QueryInterface(emgr.GetAddressOf());
+	if (emgr)
+		emgr->EndUIElement(uiid);
+	if (_ui->IsShown())
+		Show(false);
 }
 
 void WeaselTSF::_UpdateUI(const Context & ctx, const Status & status)

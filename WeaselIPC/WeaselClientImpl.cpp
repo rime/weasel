@@ -130,6 +130,11 @@ void ClientImpl::FocusOut()
 	_SendMessage(WEASEL_IPC_FOCUS_OUT, 0, session_id);
 }
 
+void ClientImpl::TrayCommand(UINT menuId)
+{
+	_SendMessage(WEASEL_IPC_TRAY_COMMAND, menuId, session_id);
+}
+
 void ClientImpl::StartSession()
 {
 	if (_Active() && Echo())
@@ -272,6 +277,11 @@ void Client::StartMaintenance()
 void Client::EndMaintenance()
 {
 	m_pImpl->EndMaintenance();
+}
+
+void Client::TrayCommand(UINT menuId)
+{
+	m_pImpl->TrayCommand(menuId);
 }
 
 bool Client::Echo()

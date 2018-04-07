@@ -16,3 +16,5 @@
 
 #include <wtl/atlapp.h>
 #include <wtl/atlframe.h>
+
+#include <boost/thread.hpp>

@@ -47,9 +47,10 @@ bool UI::Create(HWND parent)
 
 void UI::Destroy()
 {
-	if (pimpl_ && pimpl_->panel.IsWindow())
+	if (pimpl_)
 	{
-		pimpl_->panel.DestroyWindow();
+		if (pimpl_->panel.IsWindow())
+			pimpl_->panel.DestroyWindow();
 		delete pimpl_;
 		pimpl_ = 0;
 	}
@@ -99,7 +100,7 @@ void UI::Refresh()
 
 void UI::UpdateInputPosition(RECT const& rc)
 {
-	if (pimpl_)
+	if (pimpl_ && pimpl_->panel.IsWindow())
 	{
 		pimpl_->panel.MoveTo(rc);
 	}

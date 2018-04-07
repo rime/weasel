@@ -152,6 +152,7 @@ exit /b
 rem call :build_essay
 copy %WEASEL_ROOT%\LICENSE.txt output\
 copy %WEASEL_ROOT%\README.md output\README.txt
+copy %WEASEL_ROOT%\plum\rime-install.bat output\
 set plum_dir=plum
 set rime_dir=output/data
 bash plum/rime-install

@@ -46,6 +46,10 @@ WeaselService::WeaselService(
 
 WeaselService::~WeaselService()
 {
+	if (_stoppedEvent != NULL)
+	{
+		CloseHandle(_stoppedEvent);
+	}
 }
 
 BOOL WeaselService::Run(WeaselService &serv)

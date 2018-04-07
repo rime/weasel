@@ -4,6 +4,7 @@
 #include <StringAlgorithm.hpp>
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
+#include <VersionHelpers.hpp>
 
 #include <rime_api.h>
 
@@ -17,6 +18,7 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
 	, m_active_session(0)
 	, m_disabled(true)
 	, _UpdateUICallback(NULL)
+	, m_vista_greater(IsWindowsVistaOrGreater())
 {
 	_Setup();
 }
@@ -90,7 +92,7 @@ UINT RimeWithWeaselHandler::FindSession(UINT session_id)
 	return found ? session_id : 0;
 }
 
-UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
+UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 {
 	if (m_disabled)
 	{
@@ -102,6 +104,9 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer)
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 	// show session's welcome message :-) if any
+	if (eat) {
+		_Respond(session_id, eat);
+	}
 	_UpdateUI(session_id);
 	m_active_session = session_id;
 	return session_id;
@@ -295,6 +300,11 @@ void RimeWithWeaselHandler::EndMaintenance()
 	}
 }
 
+void RimeWithWeaselHandler::SetOption(UINT session_id, const std::string & opt, bool val)
+{
+	RimeSetOption(session_id, opt.c_str(), val);
+}
+
 void RimeWithWeaselHandler::OnUpdateUI(std::function<void()> const &cb)
 {
 	_UpdateUICallback = cb;
@@ -347,7 +357,18 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		m_ui->Update(weasel_context, weasel_status);
 	}
 	
-	if (_UpdateUICallback) _UpdateUICallback();
+	// Dangerous, don't touch
+	static char app_name[50];
+	RimeGetProperty(session_id, "client_app", app_name, sizeof(app_name) - 1);
+	if (utf8towcs(app_name) == std::wstring(L"explorer.exe") && m_vista_greater) {
+		boost::thread th([=]() {
+			::Sleep(100);
+			if (_UpdateUICallback) _UpdateUICallback();
+		});
+	}
+	else {
+		if (_UpdateUICallback) _UpdateUICallback();
+	}
 
 	m_message_type.clear();
 	m_message_value.clear();
@@ -420,7 +441,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		RimeFreeCommit(&commit);
 	}
 	
-	bool is_composing;
+	bool is_composing = false;
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{

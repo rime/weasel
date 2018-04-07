@@ -162,11 +162,14 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 						DWORD len = sizeof(imeFile);
 						DWORD type = 0;
 						ret = RegQueryValueEx(hSubKey, L"Ime File", NULL, &type, (LPBYTE)imeFile, &len);
-						RegCloseKey(hSubKey);
-						if (_wcsicmp(imeFile, L"weasel.ime") == 0)
+						if (ret = ERROR_SUCCESS)
 						{
-							hKL = (HKL)k;  // already there
+							if (_wcsicmp(imeFile, L"weasel.ime") == 0)
+							{
+								hKL = (HKL)k;  // already there
+							}
 						}
+						RegCloseKey(hSubKey);
 					}
 					else
 					{

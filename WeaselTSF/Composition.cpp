@@ -361,7 +361,7 @@ void WeaselTSF::_AbortComposition(bool clear)
 	if (_IsComposing()) {
 		_EndComposition(_pEditSessionContext, clear);
 	}
-	_cand->Show(false);
+	_cand->Destroy();
 }
 
 void WeaselTSF::_FinalizeComposition()

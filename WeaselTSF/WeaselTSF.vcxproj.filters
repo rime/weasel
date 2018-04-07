@@ -83,9 +83,6 @@
     <ClInclude Include="EditSession.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CandidateList.h">
       <Filter>Header Files</Filter>
     </ClInclude>

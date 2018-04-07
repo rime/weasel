@@ -6,7 +6,7 @@
 
 Unicode true
 
-!define WEASEL_VERSION 0.10.0
+!define WEASEL_VERSION 0.11.0
 !define WEASEL_BUILD ${WEASEL_VERSION}.0
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
@@ -114,6 +114,8 @@ Section "Weasel"
 program_files:
   File "LICENSE.txt"
   File "README.txt"
+  File "rime-install.bat"
+  File "rime-install-config.bat"
   File "weasel.dll"
   ${If} ${RunningX64}
     File "weaselx64.dll"

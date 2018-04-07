@@ -25,6 +25,7 @@ namespace weasel
 		void UpdateInputPosition(RECT const& rc);
 		void FocusIn();
 		void FocusOut();
+		void TrayCommand(UINT menuId);
 		bool GetResponseData(ResponseHandler const& handler);
 
 	protected:
