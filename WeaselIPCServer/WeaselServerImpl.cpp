@@ -1,8 +1,8 @@
 ﻿#include "stdafx.h"
 #include "WeaselServerImpl.h"
 #include <Windows.h>
-#include <boost/thread.hpp>
 #include <VersionHelpers.hpp>
+#include <resource.h>
 
 namespace weasel {
 	class PipeServer : public PipeChannel<DWORD, PipeMessage>
@@ -89,6 +89,16 @@ LRESULT ServerImpl::OnEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 LRESULT ServerImpl::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	UINT uID = LOWORD(wParam);
+	switch (uID) {
+	case ID_WEASELTRAY_ENABLE_ASCII:
+		m_pRequestHandler->SetOption(lParam, "ascii_mode", true);
+		return 0;
+	case ID_WEASELTRAY_DISABLE_ASCII:
+		m_pRequestHandler->SetOption(lParam, "ascii_mode", false);
+		return 0;
+	default:;
+	}
+
 	std::map<UINT, CommandHandler>::iterator it = m_MenuHandlers.find(uID);
 	if (it == m_MenuHandlers.end())
 	{

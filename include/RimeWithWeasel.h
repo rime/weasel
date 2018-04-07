@@ -28,6 +28,7 @@ public:
 	virtual void UpdateInputPosition(RECT const& rc, UINT session_id);
 	virtual void StartMaintenance();
 	virtual void EndMaintenance();
+	virtual void SetOption(UINT session_id, const std::string &opt, bool val);
 
 	void OnUpdateUI(std::function<void()> const &cb);
 

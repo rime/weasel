@@ -132,7 +132,7 @@ void ClientImpl::FocusOut()
 
 void ClientImpl::TrayCommand(UINT menuId)
 {
-	_SendMessage(WEASEL_IPC_TRAY_COMMAND, menuId, 0);
+	_SendMessage(WEASEL_IPC_TRAY_COMMAND, menuId, session_id);
 }
 
 void ClientImpl::StartSession()

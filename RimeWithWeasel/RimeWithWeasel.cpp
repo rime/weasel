@@ -300,6 +300,11 @@ void RimeWithWeaselHandler::EndMaintenance()
 	}
 }
 
+void RimeWithWeaselHandler::SetOption(UINT session_id, const std::string & opt, bool val)
+{
+	RimeSetOption(session_id, opt.c_str(), val);
+}
+
 void RimeWithWeaselHandler::OnUpdateUI(std::function<void()> const &cb)
 {
 	_UpdateUICallback = cb;

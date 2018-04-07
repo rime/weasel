@@ -141,7 +141,7 @@ STDAPI CLangBarItemButton::Show(BOOL fShow)
 
 STDAPI CLangBarItemButton::GetTooltipString(BSTR *pbstrToolTip)
 {
-	*pbstrToolTip = SysAllocString(L"右鍵打開菜單");
+	*pbstrToolTip = SysAllocString(L"左鍵切換模式，右鍵打開菜單");
 	return (*pbstrToolTip == NULL)? E_OUTOFMEMORY: S_OK;
 }
 
@@ -149,7 +149,11 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click, POINT pt, const RECT *prcAr
 {
 	if (click == TF_LBI_CLK_LEFT)
 	{
-		/* TODO : Switch mode */
+		_pTextService->_HandleLangBarMenuSelect(ascii_mode ? ID_WEASELTRAY_DISABLE_ASCII : ID_WEASELTRAY_ENABLE_ASCII);
+		ascii_mode = !ascii_mode;
+		if (_pLangBarItemSink) {
+			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
+		}
 	}
 	else if (click == TF_LBI_CLK_RIGHT)
 	{
