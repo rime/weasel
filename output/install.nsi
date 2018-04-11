@@ -114,6 +114,8 @@ Section "Weasel"
 program_files:
   File "LICENSE.txt"
   File "README.txt"
+  File "curl.exe"
+  File "curl-ca-bundle.crt"
   File "rime-install.bat"
   File "rime-install-config.bat"
   File "weasel.dll"

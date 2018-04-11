@@ -81,6 +81,7 @@
 ### 本品引用了以下開源軟件：
 
   * [Boost C++ Libraries](http://www.boost.org/) (Boost Software License)
+  * [curl](https://curl.haxx.se/) (MIT/X derivate license)
   * [google-glog](https://github.com/google/glog) (BSD 3-Clause License)
   * [Google Test](https://github.com/google/googletest) (BSD 3-Clause License)
   * [LevelDB](https://github.com/google/leveldb) (BSD 3-Clause License)
