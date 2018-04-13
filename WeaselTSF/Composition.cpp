@@ -153,12 +153,13 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 	ITfRange *pRangeComposition = NULL;
 	RECT rc;
 	BOOL fClipped;
-	if ((_pContext->QueryInterface(IID_ITfInsertAtSelection, (LPVOID *) &pInsertAtSelection)) != S_OK)
+	TF_SELECTION selection;
+	ULONG nSelection;
+	if (FAILED(_pContext->QueryInterface(IID_ITfInsertAtSelection, (LPVOID *) &pInsertAtSelection)))
 		goto Exit;
-	if ((pInsertAtSelection->InsertTextAtSelection(ec, TF_IAS_QUERYONLY, NULL, 0, &pRangeComposition)) != S_OK)
+	if (FAILED(_pContext->GetSelection(ec, TF_DEFAULT_SELECTION, 1, &selection, &nSelection)))
 		goto Exit;
-
-	if ((_pContextView->GetTextExt(ec, pRangeComposition, &rc, &fClipped)) == S_OK && (rc.left != 0 || rc.top != 0))
+	if ((_pContextView->GetTextExt(ec, selection.range, &rc, &fClipped)) == S_OK && (rc.left != 0 || rc.top != 0))
 		_pTextService->_SetCompositionPosition(rc);
 
 Exit:
