@@ -33,6 +33,7 @@ set build_boost=0
 set build_data=0
 set build_hant=0
 set build_rime=0
+set build_installer=0
 set build_x64=1
 
 :parse_cmdline_options
@@ -43,11 +44,13 @@ if "%1" == "data" set build_data=1
 if "%1" == "hant" set build_hant=1
 if "%1" == "rime" set build_rime=1
 if "%1" == "librime" set build_rime=1
+if "%1" == "installer" set build_installer=1
 if "%1" == "all" (
   set build_boost=1
   set build_data=1
   set build_hant=1
   set build_rime=1
+  set build_installer=1
 )
 if "%1" == "nox64" set build_x64=0
 shift
@@ -108,6 +111,12 @@ if %build_x64% == 1 (
 )
 msbuild.exe weasel.sln %build_option% /p:Configuration=Release /p:Platform="Win32" /fl1
 if errorlevel 1 goto error
+
+if %build_installer% == 1 (
+  "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe output\install.nsi
+  if errorlevel 1 goto error
+)
+
 goto end
 
 :build_boost

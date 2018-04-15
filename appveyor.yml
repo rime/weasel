@@ -21,10 +21,7 @@ install:
   - .\appveyor.install.bat
 
 build_script:
-  - .\build.bat data hant
-
-after_build:
-  - appveyor.after_build.bat
+  - .\build.bat data hant installer
 
 artifacts:
   - path: output\archives\weasel-0.11.0.0-installer.exe

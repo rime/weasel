@@ -9,7 +9,8 @@ Download third-party libraries: `boost(>=1.60.0)`
 
 Optional:
 install `bash` (available via Git for Windows) for installing data files from `plum`;
-install `python` for building OpenCC dictionaries.
+install `python` for building OpenCC dictionaries;
+install [NSIS](http://nsis.sourceforge.net/Download) for creating installer.
 
 ## Checkout source code
 
@@ -35,7 +36,7 @@ set BOOST_ROOT=X:\path\to\boost_N_NN_N
 
 Alternatively, save your build environment settings in `env.bat`.
 You can create the file by copying `env.bat.template` and make modifications.
-Make sure `BOOST_ROOT` is set to existing `X:\path\to\boost_N_NN_N` in your copy.
+Make sure `BOOST_ROOT` is set to existing `X:\path\to\boost_<version_number>` in your copy.
 
 ### Build
 
@@ -45,6 +46,8 @@ build.bat all
 ```
 
 Voila.
+
+Installer will be generated in `output\archives` directory.
 
 ### Alternative: using prebuilt Rime binaries
 
@@ -76,11 +79,3 @@ copy /Y build\lib\Release\rime.dll build\bin\
 cd build\bin
 echo zhongzhouyunshurufa | Release\rime_api_console.exe > output.txt
 ```
-
-### Create installer packages
-
-To create installer packages, you need to download and install [Unicode NSIS] (https://github.com/jimpark/unsis/releases).
-
-Then go to `output` directory, right-click and choose "Compile Unicode NSIS Script" with `install.nsi`.
-
-Installers will be generated in `output\archives` directory.
