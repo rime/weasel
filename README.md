@@ -91,6 +91,7 @@
   * [plum](https://github.com/rime/plum) (GNU Lesser General Public License v3.0)
   * [WinSparkle](https://github.com/vslavik/winsparkle) (MIT License)
   * [yaml-cpp](https://github.com/jbeder/yaml-cpp) (MIT License)
+  * [7-Zip](https://www.7-zip.org) (GNU LGPLv2.1+ with unRAR restriction)
 
 問題與反饋
 ----------
