@@ -25,6 +25,26 @@ inline int utf8towcslen(const char* utf8_str, int utf8_len)
 	return MultiByteToWideChar(CP_UTF8, 0, utf8_str, utf8_len, NULL, 0);
 }
 
+inline std::wstring getUsername() {
+	DWORD len = 0;
+	GetUserName(NULL, &len);
+
+	if (len <= 0) {
+		return L"";
+	}
+
+	wchar_t *username = new wchar_t[len + 1];
+
+	GetUserName(username, &len);
+	if (len <= 0) {
+		delete[] username;
+		return L"";
+	}
+	auto res = std::wstring(username);
+	delete[] username;
+	return res;
+}
+
 // data directories
 std::wstring WeaselUserDataPath();
 
