@@ -118,10 +118,14 @@ DWORD ServerImpl::OnCommand(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam)
 
 int ServerImpl::Start()
 {
-	// assure single instance
-	if (FindWindow(WEASEL_IPC_WINDOW, NULL) != NULL)
-	{
-		return 0;
+	std::wstring instanceName = L"(WEASEL)Furandōru-Sukāretto-";
+	instanceName += getUsername();
+	HANDLE hMutexOneInstance = ::CreateMutex(NULL, FALSE, instanceName.c_str());
+	bool areYouOK = (::GetLastError() == ERROR_ALREADY_EXISTS ||
+		::GetLastError() == ERROR_ACCESS_DENIED);
+
+	if (areYouOK) {
+		return 0; // assure single instance
 	}
 
 	HWND hwnd = Create(NULL);

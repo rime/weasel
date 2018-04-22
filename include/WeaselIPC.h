@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <WeaselCommon.h>
+#include <WeaselUtility.h>
 #include <windows.h>
 #include <functional>
 #include <memory>
@@ -168,21 +169,8 @@ namespace weasel
 	inline std::wstring GetPipeName()
 	{
 		std::wstring pipe_name;
-		DWORD len = 0;
-		GetUserName(NULL, &len);
-
-		if (len <= 0) {
-			return pipe_name;
-		}
-
-		std::unique_ptr<wchar_t[]> username(new wchar_t[len]);
-
-		GetUserName(username.get(), &len);
-		if (len <= 0) {
-			return pipe_name;
-		}
 		pipe_name += L"\\\\.\\pipe\\";
-		pipe_name += username.get();
+		pipe_name += getUsername();
 		pipe_name += L"\\";
 		pipe_name += WEASEL_IPC_PIPE_NAME;
 		return pipe_name;
