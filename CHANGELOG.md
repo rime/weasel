@@ -4,13 +4,9 @@
 #### 主要更新
 
 * 修復了在 Excel 中奇怪的輸入丟失問題（[#185](https://github.com/rime/weasel/issues/185)）
-
 * 功能鍵不再會觸發輸入焦點（[#194](https://github.com/rime/weasel/issues/194)、[#195](https://github.com/rime/weasel/issues/195)、[#204](https://github.com/rime/weasel/issues/204)）
-
 * 「獲取更多輸入方案」功能優化（[#180](https://github.com/rime/weasel/issues/180)）
-
 * 修復了後臺可能同時出現多個算法服務的問題（[#199](https://github.com/rime/weasel/issues/199)）
-
 * 恢復語言欄右鍵菜單中「用戶資料同步」一項
 
 #### Bug Fixes
