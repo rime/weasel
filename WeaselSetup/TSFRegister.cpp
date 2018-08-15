@@ -1,6 +1,8 @@
 #include "stdafx.h"
-#include "Register.h"
+#include "TSFRegister.h"
+#include <WeaselCommon.h>
 #include <VersionHelpers.hpp>
+#include <ComPtr.h>
 
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
@@ -9,41 +11,69 @@ static const char c_szTipKeyPrefix[] = "Software\\Microsft\\CTF\\TIP\\";
 static const char c_szInProcSvr32[] = "InprocServer32";
 static const char c_szModelName[] = "ThreadingModel";
 
-BOOL RegisterProfiles()
+#ifdef WEASEL_USING_OLDER_TSF_SDK
+
+/* For Windows 8 */
+const GUID GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT =
+{ 0x13A016DF, 0x560B, 0x46CD,{ 0x94, 0x7A, 0x4C, 0x3A, 0xF1, 0xE0, 0xE3, 0x5D } };
+
+const GUID GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT =
+{ 0x25504FB4, 0x7BAB, 0x4BC1,{ 0x9C, 0x69, 0xCF, 0x81, 0x89, 0x0F, 0x0E, 0xF5 } };
+
+#endif
+
+BOOL RegisterProfiles(std::wstring filename, HKL hkl)
 {
-	WCHAR achIconFile[MAX_PATH];
-	char achFileNameA[MAX_PATH];
-	DWORD cchA;
-	int cchIconFile;
 	HRESULT hr;
-	
-	cchA = GetModuleFileNameA(g_hInst, achFileNameA, ARRAYSIZE(achFileNameA));
-	cchIconFile = MultiByteToWideChar(CP_ACP, 0, achFileNameA, cchA, achIconFile, ARRAYSIZE(achIconFile) - 1);
-	achIconFile[cchIconFile] = '\0';
-	
-	ITfInputProcessorProfiles *pInputProcessorProfiles;
-	hr = CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER,
-		IID_ITfInputProcessorProfiles, (void **) &pInputProcessorProfiles);
-	if (hr != S_OK)
-		return E_FAIL;
 
-	hr = pInputProcessorProfiles->Register(c_clsidTextService);
-	if (hr != S_OK)
-		goto Exit;
+	if (IsWindows8OrGreater()) {
+		ComPtr<ITfInputProcessorProfileMgr> pInputProcessorProfileMgr;
+		hr = pInputProcessorProfileMgr.CoCreate(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_ALL);
+		if (FAILED(hr))
+			return FALSE;
 
-	hr = pInputProcessorProfiles->AddLanguageProfile(
-		c_clsidTextService,
-		TEXTSERVICE_LANGID,
-		c_guidProfile,
-		TEXTSERVICE_DESC,
-		(ULONG) wcslen(TEXTSERVICE_DESC),
-		achIconFile,
-		cchIconFile,
-		TEXTSERVICE_ICON_INDEX);
+		hr = pInputProcessorProfileMgr->RegisterProfile(
+			c_clsidTextService,
+			TEXTSERVICE_LANGID,
+			c_guidProfile,
+			TEXTSERVICE_DESC,
+			(ULONG)wcslen(TEXTSERVICE_DESC),
+			filename.c_str(),
+			filename.size(),
+			TEXTSERVICE_ICON_INDEX,
+			hkl,
+			0,
+			TRUE,
+			0);
+	}
+	else {
+		ComPtr<ITfInputProcessorProfiles> pInputProcessorProfiles;
+		hr = pInputProcessorProfiles.CoCreate(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER);
+		if (FAILED(hr))
+			return FALSE;
 
-Exit:
-	pInputProcessorProfiles->Release();
-	return (hr == S_OK);
+		hr = pInputProcessorProfiles->Register(c_clsidTextService);
+		if (FAILED(hr))
+			return FALSE;
+
+		hr = pInputProcessorProfiles->AddLanguageProfile(
+			c_clsidTextService,
+			TEXTSERVICE_LANGID,
+			c_guidProfile,
+			TEXTSERVICE_DESC,
+			(ULONG)wcslen(TEXTSERVICE_DESC),
+			filename.c_str(),
+			filename.size(),
+			TEXTSERVICE_ICON_INDEX);
+		if (FAILED(hr))
+			return FALSE;
+		if (hkl) {
+			hr = pInputProcessorProfiles->SubstituteKeyboardLayout(
+				c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, hkl);
+			if (FAILED(hr)) return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 void UnregisterProfiles()
@@ -52,10 +82,12 @@ void UnregisterProfiles()
 	HRESULT hr;
 
 	hr = CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER,
-		IID_ITfInputProcessorProfiles, (void **) &pInputProcessProfiles);
+		IID_ITfInputProcessorProfiles, (void **)&pInputProcessProfiles);
 	if (FAILED(hr))
 		return;
 
+	pInputProcessProfiles->SubstituteKeyboardLayout(
+		c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, NULL);
 	pInputProcessProfiles->Unregister(c_clsidTextService);
 	pInputProcessProfiles->Release();
 }
@@ -65,10 +97,10 @@ BOOL RegisterCategories()
 	ITfCategoryMgr *pCategoryMgr;
 	HRESULT hr;
 
-	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void **) &pCategoryMgr);
+	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void **)&pCategoryMgr);
 	if (hr != S_OK)
 		return FALSE;
-	
+
 	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIP_KEYBOARD, c_clsidTextService);
 	if (hr != S_OK)
 		goto Exit;
@@ -97,7 +129,7 @@ void UnregisterCategories()
 	ITfCategoryMgr *pCategoryMgr;
 	HRESULT hr;
 
-	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void **) &pCategoryMgr);
+	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void **)&pCategoryMgr);
 	if (FAILED(hr))
 		return;
 
@@ -107,15 +139,15 @@ void UnregisterCategories()
 
 static BOOL CLSIDToStringA(REFGUID refGUID, char *pchA)
 {
-	static const BYTE GuidMap[] = {3, 2, 1, 0, '-', 5, 4, '-', 7, 6, '-',
-		8, 9, '-', 10, 11, 12, 13, 14, 15};
+	static const BYTE GuidMap[] = { 3, 2, 1, 0, '-', 5, 4, '-', 7, 6, '-',
+		8, 9, '-', 10, 11, 12, 13, 14, 15 };
 
 	static const char szDigits[] = "0123456789ABCDEF";
 
 	int i;
 	char *p = pchA;
 
-	const BYTE *pBytes = (const BYTE *) &refGUID;
+	const BYTE *pBytes = (const BYTE *)&refGUID;
 
 	*p++ = '{';
 	for (i = 0; i < sizeof(GuidMap); i++)
@@ -158,14 +190,14 @@ static LONG RecurseDeleteKeyA(HKEY hParentKey, LPCSTR lpszKey)
 	return lRes == ERROR_SUCCESS ? RegDeleteKeyA(hParentKey, lpszKey) : lRes;
 }
 
-BOOL RegisterServer()
+BOOL RegisterServer(std::wstring filename)
 {
 	DWORD dw;
 	HKEY hKey;
 	HKEY hSubKey;
 	BOOL fRet;
 	char achIMEKey[ARRAYSIZE(c_szInfoKeyPrefix) + CLSID_STRLEN];
-	TCHAR achFileName[MAX_PATH];
+	//TCHAR achFileName[MAX_PATH];
 
 	if (!CLSIDToStringA(c_clsidTextService, achIMEKey + ARRAYSIZE(c_szInfoKeyPrefix) - 1))
 		return FALSE;
@@ -173,13 +205,13 @@ BOOL RegisterServer()
 
 	if (fRet = RegCreateKeyExA(HKEY_CLASSES_ROOT, achIMEKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &dw) == ERROR_SUCCESS)
 	{
-		fRet &= RegSetValueExA(hKey, NULL, 0, REG_SZ, (BYTE *) TEXTSERVICE_DESC_A, (strlen(TEXTSERVICE_DESC_A) + 1) * sizeof(TCHAR)) == ERROR_SUCCESS;
+		fRet &= RegSetValueExA(hKey, NULL, 0, REG_SZ, (BYTE *)TEXTSERVICE_DESC_A, (strlen(TEXTSERVICE_DESC_A) + 1) * sizeof(TCHAR)) == ERROR_SUCCESS;
 		if (fRet &= RegCreateKeyExA(hKey, c_szInProcSvr32, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hSubKey, &dw) == ERROR_SUCCESS)
 		{
-			dw = GetModuleFileName(g_hInst, achFileName, ARRAYSIZE(achFileName));
+			//dw = GetModuleFileName(g_hInst, achFileName, ARRAYSIZE(achFileName));
 
-			fRet &= RegSetValueEx(hSubKey, NULL, 0, REG_SZ, (BYTE *) achFileName, (lstrlen(achFileName) + 1) * sizeof(TCHAR)) == ERROR_SUCCESS;
-			fRet &= RegSetValueExA(hSubKey, c_szModelName, 0, REG_SZ, (BYTE *) TEXTSERVICE_MODEL, (strlen(TEXTSERVICE_MODEL) + 1)) == ERROR_SUCCESS;
+			fRet &= RegSetValueEx(hSubKey, NULL, 0, REG_SZ, (BYTE *)filename.c_str(), (filename.size() + 1) * sizeof(TCHAR)) == ERROR_SUCCESS;
+			fRet &= RegSetValueExA(hSubKey, c_szModelName, 0, REG_SZ, (BYTE *)TEXTSERVICE_MODEL, (strlen(TEXTSERVICE_MODEL) + 1)) == ERROR_SUCCESS;
 			RegCloseKey(hSubKey);
 		}
 		RegCloseKey(hKey);
