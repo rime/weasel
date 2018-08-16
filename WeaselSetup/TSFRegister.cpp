@@ -190,23 +190,27 @@ static LONG RecurseDeleteKeyA(HKEY hParentKey, LPCSTR lpszKey)
 	return lRes == ERROR_SUCCESS ? RegDeleteKeyA(hParentKey, lpszKey) : lRes;
 }
 
-BOOL RegisterServer(std::wstring filename)
+BOOL RegisterServer(std::wstring filename, bool wow64)
 {
 	DWORD dw;
 	HKEY hKey;
 	HKEY hSubKey;
 	BOOL fRet;
 	char achIMEKey[ARRAYSIZE(c_szInfoKeyPrefix) + CLSID_STRLEN];
+	DWORD flags = KEY_WRITE;
+	if (wow64) {
+		flags |= KEY_WOW64_32KEY;
+	}
 	//TCHAR achFileName[MAX_PATH];
 
 	if (!CLSIDToStringA(c_clsidTextService, achIMEKey + ARRAYSIZE(c_szInfoKeyPrefix) - 1))
 		return FALSE;
 	memcpy(achIMEKey, c_szInfoKeyPrefix, sizeof(c_szInfoKeyPrefix) - 1);
 
-	if (fRet = RegCreateKeyExA(HKEY_CLASSES_ROOT, achIMEKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &dw) == ERROR_SUCCESS)
+	if (fRet = RegCreateKeyExA(HKEY_CLASSES_ROOT, achIMEKey, 0, NULL, REG_OPTION_NON_VOLATILE, flags, NULL, &hKey, &dw) == ERROR_SUCCESS)
 	{
 		fRet &= RegSetValueExA(hKey, NULL, 0, REG_SZ, (BYTE *)TEXTSERVICE_DESC_A, (strlen(TEXTSERVICE_DESC_A) + 1) * sizeof(TCHAR)) == ERROR_SUCCESS;
-		if (fRet &= RegCreateKeyExA(hKey, c_szInProcSvr32, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hSubKey, &dw) == ERROR_SUCCESS)
+		if (fRet &= RegCreateKeyExA(hKey, c_szInProcSvr32, 0, NULL, REG_OPTION_NON_VOLATILE, flags, NULL, &hSubKey, &dw) == ERROR_SUCCESS)
 		{
 			//dw = GetModuleFileName(g_hInst, achFileName, ARRAYSIZE(achFileName));
 

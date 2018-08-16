@@ -354,7 +354,7 @@ int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow6
 		enable_profile(FALSE, hant);
 
 	if (register_ime) {
-		if (!RegisterServer(tsf_path.wstring()) || !RegisterProfiles(tsf_path.wstring(), ImeHKL) || !RegisterCategories())
+		if (!RegisterServer(tsf_path.wstring(), is_wow64) || !RegisterProfiles(tsf_path.wstring(), ImeHKL) || !RegisterCategories())
 		{
 			unregister_text_service();
 			MessageBox(NULL, L"註冊輸入法錯誤", L"安装/卸載失败", MB_ICONERROR | MB_OK);
