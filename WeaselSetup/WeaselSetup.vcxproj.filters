@@ -39,6 +39,9 @@
     <ClInclude Include="InstallOptionsDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TSFRegister.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -51,6 +54,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="InstallOptionsDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TSFRegister.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

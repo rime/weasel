@@ -141,6 +141,29 @@ public:
 		return temp;
 	}
 
+	HRESULT CoCreate(const CLSID &clsid, IUnknown *outer, DWORD context)
+	{
+		InternalRelease();
+		HRESULT hr;
+		IID iid = __uuidof(Interface);
+		if (context & (CLSCTX_LOCAL_SERVER | CLSCTX_REMOTE_SERVER)) {
+			IUnknown *unknown = NULL;
+			hr = CoCreateInstance(clsid, outer, context, IID_IUnknown,
+				reinterpret_cast<void**>(&unknown));
+			if (SUCCEEDED(hr) && unknown != NULL) {
+				hr = OleRun(unknown);
+				if (SUCCEEDED(hr))
+					hr = unknown->QueryInterface(iid, reinterpret_cast<void**>(&m_ptr));
+				unknown->Release();
+			}
+		}
+		else {
+			hr = CoCreateInstance(clsid, outer, context, iid,
+				reinterpret_cast<void**>(&m_ptr));
+		}
+		return hr;
+	}
+
 private:
 	void InternalAddRef() const noexcept
 	{

@@ -3,16 +3,19 @@
 #include <vector>
 #include <StringAlgorithm.hpp>
 #include <WeaselCommon.h>
-#include <msctf.h>
+
+#include "TSFRegister.h"
 
 
 // {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
-static const GUID c_clsidTextService = 
+const GUID c_clsidTextService = 
 { 0xa3f4cded, 0xb1e9, 0x41ee, { 0x9c, 0xa6, 0x7b, 0x4d, 0xd, 0xe6, 0xcb, 0xa } };
 
 // {3D02CAB6-2B8E-4781-BA20-1C9267529467}
-static const GUID c_guidProfile = 
+const GUID c_guidProfile = 
 { 0x3d02cab6, 0x2b8e, 0x4781, { 0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67 } };
+
+HKL ImeHKL = 0;
 
 
 using boost::filesystem::wpath;
@@ -224,6 +227,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 			if (!silent) MessageBox(NULL, msg, L"安裝失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
+		ImeHKL = hKL;
 		return 0;
 	}
 
@@ -337,45 +341,28 @@ void enable_profile(BOOL fEnable, bool hant) {
 		pProfiles->Release();
 	}
 }
-
+void unregister_text_service()
+{
+	UnregisterProfiles();
+	UnregisterCategories();
+	UnregisterServer();
+}
 // 注册TSF输入法
 int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	if (!register_ime)
 		enable_profile(FALSE, hant);
 
-	std::wstring params = L" \"" + tsf_path.wstring() + L"\"";
-	if (!register_ime)
-	{
-		params = L" /u " + params;  // unregister
+	if (register_ime) {
+		if (!RegisterServer(tsf_path.wstring(), is_wow64) || !RegisterProfiles(tsf_path.wstring(), ImeHKL) || !RegisterCategories())
+		{
+			unregister_text_service();
+			MessageBox(NULL, L"註冊輸入法錯誤", L"安装/卸載失败", MB_ICONERROR | MB_OK);
+			return 1;
+		}
 	}
-	//if (silent)  // always silent
-	{
-		params = L" /s " + params;
-	}
-
-	SHELLEXECUTEINFO shExInfo = {0};
-	shExInfo.cbSize = sizeof(shExInfo);
-	shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-	shExInfo.hwnd = 0;
-	shExInfo.lpVerb = L"open";                 // Operation to perform
-	shExInfo.lpFile = L"regsvr32.exe";         // Application to start    
-	shExInfo.lpParameters = params.c_str();    // Additional parameters
-	shExInfo.lpDirectory = 0;
-	shExInfo.nShow = SW_SHOW;
-	shExInfo.hInstApp = 0;  
-
-	if (ShellExecuteEx(&shExInfo))
-	{
-		WaitForSingleObject(shExInfo.hProcess, INFINITE);
-		CloseHandle(shExInfo.hProcess);
-	}
-	else
-	{
-		WCHAR msg[100];
-		wsprintf(msg, L"註冊輸入法錯誤 regsvr32.exe %s", params.c_str());
-		if (!silent) MessageBox(NULL, msg, L"安装/卸載失败", MB_ICONERROR | MB_OK);
-		return 1;
+	else {
+		unregister_text_service();
 	}
 
 	if (register_ime)

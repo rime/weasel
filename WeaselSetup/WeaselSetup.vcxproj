@@ -172,6 +172,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="TSFRegister.h" />
     <ClInclude Include="WeaselSetup.h" />
   </ItemGroup>
   <ItemGroup>
@@ -183,6 +184,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="TSFRegister.cpp" />
     <ClCompile Include="WeaselSetup.cpp" />
   </ItemGroup>
   <ItemGroup>
