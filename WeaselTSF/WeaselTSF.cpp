@@ -113,6 +113,8 @@ STDAPI WeaselTSF::Deactivate()
 
 	_UninitLanguageBar();
 
+	_UninitCompartment();
+
 	if (_pThreadMgr != NULL)
 	{
 		_pThreadMgr->Release();
@@ -150,13 +152,15 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	if (!_InitPreservedKey())
 		goto ExitError;
 
-	// TODO not yet complete
 	_pLangBarButton = NULL;
 	if (!_InitLanguageBar())
 		goto ExitError;
 
 	if (!_IsKeyboardOpen())
 		_SetKeyboardOpen(TRUE);
+
+	if (!_InitCompartment())
+		goto ExitError;
 
 	_EnsureServerConnected();
 
@@ -177,6 +181,22 @@ STDMETHODIMP WeaselTSF::OnKillThreadFocus()
 	return S_OK;
 }
 
+STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid, REFGUID guidProfile, BOOL isActivated)
+{
+	if (!IsEqualCLSID(clsid, c_clsidTextService))
+	{
+		return S_OK;
+	}
+
+	if (isActivated) {
+		_ShowLanguageBar(TRUE);
+	}
+	else {
+		_DeleteCandidateList();
+		_ShowLanguageBar(FALSE);
+	}
+	return S_OK;
+}
 
 void WeaselTSF::_EnsureServerConnected()
 {
@@ -185,11 +205,10 @@ void WeaselTSF::_EnsureServerConnected()
 		m_client.Disconnect();
 		m_client.Connect(NULL);
 		m_client.StartSession();
-		weasel::Status status;
-		weasel::ResponseParser parser(NULL, NULL, &status, NULL, &_cand->style());
+		weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
 		bool ok = m_client.GetResponseData(std::ref(parser));
 		if (ok) {
-			_UpdateLanguageBar(status);
+			_UpdateLanguageBar(_status);
 		}
 	}
 }

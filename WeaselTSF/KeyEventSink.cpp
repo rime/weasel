@@ -135,6 +135,25 @@ void WeaselTSF::_UninitKeyEventSink()
 BOOL WeaselTSF::_InitPreservedKey()
 {
 	return TRUE;
+#if 0
+	ComPtr<ITfKeystrokeMgr> pKeystrokeMgr;
+	if (_pThreadMgr->QueryInterface(pKeystrokeMgr.GetAddressOf()) != S_OK)
+	{
+		return FALSE;
+	}
+	TF_PRESERVEDKEY preservedKeyImeMode;
+
+	/* Define SHIFT ONLY for now */
+	preservedKeyImeMode.uVKey = VK_SHIFT;
+	preservedKeyImeMode.uModifiers = TF_MOD_ON_KEYUP;
+
+	auto hr = pKeystrokeMgr->PreserveKey(
+		_tfClientId,
+		GUID_IME_MODE_PRESERVED_KEY,
+		&preservedKeyImeMode, L"", 0);
+	
+	return SUCCEEDED(hr);
+#endif
 }
 
 void WeaselTSF::_UninitPreservedKey()

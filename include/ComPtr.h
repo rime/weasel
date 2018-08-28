@@ -72,6 +72,11 @@ public:
 		return m_ptr == null;
 	}
 
+	bool operator!=(std::nullptr_t null) noexcept
+	{
+		return m_ptr != null;
+	}
+
 	template <typename T>
 	ComPtr & operator=(ComPtr<T> const & other) noexcept
 	{

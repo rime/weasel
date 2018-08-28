@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include <resource.h>
 #include "WeaselTSF.h"
+#include "Compartment.h"
 
 static const DWORD LANGBARITEMSINK_COOKIE = 0x42424242;
 
@@ -60,16 +61,19 @@ public:
 	STDMETHODIMP UnadviseSink(DWORD dwCookie);
 
 	void UpdateStatus(weasel::Status stat);
+	void SetStatus(DWORD dwStatus, BOOL fSet);
 
 private:
 	GUID _guid;
 	WeaselTSF *_pTextService;
 	ITfLangBarItemSink *_pLangBarItemSink;
 	LONG _cRef; /* COM Reference count */
+	DWORD _status;
 	bool ascii_mode;
 };
 
 CLangBarItemButton::CLangBarItemButton(WeaselTSF *pTextService, REFGUID guid)
+	: _status(0)
 {
 	DllAddRef();
 
@@ -130,13 +134,14 @@ STDAPI CLangBarItemButton::GetInfo(TF_LANGBARITEMINFO *pInfo)
 
 STDAPI CLangBarItemButton::GetStatus(DWORD *pdwStatus)
 {
-	*pdwStatus = 0;
+	*pdwStatus = _status;
 	return S_OK;
 }
 
 STDAPI CLangBarItemButton::Show(BOOL fShow)
 {
-	return E_NOTIMPL;
+	SetStatus(TF_LBI_STATUS_HIDDEN, fShow ? FALSE : TRUE);
+	return S_OK;
 }
 
 STDAPI CLangBarItemButton::GetTooltipString(BSTR *pbstrToolTip)
@@ -233,6 +238,34 @@ void CLangBarItemButton::UpdateStatus(weasel::Status stat)
 	}
 }
 
+void CLangBarItemButton::SetStatus(DWORD dwStatus, BOOL fSet)
+{
+	BOOL isChange = FALSE;
+
+	if (fSet)
+	{
+		if (!(_status & dwStatus))
+		{
+			_status |= dwStatus;
+			isChange = TRUE;
+		}
+	}
+	else
+	{
+		if (_status & dwStatus)
+		{
+			_status &= ~dwStatus;
+			isChange = TRUE;
+		}
+	}
+
+	if (isChange && _pLangBarItemSink)
+	{
+		_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
+	}
+
+	return;
+}
 
 
 void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
@@ -288,6 +321,7 @@ BOOL WeaselTSF::_InitLanguageBar()
 		goto Exit;
 	}
 
+	_pLangBarButton->Show(TRUE);
 	fRet = TRUE;
 
 Exit:
@@ -316,4 +350,17 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status stat)
 {
 	if (!_pLangBarButton) return;
 	_pLangBarButton->UpdateStatus(stat);
+}
+
+void WeaselTSF::_ShowLanguageBar(BOOL show)
+{
+	if (!_pLangBarButton) return;
+	_pLangBarButton->Show(show);
+
+}
+
+void WeaselTSF::_EnableLanguageBar(BOOL enable)
+{
+	if (!_pLangBarButton) return;
+	_pLangBarButton->SetStatus(TF_LBI_STATUS_DISABLED, !enable);
 }

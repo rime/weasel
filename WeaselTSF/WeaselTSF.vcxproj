@@ -434,6 +434,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CandidateList.h" />
+    <ClInclude Include="Compartment.h" />
     <ClInclude Include="ctffunc.h" />
     <ClInclude Include="EditSession.h" />
     <ClInclude Include="Globals.h" />

@@ -7,15 +7,14 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 {
 	// get commit string from server
 	std::wstring commit;
-	weasel::Status status;
 	weasel::Config config;
 	auto context = std::make_shared<weasel::Context>();
-	weasel::ResponseParser parser(&commit, context.get(), &status, &config, &_cand->style());
+	weasel::ResponseParser parser(&commit, context.get(), &_status, &config, &_cand->style());
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
 
-	_UpdateUI(*context, status);
-	_UpdateLanguageBar(status);
+	_UpdateUI(*context, _status);
+	_UpdateLanguageBar(_status);
 
 	if (ok)
 	{
@@ -29,11 +28,11 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 			_InsertText(_pEditSessionContext, commit);
 			_EndComposition(_pEditSessionContext, false);
 		}
-		if (status.composing && !_IsComposing())
+		if (_status.composing && !_IsComposing())
 		{
 			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
 		}
-		else if (!status.composing && _IsComposing())
+		else if (!_status.composing && _IsComposing())
 		{
 			_EndComposition(_pEditSessionContext, true);
 		}
