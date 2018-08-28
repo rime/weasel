@@ -15,6 +15,7 @@ CandidateList::CandidateList(WeaselTSF * pTextService)
 	_cRef = 1;
 	_tsf = pTextService;
 	_tsf->AddRef();
+
 }
 
 CandidateList::~CandidateList()
@@ -303,8 +304,9 @@ Exit:
 void CandidateList::_StartUI()
 {
 	BOOL pbShow = TRUE;
-	ComPtr<ITfUIElementMgr> emgr;
-	_tsf->_pThreadMgr->QueryInterface(emgr.GetAddressOf());
+	ComPtr<ITfThreadMgr> pThreadMgr;
+	pThreadMgr.Copy(_tsf->_pThreadMgr);
+	ComPtr<ITfUIElementMgr> emgr = pThreadMgr.As<ITfUIElementMgr>();
 
 	if (emgr) {
 		if (!_ui->IsShown())
@@ -317,8 +319,9 @@ void CandidateList::_StartUI()
 
 void CandidateList::_EndUI()
 {
-	ComPtr<ITfUIElementMgr> emgr;
-	_tsf->_pThreadMgr->QueryInterface(emgr.GetAddressOf());
+	ComPtr<ITfThreadMgr> pThreadMgr;
+	pThreadMgr.Copy(_tsf->_pThreadMgr);
+	ComPtr<ITfUIElementMgr> emgr = pThreadMgr.As<ITfUIElementMgr>();
 	if (emgr)
 		emgr->EndUIElement(uiid);
 	if (_ui->IsShown())
