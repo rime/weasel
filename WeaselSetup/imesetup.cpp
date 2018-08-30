@@ -17,9 +17,6 @@ const GUID c_guidProfile =
 
 HKL ImeHKL = 0;
 
-
-using boost::filesystem::wpath;
-
 BOOL copy_file(const std::wstring& src, const std::wstring& dest)
 {
 	BOOL ret = CopyFile(src.c_str(), dest.c_str(), FALSE);
@@ -57,47 +54,47 @@ BOOL delete_file(const std::wstring& file)
 	return ret;
 }
 
-typedef int (*ime_register_func)(const wpath& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent);
+typedef int (*ime_register_func)(const std::wstring& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent);
 
-int install_ime_file(wpath& srcPath, const std::wstring& ext, bool hant, bool silent, ime_register_func func)
+int install_ime_file(std::wstring& srcPath, const std::wstring& ext, bool hant, bool silent, ime_register_func func)
 {
-	wpath destPath;
-	wpath wow64Path;
+	std::wstring destPath;
+	std::wstring wow64Path;
 
 	WCHAR path[MAX_PATH];
 	GetModuleFileName(GetModuleHandle(NULL), path, _countof(path));
-	srcPath = path;
 
 	bool is_x64 = (sizeof(HANDLE) == 8);
 	std::wstring srcFileName = (hant ? L"weaselt" : L"weasel");
 	srcFileName += (is_x64 ? L"x64" + ext : ext);
-	srcPath = srcPath.remove_leaf() / srcFileName;
+	WCHAR drive[_MAX_DRIVE];
+	WCHAR dir[_MAX_DIR];
+	_wsplitpath_s(path, drive, _countof(drive), dir, _countof(dir), NULL, 0, NULL, 0);
+	srcPath = std::wstring(drive) + dir + L'\\' + srcFileName;
 
 	GetSystemDirectory(path, _countof(path));
-	destPath = path;
-	destPath /= L"weasel" + ext;
+	destPath = std::wstring(path) + L"\\weasel" + ext;
 
 	if (GetSystemWow64Directory(path, _countof(path)))
 	{
-		wow64Path = path;
-		wow64Path /= L"weasel" + ext;
+		wow64Path = std::wstring(path) + L"\\weasel" + ext;
 	}
 
 	int retval = 0;
 	// 复制 .dll/.ime 到系统目录
-	if (!copy_file(srcPath.wstring(), destPath.wstring()))
+	if (!copy_file(srcPath, destPath))
 	{
-		if (!silent) MessageBox(NULL, destPath.wstring().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, destPath.c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 	retval += func(destPath, true, false, hant, silent);
 	if (!wow64Path.empty())
 	{
-		std::wstring x86 = srcPath.wstring();
+		std::wstring x86 = srcPath;
 		ireplace_last(x86, L"x64" + ext, ext);
-		if (!copy_file(x86, wow64Path.wstring()))
+		if (!copy_file(x86, wow64Path))
 		{
-			if (!silent) MessageBox(NULL, wow64Path.wstring().c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBox(NULL, wow64Path.c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 		retval += func(wow64Path, true, true, hant, silent);
@@ -110,22 +107,22 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 	int retval = 0;
 	WCHAR path[MAX_PATH];
 	GetSystemDirectory(path, _countof(path));
-	wpath imePath = path;
-	imePath /= L"weasel" + ext;
+	std::wstring imePath(path);
+	imePath += L"\\weasel" + ext;
 	retval += func(imePath, false, false, false, silent);
-	if (!delete_file(imePath.wstring()))
+	if (!delete_file(imePath))
 	{
-		if (!silent) MessageBox(NULL, imePath.wstring().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, imePath.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
 		retval += 1;
 	}
 	if (GetSystemWow64Directory(path, _countof(path)))
 	{
-		wpath wow64Path = path;
-		wow64Path /= L"weasel" + ext;
+		std::wstring wow64Path(path);
+		wow64Path += L"\\weasel" + ext;
 		retval += func(wow64Path, false, true, false, silent);
-		if (!delete_file(wow64Path.wstring()))
+		if (!delete_file(wow64Path))
 		{
-			if (!silent) MessageBox(NULL, wow64Path.wstring().c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBox(NULL, wow64Path.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
 			retval += 1;
 		}
 	}
@@ -133,7 +130,7 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 }
 
 // 注册IME输入法
-int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent)
+int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	if (is_wow64)
 	{
@@ -145,7 +142,7 @@ int register_ime(const wpath& ime_path, bool register_ime, bool is_wow64, bool h
 
 	if (register_ime)
 	{
-		HKL hKL = ImmInstallIME(ime_path.wstring().c_str(), WEASEL_IME_NAME);
+		HKL hKL = ImmInstallIME(ime_path.c_str(), WEASEL_IME_NAME);
 		if (!hKL)
 		{
 			// manually register ime
@@ -348,13 +345,13 @@ void unregister_text_service()
 	UnregisterServer();
 }
 // 注册TSF输入法
-int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
+int register_text_service(const std::wstring& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	if (!register_ime)
 		enable_profile(FALSE, hant);
 
 	if (register_ime) {
-		if (!RegisterServer(tsf_path.wstring(), is_wow64) || !RegisterProfiles(tsf_path.wstring(), ImeHKL) || !RegisterCategories())
+		if (!RegisterServer(tsf_path, is_wow64) || !RegisterProfiles(tsf_path, ImeHKL) || !RegisterCategories())
 		{
 			unregister_text_service();
 			MessageBox(NULL, L"註冊輸入法錯誤", L"安装/卸載失败", MB_ICONERROR | MB_OK);
@@ -373,7 +370,7 @@ int register_text_service(const wpath& tsf_path, bool register_ime, bool is_wow6
 
 int install(bool hant, bool silent)
 {
-	wpath ime_src_path;
+	std::wstring ime_src_path;
 	int retval = 0;
 	retval += install_ime_file(ime_src_path, L".ime", hant, silent, &register_ime);
 	retval += install_ime_file(ime_src_path, L".dll", hant, silent, &register_text_service);
@@ -388,7 +385,10 @@ int install(bool hant, bool silent)
 		return 1;
 	}
 
-	std::wstring rootDir = ime_src_path.parent_path().wstring();
+	WCHAR drive[_MAX_DRIVE];
+	WCHAR dir[_MAX_DIR];
+	_wsplitpath_s(ime_src_path.c_str(), drive, _countof(drive), dir, _countof(dir), NULL, 0, NULL, 0);
+	std::wstring rootDir = std::wstring(drive) + dir;
 	ret = RegSetValueEx(hKey, L"WeaselRoot", 0, REG_SZ,
 		                (const BYTE*)rootDir.c_str(),
 						(rootDir.length() + 1) * sizeof(WCHAR));
@@ -438,7 +438,7 @@ int uninstall(bool silent)
 bool has_installed() {
 	WCHAR path[MAX_PATH];
 	GetSystemDirectory(path, _countof(path));
-	wpath imePath = path;
-	imePath /= L"weasel.ime";
-	return boost::filesystem::exists(imePath);
+	std::wstring sysPath(path);
+	DWORD attr = GetFileAttributesW((sysPath + L"\\weasel.ime").c_str());
+	return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }

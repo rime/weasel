@@ -99,9 +99,11 @@ WeaselIME::WeaselIME(HIMC hIMC)
 , m_preferCandidatePos(false)
 {
 	WCHAR path[MAX_PATH];
-	GetModuleFileName(NULL, path, _countof(path));
-	std::wstring exe = wpath(path).filename().wstring();
-	if (iequals(L"chrome.exe", exe))
+	WCHAR fname[_MAX_FNAME];
+	WCHAR ext[_MAX_EXT];
+	GetModuleFileNameW(NULL, path, _countof(path));
+	_wsplitpath_s(path, NULL, 0, NULL, 0, fname, _countof(fname), ext, _countof(ext));
+	if (iequals(L"chrome", fname) && iequals(L"exe", ext))
 		m_preferCandidatePos = true;
 }
 

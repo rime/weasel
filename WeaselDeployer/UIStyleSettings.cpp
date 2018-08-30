@@ -37,10 +37,8 @@ bool UIStyleSettings::GetPresetColorSchemes(std::vector<ColorSchemeInfo>* result
 }
 
 std::string UIStyleSettings::GetColorSchemePreview(const std::string& color_scheme_id) {
-	boost::filesystem::path preview_path(rime_get_api()->get_shared_data_dir());
-	preview_path /= "preview";
-	preview_path /= "color_scheme_" + color_scheme_id + ".png";
-	return preview_path.string();
+	return std::string(rime_get_api()->get_shared_data_dir())
+		+ "\\preview\\color_scheme_" + color_scheme_id + ".png";
 }
 
 std::string UIStyleSettings::GetActiveColorScheme() {

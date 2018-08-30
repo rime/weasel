@@ -127,7 +127,7 @@ namespace weasel {
 			}
 
 			// Use whole buffer to receive data in client
-			return handler((LPWSTR)buffer.get(), buff_size * sizeof(char) / sizeof(wchar_t));
+			return handler((LPWSTR)buffer.get(), (UINT)(buff_size * sizeof(char) / sizeof(wchar_t)));
 		}
 
 

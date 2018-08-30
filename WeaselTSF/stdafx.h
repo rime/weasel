@@ -15,10 +15,6 @@
 #include <msctf.h>
 #include <assert.h>
 
-// #include <boost/filesystem.hpp>
-
 #include <map>
 #include <memory>
 #include <string>
-
-// using boost::filesystem::wpath;

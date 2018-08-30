@@ -15,15 +15,7 @@
 
 #include "immdev.h"
 
-#pragma warning(disable : 4819)
-
-#include <boost/filesystem.hpp>
-
-#pragma warning(default : 4819)
-
 #include <map>
 #include <memory>
 #include <mutex>
 #include <string>
-
-using boost::filesystem::wpath;
