@@ -12,7 +12,7 @@ namespace weasel {
 		using Respond = std::function<void(Msg)>;
 		using ServerHandler = std::function<void(PipeMessage, Respond)>;
 
-		PipeServer(std::wstring &pn_cmd, SECURITY_ATTRIBUTES *s);
+		PipeServer(std::wstring &&pn_cmd, SECURITY_ATTRIBUTES *s);
 
 	public:
 		void Listen(ServerHandler const &handler);
@@ -335,8 +335,8 @@ void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, _Resp resp)
 	resp(result);
 }
 
-PipeServer::PipeServer(std::wstring &pn_cmd, SECURITY_ATTRIBUTES *s)
-	: PipeChannel(pn_cmd, s)
+PipeServer::PipeServer(std::wstring &&pn_cmd, SECURITY_ATTRIBUTES *s)
+	: PipeChannel(std::move(pn_cmd), s)
 {}
 
 void PipeServer::Listen(ServerHandler const &handler)
