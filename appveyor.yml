@@ -4,10 +4,12 @@ pull_requests:
   do_not_increment_build_number: true
 
 version: '{branch} build {build}'
-image: Visual Studio 2015
+image: Visual Studio 2017
 
 environment:
   BOOST_ROOT: C:\Libraries\libboost
+  CMAKE_GENERATOR: "Visual Studio 15 2017"
+  PLATFORM_TOOLSET: v141_xp
 
 cache:
   - boost.cached -> appveyor.install.bat
