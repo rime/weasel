@@ -70,7 +70,7 @@ namespace weasel {
 		};
 
 	public:
-		PipeChannel(std::wstring &pn_cmd, SECURITY_ATTRIBUTES *s = NULL, size_t bs = 4 * 1024)
+		PipeChannel(std::wstring &&pn_cmd, SECURITY_ATTRIBUTES *s = NULL, size_t bs = 4 * 1024)
 			: PipeChannelBase(pn_cmd, bs, s)
 		{}
 

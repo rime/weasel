@@ -198,7 +198,7 @@ LRESULT ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lPa
 		PipeMessage req{ Msg, wParam, lParam };
 		return channel.Transact(req);
 	}
-	catch (DWORD ex) {
+	catch (DWORD /* ex */) {
 		return 0;
 	}
 }
