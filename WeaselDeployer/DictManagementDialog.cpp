@@ -2,7 +2,6 @@
 #include "DictManagementDialog.h"
 #include "Configurator.h"
 #include <WeaselUtility.h>
-#include <boost/filesystem.hpp>
 #include <rime_api.h>
 
 DictManagementDialog::DictManagementDialog()

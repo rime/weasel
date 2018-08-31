@@ -24,8 +24,6 @@
 #include <wtl/atlmisc.h>
 #include <wtl/atldlgs.h>
 
-#include <boost/filesystem.hpp>
-
 // {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
 extern const GUID c_clsidTextService;
 
@@ -47,3 +45,5 @@ extern const GUID GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT;
 #endif
 
 // TODO: reference additional headers your program requires here
+
+#include <string>

@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "UIStyleSettings.h"
-#include <boost/filesystem.hpp>
 
 
 UIStyleSettings::UIStyleSettings()
