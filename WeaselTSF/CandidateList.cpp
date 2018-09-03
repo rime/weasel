@@ -255,7 +255,8 @@ void CandidateList::UpdateInputPosition(RECT const & rc)
 
 void CandidateList::Destroy()
 {
-	Show(false);
+	//_EndUI();
+	Show(FALSE);
 	_ui->Destroy();
 	_curp = NULL;
 }
@@ -331,4 +332,9 @@ void CandidateList::_EndUI()
 void WeaselTSF::_UpdateUI(const Context & ctx, const Status & status)
 {
 	_cand->UpdateUI(ctx, status);
+}
+
+void WeaselTSF::_DeleteCandidateList()
+{
+	_cand->Destroy();
 }

@@ -4,10 +4,13 @@
 #include "Globals.h"
 #include "WeaselIPC.h"
 
+#include <ComPtr.h>
+
 namespace weasel {
 	class CandidateList;
 }
 class CLangBarItemButton;
+class CCompartmentEventSink;
 
 class WeaselTSF:
 	public ITfTextInputProcessorEx,
@@ -17,6 +20,7 @@ class WeaselTSF:
 	public ITfKeyEventSink,
 	public ITfCompositionSink,
 	public ITfThreadFocusSink,
+	public ITfActiveLanguageProfileNotifySink,
 	public ITfEditSession
 {
 public:
@@ -65,6 +69,12 @@ public:
 
 	/* ITfEditSession */
 	STDMETHODIMP DoEditSession(TfEditCookie ec);
+
+	/* ITfActiveLanguageProfileNotifySink */
+	STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile, BOOL isActivated);
+
+	///* ITfCompartmentEventSink */
+	//STDMETHODIMP OnChange(_In_ REFGUID guid);
 	
 	/* Compartments */
     BOOL _IsKeyboardDisabled();
@@ -111,9 +121,17 @@ private:
 	BOOL _InitLanguageBar();
 	void _UninitLanguageBar();
 	void _UpdateLanguageBar(weasel::Status stat);
-	
+	void _ShowLanguageBar(BOOL show);
+	void _EnableLanguageBar(BOOL enable);
+
 	BOOL _InsertText(ITfContext *pContext, const std::wstring& ext);
 	void _AbortComposition(bool clear = true);
+
+	void _DeleteCandidateList();
+
+	BOOL _InitCompartment();
+	void _UninitCompartment();
+	HRESULT _HandleCompartment(REFGUID guidCompartment);
 
 	bool isImmersive() const {
 		return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;
@@ -131,6 +149,8 @@ private:
 	ITfContext *_pEditSessionContext;
 	std::wstring _editSessionText;
 
+	CCompartmentEventSink *_pKeyboardCompartmentSink;
+
 	ITfComposition *_pComposition;
 
 	CLangBarItemButton *_pLangBarButton;
@@ -145,4 +165,7 @@ private:
 	/* Weasel Related */
 	weasel::Client m_client;
 	DWORD _activateFlags;
+
+	/* IME status */
+	weasel::Status _status;
 };
