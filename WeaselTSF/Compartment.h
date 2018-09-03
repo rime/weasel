@@ -1,5 +1,4 @@
 #pragma once
-#include <ComPtr.h>
 #include <functional>
 #include <msctf.h>
 
@@ -20,11 +19,11 @@ public:
 	STDMETHODIMP OnChange(_In_ REFGUID guid);
 
 	// function
-	HRESULT _Advise(_In_ IUnknown *punk, _In_ REFGUID guidCompartment);
+	HRESULT _Advise(_In_ com_ptr<IUnknown> punk, _In_ REFGUID guidCompartment);
 	HRESULT _Unadvise();
 
 private:
-	ITfCompartment * _compartment;
+	com_ptr<ITfCompartment> _compartment;
 	DWORD _cookie;
 	Callback _callback;
 

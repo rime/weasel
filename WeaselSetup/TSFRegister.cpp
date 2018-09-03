@@ -2,7 +2,6 @@
 #include "TSFRegister.h"
 #include <WeaselCommon.h>
 #include <VersionHelpers.hpp>
-#include <ComPtr.h>
 
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
@@ -27,8 +26,8 @@ BOOL RegisterProfiles(std::wstring filename, HKL hkl)
 	HRESULT hr;
 
 	if (IsWindows8OrGreater()) {
-		ComPtr<ITfInputProcessorProfileMgr> pInputProcessorProfileMgr;
-		hr = pInputProcessorProfileMgr.CoCreate(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_ALL);
+		CComPtr<ITfInputProcessorProfileMgr> pInputProcessorProfileMgr;
+		hr = pInputProcessorProfileMgr.CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_ALL);
 		if (FAILED(hr))
 			return FALSE;
 
@@ -47,8 +46,8 @@ BOOL RegisterProfiles(std::wstring filename, HKL hkl)
 			0);
 	}
 	else {
-		ComPtr<ITfInputProcessorProfiles> pInputProcessorProfiles;
-		hr = pInputProcessorProfiles.CoCreate(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER);
+		CComPtr<ITfInputProcessorProfiles> pInputProcessorProfiles;
+		hr = pInputProcessorProfiles.CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER);
 		if (FAILED(hr))
 			return FALSE;
 
