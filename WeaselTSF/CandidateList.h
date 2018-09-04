@@ -51,13 +51,16 @@ public:
 	void UpdateInputPosition(RECT const& rc);
 	void Destroy();
 	weasel::UIStyle &style();
+	void StartUI();
+	void EndUI();
 
 private:
-	void _UpdateOwner();
+	//void _UpdateOwner();
 	HWND _GetActiveWnd();
+	HRESULT _UpdateUIElement();
 
-	void _StartUI();
-	void _EndUI();
+	void _DisposeUIWindow();
+	void _MakeUIWindow();
 
 	std::unique_ptr<weasel::UI> _ui;
 	DWORD _cRef;
@@ -65,6 +68,7 @@ private:
 	DWORD uiid;
 	TfIntegratableCandidateListSelectionStyle _selectionStyle = STYLE_ACTIVE_SELECTION;
 
-	/* The parent of current candidate window */
-	HWND _curp;
+	BOOL _pbShow;
+	weasel::UIStyle _style;
 };
+

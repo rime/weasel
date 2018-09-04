@@ -71,6 +71,7 @@ void WeaselTSF::_StartComposition(com_ptr<ITfContext> pContext, BOOL fCUASWorkar
 {
 	com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
 	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled));
+	_cand->StartUI();
 	if (pStartCompositionEditSession != nullptr)
 	{
 		HRESULT hr;
@@ -113,6 +114,7 @@ void WeaselTSF::_EndComposition(com_ptr<ITfContext> pContext, BOOL clear)
 {
 	CEndCompositionEditSession *pEditSession;
 	HRESULT hr;
+	_cand->EndUI();
 
 	if ((pEditSession = new CEndCompositionEditSession(this, pContext, _pComposition, clear)) != NULL)
 	{

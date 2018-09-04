@@ -9,7 +9,7 @@ using namespace weasel;
 CCandidateList::CCandidateList(com_ptr<WeaselTSF> pTextService)
 	: _ui(make_unique<UI>())
 	, _tsf(pTextService)
-	, _curp(NULL)
+	, _pbShow(TRUE)
 {
 	_cRef = 1;
 }
@@ -110,12 +110,16 @@ STDMETHODIMP CCandidateList::GetUpdatedFlags(DWORD * pdwFlags)
 STDMETHODIMP CCandidateList::GetDocumentMgr(ITfDocumentMgr ** ppdim)
 {
 	*ppdim = nullptr;
-	if ((_tsf->_pThreadMgr->GetFocus(ppdim) == S_OK) && (*ppdim != nullptr))
+	auto pThreadMgr = _tsf->_GetThreadMgr();
+	if (pThreadMgr == nullptr)
 	{
-		return S_OK;
+		return E_FAIL;
 	}
-
-	return E_FAIL;
+	if (FAILED(pThreadMgr->GetFocus(ppdim)) || (*ppdim == nullptr))
+	{
+		return E_FAIL;
+	}
+	return S_OK;
 }
 
 STDMETHODIMP CCandidateList::GetCount(UINT * pCandidateCount)
@@ -228,13 +232,14 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 
 	/// In UWP, candidate window will only be shown
 	/// if it is owned by active view window
-	_UpdateOwner();
+	//_UpdateOwner();
 	_ui->Update(ctx, status);
+	_UpdateUIElement();
 
 	if (status.composing)
-		_StartUI();
+		Show(_pbShow);
 	else
-		_EndUI();
+		Show(FALSE);
 }
 
 void CCandidateList::UpdateStyle(const UIStyle & sty)
@@ -249,27 +254,15 @@ void CCandidateList::UpdateInputPosition(RECT const & rc)
 
 void CCandidateList::Destroy()
 {
-	//_EndUI();
+	//EndUI();
 	Show(FALSE);
-	_ui->Destroy();
-	_curp = NULL;
+	_DisposeUIWindow();
 }
 
 UIStyle & CCandidateList::style()
 {
-	return _ui->style();
-}
-
-void CCandidateList::_UpdateOwner()
-{
-	HWND actw = _GetActiveWnd();
-	if (actw != _curp) {
-		UIStyle sty = _ui->style();
-		_ui->Destroy();
-		_ui->Create(actw);
-		_curp = actw;
-		_ui->style() = sty;
-	}
+	//return _ui->style();
+	return _style;
 }
 
 HWND CCandidateList::_GetActiveWnd()
@@ -277,61 +270,105 @@ HWND CCandidateList::_GetActiveWnd()
 	com_ptr<ITfDocumentMgr> dmgr;
 	com_ptr<ITfContext> ctx;
 	com_ptr<ITfContextView> view;
+	com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
+
 	HWND w = NULL;
 
-	if (FAILED(_tsf->_pThreadMgr->GetFocus(&dmgr))) {
-		goto Exit;
-	}
-	if (FAILED(dmgr->GetTop(&ctx))) {
-		goto Exit;
-	}
-	if (FAILED(ctx->GetActiveView(&view))) {
-		goto Exit;
+	if (pThreadMgr != nullptr
+		&& SUCCEEDED(pThreadMgr->GetFocus(&dmgr))
+		&& SUCCEEDED(dmgr->GetTop(&ctx))
+		&& SUCCEEDED(ctx->GetActiveView(&view)))
+	{
+		view->GetWnd(&w);
 	}
 
-	view->GetWnd(&w);
-
-Exit:
 	if (w == NULL) w = ::GetFocus();
 	return w;
 }
 
-void CCandidateList::_StartUI()
+HRESULT CCandidateList::_UpdateUIElement()
 {
-	BOOL pbShow = TRUE;
-	com_ptr<ITfThreadMgr> pThreadMgr;
-	pThreadMgr = _tsf->_pThreadMgr;
-	com_ptr<ITfUIElementMgr> emgr;
-	auto hr = pThreadMgr->QueryInterface(&emgr);
+	HRESULT hr = S_OK;
+
+	com_ptr<ITfUIElementMgr> pUIElementMgr;
+	com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
+	if (nullptr == pThreadMgr)
+	{
+		return S_OK;
+	}
+	hr = pThreadMgr->QueryInterface(IID_ITfUIElementMgr, (void **)&pUIElementMgr);
+
+	if (hr == S_OK)
+	{
+		pUIElementMgr->UpdateUIElement(uiid);
+	}
+
+	return S_OK;
+}
+
+void CCandidateList::StartUI()
+{
+	com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
+	com_ptr<ITfUIElementMgr> pUIElementMgr;
+	auto hr = pThreadMgr->QueryInterface(&pUIElementMgr);
 	if (FAILED(hr))
 		return;
 
-	if (emgr != NULL) {
-		if (!_ui->IsShown())
-			emgr->BeginUIElement(this, &pbShow, &uiid);
-		emgr->UpdateUIElement(uiid);
+	if (pUIElementMgr == NULL)
+	{
+		return;
 	}
 
-	Show(pbShow);
+	pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
+	//pUIElementMgr->UpdateUIElement(uiid);
+	if (_pbShow)
+	{
+		_ui->style() = _style;
+		_MakeUIWindow();
+	}
 }
 
-void CCandidateList::_EndUI()
+void CCandidateList::EndUI()
 {
-	com_ptr<ITfThreadMgr> pThreadMgr;
-	pThreadMgr = _tsf->_pThreadMgr;
+	com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
 	com_ptr<ITfUIElementMgr> emgr;
 	auto hr = pThreadMgr->QueryInterface(&emgr);
 	if (FAILED(hr))
 		return;
 	if (emgr != NULL)
 		emgr->EndUIElement(uiid);
-	if (_ui->IsShown())
-		Show(false);
+	_DisposeUIWindow();
+}
+
+void CCandidateList::_DisposeUIWindow()
+{
+	if (_ui == nullptr)
+	{
+		return;
+	}
+
+	_ui->Destroy();
+}
+
+void CCandidateList::_MakeUIWindow()
+{
+	HWND p = _GetActiveWnd();
+	_ui->Create(p);
 }
 
 void WeaselTSF::_UpdateUI(const Context & ctx, const Status & status)
 {
 	_cand->UpdateUI(ctx, status);
+}
+
+void WeaselTSF::_StartUI()
+{
+	_cand->StartUI();
+}
+
+void WeaselTSF::_EndUI()
+{
+	_cand->EndUI();
 }
 
 void WeaselTSF::_DeleteCandidateList()

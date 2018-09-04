@@ -87,6 +87,7 @@ public:
 	void _SetCompositionPosition(const RECT &rc);
 	BOOL _UpdateCompositionWindow(com_ptr<ITfContext> pContext);
 	void _FinalizeComposition();
+	void _AbortComposition(bool clear = true);
 
 	/* Language bar */
 	HWND _GetFocusedContextWindow();
@@ -97,10 +98,12 @@ public:
 
 	/* UI */
 	void _UpdateUI(const weasel::Context & ctx, const weasel::Status & status);
+	void _StartUI();
+	void _EndUI();
+
+	com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
 
 private:
-	friend class CCandidateList;
-
 	/* TSF Related */
 	BOOL _InitThreadMgrEventSink();
 	void _UninitThreadMgrEventSink();
@@ -121,7 +124,6 @@ private:
 	void _EnableLanguageBar(BOOL enable);
 
 	BOOL _InsertText(com_ptr<ITfContext> pContext, const std::wstring& ext);
-	void _AbortComposition(bool clear = true);
 
 	void _DeleteCandidateList();
 

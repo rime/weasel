@@ -12,29 +12,29 @@
 
 using namespace weasel;
 
-static LPCWSTR DEFAULT_FONT_FACE = L"";
-static const int DEFAULT_FONT_POINT = 16;
-
-static const UIStyle::LayoutType LAYOUT_TYPE = UIStyle::LAYOUT_VERTICAL;
-static const int MIN_WIDTH = 160;
-static const int MIN_HEIGHT = 0;
-static const int BORDER = 3;
-static const int MARGIN_X = 12;
-static const int MARGIN_Y = 12;
-static const int SPACING = 10;
-static const int CAND_SPACING = 5;
-static const int HIGHLIGHT_SPACING = 4;
-static const int HIGHLIGHT_PADDING = 2;
-static const int ROUND_CORNER = 4;
-
-static const COLORREF TEXT_COLOR                  = 0x000000;
-static const COLORREF CAND_TEXT_COLOR             = 0x000000;
-static const COLORREF BACK_COLOR                  = 0xffffff;
-static const COLORREF BORDER_COLOR                = 0x000000;
-static const COLORREF HIGHLIGHTED_TEXT_COLOR      = 0x000000;
-static const COLORREF HIGHLIGHTED_BACK_COLOR      = 0x7fffff;
-static const COLORREF HIGHLIGHTED_CAND_TEXT_COLOR = 0xffffff;
-static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x000000;
+//static LPCWSTR DEFAULT_FONT_FACE = L"";
+//static const int DEFAULT_FONT_POINT = 16;
+//
+//static const UIStyle::LayoutType LAYOUT_TYPE = UIStyle::LAYOUT_VERTICAL;
+//static const int MIN_WIDTH = 160;
+//static const int MIN_HEIGHT = 0;
+//static const int BORDER = 3;
+//static const int MARGIN_X = 12;
+//static const int MARGIN_Y = 12;
+//static const int SPACING = 10;
+//static const int CAND_SPACING = 5;
+//static const int HIGHLIGHT_SPACING = 4;
+//static const int HIGHLIGHT_PADDING = 2;
+//static const int ROUND_CORNER = 4;
+//
+//static const COLORREF TEXT_COLOR                  = 0x000000;
+//static const COLORREF CAND_TEXT_COLOR             = 0x000000;
+//static const COLORREF BACK_COLOR                  = 0xffffff;
+//static const COLORREF BORDER_COLOR                = 0x000000;
+//static const COLORREF HIGHLIGHTED_TEXT_COLOR      = 0x000000;
+//static const COLORREF HIGHLIGHTED_BACK_COLOR      = 0x7fffff;
+//static const COLORREF HIGHLIGHTED_CAND_TEXT_COLOR = 0xffffff;
+//static const COLORREF HIGHLIGHTED_CAND_BACK_COLOR = 0x000000;
 
 
 WeaselPanel::WeaselPanel(weasel::UI &ui)
@@ -43,32 +43,32 @@ WeaselPanel::WeaselPanel(weasel::UI &ui)
 	  m_status(ui.status()), 
 	  m_style(ui.style())
 {
-	m_style.font_face = DEFAULT_FONT_FACE;
-	m_style.font_point = DEFAULT_FONT_POINT;
-	m_style.layout_type = LAYOUT_TYPE;
-	m_style.min_width = MIN_WIDTH;
-	m_style.min_height = MIN_HEIGHT;
-	m_style.border = BORDER;
-	m_style.margin_x = MARGIN_X;
-	m_style.margin_y = MARGIN_Y;
-	m_style.spacing = SPACING;
-	m_style.candidate_spacing = CAND_SPACING;
-	m_style.hilite_spacing = HIGHLIGHT_SPACING;
-	m_style.hilite_padding = HIGHLIGHT_PADDING;
-	m_style.round_corner = ROUND_CORNER;
+	//m_style.font_face = DEFAULT_FONT_FACE;
+	//m_style.font_point = DEFAULT_FONT_POINT;
+	//m_style.layout_type = LAYOUT_TYPE;
+	//m_style.min_width = MIN_WIDTH;
+	//m_style.min_height = MIN_HEIGHT;
+	//m_style.border = BORDER;
+	//m_style.margin_x = MARGIN_X;
+	//m_style.margin_y = MARGIN_Y;
+	//m_style.spacing = SPACING;
+	//m_style.candidate_spacing = CAND_SPACING;
+	//m_style.hilite_spacing = HIGHLIGHT_SPACING;
+	//m_style.hilite_padding = HIGHLIGHT_PADDING;
+	//m_style.round_corner = ROUND_CORNER;
 
-	m_style.text_color = TEXT_COLOR;
-	m_style.candidate_text_color = CAND_TEXT_COLOR;
-	m_style.label_text_color = CAND_TEXT_COLOR;
-	m_style.comment_text_color = CAND_TEXT_COLOR;
-	m_style.back_color = BACK_COLOR;
-	m_style.border_color = BORDER_COLOR;
-	m_style.hilited_text_color = HIGHLIGHTED_TEXT_COLOR;
-	m_style.hilited_back_color = HIGHLIGHTED_BACK_COLOR;
-	m_style.hilited_candidate_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
-	m_style.hilited_candidate_back_color = HIGHLIGHTED_CAND_BACK_COLOR;
-	m_style.hilited_label_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
-	m_style.hilited_comment_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
+	//m_style.text_color = TEXT_COLOR;
+	//m_style.candidate_text_color = CAND_TEXT_COLOR;
+	//m_style.label_text_color = CAND_TEXT_COLOR;
+	//m_style.comment_text_color = CAND_TEXT_COLOR;
+	//m_style.back_color = BACK_COLOR;
+	//m_style.border_color = BORDER_COLOR;
+	//m_style.hilited_text_color = HIGHLIGHTED_TEXT_COLOR;
+	//m_style.hilited_back_color = HIGHLIGHTED_BACK_COLOR;
+	//m_style.hilited_candidate_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
+	//m_style.hilited_candidate_back_color = HIGHLIGHTED_CAND_BACK_COLOR;
+	//m_style.hilited_label_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
+	//m_style.hilited_comment_text_color = HIGHLIGHTED_CAND_TEXT_COLOR;
 
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
