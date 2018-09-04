@@ -6,20 +6,14 @@
 class CEditSession: public ITfEditSession
 {
 public:
-	CEditSession(WeaselTSF *pTextService, ITfContext *pContext)
+	CEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext)
+		: _pTextService(pTextService), _pContext(pContext)
 	{
 		_cRef = 1;
-		_pContext = pContext;
-		_pContext->AddRef();
-
-		_pTextService = pTextService;
-		_pTextService->AddRef();
 	}
 
 	virtual ~CEditSession()
 	{
-		_pContext->Release();
-		_pTextService->Release();
 	}
 
 	/* IUnknown */
@@ -59,8 +53,8 @@ public:
 	virtual STDMETHODIMP DoEditSession(TfEditCookie ec) = 0;
 
 protected:
-	WeaselTSF *_pTextService;
-	ITfContext *_pContext;
+	com_ptr<WeaselTSF> _pTextService;
+	com_ptr<ITfContext> _pContext;
 
 private:
 	LONG _cRef; /* COM reference count */

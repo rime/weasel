@@ -8,7 +8,7 @@
 class CStartCompositionEditSession: public CEditSession
 {
 public:
-	CStartCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, BOOL fCUASWorkaroundEnabled)
+	CStartCompositionEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled)
 		: CEditSession(pTextService, pContext)
 	{
 		_fCUASWorkaroundEnabled = fCUASWorkaroundEnabled;
@@ -24,18 +24,19 @@ private:
 STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 {
 	HRESULT hr = E_FAIL;
-	ITfInsertAtSelection *pInsertAtSelection = NULL;
-	ITfRange *pRangeComposition = NULL;
+	com_ptr<ITfInsertAtSelection> pInsertAtSelection;
+	com_ptr<ITfRange> pRangeComposition;
 	if (_pContext->QueryInterface(IID_ITfInsertAtSelection, (LPVOID *) &pInsertAtSelection) != S_OK)
-		goto Exit;
+		return hr;
 	if (pInsertAtSelection->InsertTextAtSelection(ec, TF_IAS_QUERYONLY, NULL, 0, &pRangeComposition) != S_OK)
-		goto Exit;
+		return hr;
 	
-	ITfContextComposition *pContextComposition = NULL;
-	ITfComposition *pComposition = NULL;
+	com_ptr<ITfContextComposition> pContextComposition;
+	com_ptr<ITfComposition> pComposition;
 	if (_pContext->QueryInterface(IID_ITfContextComposition, (LPVOID *) &pContextComposition) != S_OK)
-		goto Exit;
-	if ((pContextComposition->StartComposition(ec, pRangeComposition, _pTextService, &pComposition) == S_OK) && (pComposition != NULL))
+		return hr;
+	if ((pContextComposition->StartComposition(ec, pRangeComposition, _pTextService, &pComposition) == S_OK)
+		&& (pComposition != NULL))
 	{
 		_pTextService->_SetComposition(pComposition);
 		
@@ -63,25 +64,17 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		_pContext->SetSelection(ec, 1, &tfSelection);
 	}
 	
-Exit:
-	if (pContextComposition != NULL)
-		pContextComposition->Release();
-	if (pRangeComposition != NULL)
-		pRangeComposition->Release();
-	if (pInsertAtSelection != NULL)
-		pInsertAtSelection->Release();
-
 	return hr;
 }
 
-void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnabled)
+void WeaselTSF::_StartComposition(com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled)
 {
-	CStartCompositionEditSession *pStartCompositionEditSession;
-	if ((pStartCompositionEditSession = new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled)) != NULL)
+	com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
+	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled));
+	if (pStartCompositionEditSession != nullptr)
 	{
 		HRESULT hr;
 		pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession, TF_ES_SYNC | TF_ES_READWRITE, &hr);
-		pStartCompositionEditSession->Release();
 	}
 }
 
@@ -89,7 +82,7 @@ void WeaselTSF::_StartComposition(ITfContext *pContext, BOOL fCUASWorkaroundEnab
 class CEndCompositionEditSession: public CEditSession
 {
 public:
-	CEndCompositionEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, BOOL clear = TRUE)
+	CEndCompositionEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, com_ptr<ITfComposition> pComposition, BOOL clear = TRUE)
 		: CEditSession(pTextService, pContext), _clear(clear)
 	{
 		_pComposition = pComposition;
@@ -99,7 +92,7 @@ public:
 	STDMETHODIMP DoEditSession(TfEditCookie ec);
 
 private:
-	ITfComposition *_pComposition;
+	com_ptr<ITfComposition> _pComposition;
 	BOOL _clear;
 };
 
@@ -116,7 +109,7 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 	return S_OK;
 }
 
-void WeaselTSF::_EndComposition(ITfContext *pContext, BOOL clear)
+void WeaselTSF::_EndComposition(com_ptr<ITfContext> pContext, BOOL clear)
 {
 	CEndCompositionEditSession *pEditSession;
 	HRESULT hr;
@@ -132,7 +125,7 @@ void WeaselTSF::_EndComposition(ITfContext *pContext, BOOL clear)
 class CGetTextExtentEditSession: public CEditSession
 {
 public:
-	CGetTextExtentEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfContextView *pContextView, ITfComposition *pComposition)
+	CGetTextExtentEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, com_ptr<ITfContextView> pContextView, com_ptr<ITfComposition> pComposition)
 		: CEditSession(pTextService, pContext)
 	{
 		_pContextView = pContextView;
@@ -143,50 +136,42 @@ public:
 	STDMETHODIMP DoEditSession(TfEditCookie ec);
 
 private:
-	ITfContextView *_pContextView;
-	ITfComposition *_pComposition;
+	com_ptr<ITfContextView> _pContextView;
+	com_ptr<ITfComposition> _pComposition;
 };
 
 STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 {
-	ITfInsertAtSelection *pInsertAtSelection = NULL;
-	ITfRange *pRangeComposition = NULL;
+	com_ptr<ITfInsertAtSelection> pInsertAtSelection;
+	com_ptr<ITfRange> pRangeComposition;
 	RECT rc;
 	BOOL fClipped;
 	TF_SELECTION selection;
 	ULONG nSelection;
 	if (FAILED(_pContext->QueryInterface(IID_ITfInsertAtSelection, (LPVOID *) &pInsertAtSelection)))
-		goto Exit;
+		return E_FAIL;
 	if (FAILED(_pContext->GetSelection(ec, TF_DEFAULT_SELECTION, 1, &selection, &nSelection)))
-		goto Exit;
+		return E_FAIL;
 	if ((_pContextView->GetTextExt(ec, selection.range, &rc, &fClipped)) == S_OK && (rc.left != 0 || rc.top != 0))
 		_pTextService->_SetCompositionPosition(rc);
-
-Exit:
-	if (pRangeComposition != NULL)
-		pRangeComposition->Release();
-	if (pInsertAtSelection != NULL)
-		pInsertAtSelection->Release();
 	return S_OK;
 }
 
 /* Composition Window Handling */
-BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext *pContext)
+BOOL WeaselTSF::_UpdateCompositionWindow(com_ptr<ITfContext> pContext)
 {
-	ITfContextView *pContextView = NULL;
+	com_ptr<ITfContextView> pContextView;
 	if (pContext->GetActiveView(&pContextView) != S_OK)
 		return FALSE;
-	CGetTextExtentEditSession *pEditSession;
-	if ((pEditSession = new CGetTextExtentEditSession(this, pContext, pContextView, _pComposition)) != NULL)
+	com_ptr<CGetTextExtentEditSession> pEditSession;
+	pEditSession.Attach(new CGetTextExtentEditSession(this, pContext, pContextView, _pComposition));
+	if (pEditSession == NULL)
 	{
-		HRESULT hr;
-		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_SYNC | TF_ES_READ, &hr);
-		pEditSession->Release();
-		pContextView->Release();
-		return TRUE;
+		return FALSE;
 	}
-	pContextView->Release();
-	return FALSE;
+	HRESULT hr;
+	pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_SYNC | TF_ES_READ, &hr);
+	return SUCCEEDED(hr);
 }
 
 void WeaselTSF::_SetCompositionPosition(const RECT &rc)
@@ -213,7 +198,7 @@ void WeaselTSF::_SetCompositionPosition(const RECT &rc)
 class CInlinePreeditEditSession: public CEditSession
 {
 public:
-	CInlinePreeditEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, const std::shared_ptr<weasel::Context> context)
+	CInlinePreeditEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, com_ptr<ITfComposition> pComposition, const std::shared_ptr<weasel::Context> context)
 		: CEditSession(pTextService, pContext), _pComposition(pComposition), _context(context)
 	{
 	}
@@ -222,7 +207,7 @@ public:
 	STDMETHODIMP DoEditSession(TfEditCookie ec);
 
 private:
-	ITfComposition *_pComposition;
+	com_ptr<ITfComposition> _pComposition;
 	const std::shared_ptr<weasel::Context> _context;
 };
 
@@ -230,12 +215,12 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 {
 	std::wstring preedit = _context->preedit.str;
 
-	ITfRange *pRangeComposition = NULL;
+	com_ptr<ITfRange> pRangeComposition;
 	if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
-		goto Exit;
+		return E_FAIL;
 
 	if ((pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length())) != S_OK)
-		goto Exit;
+		return E_FAIL;
 
 	int sel_start = 0, sel_end = 0; /* TODO: Check the availability and correctness of these values */
 	for (size_t i = 0; i < _context->preedit.attributes.size(); i++)
@@ -257,20 +242,17 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 	tfSelection.style.fInterimChar = FALSE;
 	_pContext->SetSelection(ec, 1, &tfSelection);
 
-Exit:
-	if (pRangeComposition != NULL)
-		pRangeComposition->Release();
 	return S_OK;
 }
 
-BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const std::shared_ptr<weasel::Context> context)
+BOOL WeaselTSF::_ShowInlinePreedit(com_ptr<ITfContext> pContext, const std::shared_ptr<weasel::Context> context)
 {
-	CInlinePreeditEditSession *pEditSession;
-	if ((pEditSession = new CInlinePreeditEditSession(this, pContext, _pComposition, context)) != NULL)
+	com_ptr<CInlinePreeditEditSession> pEditSession;
+	pEditSession.Attach(new CInlinePreeditEditSession(this, pContext, _pComposition, context));
+	if (pEditSession != NULL)
 	{
 		HRESULT hr;
 		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
-		pEditSession->Release();
 	}
 	return TRUE;
 }
@@ -279,7 +261,7 @@ BOOL WeaselTSF::_ShowInlinePreedit(ITfContext *pContext, const std::shared_ptr<w
 class CInsertTextEditSession : public CEditSession
 {
 public:
-	CInsertTextEditSession(WeaselTSF *pTextService, ITfContext *pContext, ITfComposition *pComposition, const std::wstring &text)
+	CInsertTextEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, com_ptr<ITfComposition> pComposition, const std::wstring &text)
 		: CEditSession(pTextService, pContext), _text(text), _pComposition(pComposition)
 	{
 	}
@@ -289,20 +271,20 @@ public:
 
 private:
 	std::wstring _text;
-	ITfComposition *_pComposition;
+	com_ptr<ITfComposition> _pComposition;
 };
 
 STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec)
 {
-	ITfRange *pRange;
+	com_ptr<ITfRange> pRange;
 	TF_SELECTION tfSelection;
 	HRESULT hRet = S_OK;
 
-	if ((hRet = _pComposition->GetRange(&pRange)) != S_OK)
-		goto Exit;
+	if (FAILED(_pComposition->GetRange(&pRange)))
+		return E_FAIL;
 
-	if ((hRet = pRange->SetText(ec, 0, _text.c_str(), _text.length())) != S_OK)
-		goto Exit;
+	if (FAILED(pRange->SetText(ec, 0, _text.c_str(), _text.length())))
+		return E_FAIL;
 
 	/* update the selection to an insertion point just past the inserted text. */
 	pRange->Collapse(ec, TF_ANCHOR_END);
@@ -313,14 +295,10 @@ STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec)
 
 	_pContext->SetSelection(ec, 1, &tfSelection);
 
-Exit:
-	if (pRange != NULL)
-		pRange->Release();
-
 	return hRet;
 }
 
-BOOL WeaselTSF::_InsertText(ITfContext *pContext, const std::wstring& text)
+BOOL WeaselTSF::_InsertText(com_ptr<ITfContext> pContext, const std::wstring& text)
 {
 	CInsertTextEditSession *pEditSession;
 	HRESULT hr;
@@ -334,7 +312,7 @@ BOOL WeaselTSF::_InsertText(ITfContext *pContext, const std::wstring& text)
 	return TRUE;
 }
 
-void WeaselTSF::_UpdateComposition(ITfContext *pContext)
+void WeaselTSF::_UpdateComposition(com_ptr<ITfContext> pContext)
 {
 	HRESULT hr;
 
@@ -367,14 +345,10 @@ void WeaselTSF::_AbortComposition(bool clear)
 
 void WeaselTSF::_FinalizeComposition()
 {
-	if (_pComposition != NULL)
-	{
-		_pComposition->Release();
-		_pComposition = NULL;
-	}
+	_pComposition = nullptr;
 }
 
-void WeaselTSF::_SetComposition(ITfComposition *pComposition)
+void WeaselTSF::_SetComposition(com_ptr<ITfComposition> pComposition)
 {
 	_pComposition = pComposition;
 }

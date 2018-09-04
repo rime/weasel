@@ -2,7 +2,6 @@
 #include "WeaselTSF.h"
 #include "Compartment.h"
 #include <resource.h>
-#include <ComPtr.h>
 #include <functional>
 
 STDAPI CCompartmentEventSink::QueryInterface(REFIID riid, _Outptr_ void **ppvObj)
@@ -51,7 +50,7 @@ STDAPI CCompartmentEventSink::OnChange(_In_ REFGUID guidCompartment)
 	return _callback(guidCompartment);
 }
 
-HRESULT CCompartmentEventSink::_Advise(_In_ IUnknown *punk, _In_ REFGUID guidCompartment)
+HRESULT CCompartmentEventSink::_Advise(_In_ com_ptr<IUnknown> punk, _In_ REFGUID guidCompartment)
 {
 	HRESULT hr = S_OK;
 	ITfCompartmentMgr* pCompartmentMgr = nullptr;
@@ -90,7 +89,6 @@ HRESULT CCompartmentEventSink::_Unadvise()
 		pSource->Release();
 	}
 
-	_compartment->Release();
 	_compartment = nullptr;
 	_cookie = 0;
 
@@ -208,7 +206,7 @@ BOOL WeaselTSF::_InitCompartment()
 	if (!_pKeyboardCompartmentSink)
 		return FALSE;
 	DWORD hr = _pKeyboardCompartmentSink->_Advise(
-		_pThreadMgr,
+		(IUnknown *)_pThreadMgr,
 		GUID_COMPARTMENT_KEYBOARD_OPENCLOSE
 	);
 	return SUCCEEDED(hr);
@@ -218,7 +216,6 @@ void WeaselTSF::_UninitCompartment()
 {
 	if (_pKeyboardCompartmentSink) {
 		_pKeyboardCompartmentSink->_Unadvise();
-		_pKeyboardCompartmentSink->Release();
 		_pKeyboardCompartmentSink = NULL;
 	}
 

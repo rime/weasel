@@ -15,6 +15,11 @@
 #include <msctf.h>
 #include <assert.h>
 
+#include <atlcomcli.h> 
+
 #include <map>
 #include <memory>
 #include <string>
+
+template<typename I>
+using com_ptr = CComPtr<I>;
