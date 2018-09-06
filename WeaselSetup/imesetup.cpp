@@ -80,7 +80,7 @@ int install_ime_file(std::wstring& srcPath, const std::wstring& ext, bool hant, 
 	WCHAR drive[_MAX_DRIVE];
 	WCHAR dir[_MAX_DIR];
 	_wsplitpath_s(path, drive, _countof(drive), dir, _countof(dir), NULL, 0, NULL, 0);
-	srcPath = std::wstring(drive) + dir + L'\\' + srcFileName;
+	srcPath = std::wstring(drive) + dir + srcFileName;
 
 	GetSystemDirectoryW(path, _countof(path));
 	std::wstring destPath = std::wstring(path) + L"\\weasel" + ext;
@@ -417,6 +417,7 @@ int install(bool hant, bool silent)
 	WCHAR dir[_MAX_DIR];
 	_wsplitpath_s(ime_src_path.c_str(), drive, _countof(drive), dir, _countof(dir), NULL, 0, NULL, 0);
 	std::wstring rootDir = std::wstring(drive) + dir;
+	rootDir.pop_back();
 	ret = RegSetValueEx(hKey, L"WeaselRoot", 0, REG_SZ,
 		                (const BYTE*)rootDir.c_str(),
 						(rootDir.length() + 1) * sizeof(WCHAR));
