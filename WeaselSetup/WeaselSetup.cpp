@@ -94,7 +94,7 @@ static int CustomInstall(bool installing)
 		return 1;
 
 	ret = RegCreateKeyEx(HKEY_CURRENT_USER, KEY,
-		                 0, NULL, 0, KEY_ALL_ACCESS | KEY_WOW64_32KEY, 0, &hKey, NULL);
+		                 0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
 		MessageBox(NULL, KEY, L"安裝失敗", MB_ICONERROR | MB_OK);

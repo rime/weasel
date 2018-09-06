@@ -140,11 +140,7 @@ program_files:
   ${EndIf}
   File "WeaselDeployer.exe"
   File "WeaselServer.exe"
-  ${If} ${RunningX64}
-    File "WeaselSetupx64.exe"
-  ${Else}
-    File "WeaselSetup.exe"
-  ${EndIf}
+  File "WeaselSetup.exe"
   File "rime.dll"
   File "WinSparkle.dll"
   ; shared data files
@@ -176,11 +172,7 @@ program_files:
   IfErrors +2 0
   StrCpy $R2 "/t"
 
-  ${If} ${RunningX64}
-    ExecWait '"$INSTDIR\WeaselSetupx64.exe" $R2'
-  ${Else}
-    ExecWait '"$INSTDIR\WeaselSetup.exe" $R2'
-  ${EndIf}
+  ExecWait '"$INSTDIR\WeaselSetup.exe" $R2'
 
   ; run as user...
   ExecWait "$INSTDIR\WeaselDeployer.exe /install"
@@ -216,11 +208,7 @@ Section "Start Menu Shortcuts"
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】用戶文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/userdir" "$SYSDIR\shell32.dll" 126
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】程序文件夾.lnk" "$INSTDIR\WeaselServer.exe" "/weaseldir" "$SYSDIR\shell32.dll" 19
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】檢查新版本.lnk" "$INSTDIR\WeaselServer.exe" "/update" "$SYSDIR\shell32.dll" 13
-  ${If} ${RunningX64}
-    CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】安裝選項.lnk" "$INSTDIR\WeaselSetupx64.exe" "" "$SYSDIR\shell32.dll" 162
-  ${Else}
-    CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】安裝選項.lnk" "$INSTDIR\WeaselSetup.exe" "" "$SYSDIR\shell32.dll" 162
-  ${EndIf}
+  CreateShortCut "$SMPROGRAMS\小狼毫輸入法\【小狼毫】安裝選項.lnk" "$INSTDIR\WeaselSetup.exe" "" "$SYSDIR\shell32.dll" 162
   CreateShortCut "$SMPROGRAMS\小狼毫輸入法\卸載小狼毫.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 
 SectionEnd
@@ -233,11 +221,7 @@ Section "Uninstall"
 
   ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
 
-  ${If} ${RunningX64}
-    ExecWait '"$INSTDIR\WeaselSetupx64.exe" /u'
-  ${Else}
-    ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
-  ${EndIf}
+  ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
 
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel"
