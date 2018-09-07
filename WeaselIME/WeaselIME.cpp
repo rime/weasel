@@ -35,7 +35,7 @@ static bool launch_server()
 
 	// 從註冊表取得server位置
 	HKEY hKey;
-	LSTATUS ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 0, KEY_READ, &hKey);
+	LSTATUS ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY, 0, KEY_READ | KEY_WOW64_32KEY, &hKey);
 	if (ret != ERROR_SUCCESS)
 	{
 		error_message(L"註冊表信息無影了");
