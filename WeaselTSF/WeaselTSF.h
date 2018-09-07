@@ -100,6 +100,10 @@ public:
 	void _UpdateUI(const weasel::Context & ctx, const weasel::Status & status);
 	void _StartUI();
 	void _EndUI();
+	void _ShowUI();
+	void _HideUI();
+	com_ptr<ITfContext> _GetUIContextDocument();
+
 
 	com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
 

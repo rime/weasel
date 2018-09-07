@@ -156,12 +156,12 @@ Exit:
 
 BOOL WeaselTSF::_IsKeyboardOpen()
 {
-	ITfCompartmentMgr *pCompMgr = NULL;
+	com_ptr<ITfCompartmentMgr> pCompMgr;
 	BOOL fOpen = FALSE;
 
-	if (_pThreadMgr->QueryInterface(IID_ITfCompartmentMgr, (void **) &pCompMgr) == S_OK)
+	if (_pThreadMgr->QueryInterface(&pCompMgr) == S_OK)
 	{
-		ITfCompartment *pCompartment;
+		com_ptr<ITfCompartment> pCompartment;
 		if (pCompMgr->GetCompartment(GUID_COMPARTMENT_KEYBOARD_OPENCLOSE, &pCompartment) == S_OK)
 		{
 			VARIANT var;
@@ -171,7 +171,6 @@ BOOL WeaselTSF::_IsKeyboardOpen()
 					fOpen = (BOOL) var.lVal;
 			}
 		}
-		pCompMgr->Release();
 	}
 	return fOpen;
 }
@@ -179,9 +178,9 @@ BOOL WeaselTSF::_IsKeyboardOpen()
 HRESULT WeaselTSF::_SetKeyboardOpen(BOOL fOpen)
 {
 	HRESULT hr = E_FAIL;
-	ITfCompartmentMgr *pCompMgr = NULL;
+	com_ptr<ITfCompartmentMgr> pCompMgr;
 
-	if (_pThreadMgr->QueryInterface(IID_ITfCompartmentMgr, (void **) &pCompMgr) == S_OK)
+	if (_pThreadMgr->QueryInterface(&pCompMgr) == S_OK)
 	{
 		ITfCompartment *pCompartment;
 		if (pCompMgr->GetCompartment(GUID_COMPARTMENT_KEYBOARD_OPENCLOSE, &pCompartment) == S_OK)
@@ -191,7 +190,6 @@ HRESULT WeaselTSF::_SetKeyboardOpen(BOOL fOpen)
 			var.lVal = fOpen;
 			hr = pCompartment->SetValue(_tfClientId, &var);
 		}
-		pCompMgr->Release();
 	}
 
 	return hr;

@@ -267,19 +267,24 @@ UIStyle & CCandidateList::style()
 
 HWND CCandidateList::_GetActiveWnd()
 {
-	com_ptr<ITfDocumentMgr> dmgr;
-	com_ptr<ITfContext> ctx;
-	com_ptr<ITfContextView> view;
+	com_ptr<ITfDocumentMgr> pDocumentMgr;
+	com_ptr<ITfContext> pContext;
+	com_ptr<ITfContextView> pContextView;
 	com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
 
 	HWND w = NULL;
 
+	// Reset current context
+	_pContextDocument = nullptr;
+
 	if (pThreadMgr != nullptr
-		&& SUCCEEDED(pThreadMgr->GetFocus(&dmgr))
-		&& SUCCEEDED(dmgr->GetTop(&ctx))
-		&& SUCCEEDED(ctx->GetActiveView(&view)))
+		&& SUCCEEDED(pThreadMgr->GetFocus(&pDocumentMgr))
+		&& SUCCEEDED(pDocumentMgr->GetTop(&pContext))
+		&& SUCCEEDED(pContext->GetActiveView(&pContextView)))
 	{
-		view->GetWnd(&w);
+		// Set current context
+		_pContextDocument = pContext;
+		pContextView->GetWnd(&w);
 	}
 
 	if (w == NULL) w = ::GetFocus();
@@ -340,6 +345,11 @@ void CCandidateList::EndUI()
 	_DisposeUIWindow();
 }
 
+com_ptr<ITfContext> CCandidateList::GetContextDocument()
+{
+	return _pContextDocument;
+}
+
 void CCandidateList::_DisposeUIWindow()
 {
 	if (_ui == nullptr)
@@ -369,6 +379,21 @@ void WeaselTSF::_StartUI()
 void WeaselTSF::_EndUI()
 {
 	_cand->EndUI();
+}
+
+void WeaselTSF::_ShowUI()
+{
+	_cand->Show(TRUE);
+}
+
+void WeaselTSF::_HideUI()
+{
+	_cand->Show(FALSE);
+}
+
+com_ptr<ITfContext> WeaselTSF::_GetUIContextDocument()
+{
+	return _cand->GetContextDocument();
 }
 
 void WeaselTSF::_DeleteCandidateList()

@@ -50,9 +50,13 @@ public:
 	void UpdateStyle(const weasel::UIStyle &sty);
 	void UpdateInputPosition(RECT const& rc);
 	void Destroy();
-	weasel::UIStyle &style();
 	void StartUI();
 	void EndUI();
+
+	com_ptr<ITfContext> GetContextDocument();
+
+	weasel::UIStyle &style();
+
 
 private:
 	//void _UpdateOwner();
@@ -70,5 +74,7 @@ private:
 
 	BOOL _pbShow;
 	weasel::UIStyle _style;
+
+	com_ptr<ITfContext> _pContextDocument;
 };
 

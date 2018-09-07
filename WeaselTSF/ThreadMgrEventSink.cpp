@@ -15,6 +15,20 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 {
 	_InitTextEditSink(pDocMgrFocus);
 
+	com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
+	com_ptr<ITfContext> pTfContext = _GetUIContextDocument();
+	if ((nullptr != pTfContext) && SUCCEEDED(pTfContext->GetDocumentMgr(&pCandidateListDocumentMgr)))
+	{
+		if (pCandidateListDocumentMgr != pDocMgrFocus)
+		{
+			_HideUI();
+		}
+		else
+		{
+			_ShowUI();
+		}
+	}
+
 	return S_OK;
 }
 
