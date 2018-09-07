@@ -198,7 +198,7 @@ BOOL RegisterServer(std::wstring filename, bool wow64)
 	char achIMEKey[ARRAYSIZE(c_szInfoKeyPrefix) + CLSID_STRLEN];
 	DWORD flags = KEY_WRITE;
 	if (wow64) {
-		flags |= KEY_WOW64_32KEY;
+		flags |= KEY_WOW64_64KEY;
 	}
 	//TCHAR achFileName[MAX_PATH];
 

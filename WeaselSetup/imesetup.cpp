@@ -54,50 +54,67 @@ BOOL delete_file(const std::wstring& file)
 	return ret;
 }
 
+BOOL is_wow64()
+{
+	DWORD errorCode;
+	if (GetSystemWow64DirectoryW(NULL, 0) == 0)
+		if ((errorCode = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
+			return FALSE;
+		else
+			ExitProcess((UINT)errorCode);
+	else
+		return TRUE;
+}
+
+typedef BOOL (WINAPI *PW64DW64FR)(PVOID *);
+typedef BOOL (WINAPI *PW64RW64FR)(PVOID);
 typedef int (*ime_register_func)(const std::wstring& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent);
 
 int install_ime_file(std::wstring& srcPath, const std::wstring& ext, bool hant, bool silent, ime_register_func func)
 {
-	std::wstring destPath;
-	std::wstring wow64Path;
-
 	WCHAR path[MAX_PATH];
-	GetModuleFileName(GetModuleHandle(NULL), path, _countof(path));
+	GetModuleFileNameW(GetModuleHandle(NULL), path, _countof(path));
 
-	bool is_x64 = (sizeof(HANDLE) == 8);
 	std::wstring srcFileName = (hant ? L"weaselt" : L"weasel");
-	srcFileName += (is_x64 ? L"x64" + ext : ext);
+	srcFileName += ext;
 	WCHAR drive[_MAX_DRIVE];
 	WCHAR dir[_MAX_DIR];
 	_wsplitpath_s(path, drive, _countof(drive), dir, _countof(dir), NULL, 0, NULL, 0);
-	srcPath = std::wstring(drive) + dir + L'\\' + srcFileName;
+	srcPath = std::wstring(drive) + dir + srcFileName;
 
-	GetSystemDirectory(path, _countof(path));
-	destPath = std::wstring(path) + L"\\weasel" + ext;
-
-	if (GetSystemWow64Directory(path, _countof(path)))
-	{
-		wow64Path = std::wstring(path) + L"\\weasel" + ext;
-	}
+	GetSystemDirectoryW(path, _countof(path));
+	std::wstring destPath = std::wstring(path) + L"\\weasel" + ext;
 
 	int retval = 0;
 	// 复制 .dll/.ime 到系统目录
 	if (!copy_file(srcPath, destPath))
 	{
-		if (!silent) MessageBox(NULL, destPath.c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBoxW(NULL, destPath.c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 	retval += func(destPath, true, false, hant, silent);
-	if (!wow64Path.empty())
+	if (is_wow64())
 	{
-		std::wstring x86 = srcPath;
-		ireplace_last(x86, L"x64" + ext, ext);
-		if (!copy_file(x86, wow64Path))
+		ireplace_last(srcPath, ext, L"x64" + ext);
+		PVOID OldValue = NULL;
+		PW64DW64FR fnWow64DisableWow64FsRedirection = (PW64DW64FR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "Wow64DisableWow64FsRedirection");
+		PW64RW64FR fnWow64RevertWow64FsRedirection = (PW64RW64FR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "Wow64RevertWow64FsRedirection");
+		if (fnWow64DisableWow64FsRedirection == NULL || fnWow64DisableWow64FsRedirection(&OldValue) == FALSE)
 		{
-			if (!silent) MessageBox(NULL, wow64Path.c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, L"無法取消文件系統重定向", L"安裝失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
-		retval += func(wow64Path, true, true, hant, silent);
+		if (!copy_file(srcPath, destPath))
+		{
+			if (!silent) MessageBoxW(NULL, destPath.c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
+			return 1;
+		}
+		if (fnWow64RevertWow64FsRedirection == NULL || fnWow64RevertWow64FsRedirection(OldValue) == FALSE)
+		{
+			if (!silent) MessageBoxW(NULL, L"無法恢復文件系統重定向", L"安裝失敗", MB_ICONERROR | MB_OK);
+			return 1;
+		}
+		retval += func(destPath, true, true, hant, silent);
 	}
 	return retval;
 }
@@ -106,7 +123,7 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 {
 	int retval = 0;
 	WCHAR path[MAX_PATH];
-	GetSystemDirectory(path, _countof(path));
+	GetSystemDirectoryW(path, _countof(path));
 	std::wstring imePath(path);
 	imePath += L"\\weasel" + ext;
 	retval += func(imePath, false, false, false, silent);
@@ -115,15 +132,26 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 		if (!silent) MessageBox(NULL, imePath.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
 		retval += 1;
 	}
-	if (GetSystemWow64Directory(path, _countof(path)))
+	if (is_wow64())
 	{
-		std::wstring wow64Path(path);
-		wow64Path += L"\\weasel" + ext;
-		retval += func(wow64Path, false, true, false, silent);
-		if (!delete_file(wow64Path))
+		retval += func(imePath, false, true, false, silent);
+		PVOID OldValue = NULL;
+		PW64DW64FR fnWow64DisableWow64FsRedirection = (PW64DW64FR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "Wow64DisableWow64FsRedirection");
+		PW64RW64FR fnWow64RevertWow64FsRedirection = (PW64RW64FR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "Wow64RevertWow64FsRedirection");
+		if (fnWow64DisableWow64FsRedirection == NULL || fnWow64DisableWow64FsRedirection(&OldValue) == FALSE)
 		{
-			if (!silent) MessageBox(NULL, wow64Path.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, L"無法取消文件系統重定向", L"卸載失敗", MB_ICONERROR | MB_OK);
+			return 1;
+		}
+		if (!delete_file(imePath))
+		{
+			if (!silent) MessageBoxW(NULL, imePath.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
 			retval += 1;
+		}
+		if (fnWow64RevertWow64FsRedirection == NULL || fnWow64RevertWow64FsRedirection(OldValue) == FALSE)
+		{
+			if (!silent) MessageBoxW(NULL, L"無法恢復文件系統重定向", L"卸載失敗", MB_ICONERROR | MB_OK);
+			return 1;
 		}
 	}
 	return retval;
@@ -378,7 +406,7 @@ int install(bool hant, bool silent)
 	// 写注册表
 	HKEY hKey;
 	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY,
-		                         0, NULL, 0, KEY_ALL_ACCESS | KEY_WOW64_32KEY, 0, &hKey, NULL);
+		                         0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
 		if (!silent) MessageBox(NULL, WEASEL_REG_KEY, L"安裝失敗", MB_ICONERROR | MB_OK);
@@ -389,6 +417,7 @@ int install(bool hant, bool silent)
 	WCHAR dir[_MAX_DIR];
 	_wsplitpath_s(ime_src_path.c_str(), drive, _countof(drive), dir, _countof(dir), NULL, 0, NULL, 0);
 	std::wstring rootDir = std::wstring(drive) + dir;
+	rootDir.pop_back();
 	ret = RegSetValueEx(hKey, L"WeaselRoot", 0, REG_SZ,
 		                (const BYTE*)rootDir.c_str(),
 						(rootDir.length() + 1) * sizeof(WCHAR));
