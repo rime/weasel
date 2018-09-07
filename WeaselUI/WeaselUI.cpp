@@ -40,8 +40,7 @@ bool UI::Create(HWND parent)
 	if (!pimpl_)
 		return false;
 
-	pimpl_->panel.Create(parent, 0, 0, WS_POPUP | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW | WS_EX_TOPMOST, 0U, 0);
-	//pimpl_->tray_icon.Create(parent);
+	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST, 0U, 0);
 	return true;
 }
 

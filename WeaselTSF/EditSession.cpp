@@ -13,7 +13,6 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
 
-	_UpdateUI(*context, _status);
 	_UpdateLanguageBar(_status);
 
 	if (ok)
@@ -43,6 +42,7 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 		}
 	}
 
+	_UpdateUI(*context, _status);
 
 	return TRUE;
 }
