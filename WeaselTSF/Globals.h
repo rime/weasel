@@ -4,6 +4,17 @@
 #include "stdafx.h"
 #include <WeaselCommon.h>
 
+#ifdef WEASEL_HANT
+#define TEXTSERVICE_LANGID	MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
+#else
+#define TEXTSERVICE_LANGID	MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)
+#endif
+
+#define TEXTSERVICE_DESC	WEASEL_IME_NAME
+#define TEXTSERVICE_DESC_A	"Weasel"
+#define TEXTSERVICE_MODEL	"Apartment"
+
+#define TEXTSERVICE_ICON_INDEX	0
 
 void DllAddRef();
 void DllRelease();

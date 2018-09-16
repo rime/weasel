@@ -3,19 +3,18 @@
 #include <vector>
 #include <StringAlgorithm.hpp>
 #include <WeaselCommon.h>
-
-#include "TSFRegister.h"
+#include <msctf.h>
+#include <strsafe.h>
 
 
 // {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
-const GUID c_clsidTextService = 
+static const GUID c_clsidTextService = 
 { 0xa3f4cded, 0xb1e9, 0x41ee, { 0x9c, 0xa6, 0x7b, 0x4d, 0xd, 0xe6, 0xcb, 0xa } };
 
 // {3D02CAB6-2B8E-4781-BA20-1C9267529467}
-const GUID c_guidProfile = 
+static const GUID c_guidProfile = 
 { 0x3d02cab6, 0x2b8e, 0x4781, { 0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67 } };
 
-HKL ImeHKL = 0;
 
 BOOL copy_file(const std::wstring& src, const std::wstring& dest)
 {
@@ -109,12 +108,12 @@ int install_ime_file(std::wstring& srcPath, const std::wstring& ext, bool hant, 
 			if (!silent) MessageBoxW(NULL, destPath.c_str(), L"安裝失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
+		retval += func(destPath, true, true, hant, silent);
 		if (fnWow64RevertWow64FsRedirection == NULL || fnWow64RevertWow64FsRedirection(OldValue) == FALSE)
 		{
 			if (!silent) MessageBoxW(NULL, L"無法恢復文件系統重定向", L"安裝失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
-		retval += func(destPath, true, true, hant, silent);
 	}
 	return retval;
 }
@@ -179,9 +178,9 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 			LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
 			if (ret == ERROR_SUCCESS)
 			{
-				for (DWORD k = 0xE0200000 + (hant ? 0x0404 : 0x0804); true; k += 0x10000)
+				for (DWORD k = 0xE0200000 + (hant ? 0x0404 : 0x0804); k <= 0xE0FF0804; k += 0x10000)
 				{
-					wsprintf(hkl_str, L"%08X", k);
+					StringCchPrintfW(hkl_str, _countof(hkl_str), L"%08X", k);
 					HKEY hSubKey;
 					ret = RegOpenKey(hKey, hkl_str, &hSubKey);
 					if (ret == ERROR_SUCCESS)
@@ -248,11 +247,10 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 		{
 			DWORD dwErr = GetLastError();
 			WCHAR msg[100];
-			wsprintf(msg, L"註冊輸入法錯誤 ImmInstallIME: HKL=%x Err=%x", hKL, dwErr);
+			StringCchPrintfW(msg, _countof(msg), L"註冊輸入法錯誤 ImmInstallIME: HKL=%x Err=%x", hKL, dwErr);
 			if (!silent) MessageBox(NULL, msg, L"安裝失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
-		ImeHKL = hKL;
 		return 0;
 	}
 
@@ -366,28 +364,45 @@ void enable_profile(BOOL fEnable, bool hant) {
 		pProfiles->Release();
 	}
 }
-void unregister_text_service()
-{
-	UnregisterProfiles();
-	UnregisterCategories();
-	UnregisterServer();
-}
+
 // 注册TSF输入法
 int register_text_service(const std::wstring& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
+	using RegisterServerFunction = HRESULT (STDAPICALLTYPE *)();
+
 	if (!register_ime)
 		enable_profile(FALSE, hant);
 
-	if (register_ime) {
-		if (!RegisterServer(tsf_path, is_wow64) || !RegisterProfiles(tsf_path, ImeHKL) || !RegisterCategories())
-		{
-			unregister_text_service();
-			MessageBox(NULL, L"註冊輸入法錯誤", L"安装/卸載失败", MB_ICONERROR | MB_OK);
-			return 1;
-		}
+	std::wstring params = L" \"" + tsf_path + L"\"";
+	if (!register_ime)
+	{
+		params = L" /u " + params;  // unregister
 	}
-	else {
-		unregister_text_service();
+	//if (silent)  // always silent
+	{
+		params = L" /s " + params;
+	}
+	SHELLEXECUTEINFOW shExInfo = { 0 };
+	shExInfo.cbSize = sizeof(shExInfo);
+	shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+	shExInfo.hwnd = 0;
+	shExInfo.lpVerb = L"open";                 // Operation to perform
+	shExInfo.lpFile = L"regsvr32.exe";         // Application to start    
+	shExInfo.lpParameters = params.c_str();    // Additional parameters
+	shExInfo.lpDirectory = 0;
+	shExInfo.nShow = SW_SHOW;
+	shExInfo.hInstApp = 0;
+	if (ShellExecuteExW(&shExInfo))
+	{
+		WaitForSingleObject(shExInfo.hProcess, INFINITE);
+		CloseHandle(shExInfo.hProcess);
+	}
+	else
+	{
+		WCHAR msg[100];
+		StringCchPrintfW(msg, _countof(msg), L"註冊輸入法錯誤 regsvr32.exe %s", params.c_str());
+		if (!silent) MessageBoxW(NULL, msg, L"安装/卸載失败", MB_ICONERROR | MB_OK);
+		return 1;
 	}
 
 	if (register_ime)
