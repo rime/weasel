@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include "WeaselSetup.h"
 #include "InstallOptionsDialog.h"
-#include <VersionHelpers.hpp>
 
 CAppModule _Module;
 
@@ -15,7 +14,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                      LPTSTR    lpCmdLine,
                      int       nCmdShow)
 {
-	InitVersion();
 	UNREFERENCED_PARAMETER(hPrevInstance);
 
 	HRESULT hRes = ::CoInitialize(NULL);
