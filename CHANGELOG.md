@@ -8,6 +8,8 @@
 * 使用系統的關閉輸入法功能（默認快捷鍵 Ctrl + Space）後，輸入法圖標將顯示禁用狀態
 * 修復一些情況下的崩潰問題
 * 升級核心算法庫 [librime 1.3.2](https://github.com/rime/librime/blob/master/CHANGELOG.md#132-2018-11-12)
+  * 允許多個翻譯器共用同一個詞典時的組詞，實現固定單字順序的形碼組詞([librime#184](https://github.com/rime/librime/issues/184))。
+  * 新增 translator/always_show_comments 選項，允許始終顯示候選詞註解。
 
 #### Bug Fixes
 
