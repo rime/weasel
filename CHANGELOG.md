@@ -13,17 +13,17 @@
 
 #### Bug Fixes
 
-* **candidate:** fix COM pointer reference ([63d6d9a](https://github.com/nameoverflow/weasel/commit/63d6d9a))
-* **ipc:** eliminate some trivial warnings ([dae945c](https://github.com/nameoverflow/weasel/commit/dae945c))
-* fix constructor ([b25f968](https://github.com/nameoverflow/weasel/commit/b25f968))
+* **candidate:** fix COM pointer reference ([63d6d9a](https://github.com/rime/weasel/commit/63d6d9a))
+* **ipc:** eliminate some trivial warnings ([dae945c](https://github.com/rime/weasel/commit/dae945c))
+* fix constructor ([b25f968](https://github.com/rime/weasel/commit/b25f968))
 
 
 #### Features
 
-* **compartment:** show IME disabled on language bar ([#263](https://github.com/nameoverflow/weasel/issues/263)) ([4015d18](https://github.com/nameoverflow/weasel/commit/4015d18))
-* **install:** combine IME and TSF ([#257](https://github.com/nameoverflow/weasel/issues/257)) ([91cbd2c](https://github.com/nameoverflow/weasel/commit/91cbd2c))
-* **tsf:** get IME keyboard identifier by searching registry ([#272](https://github.com/nameoverflow/weasel/issues/272)) ([b60b5b1](https://github.com/nameoverflow/weasel/commit/b60b5b1))
-* **WeaselSetup:** detect 64-bit on single 32-bit build ([#266](https://github.com/nameoverflow/weasel/issues/266)) ([fb3ae0f](https://github.com/nameoverflow/weasel/commit/fb3ae0f))
+* **compartment:** show IME disabled on language bar ([#263](https://github.com/rime/weasel/issues/263)) ([4015d18](https://github.com/rime/weasel/commit/4015d18))
+* **install:** combine IME and TSF ([#257](https://github.com/rime/weasel/issues/257)) ([91cbd2c](https://github.com/rime/weasel/commit/91cbd2c))
+* **tsf:** get IME keyboard identifier by searching registry ([#272](https://github.com/rime/weasel/issues/272)) ([b60b5b1](https://github.com/rime/weasel/commit/b60b5b1))
+* **WeaselSetup:** detect 64-bit on single 32-bit build ([#266](https://github.com/rime/weasel/issues/266)) ([fb3ae0f](https://github.com/rime/weasel/commit/fb3ae0f))
 
 
 
