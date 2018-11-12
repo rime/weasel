@@ -1,3 +1,32 @@
+<a name="0.12.0"></a>
+## 0.12.0  (2018-11-12)
+
+#### 主要更新
+
+* 合併小狼毫與小狼毫（TSF）兩種輸入法
+* 合併32位與64位系統下的安裝程序
+* 使用系統的關閉輸入法功能（默認快捷鍵 Ctrl + Space）後，輸入法圖標將顯示禁用狀態
+* 修復一些情況下的崩潰問題
+* 升級核心算法庫 [librime 1.3.2](https://github.com/rime/librime/blob/master/CHANGELOG.md#132-2018-11-12)
+  * 允許多個翻譯器共用同一個詞典時的組詞，實現固定單字順序的形碼組詞([librime#184](https://github.com/rime/librime/issues/184))。
+  * 新增 translator/always_show_comments 選項，允許始終顯示候選詞註解。
+
+#### Bug Fixes
+
+* **candidate:** fix COM pointer reference ([63d6d9a](https://github.com/rime/weasel/commit/63d6d9a))
+* **ipc:** eliminate some trivial warnings ([dae945c](https://github.com/rime/weasel/commit/dae945c))
+* fix constructor ([b25f968](https://github.com/rime/weasel/commit/b25f968))
+
+
+#### Features
+
+* **compartment:** show IME disabled on language bar ([#263](https://github.com/rime/weasel/issues/263)) ([4015d18](https://github.com/rime/weasel/commit/4015d18))
+* **install:** combine IME and TSF ([#257](https://github.com/rime/weasel/issues/257)) ([91cbd2c](https://github.com/rime/weasel/commit/91cbd2c))
+* **tsf:** get IME keyboard identifier by searching registry ([#272](https://github.com/rime/weasel/issues/272)) ([b60b5b1](https://github.com/rime/weasel/commit/b60b5b1))
+* **WeaselSetup:** detect 64-bit on single 32-bit build ([#266](https://github.com/rime/weasel/issues/266)) ([fb3ae0f](https://github.com/rime/weasel/commit/fb3ae0f))
+
+
+
 <a name="0.11.1"></a>
 ## 0.11.1 (2018-04-26)
 
