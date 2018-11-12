@@ -3,10 +3,11 @@
 
 #### 主要更新
 
-* 合併小狼毫與小狼毫（TSF）兩種輸入法([#257](https://github.com/nameoverflow/weasel/issues/257)) ([91cbd2c](https://github.com/nameoverflow/weasel/commit/91cbd2c))
-* 合併32位與64位系統下的安裝程序 ([#266](https://github.com/nameoverflow/weasel/issues/266)) ([fb3ae0f](https://github.com/nameoverflow/weasel/commit/fb3ae0f))
-* 使用系統的關閉輸入法功能（默認快捷鍵 Ctrl + Space）後，輸入法圖標將顯示禁用狀態 ([#263](https://github.com/nameoverflow/weasel/issues/263)) ([4015d18](https://github.com/nameoverflow/weasel/commit/4015d18))
-* 修復一些情況下的崩潰問題([#252](https://github.com/nameoverflow/weasel/issues/252), ([#265](https://github.com/nameoverflow/weasel/issues/265)))
+* 合併小狼毫與小狼毫（TSF）兩種輸入法
+* 合併32位與64位系統下的安裝程序
+* 使用系統的關閉輸入法功能（默認快捷鍵 Ctrl + Space）後，輸入法圖標將顯示禁用狀態
+* 修復一些情況下的崩潰問題
+* 升級核心算法庫 [librime 1.3.2](https://github.com/rime/librime/blob/master/CHANGELOG.md#132-2018-11-12)
 
 #### Bug Fixes
 
