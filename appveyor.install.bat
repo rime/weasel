@@ -15,7 +15,7 @@ copy /Y librime\build\lib\Release\rime.dll output\
 
 if %nocache% == 1 (
 	pushd C:\Libraries
-	appveyor DownloadFile http://superb-sea2.dl.sourceforge.net/project/boost/boost/1.68.0/boost_1_68_0.7z
+	appveyor DownloadFile https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.7z
 	7z x boost_1_68_0.7z | find "ing archive"
 	cd boost_1_68_0
 	call .\bootstrap.bat
