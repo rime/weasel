@@ -5,7 +5,7 @@
 namespace weasel
 {
 	const int MAX_CANDIDATES_COUNT = 10;
-	const int STATUS_ICON_SIZE = 16;
+	const int STATUS_ICON_SIZE = GetSystemMetrics(SM_CXSMICON);
 
 	class StandardLayout: public Layout
 	{
