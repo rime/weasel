@@ -28,8 +28,10 @@ if not defined PLATFORM_TOOLSET (
 
 if defined DEVTOOLS_PATH set PATH=%DEVTOOLS_PATH%%PATH%
 
+set build_config=Release
 set build_option=/t:Build
 set build_boost=0
+set build_boost_variant=release
 set build_data=0
 set build_hant=0
 set build_rime=0
@@ -38,6 +40,14 @@ set build_x64=1
 
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
+if "%1" == "debug" (
+  set build_config=Debug
+  set build_boost_variant=debug
+)
+if "%1" == "release" (
+  set build_config=Release
+  set build_boost_variant=release
+)
 if "%1" == "rebuild" set build_option=/t:Rebuild
 if "%1" == "boost" set build_boost=1
 if "%1" == "data" set build_data=1
@@ -106,10 +116,10 @@ if %build_hant% == 1 (
 )
 
 if %build_x64% == 1 (
-  msbuild.exe weasel.sln %build_option% /p:Configuration=Release /p:Platform="x64" /fl2
+  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
   if errorlevel 1 goto error
 )
-msbuild.exe weasel.sln %build_option% /p:Configuration=Release /p:Platform="Win32" /fl1
+msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1
 if errorlevel 1 goto error
 
 if %build_installer% == 1 (
@@ -130,7 +140,7 @@ set BOOST_COMPILED_LIBS=--with-date_time^
  --with-serialization
 
 set BJAM_OPTIONS_COMMON=toolset=%BJAM_TOOLSET%^
- variant=release^
+ variant=%build_boost_variant%^
  link=static^
  threading=multi^
  runtime-link=static^

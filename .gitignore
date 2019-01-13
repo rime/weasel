@@ -2,6 +2,7 @@ Debug/
 Release/
 ReleaseHant/
 /output/*.exp
+/output/*.ilk
 /output/*.iobj
 /output/*.ipdb
 /output/*.pdb
