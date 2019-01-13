@@ -119,13 +119,13 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-	<OutDir>$(SolutionDir)output\</OutDir>
+    <OutDir>$(SolutionDir)output\</OutDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>weasel</TargetName>
     <TargetExt>.ime</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|Win32'">
-	<OutDir>$(SolutionDir)output\</OutDir>
+    <OutDir>$(SolutionDir)output\</OutDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>weaselt</TargetName>
     <TargetExt>.ime</TargetExt>
@@ -137,13 +137,13 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-	<OutDir>$(SolutionDir)output\</OutDir>
+    <OutDir>$(SolutionDir)output\</OutDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>weasel$(Platform)</TargetName>
     <TargetExt>.ime</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|x64'">
-	<OutDir>$(SolutionDir)output\</OutDir>
+    <OutDir>$(SolutionDir)output\</OutDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>weaselt$(Platform)</TargetName>
     <TargetExt>.ime</TargetExt>
@@ -166,7 +166,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>"$(OutDir)weasel.ime"</OutputFile>
+      <OutputFile>$(SolutionDir)output\weasel$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_ROOT)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>weasel.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -293,7 +293,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>"$(OutDir)weasel.ime"</OutputFile>
+      <OutputFile>$(SolutionDir)output\weasel$(Platform)$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_ROOT)\stage_x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>weasel.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>

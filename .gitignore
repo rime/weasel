@@ -34,3 +34,4 @@ weasel.props
 Thumbs.db
 /.idea
 /cmake-build-debug
+*.VC.db
