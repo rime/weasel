@@ -9,7 +9,7 @@
 
 授權條款：GPLv3
 
-項目主葉：http://rime.im
+項目主葉：https://rime.im
 
 您可能還需要 RIME 用於其他操作系統的發行版：
 
