@@ -146,6 +146,8 @@ program_files:
   ; shared data files
   SetOutPath $INSTDIR\data
   File "data\default.yaml"
+  File "data\key_bindings.yaml"
+  File "data\punctuation.yaml"
   File "data\symbols.yaml"
   File "data\weasel.yaml"
   File "data\essay.txt"
