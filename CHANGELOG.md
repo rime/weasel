@@ -1,3 +1,30 @@
+<a name="0.13.0"></a>
+## 0.13.0 (2019-01-28)
+
+
+#### 主要更新
+
+* 升級核心算法庫 [librime 1.4.0](https://github.com/rime/librime/blob/master/CHANGELOG.md#140-2019-01-16)
+  * 新增 [拼寫糾錯](https://github.com/rime/librime/pull/228) 選項
+    當前僅限 QWERTY 鍵盤佈局及使用 `script_translator` 的方案
+  * 修復升級、部署數據時發生的若干錯誤
+* 更換輸入法狀態圖標，適配高分辨率屏幕
+
+
+#### Features
+
+* **tsf:**  register as GUID_TFCAT_TIPCAP_UIELEMENTENABLED ([ae876916](https://github.com/rime/weasel/commit/ae8769166ea50b319aa89460b60890d598c618c5))
+* **ui:**  high-res icons (#324) ([ad3e2027](https://github.com/rime/weasel/commit/ad3e2027644f80c6a384b7730da20dd239e780af))
+
+#### Bug Fixes
+
+* **WeaselSetup.vcxproj:**  Debug build linker options ([eb885fe0](https://github.com/rime/weasel/commit/eb885fe06ffd720d3de1101be2410a94bd3747c0))
+* **output/install.nsi:**  bundle new yaml files from rime/rime-prelude ([cba35e9b](https://github.com/rime/weasel/commit/cba35e9b2c34d095b9ca1eb44e923e004cf23ddc))
+* **test:**  Debug build ([c771126c](https://github.com/rime/weasel/commit/c771126c74fa1c4f91d4bfd8fb5ab8c16dcb7c4c))
+* **tsf:**  set current page to 0 as page count is always 1 ([5447f63b](https://github.com/rime/weasel/commit/5447f63bc7c9d0e31d7ba8ead1e1229938be276d))
+
+
+
 <a name="0.12.0"></a>
 ## 0.12.0  (2018-11-12)
 
@@ -687,4 +714,3 @@
 * 以Python開發的實驗版本
 * 獨創「拼寫運算」技術
 * 預裝標調拼音、註音、粵拼、吳語等多種輸入方案
-
