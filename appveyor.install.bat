@@ -7,9 +7,9 @@ if not exist %BOOST_ROOT% set nocache=1
 
 git submodule init
 git submodule update plum
-rem librime v1.3.0
-appveyor DownloadFile https://github.com/rime/librime/releases/download/1.3.2/rime-windows.zip
-7z x rime-windows.zip * -olibrime\ | find "ing archive"
+rem librime v1.4.0
+appveyor DownloadFile https://github.com/rime/librime/releases/download/1.4.0/rime.zip
+7z x rime.zip * -olibrime\ | find "ing archive"
 copy /Y librime\build\include\rime_*.h include\
 copy /Y librime\build\lib\Release\rime.dll output\
 
