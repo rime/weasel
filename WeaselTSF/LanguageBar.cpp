@@ -59,7 +59,7 @@ STDAPI CLangBarItemButton::QueryInterface(REFIID riid, void **ppvObject)
 		*ppvObject = (ITfLangBarItemButton *) this;
 	else if (IsEqualIID(riid, IID_ITfSource))
 		*ppvObject = (ITfSource *) this;
-	
+
 	if (*ppvObject)
 	{
 		AddRef();
@@ -153,7 +153,13 @@ STDAPI CLangBarItemButton::OnMenuSelect(UINT wID)
 
 STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 {
-	*phIcon = (HICON) LoadImageW(g_hInst, MAKEINTRESOURCEW(ascii_mode ? IDI_EN_256 : IDI_ZH_256), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+	*phIcon = (HICON) LoadImageW(
+		g_hInst,
+		MAKEINTRESOURCEW(ascii_mode ? IDI_EN : IDI_ZH),
+		IMAGE_ICON,
+		GetSystemMetrics(SM_CXSMICON),
+		GetSystemMetrics(SM_CYSMICON),
+		LR_SHARED);
 	return (*phIcon == NULL)? E_FAIL: S_OK;
 }
 
