@@ -7,13 +7,13 @@ version: '{branch} build {build}'
 image: Visual Studio 2017
 
 environment:
-  BOOST_ROOT: C:\Libraries\libboost
+  BOOST_ROOT: C:\Libraries\boost_1_69_0
   CMAKE_GENERATOR: "Visual Studio 15 2017"
   PLATFORM_TOOLSET: v141_xp
 
 cache:
   - boost.cached -> appveyor.install.bat
-  - C:\Libraries\libboost -> appveyor.install.bat
+  - C:\Libraries\boost_1_69_0\stage -> appveyor.install.bat
 
 init:
   - git --version

@@ -2,19 +2,23 @@
 
 ## Preparation
 
-Assume we already have an installation of **Visual Studio 2015** including the component "MFC and ATL support".
+  - Install **Visual Studio 2017** for *Desktop development in C++*
+    with components *ATL*, *MFC* and *Windows XP support*.
+    Visual Studio 2015 or later versions may work with additional configuration.
 
-Install dev tools: `git`, `cmake`
-Download third-party libraries: `boost(>=1.60.0)`
+  - Install dev tools: `git`, `cmake`
+
+  - Download third-party libraries: `boost(>=1.60.0)`
 
 Optional:
-install `bash` (available via Git for Windows) for installing data files from `plum`;
-install `python` for building OpenCC dictionaries;
-install [NSIS](http://nsis.sourceforge.net/Download) for creating installer.
+
+  - install `bash` via *Git for Windows*, for installing data files with `plum`;
+  - install `python` for building OpenCC dictionaries;
+  - install [NSIS](http://nsis.sourceforge.net/Download) for creating installer.
 
 ## Checkout source code
 
-Make sure you also checkout submodules `librime` and `plum` under `weasel` directory.
+Make sure all git submodules are checked out recursively.
 
 ```batch
 git clone --recursive https://github.com/rime/weasel.git
@@ -26,17 +30,20 @@ Locate `weasel` source directory.
 
 ### Setup build environment
 
-Start a Developer Command Prompt window.
+Edit your build environment settings in `env.bat`.
+You can create the file by copying `env.bat.template` in the source tree.
 
-Set `BOOST_ROOT` environment variable:
+Make sure `BOOST_ROOT` is set to the existing path `X:\path\to\boost_<version>`.
+
+When using a different version of Visual Studio or platform toolset, un-comment
+lines to set corresponding variables.
+
+Alternatively, start a *Developer Command Prompt* window and set environment
+variables directly in the console, before invocation of `build.bat`:
 
 ```batch
 set BOOST_ROOT=X:\path\to\boost_N_NN_N
 ```
-
-Alternatively, save your build environment settings in `env.bat`.
-You can create the file by copying `env.bat.template` and make modifications.
-Make sure `BOOST_ROOT` is set to existing `X:\path\to\boost_<version_number>` in your copy.
 
 ### Build
 
@@ -51,9 +58,9 @@ Installer will be generated in `output\archives` directory.
 
 ### Alternative: using prebuilt Rime binaries
 
-If you've already got a copy of prebuilt binaries of librime,
-you can simply copy `.dll`s / `.lib`s into `weasel\output` / `weasel\lib` directories respectively.
-Then build Weasel without the `all` command line option.
+If you've already got a copy of prebuilt binaries of librime, you can simply
+copy `.dll`s / `.lib`s into `weasel\output` / `weasel\lib` directories
+respectively, then build Weasel without the `all` command line option.
 
 ```batch
 build.bat boost data hant
@@ -68,14 +75,15 @@ install.bat
 
 ### Optional: play with Rime command line tools
 
-Rime comes with a REPL application which can be used to test if the library is working.
-
-Windows command line does not use UTF-8 character encoding, thus we save the output to a file.
+`librime` comes with a REPL application which can be used to test if the library
+is working.
 
 ```batch
 cd librime
-copy /Y thirdparty\bin\*.dll build\bin\
-copy /Y build\lib\Release\rime.dll build\bin\
+copy /Y build\lib\Release\rime.dll build\bin
 cd build\bin
 echo zhongzhouyunshurufa | Release\rime_api_console.exe > output.txt
 ```
+
+Instead of redirecting output to a file, you can set appropriate code page
+(`chcp 65001`) and font in the console to work with the REPL interactively.
