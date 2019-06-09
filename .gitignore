@@ -36,3 +36,4 @@ Thumbs.db
 /.idea
 /cmake-build-debug
 *.VC.db
+release-notes.html
