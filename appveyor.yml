@@ -26,5 +26,5 @@ build_script:
   - .\build.bat data hant installer
 
 artifacts:
-  - path: output\archives\weasel-0.13.0.0-installer.exe
+  - path: output\archives\weasel-0.14.0.0-installer.exe
     name: Weasel

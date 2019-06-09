@@ -1,3 +1,25 @@
+<a name="0.14.0"></a>
+## 0.14.0 (2019-06-09)
+
+
+#### 主要更新
+
+* 升級核心算法庫 [librime 1.5.0](https://github.com/rime/librime/blob/master/CHANGELOG.md#150-2019-06-06)
+  * 遷移到VS2017構建工具
+  * 通過更新第三方庫，修復userdb文件夾大量佔用磁盤空間的問題
+  * 將Rime插件納入自動化構建流程。本次發行包含兩款插件：
+    - [librime-lua](https://github.com/hchunhui/librime-lua)
+    - [librime-octagram](https://github.com/lotem/librime-octagram)
+* 高清重製真彩輸入法狀態圖標
+
+
+#### Features
+
+* **build.bat:**  bundle octagram data ([c4941c57](https://github.com/rime/weasel/commit/c4941c57d5df186273a863886bb18950a8a94447))
+* **ui:**  high-res status icons; display larger icons in WeaselPanel ([093fa806](https://github.com/rime/weasel/commit/093fa80678422f972e7a7285060553eeedb0e591))
+
+
+
 <a name="0.13.0"></a>
 ## 0.13.0 (2019-01-28)
 
