@@ -33,6 +33,7 @@ set build_option=/t:Build
 set build_boost=0
 set build_boost_variant=release
 set build_data=0
+set build_opencc=0
 set build_hant=0
 set build_rime=0
 set build_installer=0
@@ -51,6 +52,7 @@ if "%1" == "release" (
 if "%1" == "rebuild" set build_option=/t:Rebuild
 if "%1" == "boost" set build_boost=1
 if "%1" == "data" set build_data=1
+if "%1" == "opencc" set build_opencc=1
 if "%1" == "hant" set build_hant=1
 if "%1" == "rime" set build_rime=1
 if "%1" == "librime" set build_rime=1
@@ -58,6 +60,7 @@ if "%1" == "installer" set build_installer=1
 if "%1" == "all" (
   set build_boost=1
   set build_data=1
+  set build_opencc=1
   set build_hant=1
   set build_rime=1
   set build_installer=1
@@ -90,11 +93,12 @@ if %build_rime% == 1 (
   copy /Y librime\build\lib\Release\rime.dll output\
 )
 
-if %build_data% == 1 (
-  call :build_data
-) else if not exist output\data\essay.txt (
-  call :build_data
-)
+
+if not exist output\data\essay.txt set build_data=1
+if %build_data% == 1 call :build_data
+
+if not exist output\data\opencc\TSCharacters.ocd set build_opencc=1
+if %build_opencc% == 1 call :build_opencc_data
 
 cd /d %WEASEL_ROOT%
 
@@ -174,7 +178,6 @@ set plum_dir=plum
 set rime_dir=output/data
 set bundled_recipes=:preset lotem/rime-octagram-data
 bash plum/rime-install %bundled_recipes%
-call :build_opencc_data
 exit /b
 
 :build_essay
@@ -187,13 +190,13 @@ cd %WEASEL_ROOT%
 exit /b
 
 :build_opencc_data
-if not exist %WEASEL_ROOT%\librime\thirdparty\data\opencc\TSCharacters.ocd (
+if not exist %WEASEL_ROOT%\librime\thirdparty\share\opencc\TSCharacters.ocd (
   cd %WEASEL_ROOT%\librime
   call build.bat thirdparty
 )
 cd %WEASEL_ROOT%
 if not exist output\data\opencc mkdir output\data\opencc
-copy %WEASEL_ROOT%\librime\thirdparty\data\opencc\*.* output\data\opencc\
+copy %WEASEL_ROOT%\librime\thirdparty\share\opencc\*.* output\data\opencc\
 exit /b
 
 :error

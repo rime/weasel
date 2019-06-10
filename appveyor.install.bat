@@ -37,6 +37,8 @@ appveyor DownloadFile https://github.com/rime/librime/releases/download/1.5.0/ri
 copy /Y librime\dist\include\rime_*.h include\
 copy /Y librime\dist\lib\rime.lib lib\
 copy /Y librime\dist\lib\rime.dll output\
+if not exist output\data\opencc mkdir output\data\opencc
+copy /Y librime\thirdparty\share\opencc\*.* output\data\opencc\
 
 if %nocache% == 1 (
 	pushd %BOOST_ROOT%

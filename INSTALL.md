@@ -63,7 +63,7 @@ copy `.dll`s / `.lib`s into `weasel\output` / `weasel\lib` directories
 respectively, then build Weasel without the `all` command line option.
 
 ```batch
-build.bat boost data hant
+build.bat boost data opencc hant
 ```
 
 ### Install and try it live
