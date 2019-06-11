@@ -31,7 +31,7 @@ if not exist %BOOST_ROOT%/stage_x64 set nocache=1
 
 git submodule init
 git submodule update plum
-rem librime v1.4.0
+rem librime 1.5.0
 appveyor DownloadFile https://github.com/rime/librime/releases/download/1.5.0/rime-with-plugins.zip
 7z x rime-with-plugins.zip * -olibrime\ | find "ing archive"
 copy /Y librime\dist\include\rime_*.h include\
