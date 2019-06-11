@@ -2,9 +2,14 @@
 
 setlocal
 
+set WEASEL_VERSION=0.13.0
+if not defined WEASEL_BUILD set WEASEL_BUILD=0
+if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
+
 if exist env.bat call env.bat
 
-if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
+echo WEASEL_VERSION=%WEASEL_VERSION%
+echo WEASEL_BUILD=%WEASEL_BUILD%
 echo WEASEL_ROOT=%WEASEL_ROOT%
 echo.
 
@@ -127,7 +132,10 @@ msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platfor
 if errorlevel 1 goto error
 
 if %build_installer% == 1 (
-  "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe output\install.nsi
+  "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe ^
+  /DWEASEL_VERSION=%WEASEL_VERSION% ^
+  /DWEASEL_BUILD=%WEASEL_BUILD% ^
+  output\install.nsi
   if errorlevel 1 goto error
 )
 

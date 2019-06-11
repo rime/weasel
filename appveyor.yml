@@ -24,8 +24,35 @@ install:
   - .\appveyor.install.bat
 
 build_script:
+  - set WEASEL_BUILD=%APPVEYOR_BUILD_NUMBER%
   - .\build.bat data hant installer
 
 artifacts:
-  - path: output\archives\weasel-0.13.0.0-installer.exe
+  - path: output\archives\weasel-0.13.0.$(appveyor_build_number)-installer.exe
     name: Weasel
+
+deploy:
+  - provider: BinTray
+    username: $(bintray_user)
+    api_key: $(bintray_api_key)
+    subject: rime
+    repo: weasel
+    package: release
+    version: 0.13.0
+    publish: false
+    override: false
+    explode: false
+    on:
+      APPVEYOR_REPO_TAG: true
+  - provider: BinTray
+    username: $(bintray_user)
+    api_key: $(bintray_api_key)
+    subject: rime
+    repo: weasel
+    package: testing
+    version: 0.13.0.$(appveyor_build_number)
+    publish: true
+    override: false
+    explode: false
+    on:
+      branch: master

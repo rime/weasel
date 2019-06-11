@@ -6,8 +6,13 @@
 
 Unicode true
 
-!define WEASEL_VERSION 0.13.0
-!define WEASEL_BUILD ${WEASEL_VERSION}.0
+!ifndef WEASEL_VERSION
+!define WEASEL_VERSION 1.0.0
+!endif
+
+!ifndef WEASEL_BUILD
+!define WEASEL_BUILD 0
+!endif
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
 
@@ -15,9 +20,9 @@ Unicode true
 Name "小狼毫 ${WEASEL_VERSION}"
 
 ; The file to write
-OutFile "archives\weasel-${WEASEL_BUILD}-installer.exe"
+OutFile "archives\weasel-${WEASEL_VERSION}.${WEASEL_BUILD}-installer.exe"
 
-VIProductVersion "${WEASEL_BUILD}"
+VIProductVersion "${WEASEL_VERSION}.${WEASEL_BUILD}"
 VIAddVersionKey /LANG=2052 "ProductName" "小狼毫"
 VIAddVersionKey /LANG=2052 "Comments" "Powered by RIME | 中州韻輸入法引擎"
 VIAddVersionKey /LANG=2052 "CompanyName" "式恕堂"
