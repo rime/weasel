@@ -88,7 +88,7 @@ update_changelog() {
 edit_rc_file WeaselServer/WeaselServer.rc
 
 edit_source_file include/WeaselVersion.h
-edit_source_file output/install.nsi
+edit_source_file build.bat
 edit_source_file appveyor.yml
 
 edit_source_file update/testing-appcast.xml
