@@ -44,3 +44,15 @@ deploy:
     explode: false
     on:
       APPVEYOR_REPO_TAG: true
+  - provider: BinTray
+    username: $(bintray_user)
+    api_key: $(bintray_api_key)
+    subject: rime
+    repo: weasel
+    package: testing
+    version: 0.13.0.$(appveyor_build_number)
+    publish: true
+    override: false
+    explode: false
+    on:
+      branch: master
