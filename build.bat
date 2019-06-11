@@ -132,8 +132,10 @@ msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platfor
 if errorlevel 1 goto error
 
 if %build_installer% == 1 (
-  "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe output\install.nsi^
-      /DWEASEL_VERSION=%WEASEL_VERSION% /DWEASEL_BUILD=%WEASEL_BUILD%
+  "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe ^
+  /DWEASEL_VERSION=%WEASEL_VERSION% ^
+  /DWEASEL_BUILD=%WEASEL_BUILD% ^
+  output\install.nsi
   if errorlevel 1 goto error
 )
 
