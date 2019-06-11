@@ -153,7 +153,6 @@ program_files:
   File "data\essay.txt"
   File "data\*.schema.yaml"
   File "data\*.dict.yaml"
-  File "data\*.gram"
   ; opencc data files
   SetOutPath $INSTDIR\data\opencc
   File "data\opencc\*.json"

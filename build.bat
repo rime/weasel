@@ -176,8 +176,7 @@ copy %WEASEL_ROOT%\README.md output\README.txt
 copy %WEASEL_ROOT%\plum\rime-install.bat output\
 set plum_dir=plum
 set rime_dir=output/data
-set bundled_recipes=:preset lotem/rime-octagram-data
-bash plum/rime-install %bundled_recipes%
+bash plum/rime-install
 exit /b
 
 :build_essay
