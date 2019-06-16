@@ -2,6 +2,11 @@
 ## 0.14.1 (2019-06-16)
 
 
+#### 主要更新
+
+* 升級核心算法庫 [librime 1.5.1](https://github.com/rime/librime/blob/master/CHANGELOG.md#151-2019-06-16)
+  * 修復未裝配語言模型時缺省的造句算法 ([weasel#383](https://github.com/rime/weasel/issues/383))
+
 
 
 <a name="0.14.0"></a>
