@@ -2,7 +2,7 @@
 
 setlocal
 
-set WEASEL_VERSION=0.14.0
+set WEASEL_VERSION=0.14.1
 if not defined WEASEL_BUILD set WEASEL_BUILD=0
 if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
 
