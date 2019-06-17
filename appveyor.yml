@@ -28,7 +28,7 @@ build_script:
   - .\build.bat data hant installer
 
 artifacts:
-  - path: output\archives\weasel-0.14.1.$(appveyor_build_number)-installer.exe
+  - path: output\archives\weasel-0.14.2.$(appveyor_build_number)-installer.exe
     name: Weasel
 
 deploy:
@@ -38,7 +38,7 @@ deploy:
     subject: rime
     repo: weasel
     package: release
-    version: 0.14.1
+    version: 0.14.2
     publish: false
     override: false
     explode: false
@@ -50,7 +50,7 @@ deploy:
     subject: rime
     repo: weasel
     package: testing
-    version: 0.14.1.$(appveyor_build_number)
+    version: 0.14.2.$(appveyor_build_number)
     publish: true
     override: false
     explode: false
