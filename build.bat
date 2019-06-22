@@ -11,6 +11,7 @@ if exist env.bat call env.bat
 echo WEASEL_VERSION=%WEASEL_VERSION%
 echo WEASEL_BUILD=%WEASEL_BUILD%
 echo WEASEL_ROOT=%WEASEL_ROOT%
+echo WEASEL_BUNDLED_RECIPES=%WEASEL_BUNDLED_RECIPES%
 echo.
 
 if defined BOOST_ROOT (
@@ -184,7 +185,7 @@ copy %WEASEL_ROOT%\README.md output\README.txt
 copy %WEASEL_ROOT%\plum\rime-install.bat output\
 set plum_dir=plum
 set rime_dir=output/data
-bash plum/rime-install
+bash plum/rime-install %WEASEL_BUNDLED_RECIPES%
 exit /b
 
 :build_essay
