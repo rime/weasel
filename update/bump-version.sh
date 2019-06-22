@@ -1,8 +1,14 @@
 #!/bin/bash
 
+set -e
+
 invalid_args() {
     echo "Usage: $(basename $0) <old_version> <new_version>|major|minor|patch"
     exit 1
+}
+
+match_line() {
+    grep --quiet --fixed-strings "$@"
 }
 
 version_pattern='([0-9]+)\.([0-9]+)\.([0-9]+)'
@@ -41,7 +47,18 @@ else
     invalid_args
 fi
 
-echo "updating ${old_major}.${old_minor}.${old_patch} => ${new_major}.${new_minor}.${new_patch}"
+# verify old_version is current version.
+match_line "WEASEL_VERSION_STR \"${old_version}\"" include/WeaselVersion.h &&
+    match_line "WEASEL_VERSION=${old_version}" build.bat &&
+    match_line "version: ${old_version}" appveyor.yml || (
+        echo >&2 "${old_version} doesn't match current version."
+        exit 1
+    )
+
+old_version="${old_major}.${old_minor}.${old_patch}"
+new_version="${new_major}.${new_minor}.${new_patch}"
+echo "updating ${old_version} => ${new_version}"
+
 
 if [[ $OSTYPE =~ darwin ]]; then
     L_BOUND='[[:<:]]'
@@ -96,4 +113,15 @@ edit_source_file update/appcast.xml
 update_pub_date update/testing-appcast.xml
 update_pub_date update/appcast.xml
 
-update_changelog "${new_major}.${new_minor}.${new_patch}"
+update_changelog "${new_version}"
+${VISUAL:-${EDITOR:-vim}} CHANGELOG.md
+match_line "## ${new_version} " CHANGELOG.md || (
+    echo >&2 "CHANGELOG.md has no changes for version ${new_version}."
+    exit 1
+)
+bash update/write-release-notes.sh
+
+release_message="chore(release): ${new_version} :tada:"
+release_tag="${new_version}"
+git commit --all --message "${release_message}"
+git tag --annotate "${release_tag}" --message "${release_message}"
