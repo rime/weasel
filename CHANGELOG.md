@@ -1,3 +1,15 @@
+<a name="0.14.3"></a>
+## 0.14.3 (2019-06-22)
+
+
+#### 主要更新
+
+* 升級核心算法庫 [librime 1.5.3](https://github.com/rime/librime/blob/master/CHANGELOG.md#153-2019-06-22)
+  * 修復 `single_char_filter` 組件
+  * 完善上游項目 `librime` 的全自動發佈流程，免去手工上傳構建結果的步驟
+
+
+
 <a name="0.14.2"></a>
 ## 0.14.2 (2019-06-17)
 
