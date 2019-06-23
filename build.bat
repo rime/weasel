@@ -91,11 +91,15 @@ if %build_rime% == 1 (
   cd %WEASEL_ROOT%\librime
   if not exist librime\thirdparty\lib\opencc.lib (
     call build.bat thirdparty
+    if errorlevel 1 goto error
   )
   call build.bat
+  if errorlevel 1 goto error
   cd %WEASEL_ROOT%
   copy /Y librime\dist\include\rime_*.h include\
+  if errorlevel 1 goto error
   copy /Y librime\dist\lib\rime.dll output\
+  if errorlevel 1 goto error
 )
 
 
@@ -168,12 +172,12 @@ set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
 
 cd /d %BOOST_ROOT%
 if not exist bjam.exe call bootstrap.bat
-if %ERRORLEVEL% NEQ 0 goto error
+if errorlevel 1 goto error
 bjam %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
-if %ERRORLEVEL% NEQ 0 goto error
+if errorlevel 1 goto error
 if %build_x64% == 1 (
   bjam %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
-  if %ERRORLEVEL% NEQ 0 goto error
+  if errorlevel 1 goto error
 )
 exit /b
 
@@ -185,6 +189,7 @@ copy %WEASEL_ROOT%\plum\rime-install.bat output\
 set plum_dir=plum
 set rime_dir=output/data
 bash plum/rime-install %WEASEL_BUNDLED_RECIPES%
+if errorlevel 1 goto error
 exit /b
 
 :build_essay
@@ -200,10 +205,12 @@ exit /b
 if not exist %WEASEL_ROOT%\librime\thirdparty\share\opencc\TSCharacters.ocd (
   cd %WEASEL_ROOT%\librime
   call build.bat thirdparty
+  if errorlevel 1 goto error
 )
 cd %WEASEL_ROOT%
 if not exist output\data\opencc mkdir output\data\opencc
 copy %WEASEL_ROOT%\librime\thirdparty\share\opencc\*.* output\data\opencc\
+if errorlevel 1 goto error
 exit /b
 
 :error

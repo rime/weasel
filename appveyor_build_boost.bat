@@ -35,7 +35,7 @@ if %nocache% == 1 (
 	.\b2.exe %boost_build_options_x86% %boost_compiled_libs% -q -d0 stage
 	.\b2.exe %boost_build_options_x64% %boost_compiled_libs% -q -d0 stage
 	popd
-	if %ERRORLEVEL% NEQ 0 goto ERROR
+	if errorlevel 1 goto error
 
 	date /t > boost.cached & time /t >> boost.cached
 	echo.
@@ -48,10 +48,10 @@ if %nocache% == 1 (
 	echo.
 )
 
-goto EXIT
+goto exit
 
-:ERROR
-set EXITCODE=%ERRORLEVEL%
+:error
+set exitcode=%errorlevel%
 
-:EXIT
-exit /b %EXITCODE%
+:exit
+exit /b %exitcode%

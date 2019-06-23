@@ -1,7 +1,7 @@
 setlocal
 
 call appveyor_build_boost.bat
-if %ERRORLEVEL% NEQ 0 goto ERROR
+if errorlevel 1 goto error
 
 git submodule init
 git submodule update plum
@@ -16,8 +16,8 @@ copy /Y librime\dist\lib\rime.dll output\
 if not exist output\data\opencc mkdir output\data\opencc
 copy /Y librime\thirdparty\share\opencc\*.* output\data\opencc\
 
-:ERROR
-set EXITCODE=%ERRORLEVEL%
+:error
+set exitcode=%errorlevel%
 
-:EXIT
-exit /b %EXITCODE%
+:exit
+exit /b %exitcode%
