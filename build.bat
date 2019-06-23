@@ -94,9 +94,8 @@ if %build_rime% == 1 (
   )
   call build.bat
   cd %WEASEL_ROOT%
-  rem copy /Y librime\thirdparty\lib\*.lib lib\
-  copy /Y librime\build\include\rime_*.h include\
-  copy /Y librime\build\lib\Release\rime.dll output\
+  copy /Y librime\dist\include\rime_*.h include\
+  copy /Y librime\dist\lib\rime.dll output\
 )
 
 
