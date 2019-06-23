@@ -32,8 +32,9 @@ artifacts:
 
 deploy:
   - provider: BinTray
-    username: $(bintray_user)
-    api_key: $(bintray_api_key)
+    username: lotem
+    api_key: &bintray_api_key
+      secure: KutsvYFjEDoWMhEKxBP2DlXku/pSVfUsNnG70GFyYQo2vZ8GP0Yzu1rrfvyTEQbTZaJF3gwZ+2+Z5mDXsUSeIouiqzlQjiCKYScuEttLF5w=
     subject: rime
     repo: weasel
     package: release
@@ -44,8 +45,8 @@ deploy:
     on:
       APPVEYOR_REPO_TAG: true
   - provider: BinTray
-    username: $(bintray_user)
-    api_key: $(bintray_api_key)
+    username: lotem
+    api_key: *bintray_api_key
     subject: rime
     repo: weasel
     package: testing

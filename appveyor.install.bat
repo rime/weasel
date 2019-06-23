@@ -6,9 +6,11 @@ if errorlevel 1 goto error
 git submodule init
 git submodule update plum
 
-set librime_version=1.5.3
-set download_archive=rime-with-plugins-%librime_version%-win32.zip
-appveyor DownloadFile https://github.com/rime/librime/releases/download/%librime_version%/%download_archive%
+set rime_version=1.5.3
+set rime_variant=rime-with-plugins
+
+set download_archive=%rime_variant%-%rime_version%-win32.zip
+appveyor DownloadFile https://github.com/rime/librime/releases/download/%rime_version%/%download_archive%
 7z x %download_archive% * -olibrime\ | find "ing archive"
 copy /Y librime\dist\include\rime_*.h include\
 copy /Y librime\dist\lib\rime.lib lib\
