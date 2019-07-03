@@ -98,6 +98,8 @@ if %build_rime% == 1 (
   cd %WEASEL_ROOT%
   copy /Y librime\dist\include\rime_*.h include\
   if errorlevel 1 goto error
+  copy /Y librime\dist\lib\rime.lib lib\
+  if errorlevel 1 goto error
   copy /Y librime\dist\lib\rime.dll output\
   if errorlevel 1 goto error
 )
