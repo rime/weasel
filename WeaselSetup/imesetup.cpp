@@ -346,7 +346,6 @@ void enable_profile(BOOL fEnable, bool hant) {
 	HRESULT hr;
 	ITfInputProcessorProfiles *pProfiles = NULL;
 
-	//Create the object. 
 	hr = CoCreateInstance(  CLSID_TF_InputProcessorProfiles, 
 							NULL, 
 							CLSCTX_INPROC_SERVER, 
@@ -356,11 +355,14 @@ void enable_profile(BOOL fEnable, bool hant) {
 	if(SUCCEEDED(hr))
 	{
 		LANGID lang_id = hant ? 0x0404 : 0x0804;
-		//Use the interface. 
-		pProfiles->EnableLanguageProfile(c_clsidTextService, lang_id, c_guidProfile, fEnable);
-		pProfiles->EnableLanguageProfileByDefault(c_clsidTextService, lang_id, c_guidProfile, fEnable);
+		if (fEnable) {
+			pProfiles->EnableLanguageProfile(c_clsidTextService, lang_id, c_guidProfile, fEnable);
+			pProfiles->EnableLanguageProfileByDefault(c_clsidTextService, lang_id, c_guidProfile, fEnable);
+		}
+		else {
+			pProfiles->RemoveLanguageProfile(c_clsidTextService, lang_id, c_guidProfile);
+		}
 
-		//Release the interface. 
 		pProfiles->Release();
 	}
 }
