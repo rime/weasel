@@ -104,7 +104,10 @@ if %build_boost% == 1 (
 )
 
 if %build_rime% == 1 (
-  git submodule update --init --recursive
+  if not exist librime\build.bat (
+    git submodule update --init --recursive
+  )
+
   cd %WEASEL_ROOT%\librime
   if not exist librime\thirdparty\lib\opencc.lib (
     call build.bat thirdparty %rime_build_variant%
@@ -122,10 +125,15 @@ cd %WEASEL_ROOT%
   if errorlevel 1 goto error
 )
 
-if not exist output\data\essay.txt set build_data=1
+if %build_weasel% == 1 (
+  if not exist output\data\essay.txt (
+    set build_data=1
+  )
+  if not exist output\data\opencc\TSCharacters.ocd (
+    set build_opencc=1
+  )
+)
 if %build_data% == 1 call :build_data
-
-if not exist output\data\opencc\TSCharacters.ocd set build_opencc=1
 if %build_opencc% == 1 call :build_opencc_data
 
 if %build_weasel% == 0 goto end
