@@ -2,11 +2,13 @@
 
 setlocal
 
-set WEASEL_VERSION=0.14.3
-if not defined WEASEL_BUILD set WEASEL_BUILD=0
-if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
+if not exist env.bat copy env.bat.template env.bat
 
 if exist env.bat call env.bat
+
+if not defined WEASEL_VERSION set WEASEL_VERSION=0.14.3
+if not defined WEASEL_BUILD set WEASEL_BUILD=0
+if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
 
 echo WEASEL_VERSION=%WEASEL_VERSION%
 echo WEASEL_BUILD=%WEASEL_BUILD%
@@ -37,11 +39,13 @@ if defined DEVTOOLS_PATH set PATH=%DEVTOOLS_PATH%%PATH%
 set build_config=Release
 set build_option=/t:Build
 set build_boost=0
-set build_boost_variant=release
+set boost_build_variant=release
 set build_data=0
 set build_opencc=0
 set build_hant=0
 set build_rime=0
+set rime_build_variant=release
+set build_weasel=0
 set build_installer=0
 set build_x64=1
 
@@ -49,11 +53,13 @@ set build_x64=1
 if "%1" == "" goto end_parsing_cmdline_options
 if "%1" == "debug" (
   set build_config=Debug
-  set build_boost_variant=debug
+  set boost_build_variant=debug
+  set rime_build_variant=debug
 )
 if "%1" == "release" (
   set build_config=Release
-  set build_boost_variant=release
+  set boost_build_variant=release
+  set rime_build_variant=release
 )
 if "%1" == "rebuild" set build_option=/t:Rebuild
 if "%1" == "boost" set build_boost=1
@@ -62,6 +68,7 @@ if "%1" == "opencc" set build_opencc=1
 if "%1" == "hant" set build_hant=1
 if "%1" == "rime" set build_rime=1
 if "%1" == "librime" set build_rime=1
+if "%1" == "weasel" set build_weasel=1
 if "%1" == "installer" set build_installer=1
 if "%1" == "all" (
   set build_boost=1
@@ -69,12 +76,21 @@ if "%1" == "all" (
   set build_opencc=1
   set build_hant=1
   set build_rime=1
+  set build_weasel=1
   set build_installer=1
 )
 if "%1" == "nox64" set build_x64=0
 shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
+
+if %build_weasel% == 0 (
+if %build_boost% == 0 (
+if %build_data% == 0 (
+if %build_opencc% == 0 (
+if %build_rime% == 0 (
+  set build_weasel=1
+)))))
 
 cd /d %WEASEL_ROOT%
 if exist output\weaselserver.exe (
@@ -88,14 +104,16 @@ if %build_boost% == 1 (
 )
 
 if %build_rime% == 1 (
+  git submodule update --init --recursive
   cd %WEASEL_ROOT%\librime
   if not exist librime\thirdparty\lib\opencc.lib (
-    call build.bat thirdparty
+    call build.bat thirdparty %rime_build_variant%
     if errorlevel 1 goto error
   )
-  call build.bat
+  call build.bat %rime_build_variant%
   if errorlevel 1 goto error
-  cd %WEASEL_ROOT%
+
+cd %WEASEL_ROOT%
   copy /Y librime\dist\include\rime_*.h include\
   if errorlevel 1 goto error
   copy /Y librime\dist\lib\rime.lib lib\
@@ -104,12 +122,13 @@ if %build_rime% == 1 (
   if errorlevel 1 goto error
 )
 
-
 if not exist output\data\essay.txt set build_data=1
 if %build_data% == 1 call :build_data
 
 if not exist output\data\opencc\TSCharacters.ocd set build_opencc=1
 if %build_opencc% == 1 call :build_opencc_data
+
+if %build_weasel% == 0 goto end
 
 cd /d %WEASEL_ROOT%
 
@@ -158,7 +177,7 @@ set BOOST_COMPILED_LIBS=--with-date_time^
  --with-serialization
 
 set BJAM_OPTIONS_COMMON=toolset=%BJAM_TOOLSET%^
- variant=%build_boost_variant%^
+ variant=%boost_build_variant%^
  link=static^
  threading=multi^
  runtime-link=static^
@@ -184,7 +203,6 @@ if %build_x64% == 1 (
 exit /b
 
 :build_data
-rem call :build_essay
 copy %WEASEL_ROOT%\LICENSE.txt output\
 copy %WEASEL_ROOT%\README.md output\README.txt
 copy %WEASEL_ROOT%\plum\rime-install.bat output\
@@ -194,19 +212,10 @@ bash plum/rime-install %WEASEL_BUNDLED_RECIPES%
 if errorlevel 1 goto error
 exit /b
 
-:build_essay
-rem essay.kct is deprecated.
-cd %WEASEL_ROOT%\plum
-copy %WEASEL_ROOT%\librime\thirdparty\bin\kctreemgr.exe .\
-copy %WEASEL_ROOT%\librime\thirdparty\bin\zlib1.dll .\
-call make_essay.bat
-cd %WEASEL_ROOT%
-exit /b
-
 :build_opencc_data
 if not exist %WEASEL_ROOT%\librime\thirdparty\share\opencc\TSCharacters.ocd (
   cd %WEASEL_ROOT%\librime
-  call build.bat thirdparty
+  call build.bat thirdparty %rime_build_variant%
   if errorlevel 1 goto error
 )
 cd %WEASEL_ROOT%
