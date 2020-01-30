@@ -32,6 +32,16 @@ if not defined PLATFORM_TOOLSET (
   set PLATFORM_TOOLSET=v141_xp
 )
 
+if not defined MSBUILD_PATH (
+  for /f "usebackq tokens=*" %%i in (`vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe`) do (
+    set MSBUILD_PATH="%%i"
+    REM exit /b !errorlevel!
+  )
+)
+echo.
+echo MSBUILD_PATH=%MSBUILD_PATH%
+echo.
+
 if defined DEVTOOLS_PATH set PATH=%DEVTOOLS_PATH%%PATH%
 
 set build_config=Release
@@ -123,18 +133,18 @@ del msbuild*.log
 
 if %build_hant% == 1 (
   if %build_x64% == 1 (
-    msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
+    %MSBUILD_PATH% weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
     if errorlevel 1 goto error
   )
-  msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="Win32" /fl3
+  %MSBUILD_PATH% weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="Win32" /fl3
   if errorlevel 1 goto error
 )
 
 if %build_x64% == 1 (
-  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
+  %MSBUILD_PATH% weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
   if errorlevel 1 goto error
 )
-msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1
+%MSBUILD_PATH% weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1
 if errorlevel 1 goto error
 
 if %build_installer% == 1 (
@@ -190,7 +200,8 @@ copy %WEASEL_ROOT%\README.md output\README.txt
 copy %WEASEL_ROOT%\plum\rime-install.bat output\
 set plum_dir=plum
 set rime_dir=output/data
-bash plum/rime-install %WEASEL_BUNDLED_RECIPES%
+REM bash plum/rime-install %WEASEL_BUNDLED_RECIPES%
+plum/rime-install.bat
 if errorlevel 1 goto error
 exit /b
 
@@ -217,6 +228,8 @@ exit /b
 
 :error
 echo error building weasel...
+exit /b
 
 :end
+echo Finish building weasel!
 cd %WEASEL_ROOT%
