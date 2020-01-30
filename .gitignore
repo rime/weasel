@@ -20,7 +20,7 @@ ReleaseHant/
 /include/glog
 /include/rime*.h
 /ipch
-env.bat
+# env.bat
 weasel.props
 *.log
 *.user

@@ -23,6 +23,15 @@ exit /b 1
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
+if defined BASH_ROOT (
+  if exist "%BASH_ROOT%\bash.exe" goto bash_found
+)
+echo Error: Bash not found! Please set BASH_ROOT in env.bat.
+exit /b 1
+:bash_found
+echo BASH_ROOT=%BASH_ROOT%
+echo.
+
 if not defined BJAM_TOOLSET (
   rem the number actually means platform toolset, not %VisualStudioVersion%
   set BJAM_TOOLSET=msvc-14.1
@@ -200,8 +209,7 @@ copy %WEASEL_ROOT%\README.md output\README.txt
 copy %WEASEL_ROOT%\plum\rime-install.bat output\
 set plum_dir=plum
 set rime_dir=output/data
-REM bash plum/rime-install %WEASEL_BUNDLED_RECIPES%
-plum/rime-install.bat
+"%BASH_ROOT%\bash.exe" plum/rime-install %WEASEL_BUNDLED_RECIPES%
 if errorlevel 1 goto error
 exit /b
 
