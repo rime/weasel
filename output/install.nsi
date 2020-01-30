@@ -151,9 +151,8 @@ program_files:
   ; shared data files
   SetOutPath $INSTDIR\data
   File "data\*.yaml"
-  File "data\*.txt"
-  IfFileExists "data\*.gram" 0 +2
-  File "data\*.gram"
+  File /nonfatal "data\*.txt"
+  File /nonfatal "data\*.gram"
   ; opencc data files
   SetOutPath $INSTDIR\data\opencc
   File "data\opencc\*.json"
