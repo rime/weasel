@@ -20,7 +20,7 @@ int WeaselServerApp::Run()
 		return -1;
 
 	//win_sparkle_set_appcast_url("http://localhost:8000/weasel/update/appcast.xml");
-	win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
+	win_sparkle_set_registry_path("Software\\Ithuan\\ThuanTaigi\\Updates");
 	win_sparkle_init();
 	m_ui.Create(m_server.GetHWnd());
 

@@ -48,7 +48,7 @@ static int CustomInstall(bool installing)
 	bool silent = false;
 	std::wstring user_dir;
 
-	const WCHAR KEY[] = L"Software\\Rime\\Weasel";
+	const WCHAR KEY[] = L"Software\\Ithuan\\ThuanTaigi";
 	HKEY hKey;
 	LSTATUS ret = RegOpenKey(HKEY_CURRENT_USER, KEY, &hKey);
 	if (ret == ERROR_SUCCESS)
@@ -57,7 +57,7 @@ static int CustomInstall(bool installing)
 		DWORD len = sizeof(value);
 		DWORD type = 0;
 		DWORD data = 0;
-		ret = RegQueryValueEx(hKey, L"RimeUserDir", NULL, &type, (LPBYTE)value, &len);
+		ret = RegQueryValueEx(hKey, L"ThuanTaigiUserDir", NULL, &type, (LPBYTE)value, &len);
 		if (ret == ERROR_SUCCESS && type == REG_SZ)
 		{
 			user_dir = value;
@@ -99,12 +99,12 @@ static int CustomInstall(bool installing)
 		return 1;
 	}
 
-	ret = RegSetValueEx(hKey, L"RimeUserDir", 0, REG_SZ,
+	ret = RegSetValueEx(hKey, L"ThuanTaigiUserDir", 0, REG_SZ,
 		                (const BYTE*)user_dir.c_str(),
 						(user_dir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, L"無法寫入 RimeUserDir", L"安裝失敗", MB_ICONERROR | MB_OK);
+		MessageBox(NULL, L"無法寫入 ThuanTaigiUserDir", L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 

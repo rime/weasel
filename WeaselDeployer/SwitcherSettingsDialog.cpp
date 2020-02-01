@@ -102,7 +102,7 @@ LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 
 LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
 	HKEY hKey;
-	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("Software\\Rime\\Weasel"), &hKey);
+	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, _T("Software\\IThuan\\ThuanTaigi"), &hKey);
 	if (ret == ERROR_SUCCESS) {
 		WCHAR value[MAX_PATH];
 		DWORD len = sizeof(value);
@@ -147,7 +147,7 @@ LRESULT SwitcherSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
 			}
 		}
 		if (count == 0) {
-			MessageBox(_T("至少要選用一項吧。"), _T("小狼毫不是這般用法"), MB_OK | MB_ICONEXCLAMATION);
+			MessageBox(_T("至少要選用一項吧。"), _T("不是這樣使用的"), MB_OK | MB_ICONEXCLAMATION);
 			delete selection;
 			return 0;
 		}

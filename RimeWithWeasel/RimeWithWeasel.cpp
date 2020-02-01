@@ -42,7 +42,7 @@ void RimeWithWeaselHandler::_Setup()
 	weasel_traits.distribution_name = utf8_str;
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
-	weasel_traits.app_name = "rime.weasel";
+	weasel_traits.app_name = "IThuan.ThuanTaigi";
 	RimeSetup(&weasel_traits);
 	RimeSetNotificationHandler(&RimeWithWeaselHandler::OnNotify, this);
 }
@@ -63,7 +63,7 @@ void RimeWithWeaselHandler::Initialize()
 	}
 
 	RimeConfig config = { NULL };
-	if (RimeConfigOpen("weasel", &config))
+	if (RimeConfigOpen("ThuanTaigi", &config))
 	{
 		if (m_ui)
 		{
@@ -391,11 +391,11 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 	bool show_icon = false;
 	if (m_message_type == "deploy") {
 		if (m_message_type == "start")
-			tips = L"正在部署 RIME";
+			tips = L"正在部署 ThuanTaigi";
 		else if (m_message_value == "success")
 			tips = L"部署完成";
 		else if (m_message_value == "failure")
-			tips = L"有錯誤，請查看日誌 %TEMP%\\rime.weasel.*.INFO";
+			tips = L"有錯誤，請查看紀錄 %TEMP%\\IThuan.ThuanTaigi.*.INFO";
 	}
 	else if (m_message_type == "schema") {
 		tips = /*L"【" + */status.schema_name/* + L"】"*/;

@@ -30,7 +30,7 @@ void Configurator::Initialize()
 	weasel_traits.distribution_name = utf8_str;
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
-	weasel_traits.app_name = "rime.weasel";
+	weasel_traits.app_name = "IThuan.ThuanTaigi";
 	RimeSetup(&weasel_traits);
 	
 	LOG(INFO) << "WeaselDeployer reporting.";
@@ -103,7 +103,7 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 		CloseHandle(hMutex);
 		if (report_errors)
 		{
-			MessageBox(NULL, L"正在執行另一項部署任務，方纔所做的修改將在輸入法再次啓動後生效。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+			MessageBox(NULL, L"正在執行另一項部署任務，剛才所做的修改將在輸入法再次啓動後生效。", L"【意傳台語輸入法】", MB_OK | MB_ICONINFORMATION);
 		}
 		return 1;
 	}
@@ -144,7 +144,7 @@ int Configurator::DictManagement() {
 	{
 		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
-		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【意傳台語輸入法】", MB_OK | MB_ICONINFORMATION);
 		return 1;
 	}
 
@@ -186,7 +186,7 @@ int Configurator::SyncUserData() {
 	{
 		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
-		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【意傳台語輸入法】", MB_OK | MB_ICONINFORMATION);
 		return 1;
 	}
 

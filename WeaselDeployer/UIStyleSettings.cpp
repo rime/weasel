@@ -5,7 +5,7 @@
 UIStyleSettings::UIStyleSettings()
 {
 	api_ = (RimeLeversApi*)rime_get_api()->find_module("levers")->get_api();
-	settings_ = api_->custom_settings_init("weasel", "Weasel::UIStyleSettings");
+	settings_ = api_->custom_settings_init("ThuanTaigi", "Weasel::UIStyleSettings");
 }
 
 bool UIStyleSettings::GetPresetColorSchemes(std::vector<ColorSchemeInfo>* result) {
