@@ -7,20 +7,20 @@ LONG g_cRefDll = -1;
 
 CRITICAL_SECTION g_cs;
 
-// Iōng Power Shell sán-seng sin ê GUID：'{'+[guid]::NewGuid().ToString()+'}'
+// Iōng Power Shell sán-seng sin ê GUID ：'{'+[guid]::NewGuid().ToString()+'}'
 // {d5026f36-1b08-4269-a3d7-0c04e277c327}
 static const GUID c_clsidTextService = 
-{ 0xd5026f36, 0x1b08, 0x4269, { 0xa3d7, 0x0c04e277c327 } };
+{ 0xd5026f36, 0x1b08, 0x4269, { 0xa3, 0xd7, 0x0c, 0x04, 0xe2, 0x77, 0xc3, 0x27 } };
 
-// Iōng Power Shell sán-seng sin ê GUID：'{'+[guid]::NewGuid().ToString()+'}'
+// Iōng Power Shell sán-seng sin ê GUID ：'{'+[guid]::NewGuid().ToString()+'}'
 // {632f7393-d0a8-4626-9108-f22c195bd427}
 static const GUID c_guidProfile = 
-{ 0x632f7393, 0xd0a8, 0x4626, { 0x9108, 0xf22c195bd427 } };
+{ 0x632f7393, 0xd0a8, 0x4626, { 0x91, 0x08, 0xf2, 0x2c, 0x19, 0x5b, 0xd4, 0x27 } };
 
-// Iōng Power Shell sán-seng sin ê GUID：'{'+[guid]::NewGuid().ToString()+'}'
+// Iōng Power Shell sán-seng sin ê GUID ：'{'+[guid]::NewGuid().ToString()+'}'
 // {65ecc8ea-21f4-4b0f-b2ad-a26e6c4a26f0}
 static const GUID c_guidLangBarItemButton = 
-{ 0x65ecc8ea, 0x21f4, 0x4b0f, { 0xb2ad, 0xa26e6c4a26f0 } };
+{ 0x65ecc8ea, 0x21f4, 0x4b0f, { 0xb2, 0xad, 0xa2, 0x6e, 0x6c, 0x4a, 0x26, 0xf0 } };
 
 #ifdef WEASEL_USING_OLDER_TSF_SDK
 
