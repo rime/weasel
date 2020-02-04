@@ -63,7 +63,7 @@ void RimeWithWeaselHandler::Initialize()
 	}
 
 	RimeConfig config = { NULL };
-	if (RimeConfigOpen("ThuanTaigi", &config))
+	if (RimeConfigOpen("weasel", &config))
 	{
 		if (m_ui)
 		{
@@ -313,7 +313,7 @@ void RimeWithWeaselHandler::OnUpdateUI(std::function<void()> const &cb)
 
 bool RimeWithWeaselHandler::_IsDeployerRunning()
 {
-	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThoanTaigi-WeaselDeployerMutex");
 	bool deployer_detected = hMutex && GetLastError() == ERROR_ALREADY_EXISTS;
 	if (hMutex)
 	{

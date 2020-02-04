@@ -5,16 +5,7 @@
 #include <WeaselCommon.h>
 #include <msctf.h>
 #include <strsafe.h>
-
-// Iōng Power Shell sán-seng sin ê GUID：'{'+[guid]::NewGuid().ToString()+'}'
-// {d5026f36-1b08-4269-a3d7-0c04e277c327}
-static const GUID c_clsidTextService = 
-{ 0xd5026f36, 0x1b08, 0x4269, { 0xa3d7, 0x0c04e277c327 } };
-
-// Iōng Power Shell sán-seng sin ê GUID：'{'+[guid]::NewGuid().ToString()+'}'
-// {632f7393-d0a8-4626-9108-f22c195bd427}
-static const GUID c_guidProfile = 
-{ 0x632f7393, 0xd0a8, 0x4626, { 0x9108, 0xf22c195bd427 } };
+#include <Globals.h>
 
 
 BOOL copy_file(const std::wstring& src, const std::wstring& dest)

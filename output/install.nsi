@@ -81,7 +81,7 @@ Function .onInit
 
 uninst:
   ; Backup data directory from previous installation, user files may exist
-  ReadRegStr $R1 HKLM SOFTWARE\IThuan\ThuanTaigi "WeaselRoot"
+  ReadRegStr $R1 HKLM SOFTWARE\IThuan\ThuanTaigi "ThuanTaigiRoot"
   StrCmp $R1 "" call_uninstaller
   IfFileExists $R1\data\*.* 0 call_uninstaller
   CreateDirectory $TEMP\ThuanTaigi-backup
@@ -188,7 +188,7 @@ program_files:
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
   ; Write autorun key
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer" "$INSTDIR\WeaselServer.exe"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "ThuanTaigi-WeaselServer" "$INSTDIR\WeaselServer.exe"
   ; Start WeaselServer
   Exec "$INSTDIR\WeaselServer.exe"
 
@@ -202,16 +202,16 @@ SectionEnd
 Section "Start Menu Shortcuts"
   SetShellVarContext all
   CreateDirectory "$SMPROGRAMS\意傳台語輸入法"
-  CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】說明書.lnk" "$INSTDIR\README.txt"
-  CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】輸入法設定.lnk" "$INSTDIR\WeaselDeployer.exe" "" "$SYSDIR\shell32.dll" 21
-  CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】使用者詞典管理.lnk" "$INSTDIR\WeaselDeployer.exe" "/dict" "$SYSDIR\shell32.dll" 6
+  ; CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】說明書.lnk" "$INSTDIR\README.txt"
+  ; CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】輸入法設定.lnk" "$INSTDIR\WeaselDeployer.exe" "" "$SYSDIR\shell32.dll" 21
+  ; CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】使用者詞典管理.lnk" "$INSTDIR\WeaselDeployer.exe" "/dict" "$SYSDIR\shell32.dll" 6
   CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】使用者資料同步.lnk" "$INSTDIR\WeaselDeployer.exe" "/sync" "$SYSDIR\shell32.dll" 26
   CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】重新部署.lnk" "$INSTDIR\WeaselDeployer.exe" "/deploy" "$SYSDIR\shell32.dll" 144
-  CreateShortCut "$SMPROGRAMS\意傳台語輸入法\意傳台語輸入法服務.lnk" "$INSTDIR\WeaselServer.exe" "" "$INSTDIR\WeaselServer.exe" 0
+  CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】執行服務.lnk" "$INSTDIR\WeaselServer.exe" "" "$INSTDIR\WeaselServer.exe" 0
   CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】使用者資料夾.lnk" "$INSTDIR\WeaselServer.exe" "/userdir" "$SYSDIR\shell32.dll" 126
   CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】程式資料夾.lnk" "$INSTDIR\WeaselServer.exe" "/weaseldir" "$SYSDIR\shell32.dll" 19
-  CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】檢查新版本.lnk" "$INSTDIR\WeaselServer.exe" "/update" "$SYSDIR\shell32.dll" 13
-  CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】安裝選項.lnk" "$INSTDIR\WeaselSetup.exe" "" "$SYSDIR\shell32.dll" 162
+  ; CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】檢查新版本.lnk" "$INSTDIR\WeaselServer.exe" "/update" "$SYSDIR\shell32.dll" 13
+  ; CreateShortCut "$SMPROGRAMS\意傳台語輸入法\【意傳台語輸入法】安裝選項.lnk" "$INSTDIR\WeaselSetup.exe" "" "$SYSDIR\shell32.dll" 162
   CreateShortCut "$SMPROGRAMS\意傳台語輸入法\移除意傳台語輸入法.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 
 SectionEnd
@@ -228,7 +228,7 @@ Section "Uninstall"
 
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ThuanTaigi"
-  DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer"
+  DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "ThuanTaigi-WeaselServer"
   DeleteRegKey HKLM SOFTWARE\IThuan\ThuanTaigi
 
   ; Remove files and uninstaller

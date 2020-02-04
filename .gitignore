@@ -37,3 +37,4 @@ Thumbs.db
 /cmake-build-debug
 *.VC.db
 release-notes.html
+.vscode/
