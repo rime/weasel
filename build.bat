@@ -75,7 +75,12 @@ if "%1" == "release" (
   set build_boost_variant=release
 )
 if "%1" == "rebuild" set build_option=/t:Rebuild
-if "%1" == "clean" set build_option=/t:Clean
+if "%1" == "clean" (
+  set build_option=/t:Clean
+  cd librime
+  build.bat clean
+  cd ..
+)
 if "%1" == "boost" set build_boost=1
 if "%1" == "data" set build_data=1
 if "%1" == "opencc" set build_opencc=1
