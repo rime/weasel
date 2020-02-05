@@ -23,12 +23,14 @@ Name "意傳台語輸入法 ${WEASEL_VERSION}"
 OutFile "archives\ThuanTaigi-${WEASEL_VERSION}.${WEASEL_BUILD}-installer.exe"
 
 VIProductVersion "${WEASEL_VERSION}.${WEASEL_BUILD}"
-VIAddVersionKey /LANG=2052 "ProductName" "意傳台語輸入法"
-VIAddVersionKey /LANG=2052 "Comments" "Powered by 意傳科技"
-VIAddVersionKey /LANG=2052 "CompanyName" "意傳科技"
-VIAddVersionKey /LANG=2052 "LegalCopyright" "意傳科技"
-VIAddVersionKey /LANG=2052 "FileDescription" "意傳台語輸入法"
-VIAddVersionKey /LANG=2052 "FileVersion" "${WEASEL_VERSION}"
+; NSIS\Contrib\Language files\TradChinese.nlf
+; Language ID: 1028
+VIAddVersionKey /LANG=1028 "ProductName" "意傳台語輸入法"
+VIAddVersionKey /LANG=1028 "Comments" "Powered by 意傳科技"
+VIAddVersionKey /LANG=1028 "CompanyName" "意傳科技"
+VIAddVersionKey /LANG=1028 "LegalCopyright" "意傳科技"
+VIAddVersionKey /LANG=1028 "FileDescription" "意傳台語輸入法"
+VIAddVersionKey /LANG=1028 "FileVersion" "${WEASEL_VERSION}"
 
 !define MUI_ICON ..\resource\weasel.ico
 SetCompressor /SOLID lzma
@@ -60,9 +62,7 @@ RequestExecutionLevel admin
 
 ; Languages
 
-; !insertmacro MUI_LANGUAGE "SimpChinese"
 !insertmacro MUI_LANGUAGE "TradChinese"
-; !insertmacro MUI_LANGUAGE "English"
 
 ;--------------------------------
 

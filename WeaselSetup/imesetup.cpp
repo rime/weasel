@@ -86,6 +86,8 @@ int install_ime_file(std::wstring& srcPath, const std::wstring& ext, bool hant, 
 	GetSystemDirectoryW(path, _countof(path));
 	std::wstring destPath = std::wstring(path) + L"\\ThuanTaigi" + ext;
 
+	// if (!silent) MessageBox(NULL, destPath.c_str(), L"destPath", MB_ICONERROR | MB_OK);
+
 	int retval = 0;
 	// 复制 .dll/.ime 到系统目录
 	if (!copy_file(srcPath, destPath))
@@ -175,6 +177,8 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 		if (!hKL)
 		{
 			// manually register ime
+			// https://docs.microsoft.com/zh-tw/windows-hardware/manufacture/desktop/windows-language-pack-default-values
+			// https://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=Kbd_Registry
 			WCHAR hkl_str[16] = {0};
 			HKEY hKey;
 			LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
