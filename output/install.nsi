@@ -140,7 +140,7 @@ program_files:
   ${If} ${RunningX64}
     File "ThuanTaigix64.ime"
   ${EndIf}
-  File "ThuanTaigi.ime"
+  File "ThuanTaigit.ime"
   ${If} ${RunningX64}
     File "ThuanTaigitx64.ime"
   ${EndIf}
@@ -229,7 +229,7 @@ Section "Uninstall"
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ThuanTaigi"
   DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "ThuanTaigi-WeaselServer"
-  DeleteRegKey HKLM SOFTWARE\IThuan\ThuanTaigi
+  DeleteRegKey HKLM SOFTWARE\IThuan
 
   ; Remove files and uninstaller
   SetOutPath $TEMP

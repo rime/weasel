@@ -313,7 +313,7 @@ void RimeWithWeaselHandler::OnUpdateUI(std::function<void()> const &cb)
 
 bool RimeWithWeaselHandler::_IsDeployerRunning()
 {
-	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThoanTaigi-WeaselDeployerMutex");
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThuanTaigi-WeaselDeployerMutex");
 	bool deployer_detected = hMutex && GetLastError() == ERROR_ALREADY_EXISTS;
 	if (hMutex)
 	{

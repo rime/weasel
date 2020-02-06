@@ -125,9 +125,9 @@ static int Run(LPTSTR lpCmdLine)
 	bool uninstalling = !wcscmp(L"/u", lpCmdLine);
 	if (uninstalling)
 		return uninstall(silent);
-	// bool hans = !wcscmp(L"/s", lpCmdLine);
-	// if (hans)
-	// 	return install(false, silent);
+	bool hans = !wcscmp(L"/s", lpCmdLine);
+	if (hans)
+		return install(false, silent);
 	bool hant = !wcscmp(L"/t", lpCmdLine);
 	if (hant)
 		return install(true, silent);

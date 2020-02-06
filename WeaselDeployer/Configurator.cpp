@@ -91,10 +91,10 @@ int Configurator::Run(bool installing)
 }
 
 int Configurator::UpdateWorkspace(bool report_errors) {
-	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThoanTaigi-WeaselDeployerMutex");
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThuanTaigi-WeaselDeployerMutex");
 	if (!hMutex)
 	{
-		LOG(ERROR) << "Error creating ThoanTaigi-WeaselDeployerMutex.";
+		LOG(ERROR) << "Error creating ThuanTaigi-WeaselDeployerMutex.";
 		return 1;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
@@ -134,10 +134,10 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 }
 
 int Configurator::DictManagement() {
-	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThoanTaigi-WeaselDeployerMutex");
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThuanTaigi-WeaselDeployerMutex");
 	if (!hMutex)
 	{
-		LOG(ERROR) << "Error creating ThoanTaigi-WeaselDeployerMutex.";
+		LOG(ERROR) << "Error creating ThuanTaigi-WeaselDeployerMutex.";
 		return 1;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
@@ -176,10 +176,10 @@ int Configurator::DictManagement() {
 }
 
 int Configurator::SyncUserData() {
-	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThoanTaigi-WeaselDeployerMutex");
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThuanTaigi-WeaselDeployerMutex");
 	if (!hMutex)
 	{
-		LOG(ERROR) << "Error creating ThoanTaigi-WeaselDeployerMutex.";
+		LOG(ERROR) << "Error creating ThuanTaigi-WeaselDeployerMutex.";
 		return 1;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
