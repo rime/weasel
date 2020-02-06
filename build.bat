@@ -61,6 +61,7 @@ set build_data=0
 set build_opencc=0
 set build_hant=1
 set build_rime=0
+set clean_rime=0
 set build_installer=0
 set build_x64=1
 
@@ -77,9 +78,7 @@ if "%1" == "release" (
 if "%1" == "rebuild" set build_option=/t:Rebuild
 if "%1" == "clean" (
   set build_option=/t:Clean
-  cd librime
-  build.bat clean
-  cd ..
+  set clean_rime=1
 )
 if "%1" == "boost" set build_boost=1
 if "%1" == "data" set build_data=1
@@ -168,6 +167,13 @@ if %build_installer% == 1 (
   /DWEASEL_BUILD=%WEASEL_BUILD% ^
   output\install.nsi
   if errorlevel 1 goto error
+)
+
+if %clean_rime% == 1 (
+  cd librime
+  build.bat clean
+  cd ..
+  echo Finish cleaning librime.
 )
 
 goto end
