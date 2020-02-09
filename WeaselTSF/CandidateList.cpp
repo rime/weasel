@@ -78,8 +78,8 @@ STDMETHODIMP CCandidateList::GetDescription(BSTR * pbstr)
 
 STDMETHODIMP CCandidateList::GetGUID(GUID * pguid)
 {
-	// Iōng Power Shell sán-seng sin ê GUID ：'{'+[guid]::NewGuid().ToString()+'}'
-	// {45a8b6c3-f703-4c89-881a-3d21d013dea0}
+	// Iōng Power Shell sán-seng sin ê GUID: '{'+[guid]::NewGuid().ToString()+'}'
+	// GUID: {45a8b6c3-f703-4c89-881a-3d21d013dea0}
 	*pguid = { 0x45a8b6c3, 0xf703, 0x4c89, { 0x88, 0x1a, 0x3d, 0x21, 0xd0, 0x13, 0xde, 0xa0 } };
 	return S_OK;
 }

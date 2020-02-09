@@ -7,13 +7,13 @@
 #include <strsafe.h>
 
 
-// Iōng Power Shell sán-seng sin ê GUID：'{'+[guid]::NewGuid().ToString()+'}'
-// {d5026f36-1b08-4269-a3d7-0c04e277c327}
+// Iōng Power Shell sán-seng sin ê GUID: '{'+[guid]::NewGuid().ToString()+'}'
+// GUID: {d5026f36-1b08-4269-a3d7-0c04e277c327}
 static const GUID c_clsidTextService = 
 { 0xd5026f36, 0x1b08, 0x4269, { 0xa3, 0xd7, 0x0c, 0x04, 0xe2, 0x77, 0xc3, 0x27 } };
 
-// Iōng Power Shell sán-seng sin ê GUID：'{'+[guid]::NewGuid().ToString()+'}'
-// {632f7393-d0a8-4626-9108-f22c195bd427}
+// Iōng Power Shell sán-seng sin ê GUID: '{'+[guid]::NewGuid().ToString()+'}'
+// GUID: {632f7393-d0a8-4626-9108-f22c195bd427}
 static const GUID c_guidProfile = 
 { 0x632f7393, 0xd0a8, 0x4626, { 0x91, 0x08, 0xf2, 0x2c, 0x19, 0x5b, 0xd4, 0x27 } };
 

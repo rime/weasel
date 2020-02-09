@@ -3,7 +3,7 @@
 #include "WeaselTSF.h"
 #include "LanguageBar.h"
 
-static const DWORD LANGBARITEMSINK_COOKIE = 0x42424242;
+static const DWORD LANGBARITEMSINK_COOKIE = 0x25394756;
 
 static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
 {
@@ -106,7 +106,7 @@ STDAPI CLangBarItemButton::Show(BOOL fShow)
 
 STDAPI CLangBarItemButton::GetTooltipString(BSTR *pbstrToolTip)
 {
-	*pbstrToolTip = SysAllocString(L"左鍵切換模式，右鍵打開菜單");
+	*pbstrToolTip = SysAllocString(L"左鍵切換模式，右鍵打開選單");
 	return (*pbstrToolTip == NULL)? E_OUTOFMEMORY: S_OK;
 }
 
