@@ -119,18 +119,31 @@ static int CustomInstall(bool installing)
 	return 0;
 }
 
+// static int Run(LPTSTR lpCmdLine)
+// {
+// 	const bool silent = true;
+// 	bool uninstalling = !wcscmp(L"/u", lpCmdLine);
+// 	if (uninstalling)
+// 		return uninstall(silent);
+// 	bool hans = !wcscmp(L"/s", lpCmdLine);
+// 	if (hans)
+// 		return install(false, silent);
+// 	bool hant = !wcscmp(L"/t", lpCmdLine);
+// 	if (hant)
+// 		return install(true, silent);
+// 	bool installing = !wcscmp(L"/i", lpCmdLine);
+// 	return CustomInstall(installing);
+// }
+
+// ThuanTaigi: 強制使用hant、mài顯示設定
 static int Run(LPTSTR lpCmdLine)
 {
 	const bool silent = true;
+	const bool hant = true;
+
 	bool uninstalling = !wcscmp(L"/u", lpCmdLine);
 	if (uninstalling)
 		return uninstall(silent);
-	bool hans = !wcscmp(L"/s", lpCmdLine);
-	if (hans)
-		return install(false, silent);
-	bool hant = !wcscmp(L"/t", lpCmdLine);
-	if (hant)
-		return install(true, silent);
-	bool installing = !wcscmp(L"/i", lpCmdLine);
-	return CustomInstall(installing);
+
+	return install(hant, silent);
 }

@@ -76,8 +76,11 @@ int Configurator::Run(bool installing)
 	RimeSwitcherSettings* switcher_settings = api->switcher_settings_init();
 	UIStyleSettings ui_style_settings;
 
-	bool skip_switcher_settings = installing && !api->is_first_run((RimeCustomSettings*)switcher_settings);
-	bool skip_ui_style_settings = installing && !api->is_first_run(ui_style_settings.settings());
+	// ThuanTaigi: 強制mài顯示設定UI
+	// bool skip_switcher_settings = installing && !api->is_first_run((RimeCustomSettings*)switcher_settings);
+	// bool skip_ui_style_settings = installing && !api->is_first_run(ui_style_settings.settings());
+	bool skip_switcher_settings = true;
+	bool skip_ui_style_settings = true;
 
 	(skip_switcher_settings || configure_switcher(api, switcher_settings, &reconfigured)) &&
 		(skip_ui_style_settings || configure_ui(api, &ui_style_settings, &reconfigured));
