@@ -67,8 +67,13 @@ ibus::Keycode TranslateKeycode(UINT vkey, KeyInfo kinfo)
 	case VK_BACK:	return ibus::BackSpace;
 	case VK_TAB:	return ibus::Tab;
 	case VK_CLEAR:	return ibus::Clear;
-	case VK_RETURN:	return ibus::Return;
-
+	case VK_RETURN:
+	{
+		if (kinfo.isExtended == 1)
+			return ibus::KP_Enter;
+		else
+			return ibus::Return;
+	}
 	case VK_SHIFT:
 	{
 		if (kinfo.scanCode == 0x36)
