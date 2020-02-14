@@ -249,7 +249,7 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <OutputFile>$(SolutionDir)\output\ThuanTaigis.dll</OutputFile>
+      <OutputFile>$(SolutionDir)\output\ThuanTaigis$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_ROOT)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -373,7 +373,7 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <OutputFile>$(SolutionDir)\output\ThuanTaigisx64.dll</OutputFile>
+      <OutputFile>$(SolutionDir)\output\ThuanTaigis$(Platform)$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_ROOT)\stage_x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>

@@ -3,7 +3,7 @@
 #include "WeaselTSF.h"
 #include "LanguageBar.h"
 
-static const DWORD LANGBARITEMSINK_COOKIE = 0x25394756;
+static const DWORD LANGBARITEMSINK_COOKIE = 0x42424242;
 
 static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
 {

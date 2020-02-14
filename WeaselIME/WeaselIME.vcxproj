@@ -261,7 +261,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(SolutionDir)\output\ThuanTaigis.ime</OutputFile>
+      <OutputFile>$(SolutionDir)\output\ThuanTaigis$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_ROOT)\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>weasel.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -397,7 +397,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(SolutionDir)\output\ThuanTaigisx64.ime</OutputFile>
+      <OutputFile>$(SolutionDir)\output\ThuanTaigis$(Platform)$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(BOOST_ROOT)\stage_x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>weasel.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>

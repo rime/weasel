@@ -2,7 +2,8 @@
 
 setlocal
 
-set WEASEL_VERSION=0.1.0
+rem ThuanTaigi: 改版本號碼
+set WEASEL_VERSION=1.0.0
 if not defined WEASEL_BUILD set WEASEL_BUILD=0
 if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
 
