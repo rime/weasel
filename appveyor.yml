@@ -30,6 +30,8 @@ install:
 build_script:
   - if "%APPVEYOR_REPO_TAG%" == "false" set WEASEL_BUILD=%APPVEYOR_BUILD_NUMBER%
   - .\build.bat data hant installer
+  - ps: $env:BUILD_TIMESTAMP=Get-Date -format yyyyMMddHHmmss
+  - ps: echo $BUILD_TIMESTAMP
 
 artifacts:
   - path: output\archives\ThuanTaigi-v$(WEASEL_VERSION).$(WEASEL_BUILD)-installer.exe
@@ -45,6 +47,5 @@ deploy:
   prerelease: false
   force_update: true
 
-  on_finish:
-    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-    
+on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
