@@ -2,6 +2,8 @@ environment:
   BOOST_ROOT: C:\Libraries\boost_1_69_0
   CMAKE_GENERATOR: Visual Studio 15 2017
   PLATFORM_TOOLSET: v141_xp
+  WEASEL_VERSION: 1.2.3
+  WEASEL_BUILD: 4
 
 init:
   - git --version
