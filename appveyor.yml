@@ -35,6 +35,7 @@ build_script:
   - ps: $env:BUILD_TIMESTAMP=Get-Date -format yyyyMMddHHmmss
   - ps: $BUILD_TIMESTAMP=$env:BUILD_TIMESTAMP
   - ps: echo $BUILD_TIMESTAMP
+  - ps: mv ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-installer.exe ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-%BUILD_TIMESTAMP%-installer.exe
 
 artifacts:
   - path: output\archives\ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-%BUILD_TIMESTAMP%-installer.exe
