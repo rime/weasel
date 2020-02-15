@@ -32,16 +32,16 @@ build_script:
   - .\build.bat data hant installer
 
 artifacts:
-  - path: output\archives\ThuanTaigi-v$(appveyor_build_version)-installer.exe
+  - path: output\archives\ThuanTaigi-v$(WEASEL_VERSION).$(WEASEL_BUILD)-installer.exe
     name: ThuanTaigi
 
 deploy:
-  release: ThuanTaigi-v$(appveyor_build_version)
+  release: ThuanTaigi-v$(WEASEL_VERSION).$(WEASEL_BUILD)
   description: 'ThuanTaigi Release'
   provider: GitHub
   auth_token:
     secure: QYElUlaZayQxjLn83N/BwkuePDbwhXf0cI6q0BqimbNQ+2DCU4WhDjyehZ6Jm1Dq
-  artifact: output\archives\ThuanTaigi-v$(appveyor_build_version)-installer.exe            
+  artifact: output/archives/*
   draft: true
   prerelease: false
   force_update: true
