@@ -41,7 +41,6 @@ deploy:
   provider: GitHub
   auth_token:
     secure: QYElUlaZayQxjLn83N/BwkuePDbwhXf0cI6q0BqimbNQ+2DCU4WhDjyehZ6Jm1Dq
-  artifact: output/archives/*
   draft: true
   prerelease: false
   force_update: true
