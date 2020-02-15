@@ -27,8 +27,8 @@ build_script:
   - .\build.bat data hant installer
 
 artifacts:
-  - path: output\archives\weasel-0.14.3.*-installer.exe
-    name: Weasel
+  - path: output\archives\ThuanTaigi-1.0.0.*-installer.exe
+    name: ThuanTaigi
 
 deploy:
   - provider: BinTray

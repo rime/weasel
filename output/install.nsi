@@ -119,7 +119,7 @@ Section "ThuanTaigi"
 
 program_files:
   File "LICENSE.txt"
-  File "README.txt"
+  File /nonfatal "README.txt"
   File "7-zip-license.txt"
   File "7z.dll"
   File "7z.exe"
