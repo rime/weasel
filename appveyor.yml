@@ -6,7 +6,6 @@ environment:
 init:
   - git --version
   - git config --global core.autocrlf true
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 branches:
   only:
@@ -35,6 +34,9 @@ build_script:
 artifacts:
   - path: output\archives\ThuanTaigi-v$(WEASEL_VERSION).$(WEASEL_BUILD)-installer.exe
     name: ThuanTaigi
+
+before_deploy:
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 deploy:
   release: ThuanTaigi-v$(WEASEL_VERSION).$(WEASEL_BUILD)
