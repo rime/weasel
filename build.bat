@@ -216,24 +216,24 @@ if %build_x64% == 1 (
 exit /b
 
 :build_data
-rem call :build_essay
+REM call :build_essay
 copy %WEASEL_ROOT%\LICENSE.txt output\
-copy %WEASEL_ROOT%\README.md output\README.txt
-copy %WEASEL_ROOT%\plum\rime-install.bat output\
-set plum_dir=plum
+REM copy %WEASEL_ROOT%\README.md output\README.txt
+REM copy %WEASEL_ROOT%\plum\rime-install.bat output\
+REM set plum_dir=plum
 set rime_dir=output/data
-"%BASH_ROOT%\bash.exe" plum/rime-install %WEASEL_BUNDLED_RECIPES%
-if errorlevel 1 goto error
+REM "%BASH_ROOT%\bash.exe" plum/rime-install %WEASEL_BUNDLED_RECIPES%
+REM if errorlevel 1 goto error
 exit /b
 
-:build_essay
-rem essay.kct is deprecated.
-cd %WEASEL_ROOT%\plum
-copy %WEASEL_ROOT%\librime\thirdparty\bin\kctreemgr.exe .\
-copy %WEASEL_ROOT%\librime\thirdparty\bin\zlib1.dll .\
-call make_essay.bat
-cd %WEASEL_ROOT%
-exit /b
+REM :build_essay
+REM rem essay.kct is deprecated.
+REM cd %WEASEL_ROOT%\plum
+REM copy %WEASEL_ROOT%\librime\thirdparty\bin\kctreemgr.exe .\
+REM copy %WEASEL_ROOT%\librime\thirdparty\bin\zlib1.dll .\
+REM call make_essay.bat
+REM cd %WEASEL_ROOT%
+REM exit /b
 
 :build_opencc_data
 if not exist %WEASEL_ROOT%\librime\thirdparty\share\opencc\TSCharacters.ocd (
