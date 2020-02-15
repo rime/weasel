@@ -1,3 +1,8 @@
+branches:
+  only:
+    - master
+    - kai_sanphin_mia
+
 clone_depth: 1
 pull_requests:
   do_not_increment_build_number: true
@@ -27,32 +32,16 @@ build_script:
   - .\build.bat data hant installer
 
 artifacts:
-  - path: output\archives\ThuanTaigi-1.0.0.*-installer.exe
+  - path: output\archives\ThuanTaigi-v$(appveyor_build_version)-installer.exe
     name: ThuanTaigi
 
 deploy:
-  - provider: BinTray
-    username: lotem
-    api_key: &bintray_api_key
-      secure: KutsvYFjEDoWMhEKxBP2DlXku/pSVfUsNnG70GFyYQo2vZ8GP0Yzu1rrfvyTEQbTZaJF3gwZ+2+Z5mDXsUSeIouiqzlQjiCKYScuEttLF5w=
-    subject: rime
-    repo: weasel
-    package: release
-    version: 0.14.3
-    publish: false
-    override: false
-    explode: false
-    on:
-      APPVEYOR_REPO_TAG: true
-  - provider: BinTray
-    username: lotem
-    api_key: *bintray_api_key
-    subject: rime
-    repo: weasel
-    package: testing
-    version: 0.14.3.$(APPVEYOR_BUILD_NUMBER)
-    publish: true
-    override: false
-    explode: false
-    on:
-      branch: master
+  release: ThuanTaigi-v$(appveyor_build_version)
+  description: 'ThuanTaigi Release'
+  provider: GitHub
+  auth_token:
+    secure: H3bH9AFzizdYB+j9cWiEqTIirQWl3pEfabN582gaeVgWZS9RB7OuqUcCiH/87eEumGEFgH8vKERLoKErHsR357+BVb66vLnobxdzO0ZZVKcibS6V8VEWwneQVG7MeaNamKySWdOCkqi59oEBx/C2xypBP1xsvVoXb3fiDAAPUk+LgF6W91ebSBTOX2PjZ1L1gDvc50EAdCWY6u5Vhdk/zYcBmgl+EXEFm54S/gQXLiXOntseB/2cIne85LPSbN+9EhO0CSwxw6Z8h/w8EHtG9KsLsJ5zHqopUuD1vBh8zvl8Gn/hBORfT7qO5zBMlrDGf3ubTnpbTsg/VTIHjUzniMc9IJyJNLmE20xyMD+8mW6ELdmE1V+8CxHI70dCkdW5gO0WxUyaotY+W7s6x3Ts47NSZatqjUcCkBykt7I3+LW1djRONijV4TO47A/8+ReW/oI7vUjdcIanuvHXMl9eB3q+YkkXeJ1p929YfRsSvTFSaHCwhBcu9y+ve+pLb7vhLAtYn3dHOR7ncufmoQY2iDBlJj6MRGd54qxdZwtu747xGLDsGeSzz9+bmH7s210BdjkbP/vJPQfayc5txpH1xqp+lE2BtCglpeUspNo/XIqRpSv3k6xLjeTIFSZ4uWvj6bKLihXsh1LrnqQQ4wpHRIXFC9AYbzWXOH63F7BzFeA=
+  artifact: output\archives\ThuanTaigi-v$(appveyor_build_version)-installer.exe            
+  draft: true
+  prerelease: false
+  force_update: true
