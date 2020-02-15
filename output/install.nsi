@@ -20,7 +20,7 @@ Unicode true
 Name "意傳台語輸入法 ${WEASEL_VERSION}"
 
 ; The file to write
-OutFile "archives\ThuanTaigi-${WEASEL_VERSION}.${WEASEL_BUILD}-installer.exe"
+OutFile "archives\ThuanTaigi-v${WEASEL_VERSION}.${WEASEL_BUILD}-installer.exe"
 
 VIProductVersion "${WEASEL_VERSION}.${WEASEL_BUILD}"
 ; NSIS\Contrib\Language files\TradChinese.nlf
