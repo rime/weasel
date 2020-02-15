@@ -126,8 +126,8 @@ program_files:
   File "COPYING-curl.txt"
   File "curl.exe"
   File "curl-ca-bundle.crt"
-  File "rime-install.bat"
-  File "rime-install-config.bat"
+  File /nonfatal "rime-install.bat"
+  File /nonfatal "rime-install-config.bat"
   File "ThuanTaigi.dll"
   ${If} ${RunningX64}
     File "ThuanTaigix64.dll"
