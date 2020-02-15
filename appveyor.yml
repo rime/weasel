@@ -5,6 +5,8 @@ environment:
   APPVEYOR_RDP_PASSWORD: 123456
 
 init:
+  - git --version
+  - git config --global core.autocrlf true
   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 branches:
@@ -23,10 +25,6 @@ cache:
   - boost.cached -> appveyor_build_boost.bat
   - C:\Libraries\boost_1_69_0\stage -> appveyor_build_boost.bat
   - C:\Libraries\boost_1_69_0\stage_x64 -> appveyor_build_boost.bat
-
-init:
-  - git --version
-  - git config --global core.autocrlf true
 
 install:
   - .\appveyor.install.bat
