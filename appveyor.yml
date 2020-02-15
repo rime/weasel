@@ -34,8 +34,12 @@ build_script:
   - .\build.bat data hant installer
   - ps: $env:BUILD_TIMESTAMP=Get-Date -format yyyyMMddHHmmss
   - ps: $BUILD_TIMESTAMP=$env:BUILD_TIMESTAMP
+  - ps: $WEASEL_VERSION=$env:WEASEL_VERSION
+  - ps: $WEASEL_BUILD=$env:WEASEL_BUILD
+  - ps: echo $WEASEL_VERSION
+  - ps: echo $WEASEL_BUILD
   - ps: echo $BUILD_TIMESTAMP
-  - ps: mv output\archives\ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-installer.exe output\archives\ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-%BUILD_TIMESTAMP%-installer.exe
+  - ps: mv output\archives\ThuanTaigi-v$WEASEL_VERSION.$WEASEL_BUILD-installer.exe output\archives\ThuanTaigi-v$WEASEL_VERSION.$WEASEL_BUILD-$BUILD_TIMESTAMP-installer.exe
 
 artifacts:
   - path: output\archives\ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-%BUILD_TIMESTAMP%-installer.exe
