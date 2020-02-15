@@ -2,7 +2,7 @@ environment:
   BOOST_ROOT: C:\Libraries\boost_1_69_0
   CMAKE_GENERATOR: Visual Studio 15 2017
   PLATFORM_TOOLSET: v141_xp
-  APPVEYOR_RDP_PASSWORD: 123456
+  APPVEYOR_RDP_PASSWORD: 12345678
 
 init:
   - git --version
