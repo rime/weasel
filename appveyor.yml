@@ -32,15 +32,16 @@ install:
 build_script:
   # - if "%APPVEYOR_REPO_TAG%" == "false" set WEASEL_BUILD=%APPVEYOR_BUILD_NUMBER%
   - .\build.bat data hant installer
-  - ps: $BUILD_TIMESTAMP=Get-Date -format yyyyMMddHHmmss
-  - ps: echo BUILD_TIMESTAMP is $BUILD_TIMESTAMP
+  - ps: $env:BUILD_TIMESTAMP=Get-Date -format yyyyMMddHHmmss
+  - ps: $BUILD_TIMESTAMP=$env:BUILD_TIMESTAMP
+  - ps: echo $BUILD_TIMESTAMP
 
 artifacts:
-  - path: output\archives\ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-$BUILD_TIMESTAMP-installer.exe
+  - path: output\archives\ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-%BUILD_TIMESTAMP%-installer.exe
     name: ThuanTaigi
 
 deploy:
-  release: ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-$BUILD_TIMESTAMP
+  release: ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-%BUILD_TIMESTAMP%
   description: 'ThuanTaigi Release'
   provider: GitHub
   auth_token:
