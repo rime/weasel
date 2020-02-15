@@ -38,11 +38,11 @@ build_script:
   - ps: echo $BUILD_TIMESTAMP
 
 artifacts:
-  - path: output\archives\ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-$BUILD_TIMESTAMP-installer.exe
+  - path: output\archives\ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-$(BUILD_TIMESTAMP)-installer.exe
     name: ThuanTaigi
 
 deploy:
-  release: ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-$BUILD_TIMESTAMP
+  release: ThuanTaigi-v%WEASEL_VERSION%.%WEASEL_BUILD%-$(BUILD_TIMESTAMP)
   description: 'ThuanTaigi Release'
   provider: GitHub
   auth_token:
