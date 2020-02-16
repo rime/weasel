@@ -33,7 +33,7 @@ build_script:
   # - if "%APPVEYOR_REPO_TAG%" == "false" set WEASEL_BUILD=%APPVEYOR_BUILD_NUMBER%
   - .\build.bat data hant installer
   - ps: $env:BUILD_TIMESTAMP=Get-Date -format yyyyMMddHHmmss
-  - ps: $env:GIT_HASH=$env:APPVEYOR_REPO_COMMIT.Substring(0, 6)
+  - ps: $env:GIT_HASH=$env:APPVEYOR_REPO_COMMIT.Substring(0, 7)
   - ps: $BUILD_TIMESTAMP=$env:BUILD_TIMESTAMP
   - ps: $WEASEL_VERSION=$env:WEASEL_VERSION
   - ps: $WEASEL_BUILD=$env:WEASEL_BUILD
