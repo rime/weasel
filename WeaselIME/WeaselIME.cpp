@@ -45,10 +45,10 @@ static bool launch_server()
 	WCHAR value[MAX_PATH];
 	DWORD len = sizeof(value);
 	DWORD type = 0;
-	ret = RegQueryValueEx(hKey, L"WeaselRoot", NULL, &type, (LPBYTE)value, &len);
+	ret = RegQueryValueEx(hKey, L"ThuanTaigiRoot", NULL, &type, (LPBYTE)value, &len);
 	if (ret != ERROR_SUCCESS)
 	{
-		error_message(L"未設置 WeaselRoot");
+		error_message(L"未設置 ThuanTaigiRoot");
 		RegCloseKey(hKey);
 		return false;
 	}

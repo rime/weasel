@@ -5,9 +5,9 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
 
-#define WEASEL_IME_NAME L"小狼毫"
-#define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
-#define RIME_REG_KEY L"Software\\Rime"
+#define WEASEL_IME_NAME L"意傳台語輸入法"
+#define WEASEL_REG_KEY L"Software\\IThuan\\ThuanTaigi"
+#define RIME_REG_KEY L"Software\\IThuan"
 
 namespace weasel
 {

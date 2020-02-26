@@ -1,7 +1,8 @@
 #pragma once
 
-#define WEASEL_VERSION_STR "0.14.3"
-#define WEASEL_VERSION_NUM 0,14,3,0
+// ThuanTaigi: 改版本號碼
+#define WEASEL_VERSION_STR "1.0.0"
+#define WEASEL_VERSION_NUM 1,0,0,0
 
-#define WEASEL_CODE_NAME "Weasel"
+#define WEASEL_CODE_NAME "ThuanTaigi"
 #define WEASEL_VERSION WEASEL_VERSION_STR

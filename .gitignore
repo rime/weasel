@@ -20,7 +20,7 @@ ReleaseHant/
 /include/glog
 /include/rime*.h
 /ipch
-env.bat
+# env.bat
 weasel.props
 *.log
 *.user
@@ -37,3 +37,4 @@ Thumbs.db
 /cmake-build-debug
 *.VC.db
 release-notes.html
+.vscode/

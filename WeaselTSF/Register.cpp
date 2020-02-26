@@ -29,7 +29,7 @@ HKL FindIME()
 				DWORD type;
 				DWORD size = sizeof data;
 				ret = RegQueryValueExW(hSubKey, L"Ime File", NULL, &type, (LPBYTE)data, &size);
-				if (ret == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(data, L"weasel.ime") == 0)
+				if (ret == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(data, L"ThuanTaigi.ime") == 0)
 					hKL = (HKL)id;
 			}
 			RegCloseKey(hSubKey);

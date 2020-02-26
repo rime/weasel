@@ -2,7 +2,8 @@
 
 setlocal
 
-set WEASEL_VERSION=0.14.3
+rem ThuanTaigi: 改版本號碼
+if not defined WEASEL_VERSION set WEASEL_VERSION=1.0.0
 if not defined WEASEL_BUILD set WEASEL_BUILD=0
 if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
 
@@ -23,6 +24,15 @@ exit /b 1
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
 
+if defined BASH_ROOT (
+  if exist "%BASH_ROOT%\bash.exe" goto bash_found
+)
+echo Error: Bash not found! Please set BASH_ROOT in env.bat.
+exit /b 1
+:bash_found
+echo BASH_ROOT=%BASH_ROOT%
+echo.
+
 if not defined BJAM_TOOLSET (
   rem the number actually means platform toolset, not %VisualStudioVersion%
   set BJAM_TOOLSET=msvc-14.1
@@ -32,6 +42,16 @@ if not defined PLATFORM_TOOLSET (
   set PLATFORM_TOOLSET=v141_xp
 )
 
+if not defined MSBUILD_PATH (
+  for /f "usebackq tokens=*" %%i in (`vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe`) do (
+    set MSBUILD_PATH="%%i"
+    REM exit /b !errorlevel!
+  )
+)
+echo.
+echo MSBUILD_PATH=%MSBUILD_PATH%
+echo.
+
 if defined DEVTOOLS_PATH set PATH=%DEVTOOLS_PATH%%PATH%
 
 set build_config=Release
@@ -40,8 +60,9 @@ set build_boost=0
 set build_boost_variant=release
 set build_data=0
 set build_opencc=0
-set build_hant=0
+set build_hant=1
 set build_rime=0
+set clean_rime=0
 set build_installer=0
 set build_x64=1
 
@@ -56,6 +77,10 @@ if "%1" == "release" (
   set build_boost_variant=release
 )
 if "%1" == "rebuild" set build_option=/t:Rebuild
+if "%1" == "clean" (
+  set build_option=/t:Clean
+  set clean_rime=1
+)
 if "%1" == "boost" set build_boost=1
 if "%1" == "data" set build_data=1
 if "%1" == "opencc" set build_opencc=1
@@ -123,18 +148,18 @@ del msbuild*.log
 
 if %build_hant% == 1 (
   if %build_x64% == 1 (
-    msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
+    %MSBUILD_PATH% weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
     if errorlevel 1 goto error
   )
-  msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="Win32" /fl3
+  %MSBUILD_PATH% weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="Win32" /fl3
   if errorlevel 1 goto error
 )
 
 if %build_x64% == 1 (
-  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
+  %MSBUILD_PATH% weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
   if errorlevel 1 goto error
 )
-msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1
+%MSBUILD_PATH% weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1
 if errorlevel 1 goto error
 
 if %build_installer% == 1 (
@@ -143,6 +168,13 @@ if %build_installer% == 1 (
   /DWEASEL_BUILD=%WEASEL_BUILD% ^
   output\install.nsi
   if errorlevel 1 goto error
+)
+
+if %clean_rime% == 1 (
+  cd librime
+  build.bat clean
+  cd ..
+  echo Finish cleaning librime.
 )
 
 goto end
@@ -184,24 +216,24 @@ if %build_x64% == 1 (
 exit /b
 
 :build_data
-rem call :build_essay
+REM call :build_essay
 copy %WEASEL_ROOT%\LICENSE.txt output\
-copy %WEASEL_ROOT%\README.md output\README.txt
-copy %WEASEL_ROOT%\plum\rime-install.bat output\
-set plum_dir=plum
+REM copy %WEASEL_ROOT%\README.md output\README.txt
+REM copy %WEASEL_ROOT%\plum\rime-install.bat output\
+REM set plum_dir=plum
 set rime_dir=output/data
-bash plum/rime-install %WEASEL_BUNDLED_RECIPES%
-if errorlevel 1 goto error
+REM "%BASH_ROOT%\bash.exe" plum/rime-install %WEASEL_BUNDLED_RECIPES%
+REM if errorlevel 1 goto error
 exit /b
 
-:build_essay
-rem essay.kct is deprecated.
-cd %WEASEL_ROOT%\plum
-copy %WEASEL_ROOT%\librime\thirdparty\bin\kctreemgr.exe .\
-copy %WEASEL_ROOT%\librime\thirdparty\bin\zlib1.dll .\
-call make_essay.bat
-cd %WEASEL_ROOT%
-exit /b
+REM :build_essay
+REM rem essay.kct is deprecated.
+REM cd %WEASEL_ROOT%\plum
+REM copy %WEASEL_ROOT%\librime\thirdparty\bin\kctreemgr.exe .\
+REM copy %WEASEL_ROOT%\librime\thirdparty\bin\zlib1.dll .\
+REM call make_essay.bat
+REM cd %WEASEL_ROOT%
+REM exit /b
 
 :build_opencc_data
 if not exist %WEASEL_ROOT%\librime\thirdparty\share\opencc\TSCharacters.ocd (
@@ -217,6 +249,8 @@ exit /b
 
 :error
 echo error building weasel...
+exit /b
 
 :end
+echo Finish building weasel!
 cd %WEASEL_ROOT%

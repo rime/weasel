@@ -7,21 +7,25 @@ LONG g_cRefDll = -1;
 
 CRITICAL_SECTION g_cs;
 
-// {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
+// Iōng Power Shell sán-seng sin ê GUID: '{'+[guid]::NewGuid().ToString()+'}'
+// GUID: {d5026f36-1b08-4269-a3d7-0c04e277c327}
 static const GUID c_clsidTextService = 
-{ 0xa3f4cded, 0xb1e9, 0x41ee, { 0x9c, 0xa6, 0x7b, 0x4d, 0xd, 0xe6, 0xcb, 0xa } };
+{ 0xd5026f36, 0x1b08, 0x4269, { 0xa3, 0xd7, 0x0c, 0x04, 0xe2, 0x77, 0xc3, 0x27 } };
 
-// {3D02CAB6-2B8E-4781-BA20-1C9267529467}
+// Iōng Power Shell sán-seng sin ê GUID: '{'+[guid]::NewGuid().ToString()+'}'
+// GUID: {632f7393-d0a8-4626-9108-f22c195bd427}
 static const GUID c_guidProfile = 
-{ 0x3d02cab6, 0x2b8e, 0x4781, { 0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67 } };
+{ 0x632f7393, 0xd0a8, 0x4626, { 0x91, 0x08, 0xf2, 0x2c, 0x19, 0x5b, 0xd4, 0x27 } };
 
-// {341F9E3A-B8AD-499D-936C-48701E329FB2}
+// Iōng Power Shell sán-seng sin ê GUID: '{'+[guid]::NewGuid().ToString()+'}'
+// GUID: {65ecc8ea-21f4-4b0f-b2ad-a26e6c4a26f0}
 static const GUID c_guidLangBarItemButton = 
-{ 0x341f9e3a, 0xb8ad, 0x499d, { 0x93, 0x6c, 0x48, 0x70, 0x1e, 0x32, 0x9f, 0xb2 } };
+{ 0x65ecc8ea, 0x21f4, 0x4b0f, { 0xb2, 0xad, 0xa2, 0x6e, 0x6c, 0x4a, 0x26, 0xf0 } };
 
 #ifdef WEASEL_USING_OLDER_TSF_SDK
 
 /* For Windows 8 */
+// https://docs.microsoft.com/en-us/previous-versions/windows/apps/hh967425(v=win.10)?redirectedfrom=MSDN#declaring-compatibility
 const GUID GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT =
 { 0x13A016DF, 0x560B, 0x46CD, { 0x94, 0x7A, 0x4C, 0x3A, 0xF1, 0xE0, 0xE3, 0x5D } };
 

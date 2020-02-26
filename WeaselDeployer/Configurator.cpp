@@ -30,7 +30,7 @@ void Configurator::Initialize()
 	weasel_traits.distribution_name = utf8_str;
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
-	weasel_traits.app_name = "rime.weasel";
+	weasel_traits.app_name = "IThuan.ThuanTaigi";
 	RimeSetup(&weasel_traits);
 	
 	LOG(INFO) << "WeaselDeployer reporting.";
@@ -76,8 +76,11 @@ int Configurator::Run(bool installing)
 	RimeSwitcherSettings* switcher_settings = api->switcher_settings_init();
 	UIStyleSettings ui_style_settings;
 
-	bool skip_switcher_settings = installing && !api->is_first_run((RimeCustomSettings*)switcher_settings);
-	bool skip_ui_style_settings = installing && !api->is_first_run(ui_style_settings.settings());
+	// ThuanTaigi: 強制mài顯示設定UI
+	// bool skip_switcher_settings = installing && !api->is_first_run((RimeCustomSettings*)switcher_settings);
+	// bool skip_ui_style_settings = installing && !api->is_first_run(ui_style_settings.settings());
+	bool skip_switcher_settings = true;
+	bool skip_ui_style_settings = true;
 
 	(skip_switcher_settings || configure_switcher(api, switcher_settings, &reconfigured)) &&
 		(skip_ui_style_settings || configure_ui(api, &ui_style_settings, &reconfigured));
@@ -91,10 +94,10 @@ int Configurator::Run(bool installing)
 }
 
 int Configurator::UpdateWorkspace(bool report_errors) {
-	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThuanTaigi-WeaselDeployerMutex");
 	if (!hMutex)
 	{
-		LOG(ERROR) << "Error creating WeaselDeployerMutex.";
+		LOG(ERROR) << "Error creating ThuanTaigi-WeaselDeployerMutex.";
 		return 1;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
@@ -103,7 +106,7 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 		CloseHandle(hMutex);
 		if (report_errors)
 		{
-			MessageBox(NULL, L"正在執行另一項部署任務，方纔所做的修改將在輸入法再次啓動後生效。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+			MessageBox(NULL, L"正在執行另一項部署任務，剛才所做的修改將在輸入法再次啓動後生效。", L"【意傳台語輸入法】", MB_OK | MB_ICONINFORMATION);
 		}
 		return 1;
 	}
@@ -134,17 +137,17 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 }
 
 int Configurator::DictManagement() {
-	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThuanTaigi-WeaselDeployerMutex");
 	if (!hMutex)
 	{
-		LOG(ERROR) << "Error creating WeaselDeployerMutex.";
+		LOG(ERROR) << "Error creating ThuanTaigi-WeaselDeployerMutex.";
 		return 1;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
-		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【意傳台語輸入法】", MB_OK | MB_ICONINFORMATION);
 		return 1;
 	}
 
@@ -176,17 +179,17 @@ int Configurator::DictManagement() {
 }
 
 int Configurator::SyncUserData() {
-	HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
+	HANDLE hMutex = CreateMutex(NULL, TRUE, L"ThuanTaigi-WeaselDeployerMutex");
 	if (!hMutex)
 	{
-		LOG(ERROR) << "Error creating WeaselDeployerMutex.";
+		LOG(ERROR) << "Error creating ThuanTaigi-WeaselDeployerMutex.";
 		return 1;
 	}
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
-		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【意傳台語輸入法】", MB_OK | MB_ICONINFORMATION);
 		return 1;
 	}
 

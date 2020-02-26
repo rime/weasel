@@ -11,7 +11,7 @@
 #endif
 
 #define TEXTSERVICE_DESC	WEASEL_IME_NAME
-#define TEXTSERVICE_DESC_A	"Weasel"
+#define TEXTSERVICE_DESC_A	"ThuanTaigi"
 #define TEXTSERVICE_MODEL	"Apartment"
 
 #define TEXTSERVICE_ICON_INDEX	0

@@ -7,13 +7,15 @@
 #include <strsafe.h>
 
 
-// {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
+// Iōng Power Shell sán-seng sin ê GUID: '{'+[guid]::NewGuid().ToString()+'}'
+// GUID: {d5026f36-1b08-4269-a3d7-0c04e277c327}
 static const GUID c_clsidTextService = 
-{ 0xa3f4cded, 0xb1e9, 0x41ee, { 0x9c, 0xa6, 0x7b, 0x4d, 0xd, 0xe6, 0xcb, 0xa } };
+{ 0xd5026f36, 0x1b08, 0x4269, { 0xa3, 0xd7, 0x0c, 0x04, 0xe2, 0x77, 0xc3, 0x27 } };
 
-// {3D02CAB6-2B8E-4781-BA20-1C9267529467}
+// Iōng Power Shell sán-seng sin ê GUID: '{'+[guid]::NewGuid().ToString()+'}'
+// GUID: {632f7393-d0a8-4626-9108-f22c195bd427}
 static const GUID c_guidProfile = 
-{ 0x3d02cab6, 0x2b8e, 0x4781, { 0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67 } };
+{ 0x632f7393, 0xd0a8, 0x4626, { 0x91, 0x08, 0xf2, 0x2c, 0x19, 0x5b, 0xd4, 0x27 } };
 
 
 BOOL copy_file(const std::wstring& src, const std::wstring& dest)
@@ -74,7 +76,7 @@ int install_ime_file(std::wstring& srcPath, const std::wstring& ext, bool hant, 
 	WCHAR path[MAX_PATH];
 	GetModuleFileNameW(GetModuleHandle(NULL), path, _countof(path));
 
-	std::wstring srcFileName = (hant ? L"weaselt" : L"weasel");
+	std::wstring srcFileName = (hant ? L"ThuanTaigit" : L"ThuanTaigi");
 	srcFileName += ext;
 	WCHAR drive[_MAX_DRIVE];
 	WCHAR dir[_MAX_DIR];
@@ -82,7 +84,7 @@ int install_ime_file(std::wstring& srcPath, const std::wstring& ext, bool hant, 
 	srcPath = std::wstring(drive) + dir + srcFileName;
 
 	GetSystemDirectoryW(path, _countof(path));
-	std::wstring destPath = std::wstring(path) + L"\\weasel" + ext;
+	std::wstring destPath = std::wstring(path) + L"\\ThuanTaigi" + ext;
 
 	int retval = 0;
 	// 复制 .dll/.ime 到系统目录
@@ -124,11 +126,11 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 	WCHAR path[MAX_PATH];
 	GetSystemDirectoryW(path, _countof(path));
 	std::wstring imePath(path);
-	imePath += L"\\weasel" + ext;
+	imePath += L"\\ThuanTaigi" + ext;
 	retval += func(imePath, false, false, false, silent);
 	if (!delete_file(imePath))
 	{
-		if (!silent) MessageBox(NULL, imePath.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, imePath.c_str(), L"移除失敗", MB_ICONERROR | MB_OK);
 		retval += 1;
 	}
 	if (is_wow64())
@@ -139,17 +141,17 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 		PW64RW64FR fnWow64RevertWow64FsRedirection = (PW64RW64FR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "Wow64RevertWow64FsRedirection");
 		if (fnWow64DisableWow64FsRedirection == NULL || fnWow64DisableWow64FsRedirection(&OldValue) == FALSE)
 		{
-			if (!silent) MessageBoxW(NULL, L"無法取消文件系統重定向", L"卸載失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, L"無法取消文件系統重定向", L"移除失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 		if (!delete_file(imePath))
 		{
-			if (!silent) MessageBoxW(NULL, imePath.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, imePath.c_str(), L"移除失敗", MB_ICONERROR | MB_OK);
 			retval += 1;
 		}
 		if (fnWow64RevertWow64FsRedirection == NULL || fnWow64RevertWow64FsRedirection(OldValue) == FALSE)
 		{
-			if (!silent) MessageBoxW(NULL, L"無法恢復文件系統重定向", L"卸載失敗", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, L"無法恢復文件系統重定向", L"移除失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 	}
@@ -173,6 +175,8 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 		if (!hKL)
 		{
 			// manually register ime
+			// https://docs.microsoft.com/zh-tw/windows-hardware/manufacture/desktop/windows-language-pack-default-values
+			// https://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=Kbd_Registry
 			WCHAR hkl_str[16] = {0};
 			HKEY hKey;
 			LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
@@ -191,7 +195,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 						ret = RegQueryValueEx(hSubKey, L"Ime File", NULL, &type, (LPBYTE)imeFile, &len);
 						if (ret = ERROR_SUCCESS)
 						{
-							if (_wcsicmp(imeFile, L"weasel.ime") == 0)
+							if (_wcsicmp(imeFile, L"ThuanTaigi.ime") == 0)
 							{
 								hKL = (HKL)k;  // already there
 							}
@@ -204,7 +208,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 						ret = RegCreateKey(hKey, hkl_str, &hSubKey);
 						if (ret == ERROR_SUCCESS)
 						{
-							const WCHAR ime_file[] = L"weasel.ime";
+							const WCHAR ime_file[] = L"ThuanTaigi.ime";
 							RegSetValueEx(hSubKey, L"Ime File", 0, REG_SZ, (LPBYTE)ime_file, sizeof(ime_file));
 							const WCHAR layout_file[] = L"kbdus.dll";
 							RegSetValueEx(hSubKey, L"Layout File", 0, REG_SZ, (LPBYTE)layout_file, sizeof(layout_file));
@@ -260,7 +264,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
 	if (ret != ERROR_SUCCESS)
 	{
-		if (!silent) MessageBox(NULL, KEYBOARD_LAYOUTS_KEY, L"卸載失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, KEYBOARD_LAYOUTS_KEY, L"移除失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -288,7 +292,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 				continue;
 
 			// 小狼毫?
-			if (_wcsicmp(imeFile, L"weasel.ime") == 0)
+			if (_wcsicmp(imeFile, L"ThuanTaigi.ime") == 0)
 			{
 				DWORD value;
 				swscanf_s(subKey, L"%x", &value);
@@ -403,7 +407,7 @@ int register_text_service(const std::wstring& tsf_path, bool register_ime, bool 
 	{
 		WCHAR msg[100];
 		StringCchPrintfW(msg, _countof(msg), L"註冊輸入法錯誤 regsvr32.exe %s", params.c_str());
-		if (!silent) MessageBoxW(NULL, msg, L"安装/卸載失败", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBoxW(NULL, msg, L"安装/移除失败", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -435,12 +439,12 @@ int install(bool hant, bool silent)
 	_wsplitpath_s(ime_src_path.c_str(), drive, _countof(drive), dir, _countof(dir), NULL, 0, NULL, 0);
 	std::wstring rootDir = std::wstring(drive) + dir;
 	rootDir.pop_back();
-	ret = RegSetValueEx(hKey, L"WeaselRoot", 0, REG_SZ,
+	ret = RegSetValueEx(hKey, L"ThuanTaigiRoot", 0, REG_SZ,
 		                (const BYTE*)rootDir.c_str(),
 						(rootDir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		if (!silent) MessageBox(NULL, L"無法寫入 WeaselRoot", L"安裝失敗", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, L"無法寫入 ThuanTaigiRoot", L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -459,7 +463,7 @@ int install(bool hant, bool silent)
 	if (retval)
 		return 1;
 
-	if (!silent) MessageBox(NULL, L"可以使【小狼毫】寫字了 :)", L"安裝完成", MB_ICONINFORMATION | MB_OK);
+	if (!silent) MessageBox(NULL, L"可以用【意傳台語輸入法】打字了 :)", L"安裝完成", MB_ICONINFORMATION | MB_OK);
 	return 0;
 }
 
@@ -477,7 +481,7 @@ int uninstall(bool silent)
 	if (retval)
 		return 1;
 
-	if (!silent) MessageBox(NULL, L"小狼毫 :)", L"卸載完成", MB_ICONINFORMATION | MB_OK);
+	if (!silent) MessageBox(NULL, L"意傳台語輸入法 :)", L"移除完成", MB_ICONINFORMATION | MB_OK);
 	return 0;
 }
 
@@ -485,6 +489,6 @@ bool has_installed() {
 	WCHAR path[MAX_PATH];
 	GetSystemDirectory(path, _countof(path));
 	std::wstring sysPath(path);
-	DWORD attr = GetFileAttributesW((sysPath + L"\\weasel.ime").c_str());
+	DWORD attr = GetFileAttributesW((sysPath + L"\\ThuanTaigi.ime").c_str());
 	return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
