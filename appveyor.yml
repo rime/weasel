@@ -12,7 +12,7 @@ init:
 branches:
   only:
     - master
-    - kai_sanphin_mia
+    - kai_keypad_sooji_tuieng
 
 clone_depth: 1
 pull_requests:
