@@ -170,7 +170,7 @@ program_files:
   ${GetOptions} $R0 "/S" $R1
   IfErrors +2 0
   StrCpy $R2 "/s"
-  ${GetOptions} $R0 "/T" $R1
+  ${GetOptions} $R0 "/S /T" $R1
   IfErrors +2 0
   StrCpy $R2 "/t"
 
