@@ -390,7 +390,7 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 	std::wstring& tips(ctx.aux.str);
 	bool show_icon = false;
 	if (m_message_type == "deploy") {
-		if (m_message_type == "start")
+		if (m_message_value == "start")
 			tips = L"正在部署 RIME";
 		else if (m_message_value == "success")
 			tips = L"部署完成";
