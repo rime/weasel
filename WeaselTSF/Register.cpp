@@ -65,6 +65,8 @@ BOOL RegisterProfiles()
 			0,
 			TRUE,
 			0);
+		if (FAILED(hr))
+			return FALSE;
 	}
 	else
 	{
@@ -99,18 +101,38 @@ BOOL RegisterProfiles()
 
 void UnregisterProfiles()
 {
-	ITfInputProcessorProfiles *pInputProcessProfiles;
 	HRESULT hr;
 
-	hr = CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER,
-		IID_ITfInputProcessorProfiles, (void **)&pInputProcessProfiles);
-	if (FAILED(hr))
-		return;
+	if (IsWindows8OrGreater())
+	{
+		CComPtr<ITfInputProcessorProfileMgr> pInputProcessorProfileMgr;
+		hr = pInputProcessorProfileMgr.CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_ALL);
+		if (FAILED(hr))
+			return;
 
-	pInputProcessProfiles->SubstituteKeyboardLayout(
-		c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, NULL);
-	pInputProcessProfiles->Unregister(c_clsidTextService);
-	pInputProcessProfiles->Release();
+		hr = pInputProcessorProfileMgr->UnregisterProfile(
+			c_clsidTextService,
+			TEXTSERVICE_LANGID,
+			c_guidProfile,
+			0);
+	}
+	else
+	{
+		ITfInputProcessorProfiles *pInputProcessProfiles;
+		hr = CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER,
+			IID_ITfInputProcessorProfiles, (void **)&pInputProcessProfiles);
+		if (FAILED(hr))
+			return;
+
+		pInputProcessProfiles->SubstituteKeyboardLayout(
+			c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, NULL);
+		pInputProcessProfiles->RemoveLanguageProfile(
+			c_clsidTextService,
+			TEXTSERVICE_LANGID,
+			c_guidProfile);
+		pInputProcessProfiles->Unregister(c_clsidTextService);
+		pInputProcessProfiles->Release();
+	}
 }
 
 BOOL RegisterCategories()
@@ -158,6 +180,27 @@ void UnregisterCategories()
 		return;
 
 	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIP_KEYBOARD, c_clsidTextService);
+	if (hr != S_OK)
+		goto UnregisterExit;
+
+	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_UIELEMENTENABLED, c_clsidTextService);
+	if (hr != S_OK)
+		goto UnregisterExit;
+
+	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT, c_clsidTextService);
+	if (hr != S_OK)
+		goto UnregisterExit;
+
+	if (IsWindows8OrGreater())
+	{
+		hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
+		if (hr != S_OK)
+			goto UnregisterExit;
+
+		hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
+	}
+
+UnregisterExit:
 	pCategoryMgr->Release();
 }
 
