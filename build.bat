@@ -129,7 +129,7 @@ if %build_weasel% == 1 (
   if not exist output\data\essay.txt (
     set build_data=1
   )
-  if not exist output\data\opencc\TSCharacters.ocd (
+  if not exist output\data\opencc\TSCharacters.ocd* (
     set build_opencc=1
   )
 )
