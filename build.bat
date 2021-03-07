@@ -36,6 +36,7 @@ if not defined PLATFORM_TOOLSET (
 
 if defined DEVTOOLS_PATH set PATH=%DEVTOOLS_PATH%%PATH%
 
+set clean=0
 set build_config=Release
 set build_option=/t:Build
 set build_boost=0
@@ -70,8 +71,9 @@ if "%1" == "rime" set build_rime=1
 if "%1" == "librime" set build_rime=1
 if "%1" == "weasel" set build_weasel=1
 if "%1" == "installer" set build_installer=1
+if "%1" == "clean" set clean=1
 if "%1" == "all" (
-  set build_boost=1
+  set build_boost=0
   set build_data=1
   set build_opencc=1
   set build_hant=1
@@ -132,6 +134,9 @@ if %build_weasel% == 1 (
   if not exist output\data\opencc\TSCharacters.ocd* (
     set build_opencc=1
   )
+  if exist librime\dist\lib\rime.dll (
+	  copy librime\dist\lib\rime.dll output\. /y
+  )
 )
 if %build_data% == 1 call :build_data
 if %build_opencc% == 1 call :build_opencc_data
@@ -170,6 +175,27 @@ if %build_installer% == 1 (
   /DWEASEL_BUILD=%WEASEL_BUILD% ^
   output\install.nsi
   if errorlevel 1 goto error
+)
+
+if %clean% == 1 (
+  rmdir /s /q Release
+  rmdir /s /q x64  
+  rmdir /s /q RimeWithWeasel\Release
+  rmdir /s /q TestResponseParser\Release
+  rmdir /s /q TestWeaselIPC\Release
+  rmdir /s /q WeaselDeployer\Release
+  rmdir /s /q WeaselIME\Release
+  rmdir /s /q WeaselIME\x64
+  rmdir /s /q WeaselIPC\Release
+  rmdir /s /q WeaselIPC\x64  
+  rmdir /s /q WeaselIPCServer\Release
+  rmdir /s /q WeaselServer\Release
+  rmdir /s /q WeaselSetup\Release
+  rmdir /s /q WeaselTSF\Release
+  rmdir /s /q WeaselTSF\x64
+  rmdir /s /q WeaselUI\Release
+  rmdir /s /q WeaselUI\x64
+  del /Q msbuild*.log  
 )
 
 goto end

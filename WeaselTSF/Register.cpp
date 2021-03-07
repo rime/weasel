@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "Register.h"
 #include <strsafe.h>
+
 #include <VersionHelpers.hpp>
+
 
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
