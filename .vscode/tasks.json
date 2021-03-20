@@ -1,0 +1,25 @@
+{
+    //https://code.visualstudio.com/docs/cpp/config-msvc
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "type": "shell",
+        "label": "cl.exe build active file",
+        "command": "cl.exe",
+        "args": [
+          "/Zi",
+          "/EHsc",
+          "/Fe:",
+          "/INCLUDE:D:\\WorkD\\Dev\\libs\\skialib\\include",
+          "/LIBPATH:D:\\WorkD\\Dev\\libs\\skialib\\static_MT_x64",
+          "${fileDirname}\\${fileBasenameNoExtension}.exe",
+          "${file}"
+        ],
+        "problemMatcher": ["$msCompile"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      }
+    ]
+  }

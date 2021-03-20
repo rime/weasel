@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                //"D:\\WorkD\\Dev\\libs\\vcpkg\\installed\\x86-windows\\include/**",
+                "D:\\WorkD\\Dev\\libs\\boost_1_75_0",
+				"D:\\WorkD\\Dev\\libs\\skialib/**",
+                "${workspaceFolder}/**",
+           
+                "${default}"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.19041.0",
+            "compilerPath": "E:/ssd/Dev/Microsoft/vs2019/Community/VC/Tools/MSVC/14.28.29910/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"            
+        }
+    ],
+    "version": 4
+}

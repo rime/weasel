@@ -20,6 +20,7 @@ ReleaseHant/
 /include/glog
 /include/rime*.h
 /ipch
+/librime
 env.bat
 weasel.props
 *.log
@@ -32,6 +33,7 @@ weasel.props
 .*.swp
 *.swp
 .vs
+.vscode
 Thumbs.db
 /.idea
 /cmake-build-debug
