@@ -3,6 +3,9 @@
 #include <WeaselUI.h>
 #include "Layout.h"
 
+#include "TextRender.h"
+static 	gfx::win::TextRender g_render;
+
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 
 class WeaselPanel : 
@@ -47,4 +50,5 @@ private:
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;
 	CIcon m_iconAlpha;
+
 };

@@ -9,11 +9,13 @@
         "args": [
           "/Zi",
           "/EHsc",
-          "/Fe:",
-          "/INCLUDE:D:\\WorkD\\Dev\\libs\\skialib\\include",
-          "/LIBPATH:D:\\WorkD\\Dev\\libs\\skialib\\static_MT_x64",
-          "${fileDirname}\\${fileBasenameNoExtension}.exe",
-          "${file}"
+          "/MD",
+          "${workspaceFolder}\\FontRender\\*.cpp",
+          "/INCLUDE:D:\\WorkD\\Dev\\libs\\skialib\\",
+          "/link",
+          "/LIBPATH:D:\\WorkD\\Dev\\libs\\skialib\\static_MD_x86\\",   
+          "/out:${workspaceFolder}\\FontRender\\TextRender.exe",  
+  
         ],
         "problemMatcher": ["$msCompile"],
         "group": {

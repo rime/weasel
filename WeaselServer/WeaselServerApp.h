@@ -54,6 +54,7 @@ public:
 	WeaselServerApp();
 	~WeaselServerApp();
 	int Run();
+	void LoadIMEIndicator(bool bLoad);
 
 protected:
 	void SetupMenuHandlers();

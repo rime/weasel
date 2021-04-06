@@ -32,10 +32,12 @@ weasel.props
 *~
 .*.swp
 *.swp
-.vs
-.vscode
+*.org
+/.vs
+/.vscode
 Thumbs.db
 /.idea
 /cmake-build-debug
 *.VC.db
 release-notes.html
+/WeaselUI/FontRender/other

@@ -98,6 +98,7 @@ BOOL RegisterProfiles()
 		if (FAILED(hr))
 			return FALSE;
 	}
+
 	return TRUE;
 }
 

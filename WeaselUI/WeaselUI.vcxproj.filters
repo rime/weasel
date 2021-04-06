@@ -19,6 +19,12 @@
     <Filter Include="Source Files\Layouts">
       <UniqueIdentifier>{b6c3d107-af01-4875-aaf9-f28ba062e2ba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\FontRender">
+      <UniqueIdentifier>{8fd2d1ad-fccb-442d-aec4-e94ded20c466}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\FontRender">
+      <UniqueIdentifier>{28386c94-2122-4cb3-8416-68433b7d46ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -44,6 +50,12 @@
     </ClCompile>
     <ClCompile Include="FullScreenLayout.cpp">
       <Filter>Source Files\Layouts</Filter>
+    </ClCompile>
+    <ClCompile Include="FontRender\graphemesplitter.cpp">
+      <Filter>Source Files\FontRender</Filter>
+    </ClCompile>
+    <ClCompile Include="FontRender\TextRender.cpp">
+      <Filter>Source Files\FontRender</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -76,6 +88,21 @@
     </ClInclude>
     <ClInclude Include="FullScreenLayout.h">
       <Filter>Header Files\Layouts</Filter>
+    </ClInclude>
+    <ClInclude Include="FontRender\graphemesplitter.hpp">
+      <Filter>Header Files\FontRender</Filter>
+    </ClInclude>
+    <ClInclude Include="FontRender\HbFont.hpp">
+      <Filter>Header Files\FontRender</Filter>
+    </ClInclude>
+    <ClInclude Include="FontRender\mru_cache.h">
+      <Filter>Header Files\FontRender</Filter>
+    </ClInclude>
+    <ClInclude Include="FontRender\TextRender.h">
+      <Filter>Header Files\FontRender</Filter>
+    </ClInclude>
+    <ClInclude Include="FontRender\xxhash.hpp">
+      <Filter>Header Files\FontRender</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

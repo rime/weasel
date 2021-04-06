@@ -98,12 +98,12 @@ WeaselIME::WeaselIME(HIMC hIMC)
 , m_composing(false)
 , m_preferCandidatePos(false)
 {
-	WCHAR path[MAX_PATH];
-	WCHAR fname[_MAX_FNAME];
-	WCHAR ext[_MAX_EXT];
+	WCHAR path[MAX_PATH-1] = { 0 };
+	WCHAR fname[_MAX_FNAME-1] = { 0 };
+	WCHAR ext[_MAX_EXT-1] = { 0 };
 	GetModuleFileNameW(NULL, path, _countof(path));
 	_wsplitpath_s(path, NULL, 0, NULL, 0, fname, _countof(fname), ext, _countof(ext));
-	if (iequals(L"chrome", fname) && iequals(L"exe", ext))
+	if (iequals(L"chrome", fname) && iequals(L"exe",ext))
 		m_preferCandidatePos = true;
 }
 
@@ -199,17 +199,22 @@ BOOL WeaselIME::IsIMEMessage(UINT uMsg)
 	return FALSE;
 }
 
+//https://stackoverflow.com/questions/58710090/why-does-a-lock-guard-on-a-mutex-reference-produce-c26110
+//https://docs.microsoft.com/en-us/cpp/code-quality/c26110?view=msvc-160
 std::shared_ptr<WeaselIME> WeaselIME::GetInstance(HIMC hIMC)
 {
 	if (!s_instances.is_valid())
 	{
 		return std::shared_ptr<WeaselIME>();
 	}
-	std::lock_guard<std::mutex> lock(s_instances.get_mutex());
-	std::shared_ptr<WeaselIME>& p = s_instances[hIMC];
+	//增加 _Guarded_by_ 声明，否则多线程会出现锁定失败问题
+	std::mutex &_mutex _Guarded_by_(m_mutex) = s_instances.get_mutex();
+	std::lock_guard<std::mutex> lock(_mutex);
+	std::shared_ptr<WeaselIME> &p = s_instances[hIMC];
 	if (!p)
 	{
-		p.reset(new WeaselIME(hIMC));
+		//p.reset(new WeaselIME(hIMC));
+		p = std::make_shared<WeaselIME>(hIMC);
 	}
 	return p;
 }

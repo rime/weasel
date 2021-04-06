@@ -45,12 +45,31 @@ void ServerImpl::_Finailize()
 	if (pipeThread != nullptr) {
 		pipeThread->interrupt();
 	}
+
+
+	if (m_pRequestHandler) {
+		m_pRequestHandler->Finalize();
+		m_pRequestHandler=nullptr;
+	}
+
 	if (IsWindow())
 	{
+		//
+		LPCTSTR lpCaption = this->GetWndCaption();
+		LPCTSTR lpWndClassName = this->GetWndClassName();
+
+		printf("===Caption%ls | WndClass:%ls=====\r\n", lpCaption, lpWndClassName);
+
+		DWORD hThread = this->GetWindowThreadID();
+		assert(hThread);
+		if (hThread) {
+			::PostThreadMessage(hThread, WM_QUIT, 0, 0);
+			::Sleep(200);
+		}
+		//
 		DestroyWindow();
 	}
 
-	m_pRequestHandler->Finalize();
 }
 
 LRESULT ServerImpl::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -137,7 +156,7 @@ int ServerImpl::Stop()
 {
 	_Finailize();
 	// quit the server
-	::ExitProcess(0);
+	//::ExitProcess(0);
 	return 0;
 }
 

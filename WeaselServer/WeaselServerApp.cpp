@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "WeaselServerApp.h"
+#include <strsafe.h>
 
 WeaselServerApp::WeaselServerApp()
 	: m_handler(std::make_unique<RimeWithWeaselHandler>(&m_ui))
@@ -14,6 +15,59 @@ WeaselServerApp::~WeaselServerApp()
 {
 }
 
+//
+void WeaselServerApp::LoadIMEIndicator(bool bLoad) {
+	auto hant = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL);
+	auto simp = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+	auto _GetLocaleID = [](int langID) {
+		HKL hKL = nullptr;
+		WCHAR key[9] = { 0 };
+		HKEY hKey;
+		std::wstring _localeID;
+		LSTATUS ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts", 0, KEY_READ, &hKey);
+		if (ret == ERROR_SUCCESS)
+		{
+			for (DWORD id = (0xE0200000 | langID); hKL == nullptr && id <= (0xE0FF0000 | langID); id += 0x10000)
+			{
+				StringCchPrintfW(key, _countof(key), L"%08X", id);
+				HKEY hSubKey;
+				ret = RegOpenKeyExW(hKey, key, 0, KEY_READ, &hSubKey);
+				if (ret == ERROR_SUCCESS)
+				{
+					WCHAR data[32] = { 0 };
+					DWORD type;
+					DWORD size = sizeof data;
+					ret = RegQueryValueExW(hSubKey, L"Ime File", NULL, &type, (LPBYTE)data, &size);
+					if (ret == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(data, L"weasel.ime") == 0) {
+						hKL = (HKL)id;
+						_localeID = std::wstring(key);
+					}
+				}
+				RegCloseKey(hSubKey);
+			}
+		}
+		RegCloseKey(hKey);
+		return _localeID;
+	};
+	auto _LoadKeyBoadrdLayout = [](LPCWSTR id,bool bLoad) {
+		HKL hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE);
+		if (hKL) 
+		{
+			BOOL b = ::UnloadKeyboardLayout(hKL);
+			if(bLoad)
+				hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE);
+		}
+	};
+	if (IsWindows8OrGreater()) {
+		std::wstring id = _GetLocaleID(simp);
+		if (id.empty())
+			id = _GetLocaleID(hant);
+		if (!id.empty())
+			_LoadKeyBoadrdLayout(id.c_str(), bLoad);
+	}
+}
+//
+
 int WeaselServerApp::Run()
 {
 	if (!m_server.Start())
@@ -23,6 +77,8 @@ int WeaselServerApp::Run()
 	win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
 	win_sparkle_init();
 	m_ui.Create(m_server.GetHWnd());
+
+	LoadIMEIndicator(true);  //
 
 	tray_icon.Create(m_server.GetHWnd());
 	tray_icon.Refresh();
@@ -34,9 +90,15 @@ int WeaselServerApp::Run()
 
 	int ret = m_server.Run();
 
+	HWND hWnd = m_server.GetHWnd();
+
 	m_handler->Finalize();
+
+	LoadIMEIndicator(false);  //
+
 	m_ui.Destroy();
 	tray_icon.RemoveIcon();
+	tray_icon.Refresh();
 	win_sparkle_cleanup();
 
 	return ret;

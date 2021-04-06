@@ -185,15 +185,19 @@ if %clean% == 1 (
   rmdir /s /q TestWeaselIPC\Release
   rmdir /s /q WeaselDeployer\Release
   rmdir /s /q WeaselIME\Release
+  rmdir /s /q WeaselIME\ReleaseHant
   rmdir /s /q WeaselIME\x64
   rmdir /s /q WeaselIPC\Release
+  rmdir /s /q WeaselIPC\ReleaseHant
   rmdir /s /q WeaselIPC\x64  
   rmdir /s /q WeaselIPCServer\Release
   rmdir /s /q WeaselServer\Release
   rmdir /s /q WeaselSetup\Release
   rmdir /s /q WeaselTSF\Release
+  rmdir /s /q WeaselTSF\ReleaseHant
   rmdir /s /q WeaselTSF\x64
   rmdir /s /q WeaselUI\Release
+  rmdir /s /q WeaselUI\ReleaseHant
   rmdir /s /q WeaselUI\x64
   del /Q msbuild*.log  
 )
