@@ -1,3 +1,9 @@
+/******************************************/
+/*  TextRender - render text by GDI       */
+/*  ver: 0.1                              */
+/*  Copyright (C) 2021,cnlog              */
+/******************************************/
+
 #ifndef UI_GFX_WIN_TEXT_RENDER_H_
 #define UI_GFX_WIN_TEXT_RENDER_H_
 
@@ -5,12 +11,30 @@
 #include "graphemesplitter.hpp"
 #include "xxhash.hpp"
 
+#ifndef _DEBUG
+//#   pragma comment(linker, "/MERGE:.data=.text")
+//#   pragma comment(linker, "/MERGE:.rdata=.text")
+#endif //_DEBUG
+
 #pragma comment( lib , "user32.lib" )
-#pragma comment( lib , "skia.lib" )
 #pragma comment( lib , "harfbuzz.lib" )
 //#pragma comment( lib , "icu.lib" ) 
 //#pragma comment( lib , "opengl32.lib" )
- 
+
+#define USE_SKDLL
+
+#if defined(_WIN32) 
+#   if defined(USE_SKDLL)
+#       if defined(_WIN64)
+#           pragma comment( lib , "skiax64.dll.lib" )
+#       else
+#           pragma comment( lib , "skiax86.dll.lib" )
+#       endif
+        static SkThreadID SkGetThreadID() { return GetCurrentThreadId(); }
+#   else
+#       pragma comment( lib , "skia.lib" )   
+#   endif
+#endif
 
 namespace gfx {
 namespace win {
@@ -58,10 +82,11 @@ namespace win {
         bool OnDraw(std::wstring text, HDC  hdc,  const RECT& rc);
         bool Render(std::wstring text, HDC  hdc,  const RECT& rc);
         bool Render(std::wstring text, HWND hWnd, const RECT& rc);
+        long CountCacheBytes_debug();
      protected:
         bool Render(std::wstring text, int width, int height);
-        SkBitmap GetBitMapFromSurface(const std::wstring text);
         u8string To_UTF8(const std::wstring& s);
+        SkBitmap GetBitMapFromSurface(const std::wstring text);
         SkColor  COLORREFToSkColor(COLORREF color);
         COLORREF SkColorToCOLORREF(SkColor  color);
         void ConvertSkiaToRGBA(const unsigned char* skia, int pixel_width, unsigned char* rgba);
@@ -91,8 +116,8 @@ namespace win {
     private:
         bool      m_bEnabled;
         bool      m_bCanDraw;
-        double    m_fontSize;
-        double    m_zoomLevel;
+        float     m_fontSize;
+        float     m_zoomLevel;
         u8string  m_fontName;
         SkColor   m_fontColor;
         SkColor   m_bkColor;
@@ -106,7 +131,7 @@ namespace win {
         sk_sp<SkTypeface> GetFontFaceFromCacheByCodePoint(int32_t cp);
         sk_sp<SkSurface>  GetSurfaceFromCacheByText(const std::wstring text);
         void SetSurfaceToCache(const std::wstring text, sk_sp<SkSurface> surface);
-        //hash {text,textcolor} 
+        //hash {text,textcolor,backcolor} 
         _hash_t GetHash(const std::wstring text);
     private:
         NOCOPY(TextRender);

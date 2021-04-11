@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 
+#pragma warning(disable:4984)
+
 /*
 // standalone hash
 std::array<int, 4> input {322, 2137, 42069, 65536};

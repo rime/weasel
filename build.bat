@@ -6,7 +6,7 @@ if not exist env.bat copy env.bat.template env.bat
 
 if exist env.bat call env.bat
 
-if not defined WEASEL_VERSION set WEASEL_VERSION=0.14.3
+if not defined WEASEL_VERSION set WEASEL_VERSION=0.14.4
 if not defined WEASEL_BUILD set WEASEL_BUILD=0
 if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
 
@@ -71,7 +71,10 @@ if "%1" == "rime" set build_rime=1
 if "%1" == "librime" set build_rime=1
 if "%1" == "weasel" set build_weasel=1
 if "%1" == "installer" set build_installer=1
-if "%1" == "clean" set clean=1
+if "%1" == "clean" (
+	set clean=1
+	goto clean_start
+)
 if "%1" == "all" (
   set build_boost=0
   set build_data=1
@@ -177,9 +180,11 @@ if %build_installer% == 1 (
   if errorlevel 1 goto error
 )
 
+:clean_start
 if %clean% == 1 (
   rmdir /s /q Release
-  rmdir /s /q x64  
+  rmdir /s /q x64
+  rmdir /s /q ReleaseHant
   rmdir /s /q RimeWithWeasel\Release
   rmdir /s /q TestResponseParser\Release
   rmdir /s /q TestWeaselIPC\Release

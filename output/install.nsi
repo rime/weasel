@@ -117,6 +117,19 @@ Section "Weasel"
   RMDir /r $TEMP\weasel-backup
 
 program_files:
+  ; ---- install skia dll begin ----
+  ${IF} ${RunningX64}
+    ${DisableX64FSRedirection}
+    SetOutPath "$SYSDIR"
+	File "skiax64.dll"
+	${EnableX64FSRedirection}
+	File "skiax86.dll"
+  ${Else}
+    SetOutPath "$SYSDIR"
+  	File "skiax86.dll"
+  ${EndIf}
+  SetOutPath "$INSTDIR"
+  ; ---- install skia dll end ----
   File "LICENSE.txt"
   File "README.txt"
   File "7-zip-license.txt"
@@ -243,6 +256,17 @@ Section "Uninstall"
   SetShellVarContext all
   Delete /REBOOTOK "$SMPROGRAMS\小狼毫輸入法\*.*"
   RMDir /REBOOTOK "$SMPROGRAMS\小狼毫輸入法"
+  
+  ; ---- remove skia dll begin ----
+  ${IF} ${RunningX64}
+    ${DisableX64FSRedirection}
+    Delete /REBOOTOK "$SYSDIR\skiax64.dll"
+	${EnableX64FSRedirection}
+	Delete /REBOOTOK "$SYSDIR\skiax86.dll"
+  ${Else}
+    Delete /REBOOTOK "$SYSDIR\skiax86.dll"
+  ${EndIf}
+  ; ---- remove skia dll end ----  
 
   ; Prompt reboot
   SetRebootFlag true

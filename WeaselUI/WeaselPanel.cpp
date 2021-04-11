@@ -28,6 +28,11 @@ WeaselPanel::~WeaselPanel()
 	if (m_layout != NULL)
 		delete m_layout;
 	_trace0("~WeaselPanel()");
+#ifdef _DEBUG
+	long nBytes = g_render.CountCacheBytes_debug();
+	_trace("m_surfaceCache:%ldM\r\n", nBytes);
+#endif // _DEBUG
+
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -373,7 +378,8 @@ static bool _TextOutWithEmoji(CDCHandle dc, int x, int y, CRect const& rc, LPCWS
 		//g_render.SetFontSize(18);
 		g_render.SetFontName(std::wstring(lpFaceName));
 		g_render.SetFontHeight(abs(lfont.lfHeight));
-		g_render.SetFontColor(dc.GetTextColor());
+		g_render.SetFontColor(dc.GetTextColor(), dc.GetBkColor());
+		
 		std::wstring txt = std::wstring(psz);
 		bool b = g_render.Render(txt, dc.m_hDC, rc);
 		_trace("lfont.lfHeight:%d fontname:%ls\r\n", lfont.lfHeight, lpFaceName);

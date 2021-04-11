@@ -22,7 +22,8 @@ BOOL WeaselTrayIcon::Create(HWND hTargetWnd)
 	CIcon icon;
 	icon.LoadIconW(IDI_ZH);
 	BOOL bRet = CSystemTray::Create(hModule, NULL, WM_WEASEL_TRAY_NOTIFY, 
-		WEASEL_IME_NAME, icon, IDR_MENU_POPUP);
+		WEASEL_IME_NAME, icon, IDR_MENU_POPUP,
+		TRUE); 
 	if (hTargetWnd)
 	{
 		SetTargetWnd(hTargetWnd);

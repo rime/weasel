@@ -20,13 +20,13 @@ class CClassFactory: public IClassFactory
 {
 public:
 	// IUnknown methods
-	STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
-	STDMETHODIMP_(ULONG) AddRef();
-	STDMETHODIMP_(ULONG) Release();
+	STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
+	STDMETHODIMP_(ULONG) AddRef() override;
+	STDMETHODIMP_(ULONG) Release() override;
 
 	// IClassFactory methods
-	STDMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject);
-	STDMETHODIMP LockServer(BOOL fLock);
+	STDMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject) override;
+	STDMETHODIMP LockServer(BOOL fLock) override;
 };
 
 STDAPI CClassFactory::QueryInterface(REFIID riid, void **ppvObject)
@@ -84,8 +84,8 @@ static void BuildGlobalObjects()
 {
 	g_classFactory = new CClassFactory();
 }
-
-STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppvObject)
+_Check_return_
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID FAR* ppv)
 {
 	if (g_classFactory == NULL)
 	{
@@ -96,14 +96,14 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppvObject)
 	}
 	if (IsEqualIID(riid, IID_IClassFactory) || IsEqualIID(riid, IID_IUnknown))
 	{
-		*ppvObject = g_classFactory;
+		*ppv = g_classFactory;
 		DllAddRef();
 		return NOERROR;
 	}
-	*ppvObject = NULL;
+	*ppv = NULL;
 	return CLASS_E_CLASSNOTAVAILABLE;
 }
-
+__control_entrypoint(DllExport)
 STDAPI DllCanUnloadNow()
 {
 	if (g_cRefDll >= 0)

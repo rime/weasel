@@ -35,6 +35,10 @@ weasel.props
 *.org
 /.vs
 /.vscode
+/.vscode/c_cpp_properties.json
+/.vscode/launch.json
+/.vscode/settings.json
+/.vscode/tasks.json
 Thumbs.db
 /.idea
 /cmake-build-debug

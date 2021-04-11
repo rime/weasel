@@ -9,6 +9,12 @@
 #include "WeaselIME.h"
 #include <algorithm>
 
+#if defined(_DEBUG)
+#	define _DUMP_FILE "g:\\msgdump.txt"
+#	include "msgdumpdef.hpp"
+#endif
+
+
 // logging disabled
 #define EZDBGONLYLOGGERVAR(...)
 #define EZDBGONLYLOGGERPRINT(...)
@@ -98,6 +104,9 @@ WeaselIME::WeaselIME(HIMC hIMC)
 , m_composing(false)
 , m_preferCandidatePos(false)
 {
+#if(_DUMP_MSG_WRITE_DISK)
+	OPEN_DUMP_FILE();
+#endif
 	WCHAR path[MAX_PATH-1] = { 0 };
 	WCHAR fname[_MAX_FNAME-1] = { 0 };
 	WCHAR ext[_MAX_EXT-1] = { 0 };
@@ -106,7 +115,11 @@ WeaselIME::WeaselIME(HIMC hIMC)
 	if (iequals(L"chrome", fname) && iequals(L"exe",ext))
 		m_preferCandidatePos = true;
 }
-
+WeaselIME::~WeaselIME() {
+#if(_DUMP_MSG_WRITE_DISK)
+	CLOSE_DUMP_FILE();
+#endif
+}
 HINSTANCE WeaselIME::GetModuleInstance()
 {
 	return s_hModule;
@@ -159,6 +172,10 @@ LPCWSTR WeaselIME::GetUIClassName()
 
 LRESULT WINAPI WeaselIME::UIWndProc(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp)
 {
+#if(_DUMP_MSG_WRITE_DISK)
+	DUMP_FILE_IS_OPEN();
+	MSG_DUMP(hWnd, uMsg, wp, lp);
+#endif
 	HIMC hIMC = (HIMC)GetWindowLongPtr(hWnd, 0);
 	if (hIMC)
 	{
@@ -207,7 +224,7 @@ std::shared_ptr<WeaselIME> WeaselIME::GetInstance(HIMC hIMC)
 	{
 		return std::shared_ptr<WeaselIME>();
 	}
-	//增加 _Guarded_by_ 声明，否则多线程会出现锁定失败问题
+	//增加 _Guarded_by_ 声明，否则多线程会出现锁定失败问题,缓解
 	std::mutex &_mutex _Guarded_by_(m_mutex) = s_instances.get_mutex();
 	std::lock_guard<std::mutex> lock(_mutex);
 	std::shared_ptr<WeaselIME> &p = s_instances[hIMC];

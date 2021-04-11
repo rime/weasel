@@ -104,6 +104,15 @@
     <ClInclude Include="FontRender\xxhash.hpp">
       <Filter>Header Files\FontRender</Filter>
     </ClInclude>
+    <ClInclude Include="FontRender\msgdump.h">
+      <Filter>Header Files\FontRender</Filter>
+    </ClInclude>
+    <ClInclude Include="FontRender\winxx.h">
+      <Filter>Header Files\FontRender</Filter>
+    </ClInclude>
+    <ClInclude Include="FontRender\msgdumpdef.hpp">
+      <Filter>Header Files\FontRender</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

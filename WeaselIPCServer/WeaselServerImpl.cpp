@@ -55,11 +55,6 @@ void ServerImpl::_Finailize()
 	if (IsWindow())
 	{
 		//
-		LPCTSTR lpCaption = this->GetWndCaption();
-		LPCTSTR lpWndClassName = this->GetWndClassName();
-
-		printf("===Caption%ls | WndClass:%ls=====\r\n", lpCaption, lpWndClassName);
-
 		DWORD hThread = this->GetWindowThreadID();
 		assert(hThread);
 		if (hThread) {

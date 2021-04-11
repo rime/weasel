@@ -90,7 +90,6 @@ int WeaselServerApp::Run()
 
 	int ret = m_server.Run();
 
-	HWND hWnd = m_server.GetHWnd();
 
 	m_handler->Finalize();
 

@@ -1,3 +1,9 @@
+/******************************************/
+/*  HbFont - Hb Function Wrap             */
+/*  ver: 0.1                              */
+/*  Copyright (C) 2021,cnlog              */
+/******************************************/
+
 #ifndef UI_GFX_HB_FONT_H_
 #define UI_GFX_HB_FONT_H_
 
@@ -53,7 +59,6 @@
 #include <queue>
 #include "mru_cache.h"
 
-
 #include <iostream>
 #include <cassert>
 
@@ -68,6 +73,15 @@ typedef int32_t UChar32;
         _CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
         _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
     };
+#   define _traceX(fmt, ...)         \
+    {                                \
+        TCHAR buffer[512] = { 0 };   \
+        va_list args;                \
+        va_start(args, fmt);         \
+        wsprintf(buffer, fmt, args); \
+        va_end(args);                \
+        OutputDebugString(buffer);   \
+    };
     //#define new   new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #   define TRACE _trace
 #   define DumpMemLeaks()      {  _CrtDumpMemoryLeaks();          }
@@ -76,8 +90,9 @@ typedef int32_t UChar32;
 #   define SK_DEBUG
 #else
 #   define SK_RELEASE
-#   define l_printf(fmt,...) (void)0 
-#   define l_info(x) (void)0 
+#   define _trace(fmt,...)     (void)0 
+#   define _traceX(fmt,...)    (void)0
+#   define _trace0(x) (void)0 
     inline void EnableMemLeakCheck1(){}
 #   define DumpMemLeaks() (void)0
 #endif // _DEBUG
@@ -108,8 +123,8 @@ template<typename Type>
 };
 
     constexpr int  kDefaultFontNumber = 13;
-    constexpr auto kDefaultFontColor = SK_ColorBLACK;
-    constexpr auto kDefaultBkColor   = SK_ColorGRAY;
+    constexpr auto kDefaultFontColor  = SK_ColorBLACK;
+    constexpr auto kDefaultBkColor    = SK_ColorGRAY;
     constexpr auto kDefaultFont = "Microsoft YaHei";
     constexpr int  kTypefaceCacheSize = 64;
     constexpr int  kGlyphCacheSize    = 1024;
@@ -144,7 +159,7 @@ template<typename Type>
     // Outputs the |width| and |extents| of the glyph with index |codepoint| in
     // |paint|'s font.
     // We treat HarfBuzz ints as 16.16 fixed-point.
-    static int SkiaScalarToHarfBuzzUnits(SkScalar v) {
+    static __forceinline int SkiaScalarToHarfBuzzUnits(SkScalar v) {
         return SkScalarRoundToInt(v);
     };
     static void GetGlyphWidthAndExtents(const SkFont& font,
@@ -154,7 +169,7 @@ template<typename Type>
             //DCHECK_LE(codepoint, std::numeric_limits<uint16_t>::max());
 
             SkScalar sk_width;
-            SkRect sk_bounds;
+            SkRect   sk_bounds;
             uint16_t glyph = static_cast<uint16_t>(codepoint);
 
             font.getWidths(&glyph, 1, &sk_width, &sk_bounds);
@@ -163,10 +178,10 @@ template<typename Type>
             if (extents) {
                 // Invert y-axis because Skia is y-grows-down but we set up HarfBuzz to be
                 // y-grows-up.
-                extents->x_bearing = SkiaScalarToHarfBuzzUnits(sk_bounds.fLeft);
+                extents->x_bearing = SkiaScalarToHarfBuzzUnits( sk_bounds.fLeft);
                 extents->y_bearing = SkiaScalarToHarfBuzzUnits(-sk_bounds.fTop);
-                extents->width  = SkiaScalarToHarfBuzzUnits(sk_bounds.width());
-                extents->height = SkiaScalarToHarfBuzzUnits(-sk_bounds.height());
+                extents->width     = SkiaScalarToHarfBuzzUnits( sk_bounds.width());
+                extents->height    = SkiaScalarToHarfBuzzUnits(-sk_bounds.height());
             }
     };
 
@@ -177,7 +192,7 @@ template<typename Type>
                                 hb_codepoint_t  unicode,
                                 hb_codepoint_t  variation_selector,
                                 hb_codepoint_t* glyph,
-                                void* user_data) {
+                                void* user_data) _Acquires_exclusive_lock_(g_faceCacheMutex) {
         SkAutoMutexExclusive lock(g_faceCacheMutex);
         FontData* font_data = reinterpret_cast<FontData*>(data);
         GlyphCache *cache = font_data->glyph_cache_.get();
@@ -320,7 +335,7 @@ template<typename Type>
         TypefaceData(TypefaceData&& data) {
                 face_   = std::move(data.face_) ;
                 glyphs_ = std::move(data.glyphs_);
-                sk_typeface_ = data.sk_typeface_;
+                sk_typeface_ = std::move(data.sk_typeface_);
                 data.face_   = nullptr;
                 data.glyphs_ = nullptr;
                 data.sk_typeface_ = nullptr;
@@ -360,7 +375,6 @@ template<typename Type>
                         int b2 = it->second.glyphs() == nullptr ? -1 : (it->second.glyphs()->size());
                         _trace("~TextShaper== b0:%d b1:%d b2:%d\r\n", b0, b1, b2);
                     }
-                    //g_face_caches->Clear();
                     */
                 }
                 _trace0("~TextShaper");
@@ -404,8 +418,8 @@ template<typename Type>
 
                     SkTextBlobBuilder builder;
                     const auto& runBuffer = builder.allocRunPos(skfont, glyph_count);  
-                    double x = 0;
-                    double y = 0;
+                    float x = 0;
+                    float y = 0;
                     for (unsigned int i = 0; i < glyph_count; i++) {
                         runBuffer.glyphs[i] = glyph_info[i].codepoint;
                         reinterpret_cast<SkPoint*>(runBuffer.pos)[i] = SkPoint::Make(
@@ -418,7 +432,8 @@ template<typename Type>
             }
         public:
            // Creates a HarfBuzz font from the given Skia face and text size/font size.
-            HBFont CreateHbFont(sk_sp<SkTypeface> skia_face,SkScalar text_size) {
+            HBFont CreateHbFont(sk_sp<SkTypeface> skia_face,
+                                SkScalar text_size) _Acquires_exclusive_lock_(g_faceCacheMutex) {
                 SkAutoMutexExclusive lock(g_faceCacheMutex);
                 // A cache from Skia font to harfbuzz typeface information.
                 TypefaceCache* skFaceCached = g_face_caches.get();
@@ -436,8 +451,6 @@ template<typename Type>
                 }
                 hb_face_set_upem(hb_face.get(), skFaceData->second.typeface()->getUnitsPerEm());
                 HBFont hb_font_parent( hb_font_create(hb_face.get()) );
-                FontData* hb_font_data = new FontData(skFaceData->second.glyphs());
-              
                 if(!hb_font_parent){
                     _trace0("Could not create hb_font");
                     return nullptr;
@@ -445,8 +458,17 @@ template<typename Type>
                 // Creating a sub font means that non-available functions
                 // are found from the parent.
                 HBFont hb_font(hb_font_create_sub_font(hb_font_parent.get()));
+                if (!hb_font) {
+                    _trace0("Could not create hb_font");
+                    return nullptr;
+                }
                 int nSize = SkScalarRoundToInt(text_size);
                 hb_font_set_scale(hb_font.get(), nSize, nSize);
+                FontData* hb_font_data = new FontData(skFaceData->second.glyphs());
+                if (!hb_font_data) {
+                    _trace0("Could not new hb_font_data");
+                    return nullptr;
+                }
                 hb_font_data->font_.setTypeface(skFaceData->second.typeface());
                 hb_font_data->font_.setSize(text_size);
                 hb_font_set_funcs(hb_font.get(), HbGetFontFuncs(), 

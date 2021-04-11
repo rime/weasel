@@ -46,6 +46,7 @@ public:
 	static void Cleanup();
 
 	WeaselIME(HIMC hIMC);
+	~WeaselIME();
 	LRESULT OnIMESelect(BOOL fSelect);
 	LRESULT OnIMEFocus(BOOL fFocus);
 	LRESULT OnUIMessage(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp);
