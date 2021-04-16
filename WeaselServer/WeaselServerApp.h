@@ -54,7 +54,7 @@ public:
 	WeaselServerApp();
 	~WeaselServerApp();
 	int Run();
-	//
+	//º”‘ÿime ‰»Î∑®
 	void LoadIMEIndicator(bool bLoad);
 	//
 

@@ -169,7 +169,10 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 
 	if (register_ime)
 	{
-		HKL hKL = ImmInstallIME(ime_path.c_str(), WEASEL_IME_NAME);
+		//HKL hKL = ImmInstallIME(ime_path.c_str(), WEASEL_IME_NAME);
+		//通过手工注册,ImmInstallIME会注册成错误的locale,比如一切设置都是简体，结果安装后输入法列表显示
+		//繁体，虽然输入依然是简体,通过手工注册没问题
+		HKL hKL = 0;  
 		if (!hKL)
 		{
 			// manually register ime

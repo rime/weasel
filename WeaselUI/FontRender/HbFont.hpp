@@ -62,7 +62,7 @@
 #include <iostream>
 #include <cassert>
 
-typedef int32_t UChar32;
+using UChar32 = int32_t ;
 
 #if defined(_DEBUG) && defined(_WIN32)
 #   define _CRTDBG_MAP_ALLOC
@@ -73,14 +73,11 @@ typedef int32_t UChar32;
         _CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
         _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
     };
-#   define _traceX(fmt, ...)         \
-    {                                \
-        TCHAR buffer[512] = { 0 };   \
-        va_list args;                \
-        va_start(args, fmt);         \
-        wsprintf(buffer, fmt, args); \
-        va_end(args);                \
-        OutputDebugString(buffer);   \
+#   define _traceX(fmt, ...)                    \
+    {                                           \
+		TCHAR buffer[512] = { 0 };				\
+		wsprintf(buffer, fmt, ##__VA_ARGS__);   \
+		OutputDebugString(buffer);				\
     };
     //#define new   new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #   define TRACE _trace
@@ -90,11 +87,11 @@ typedef int32_t UChar32;
 #   define SK_DEBUG
 #else
 #   define SK_RELEASE
-#   define _trace(fmt,...)     (void)0 
-#   define _traceX(fmt,...)    (void)0
-#   define _trace0(x) (void)0 
+#   define _trace(fmt,...)     ((void)0)
+#   define _traceX(fmt,...)    ((void)0)
+#   define _trace0(x)          ((void)0)
     inline void EnableMemLeakCheck1(){}
-#   define DumpMemLeaks() (void)0
+#   define DumpMemLeaks()      ((void)0)
 #endif // _DEBUG
 
 #define NOCOPY(T)	T(const T&); T& operator=(const T&);
@@ -156,9 +153,6 @@ template<typename Type>
         GlyphCachePtr &glyph_cache_;
     }; //struct FontData
 
-    // Outputs the |width| and |extents| of the glyph with index |codepoint| in
-    // |paint|'s font.
-    // We treat HarfBuzz ints as 16.16 fixed-point.
     static __forceinline int SkiaScalarToHarfBuzzUnits(SkScalar v) {
         return SkScalarRoundToInt(v);
     };
@@ -185,8 +179,7 @@ template<typename Type>
             }
     };
 
-    // Writes the |glyph| index for the given |unicode| code point. Returns whether
-    // the glyph exists, i.e. it is not a missing glyph.
+    //从cache中查找cp对应的字型id,返回对应cp的字型是否存在
     static hb_bool_t HbGetGlyph(hb_font_t* font,
                                 void* data,
                                 hb_codepoint_t  unicode,
@@ -204,7 +197,7 @@ template<typename Type>
 
         *glyph = iter->second;
         return !!*glyph;
-    }; //GetGlyph
+    }; //HbGetGlyph
 
     static hb_bool_t HbGetNominalGlyph(hb_font_t* font,
                                     void* data,
@@ -212,7 +205,7 @@ template<typename Type>
                                     hb_codepoint_t* glyph,
                                     void* user_data) {
             return HbGetGlyph(font, data, unicode, 0, glyph, user_data);
-    }; //GetNominalGlyph
+    }; //HbGetNominalGlyph
 
     // Returns the horizontal advance value of the |glyph|.
     static hb_position_t HbGetGlyphHorizontalAdvance(hb_font_t* font,
@@ -224,7 +217,7 @@ template<typename Type>
 
         GetGlyphWidthAndExtents(font_data->font_, glyph, &advance, 0);
         return advance;
-    };
+    }; //HbGetGlyphHorizontalAdvance
 
     static hb_bool_t HbGetGlyphHorizontalOrigin(hb_font_t* font,
                                     void* data,
@@ -234,7 +227,7 @@ template<typename Type>
                                     void* user_data) {
         // Just return true, like the HarfBuzz-FreeType implementation.
         return true;
-    };
+    }; //HbGetGlyphHorizontalOrigin
 
     static hb_position_t HbGetGlyphKerning(FontData* font_data,
                                     hb_codepoint_t first_glyph,
@@ -250,7 +243,7 @@ template<typename Type>
         SkScalar upm = SkIntToScalar(typeface->getUnitsPerEm());
         SkScalar size = font_data->font_.getSize();
         return SkiaScalarToHarfBuzzUnits(SkIntToScalar(kerning_adjustments[0]) * size / upm);
-    };
+    }; //HbGetGlyphKerning
 
     static hb_position_t HbGetGlyphHorizontalKerning(hb_font_t* font,
                                         void* data,
@@ -259,7 +252,7 @@ template<typename Type>
                                         void* user_data) {
         FontData* font_data = reinterpret_cast<FontData*>(data);
         return HbGetGlyphKerning(font_data, left_glyph, right_glyph);
-    };
+    }; //HbGetGlyphHorizontalKerning
 
     static hb_position_t HbGetGlyphVerticalKerning(hb_font_t* font,
                                         void* data,
@@ -268,7 +261,8 @@ template<typename Type>
                                         void* user_data) {
         FontData* font_data = reinterpret_cast<FontData*>(data);
         return HbGetGlyphKerning(font_data, top_glyph, bottom_glyph);
-    };    
+    }; //HbGetGlyphVerticalKerning
+
     // Writes the |extents| of |glyph|.
     static hb_bool_t HbGetGlyphExtents( hb_font_t* font,
                                         void* data,
@@ -279,7 +273,7 @@ template<typename Type>
 
         GetGlyphWidthAndExtents(font_data->font_, glyph, 0, extents);
         return true;
-    };
+    }; //HbGetGlyphExtents
 
     static hb_font_funcs_t* HbGetFontFuncs() {
         static hb_font_funcs_t* const funcs = []{
@@ -306,7 +300,7 @@ template<typename Type>
         }();
         SkASSERT(funcs);
         return funcs;
-    }; //skhb_get_font_funcs
+    }; //HbGetFontFuncs
 
     // Returns the raw data of the font table |tag|.
     static hb_blob_t* HbGetFontTable(hb_face_t* face, hb_tag_t tag, void* context) {
@@ -320,7 +314,7 @@ template<typename Type>
                         HB_MEMORY_MODE_READONLY, rawData, [](void* ctx) {
                             SkSafeUnref(((SkData*)ctx)); }
                     );
-    }; //GetFontTable
+    }; //HbGetFontTable
 
     //class TypefaceData
     class TypefaceData {
@@ -373,7 +367,7 @@ template<typename Type>
                         int b0 = it->second.typeface() == nullptr ? -1 : it->second.typeface()->uniqueID();
                         int b1 = (it->second.face() == nullptr) ? -1 : -2;
                         int b2 = it->second.glyphs() == nullptr ? -1 : (it->second.glyphs()->size());
-                        _trace("~TextShaper== b0:%d b1:%d b2:%d\r\n", b0, b1, b2);
+                        _trace("~TextShaper | b0:%d b1:%d b2:%d\r\n", b0, b1, b2);
                     }
                     */
                 }
@@ -412,7 +406,7 @@ template<typename Type>
                         return nullptr;
                     }
                     hb_shape(hb_font.get(), buf, nullptr, 0);
-                    unsigned int glyph_count;
+                    unsigned int glyph_count = 0;
                     hb_glyph_info_t *glyph_info    = hb_buffer_get_glyph_infos(buf, &glyph_count);
                     hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buf, &glyph_count); 
 
@@ -437,7 +431,7 @@ template<typename Type>
                 SkAutoMutexExclusive lock(g_faceCacheMutex);
                 // A cache from Skia font to harfbuzz typeface information.
                 TypefaceCache* skFaceCached = g_face_caches.get();
-                assert(skFaceCached);
+                SkASSERT(skFaceCached);
                 TypefaceCache::iterator skFaceData = skFaceCached->Get(skia_face->uniqueID());
                 if (skFaceData == skFaceCached->end()) {
                     TypefaceData new_skFaceData(skia_face);

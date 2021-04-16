@@ -396,9 +396,11 @@ static bool _TextOutWithEmoji(CDCHandle dc, int x, int y, CRect const& rc, LPCWS
 
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
 {
+	//显示彩色表情
 	bool b = _TextOutWithEmoji(dc,x,y,rc,psz,cch);
 	if (b)
 		return;
+	//
 
 	if (FAILED(_TextOutWithFallback(dc, x, y, rc, psz, cch))) {
 		dc.TextOutW(x, y, psz, cch);

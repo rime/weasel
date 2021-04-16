@@ -16,14 +16,12 @@
 //#   pragma comment(linker, "/MERGE:.rdata=.text")
 #endif //_DEBUG
 
-#pragma comment( lib , "user32.lib" )
-#pragma comment( lib , "harfbuzz.lib" )
-//#pragma comment( lib , "icu.lib" ) 
-//#pragma comment( lib , "opengl32.lib" )
-
 #define USE_SKDLL
 
 #if defined(_WIN32) 
+#   pragma comment( lib , "user32.lib" )
+    //#pragma comment( lib , "icu.lib" ) 
+    //#pragma comment( lib , "opengl32.lib" )
 #   if defined(USE_SKDLL)
 #       if defined(_WIN64)
 #           pragma comment( lib , "skiax64.dll.lib" )
@@ -32,7 +30,15 @@
 #       endif
         static SkThreadID SkGetThreadID() { return GetCurrentThreadId(); }
 #   else
-#       pragma comment( lib , "skia.lib" )   
+#       pragma comment( lib , "skia.lib" )
+#   endif
+#   if !defined(_DEBUG)
+#       pragma comment( lib , "harfbuzz.lib" )
+#   else
+#       if defined(_WIN64)
+#           error "Please switch to Win32 for debugging."
+#       endif
+#       pragma comment( lib , "harfbuzz_MTd_x86.lib" )
 #   endif
 #endif
 
@@ -79,12 +85,12 @@ namespace win {
         void SetFontColor(COLORREF fontColor,COLORREF bkColor);
         void SetFontColor(COLORREF fontColo);
         bool CanDraw() {return m_bEnabled && m_bCanDraw;};
-        bool OnDraw(std::wstring text, HDC  hdc,  const RECT& rc);
-        bool Render(std::wstring text, HDC  hdc,  const RECT& rc);
-        bool Render(std::wstring text, HWND hWnd, const RECT& rc);
+        bool OnDraw(const std::wstring text, HDC  hdc,  const RECT& rc);
+        bool Render(const std::wstring text, HDC  hdc,  const RECT& rc);
+        bool Render(const std::wstring text, HWND hWnd, const RECT& rc);
         long CountCacheBytes_debug();
      protected:
-        bool Render(std::wstring text, int width, int height);
+        bool Render(const std::wstring text, int width, int height);
         u8string To_UTF8(const std::wstring& s);
         SkBitmap GetBitMapFromSurface(const std::wstring text);
         SkColor  COLORREFToSkColor(COLORREF color);

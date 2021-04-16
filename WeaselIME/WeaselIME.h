@@ -70,4 +70,8 @@ private:
 	bool m_composing;
 	bool m_preferCandidatePos;
 	weasel::Client m_client;
+	//是否支持ime消息
+	bool m_bSupportImeMsg;
+	BOOL WINAPI _ImmGenerateMessage(HIMC hIMC);
+	//
 };

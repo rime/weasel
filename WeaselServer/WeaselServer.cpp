@@ -30,6 +30,41 @@ typedef enum MONITOR_DPI_TYPE {
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
+	//TCHAR lpstrCmdLine[32] = L"/qq";
+	//防止运行多个server实例,???
+	HANDLE hEvent=::CreateEvent(nullptr, FALSE, FALSE, L"_WIN_WEASE_SERVER_HAS_INSTANCE_");
+	bool state = (::GetLastError() == ERROR_ALREADY_EXISTS );
+	auto _close_event_handle = [&] {
+		if (hEvent != INVALID_HANDLE_VALUE && !state) {
+			::CloseHandle(hEvent);
+			hEvent = INVALID_HANDLE_VALUE;
+		}
+	};
+	if (!wcscmp(L"/userdir", lpstrCmdLine) || !wcscmp(L"/weaseldir", lpstrCmdLine) ||
+		!wcscmp(L"/update", lpstrCmdLine)) {
+		int n=0;
+	}
+	else if (!wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine)) {
+		bool b=::CloseHandle(hEvent);
+		hEvent = INVALID_HANDLE_VALUE;
+		//char buf[32] = { 0 };
+		//sprintf(buf, "CloseHandle:%d", b);
+		//OutputDebugStringA(buf);
+	}
+	else {
+		if (state)
+		{
+			::MessageBox(HWND_DESKTOP, L"WeaselServer已经运行了!", L"警告", MB_OK | MB_ICONINFORMATION);
+			return 1;
+		}
+	}
+	auto _safe_return = [&] {
+		_Module.Term();
+		::CoUninitialize();
+		_close_event_handle();
+	};
+
+	//
 	InitVersion();
 
 	// Set DPI awareness (Windows 8.1+)
@@ -53,6 +88,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	GetUserName(user_name, &size);
 	if (!_wcsicmp(user_name, L"SYSTEM"))
 	{
+		_close_event_handle();
 		return 1;
 	}
 
@@ -74,11 +110,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	{
 		CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 		WeaselServerApp::explore(WeaselUserDataPath());
+		_safe_return();
 		return 0;
 	}
 	if (!wcscmp(L"/weaseldir", lpstrCmdLine))
 	{
 		WeaselServerApp::explore(WeaselServerApp::install_dir());
+		_safe_return();
 		return 0;
 	}
 
@@ -91,8 +129,11 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		{
 			client.ShutdownServer();
 		}
-		if (quit)
+		if (quit) {
+			_safe_return();
 			return 0;
+		}
+
 	}
 
 	bool check_updates = !wcscmp(L"/update", lpstrCmdLine);
@@ -124,5 +165,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	_Module.Term();
 	::CoUninitialize();
 
+	_close_event_handle();
 	return nRet;
 }

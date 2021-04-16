@@ -121,6 +121,7 @@ static int CustomInstall(bool installing)
 
 static int Run(LPTSTR lpCmdLine)
 {
+	//LPTSTR lpCmdLine = L"/u";
 	const bool silent = true;
 	bool uninstalling = !wcscmp(L"/u", lpCmdLine);
 	if (uninstalling)

@@ -176,6 +176,7 @@ STDAPI CLangBarItemButton::AdviseSink(REFIID riid, IUnknown *punk, DWORD *pdwCoo
 	if (_pLangBarItemSink != NULL)
 		return CONNECT_E_ADVISELIMIT;
 	
+	//这里加一 ASSERT，防止debug版时候进入QueryInterface出ASSERT，否则可能会崩溃掉VS
 	ATLASSERT(_pLangBarItemSink);
 
 	if (punk->QueryInterface(IID_ITfLangBarItemSink, (LPVOID *) &_pLangBarItemSink) != S_OK)

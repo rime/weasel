@@ -3,8 +3,10 @@
 !include LogicLib.nsh
 !include MUI2.nsh
 !include x64.nsh
+!include Library.nsh
 
 Unicode true
+ShowInstDetails show
 
 !ifndef WEASEL_VERSION
 !define WEASEL_VERSION 1.0.0
@@ -121,12 +123,12 @@ program_files:
   ${IF} ${RunningX64}
     ${DisableX64FSRedirection}
     SetOutPath "$SYSDIR"
-	File "skiax64.dll"
+	!insertmacro InstallLib DLL SHARED REBOOT_PROTECTED "skiax64.dll" "$SYSDIR\skiax64.dll" $TEMP
 	${EnableX64FSRedirection}
-	File "skiax86.dll"
+	!insertmacro InstallLib DLL SHARED REBOOT_PROTECTED "skiax86.dll" "$SYSDIR\skiax86.dll" $TEMP
   ${Else}
     SetOutPath "$SYSDIR"
-  	File "skiax86.dll"
+  	!insertmacro InstallLib DLL SHARED REBOOT_PROTECTED "skiax86.dll" "$SYSDIR\skiax86.dll" $TEMP
   ${EndIf}
   SetOutPath "$INSTDIR"
   ; ---- install skia dll end ----
@@ -180,13 +182,23 @@ program_files:
   StrCpy $R2  "/i"
   ${GetParameters} $R0
   ClearErrors
-  ${GetOptions} $R0 "/S" $R1
-  IfErrors +2 0
-  StrCpy $R2 "/s"
-  ${GetOptions} $R0 "/T" $R1
-  IfErrors +2 0
-  StrCpy $R2 "/t"
-
+  ;${GetOptions} $R0 "/S" $R1
+  ;IfErrors +2 0
+  ;StrCpy $R2 "/s"
+  ;${GetOptions} $R0 "/T" $R1
+  ;IfErrors +2 0
+  ;StrCpy $R2 "/t"
+  ;
+  ReadRegStr $R3 HKLM "SYSTEM\CurrentControlSet\Control\Nls\Language" "Default"
+  ${If} $R3 = 0804
+	StrCpy $R2 "/s"
+  ${ElseIf} $R3 = 0404
+	StrCpy $R2 "/t"
+  ${EndIf}
+  DetailPrint '"$INSTDIR\WeaselSetup.exe" $R2'
+  ;ExecWait 'cmd.exe'
+  ;
+  
   ExecWait '"$INSTDIR\WeaselSetup.exe" $R2'
 
   ; run as user...
@@ -235,6 +247,17 @@ SectionEnd
 Section "Uninstall"
 
   ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
+  
+    ; ---- remove skia dll begin ----
+  ${IF} ${RunningX64}
+    ${DisableX64FSRedirection}
+    !insertmacro UnInstallLib DLL SHARED REBOOT_PROTECTED $SYSDIR\skiax64.dll
+	${EnableX64FSRedirection}
+    !insertmacro UnInstallLib DLL SHARED REBOOT_PROTECTED $SYSDIR\skiax86.dll
+  ${Else}
+    !insertmacro UnInstallLib DLL SHARED REBOOT_PROTECTED $SYSDIR\skiax86.dll	
+  ${EndIf}
+  ; ---- remove skia dll end ----  
 
   ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
 
@@ -257,17 +280,6 @@ Section "Uninstall"
   Delete /REBOOTOK "$SMPROGRAMS\小狼毫輸入法\*.*"
   RMDir /REBOOTOK "$SMPROGRAMS\小狼毫輸入法"
   
-  ; ---- remove skia dll begin ----
-  ${IF} ${RunningX64}
-    ${DisableX64FSRedirection}
-    Delete /REBOOTOK "$SYSDIR\skiax64.dll"
-	${EnableX64FSRedirection}
-	Delete /REBOOTOK "$SYSDIR\skiax86.dll"
-  ${Else}
-    Delete /REBOOTOK "$SYSDIR\skiax86.dll"
-  ${EndIf}
-  ; ---- remove skia dll end ----  
-
   ; Prompt reboot
   SetRebootFlag true
 

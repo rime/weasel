@@ -81,6 +81,12 @@ bool ClientImpl::CommitComposition()
 		return false;
 
 	LRESULT ret = _SendMessage(WEASEL_IPC_COMMIT_COMPOSITION, 0, session_id);
+#ifdef _DEBUG
+	TCHAR buf[256] = { 0 };
+	wsprintf(buf, L"ClientImpl::CommitComposition ret=%d", ret);
+	OutputDebugString(buf);
+#endif // _DEBUG
+
 	return ret != 0;
 }
 

@@ -19,11 +19,11 @@ WeaselServerApp::~WeaselServerApp()
 void WeaselServerApp::LoadIMEIndicator(bool bLoad) {
 	auto hant = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL);
 	auto simp = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
-	auto _GetLocaleID = [](int langID) {
-		HKL hKL = nullptr;
+	auto _GetLocaleID = [&](int langID) {
 		WCHAR key[9] = { 0 };
 		HKEY hKey;
 		std::wstring _localeID;
+		HKL hKL = nullptr;
 		LSTATUS ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts", 0, KEY_READ, &hKey);
 		if (ret == ERROR_SUCCESS)
 		{
@@ -50,21 +50,27 @@ void WeaselServerApp::LoadIMEIndicator(bool bLoad) {
 		return _localeID;
 	};
 	auto _LoadKeyBoadrdLayout = [](LPCWSTR id,bool bLoad) {
-		HKL hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE);
-		if (hKL) 
+		HKL _hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE);
+		if (_hKL)
 		{
-			BOOL b = ::UnloadKeyboardLayout(hKL);
-			if(bLoad)
-				hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE);
+			BOOL b = ::UnloadKeyboardLayout(_hKL);
+			if (bLoad) {
+				_hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE);
+			}
 		}
 	};
-	if (IsWindows8OrGreater()) {
-		std::wstring id = _GetLocaleID(simp);
-		if (id.empty())
-			id = _GetLocaleID(hant);
-		if (!id.empty())
-			_LoadKeyBoadrdLayout(id.c_str(), bLoad);
+	LCID _lcid = ::GetSystemDefaultLCID();
+	std::wstring id;
+	if ( 0x804 == _lcid ) {
+		id=_GetLocaleID(simp);
 	}
+	if ( 0x404 == _lcid ) {
+		id=_GetLocaleID(hant);
+	}
+	//if (IsWindows8OrGreater()) {
+	if (!id.empty())
+			_LoadKeyBoadrdLayout(id.c_str(),  bLoad);
+	//}
 }
 //
 
@@ -78,7 +84,7 @@ int WeaselServerApp::Run()
 	win_sparkle_init();
 	m_ui.Create(m_server.GetHWnd());
 
-	LoadIMEIndicator(true);  //
+	LoadIMEIndicator(true);  //加载键盘
 
 	tray_icon.Create(m_server.GetHWnd());
 	tray_icon.Refresh();
@@ -90,10 +96,10 @@ int WeaselServerApp::Run()
 
 	int ret = m_server.Run();
 
-
+	OutputDebugString(L"m_handler->Finalize");
 	m_handler->Finalize();
 
-	LoadIMEIndicator(false);  //
+	LoadIMEIndicator(false);  //卸载键盘,如果设置成默认输入法可能卸载不了,功能没影响，只是输入法列表能看到
 
 	m_ui.Destroy();
 	tray_icon.RemoveIcon();

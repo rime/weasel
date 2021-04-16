@@ -54,7 +54,7 @@ void ServerImpl::_Finailize()
 
 	if (IsWindow())
 	{
-		//
+		//通知消息循环退出
 		DWORD hThread = this->GetWindowThreadID();
 		assert(hThread);
 		if (hThread) {
@@ -152,6 +152,7 @@ int ServerImpl::Stop()
 	_Finailize();
 	// quit the server
 	//::ExitProcess(0);
+	//需在_Finailize()中退出消息循环，否则容易造成假死
 	return 0;
 }
 

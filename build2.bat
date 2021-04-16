@@ -205,6 +205,10 @@ if %clean% == 1 (
   rmdir /s /q WeaselUI\ReleaseHant
   rmdir /s /q WeaselUI\x64
   del /Q msbuild*.log  
+  del /Q output\*.ilk
+  del /Q output\*.ime
+  del /Q output\*.exp
+  del /Q output\*.pdb
 )
 
 goto end
