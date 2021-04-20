@@ -35,7 +35,7 @@ BOOL WeaselTrayIcon::Create(HWND hTargetWnd)
 	return bRet;
 }
 
-void WeaselTrayIcon::Refresh()
+void WeaselTrayIcon::Refresh(int state)
 {
 	if (!m_style.display_tray_icon && !m_status.disabled) // display notification when deploying
 	{
@@ -46,9 +46,33 @@ void WeaselTrayIcon::Refresh()
 		}
 		return;
 	}
+#ifdef _DEBUG
+	bool bTsf = false;
+	bool bAddSession = false;
+	static int current = 0;
+	// state==0 ?,other state ?
+	if (state) 
+	{
+		bTsf = (state & (1 << 1)) != 0;
+		bAddSession = (state & (1 << 2)) != 0;
+
+		if (!bTsf && bAddSession)		 //ime enter
+			current = 1;
+		else if (bTsf && bAddSession)	 //tsf enter
+			current = 2;
+		else if (bTsf && !bAddSession)	 //tsf leave
+			current = 3;
+		else if (!bTsf && !bAddSession)	 //ime leave
+			current = 4;
+
+		char buf[128] = { 0 };
+		sprintf(buf, "tsf:%d addsession:%d current:%d\r\n", bTsf, bAddSession,current);
+		OutputDebugStringA(buf);
+	}
+#endif
 	WeaselTrayMode mode = m_status.disabled ? DISABLED : 
 		m_status.ascii_mode ? ASCII : ZHUNG;
-	if (mode != m_mode)
+	if (mode != m_mode )
 	{
 		m_mode = mode;
 		ShowIcon();

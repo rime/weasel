@@ -79,25 +79,25 @@ namespace win {
         void Enable(bool bEnabled);
         void SetFontSize(int fontNumber);
         void SetFontHeight(float height);
-        void SetFontName(std::string  name);
-        void SetFontName(std::wstring name);
+        void SetFontName(const std::string&  name);
+        void SetFontName(const std::wstring& name);
         void SetFontColor(SkColor  fontColor,SkColor  bkColor);
         void SetFontColor(COLORREF fontColor,COLORREF bkColor);
         void SetFontColor(COLORREF fontColo);
         bool CanDraw() {return m_bEnabled && m_bCanDraw;};
-        bool OnDraw(const std::wstring text, HDC  hdc,  const RECT& rc);
-        bool Render(const std::wstring text, HDC  hdc,  const RECT& rc);
-        bool Render(const std::wstring text, HWND hWnd, const RECT& rc);
+        bool OnDraw(const std::wstring& text, HDC  hdc,  const RECT& rc);
+        bool Render(const std::wstring& text, HDC  hdc,  const RECT& rc);
+        bool Render(const std::wstring& text, HWND hWnd, const RECT& rc);
         long CountCacheBytes_debug();
      protected:
-        bool Render(const std::wstring text, int width, int height);
+        bool Render(const std::wstring& text, int width, int height);
         u8string To_UTF8(const std::wstring& s);
-        SkBitmap GetBitMapFromSurface(const std::wstring text);
+        SkBitmap GetBitMapFromSurface(const std::wstring& text);
         SkColor  COLORREFToSkColor(COLORREF color);
         COLORREF SkColorToCOLORREF(SkColor  color);
         void ConvertSkiaToRGBA(const unsigned char* skia, int pixel_width, unsigned char* rgba);
     protected:
-        ItemList TextAnalysis(std::wstring text);
+        ItemList TextAnalysis(const std::wstring& text);
         std::vector<u8string> split_graphemes(const char* str, size_t length);
         std::vector<u8string> split_graphemes(const u8string& str);
     protected:
@@ -135,10 +135,10 @@ namespace win {
         SurfaceCachePtr   m_surfaceCache;
 
         sk_sp<SkTypeface> GetFontFaceFromCacheByCodePoint(int32_t cp);
-        sk_sp<SkSurface>  GetSurfaceFromCacheByText(const std::wstring text);
-        void SetSurfaceToCache(const std::wstring text, sk_sp<SkSurface> surface);
-        //hash {text,textcolor,backcolor} 
-        _hash_t GetHash(const std::wstring text);
+        sk_sp<SkSurface>  GetSurfaceFromCacheByText(const std::wstring& text);
+        void SetSurfaceToCache(const std::wstring& text, sk_sp<SkSurface> surface);
+        //hash {text,textcolor,backcolor,fontSize}  //2021/04/20,add fontSize for hash
+        _hash_t GetHash(const std::wstring& text);
     private:
         NOCOPY(TextRender);
  };

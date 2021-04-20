@@ -30,12 +30,12 @@ public:
 	virtual void EndMaintenance();
 	virtual void SetOption(UINT session_id, const std::string &opt, bool val);
 
-	void OnUpdateUI(std::function<void()> const &cb);
+	void OnUpdateUI(std::function<void(int state)> const &cb);
 
 private:
 	void _Setup();
 	bool _IsDeployerRunning();
-	void _UpdateUI(UINT session_id);
+	void _UpdateUI(UINT session_id, int state=0);
 	void _LoadSchemaSpecificSettings(const std::string& schema_id);
 	bool _ShowMessage(weasel::Context& ctx, weasel::Status& status);
 	bool _Respond(UINT session_id, EatLine eat);
@@ -54,7 +54,7 @@ private:
 	std::string m_last_schema_id;
 	weasel::UIStyle m_base_style;
 
-	std::function<void()> _UpdateUICallback;
+	std::function<void(int state)> _UpdateUICallback;
 
 	static void OnNotify(void* context_object,
 		                 uintptr_t session_id,

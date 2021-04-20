@@ -16,7 +16,7 @@ public:
 	WeaselTrayIcon(weasel::UI &ui);
 
 	BOOL Create(HWND hTargetWnd);
-	void Refresh();
+	void Refresh(int state);
 
 protected:
 	virtual void CustomizeMenu(HMENU hMenu);

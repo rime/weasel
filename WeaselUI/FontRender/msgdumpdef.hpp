@@ -1,6 +1,7 @@
 #pragma once
 #include "windows.h"
 #include<fstream>
+#include<strsafe.h>
 
 #pragma warning(disable:4353)
 
@@ -27,7 +28,7 @@
 			TCHAR buffer[512] = { 0 };
 			va_list args;
 			va_start(args, fmt);
-			wsprintf(buffer, fmt, args);
+			StringCchVPrintf(buffer, 512, fmt, args);
 			va_end(args);
 			assert(g_dumpFile.is_open());
 			if (g_dumpFile.is_open()) {

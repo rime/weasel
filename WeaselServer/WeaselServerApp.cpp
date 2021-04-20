@@ -50,12 +50,12 @@ void WeaselServerApp::LoadIMEIndicator(bool bLoad) {
 		return _localeID;
 	};
 	auto _LoadKeyBoadrdLayout = [](LPCWSTR id,bool bLoad) {
-		HKL _hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE);
+		HKL _hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE | KLF_NOTELLSHELL);
 		if (_hKL)
 		{
 			BOOL b = ::UnloadKeyboardLayout(_hKL);
 			if (bLoad) {
-				_hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE);
+				_hKL = ::LoadKeyboardLayout(id, KLF_ACTIVATE | KLF_NOTELLSHELL);
 			}
 		}
 	};
@@ -87,23 +87,23 @@ int WeaselServerApp::Run()
 	LoadIMEIndicator(true);  //加载键盘
 
 	tray_icon.Create(m_server.GetHWnd());
-	tray_icon.Refresh();
+	tray_icon.Refresh(0);
 
 	m_handler->Initialize();
-	m_handler->OnUpdateUI([this]() {
-		tray_icon.Refresh();
+	m_handler->OnUpdateUI([this](int state){
+		tray_icon.Refresh(state);
 	});
 
 	int ret = m_server.Run();
 
-	OutputDebugString(L"m_handler->Finalize");
+	//OutputDebugString(L"m_handler->Finalize");
 	m_handler->Finalize();
 
 	LoadIMEIndicator(false);  //卸载键盘,如果设置成默认输入法可能卸载不了,功能没影响，只是输入法列表能看到
 
 	m_ui.Destroy();
 	tray_icon.RemoveIcon();
-	tray_icon.Refresh();
+	tray_icon.Refresh(0);
 	win_sparkle_cleanup();
 
 	return ret;
