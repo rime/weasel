@@ -107,7 +107,11 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	if (eat) {
 		_Respond(session_id, eat);
 	}
-	_UpdateUI(session_id);
+	//
+	bool is_tsf = _IsSessionTSF(session_id);
+	int state = is_tsf ? 0xFF : 0xFD;
+	//
+	_UpdateUI(session_id,state);
 	m_active_session = session_id;
 	return session_id;
 }
@@ -118,8 +122,16 @@ UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 	if (m_disabled) return 0;
 	DLOG(INFO) << "Remove session: session_id = " << session_id;
 	// TODO: force committing? otherwise current composition would be lost
+	//
+	bool is_tsf = _IsSessionTSF(session_id);
+	//11 tsf;01 ime,1?1 addSession 0?1 removeSession
+	int state = is_tsf?0xFF : 0xFD;
+	state = state & 0xFB;
+	if (_UpdateUICallback) _UpdateUICallback(state);
+	//
 	RimeDestroySession(session_id);
 	m_active_session = 0;
+
 	return 0;
 }
 
@@ -305,7 +317,7 @@ void RimeWithWeaselHandler::SetOption(UINT session_id, const std::string & opt, 
 	RimeSetOption(session_id, opt.c_str(), val);
 }
 
-void RimeWithWeaselHandler::OnUpdateUI(std::function<void()> const &cb)
+void RimeWithWeaselHandler::OnUpdateUI(std::function<void(int state)> const &cb)
 {
 	_UpdateUICallback = cb;
 }
@@ -323,7 +335,7 @@ bool RimeWithWeaselHandler::_IsDeployerRunning()
 }
 
 
-void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
+void RimeWithWeaselHandler::_UpdateUI(UINT session_id, int state)
 {
 	weasel::Status weasel_status;
 	weasel::Context weasel_context;
@@ -363,11 +375,11 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	if (utf8towcs(app_name) == std::wstring(L"explorer.exe") && m_vista_greater) {
 		boost::thread th([=]() {
 			::Sleep(100);
-			if (_UpdateUICallback) _UpdateUICallback();
+			if (_UpdateUICallback) _UpdateUICallback(state);
 		});
 	}
 	else {
-		if (_UpdateUICallback) _UpdateUICallback();
+		if (_UpdateUICallback) _UpdateUICallback(state);
 	}
 
 	m_message_type.clear();

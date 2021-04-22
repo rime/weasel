@@ -1,5 +1,9 @@
 #pragma once
 
+#if _MSC_VER >= 1920
+#include <VersionHelpers.h>
+#endif
+
 #ifndef NTSTATUS
 typedef __success(return >= 0) LONG NTSTATUS;
 #endif
@@ -92,7 +96,7 @@ inline void InitVersion()
 	}
 }
 
-
+#if _MSC_VER < 1920
 VERSIONHELPERAPI
 IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WORD wServicePackMajor, DWORD dwBuild)
 {
@@ -219,3 +223,4 @@ IsWindowsServer()
 
 	return !VerifyVersionInfoW(&osvi, VER_PRODUCT_TYPE, dwlConditionMask);
 }
+#endif

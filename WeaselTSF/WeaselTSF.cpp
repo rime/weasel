@@ -92,8 +92,10 @@ STDAPI_(ULONG) WeaselTSF::Release()
 	return cr;
 }
 
+
 STDAPI WeaselTSF::Activate(ITfThreadMgr *pThreadMgr, TfClientId tfClientId)
 {
+
 	return ActivateEx(pThreadMgr, tfClientId, 0U);
 }
 
@@ -120,6 +122,7 @@ STDAPI WeaselTSF::Deactivate()
 
 	return S_OK;
 }
+
 
 STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DWORD dwFlags)
 {

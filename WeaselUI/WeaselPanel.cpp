@@ -27,6 +27,12 @@ WeaselPanel::~WeaselPanel()
 {
 	if (m_layout != NULL)
 		delete m_layout;
+	_trace0("~WeaselPanel()");
+#ifdef _DEBUG
+	long nBytes = g_render.CountCacheBytes_debug();
+	_trace("m_surfaceCache:%ldM\r\n", nBytes);
+#endif // _DEBUG
+
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -362,9 +368,40 @@ static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const& rc,
 	ScriptStringFree(&ssa);
 	return hr;
 }
+static bool _TextOutWithEmoji(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch) {
+	try
+	{
+		LOGFONT lfont;
+		dc.GetCurrentFont().GetLogFont(&lfont);
+		LPCWSTR lpFaceName = lfont.lfFaceName;
+		g_render.Enable(true);
+		//g_render.SetFontSize(18);
+		g_render.SetFontName(std::wstring(lpFaceName));
+		g_render.SetFontHeight(abs(lfont.lfHeight));
+		g_render.SetFontColor(dc.GetTextColor(), dc.GetBkColor());
+		
+		std::wstring txt = std::wstring(psz);
+		bool b = g_render.Render(txt, dc.m_hDC, rc);
+		_trace("lfont.lfHeight:%d fontname:%ls\r\n", lfont.lfHeight, lpFaceName);
+		if (b) {
+			b = g_render.OnDraw(txt,dc.m_hDC, rc);
+			if (b) return true;
+		}
+	}
+	catch (...) {
+		_trace("_TextOutWithEmoji:%s", "exception");
+	}
+	return false;
+}
 
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
 {
+	//显示彩色表情
+	bool b = _TextOutWithEmoji(dc,x,y,rc,psz,cch);
+	if (b)
+		return;
+	//
+
 	if (FAILED(_TextOutWithFallback(dc, x, y, rc, psz, cch))) {
 		dc.TextOutW(x, y, psz, cch);
 	}

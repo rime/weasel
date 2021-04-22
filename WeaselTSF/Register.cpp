@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "Register.h"
 #include <strsafe.h>
+
 #include <VersionHelpers.hpp>
+
 
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
@@ -67,6 +69,7 @@ BOOL RegisterProfiles()
 			0);
 		if (FAILED(hr))
 			return FALSE;
+
 	}
 	else
 	{
@@ -96,6 +99,7 @@ BOOL RegisterProfiles()
 		if (FAILED(hr))
 			return FALSE;
 	}
+
 	return TRUE;
 }
 

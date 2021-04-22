@@ -45,12 +45,26 @@ void ServerImpl::_Finailize()
 	if (pipeThread != nullptr) {
 		pipeThread->interrupt();
 	}
+
+
+	if (m_pRequestHandler) {
+		m_pRequestHandler->Finalize();
+		m_pRequestHandler=nullptr;
+	}
+
 	if (IsWindow())
 	{
+		//通知消息循环退出
+		DWORD hThread = this->GetWindowThreadID();
+		assert(hThread);
+		if (hThread) {
+			::PostThreadMessage(hThread, WM_QUIT, 0, 0);
+			::Sleep(200);
+		}
+		//
 		DestroyWindow();
 	}
 
-	m_pRequestHandler->Finalize();
 }
 
 LRESULT ServerImpl::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -137,7 +151,8 @@ int ServerImpl::Stop()
 {
 	_Finailize();
 	// quit the server
-	::ExitProcess(0);
+	//::ExitProcess(0);
+	//需在_Finailize()中退出消息循环，否则容易造成假死
 	return 0;
 }
 

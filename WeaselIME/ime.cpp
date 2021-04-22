@@ -23,7 +23,7 @@ BOOL WINAPI ImeInquire(IMEINFO* lpIMEInfo, LPWSTR lpszUIClass, DWORD dwSystemInf
 	wcscpy(lpszUIClass, WeaselIME::GetUIClassName());
 
 	lpIMEInfo->dwPrivateDataSize = 0;
-	lpIMEInfo->fdwProperty = IME_PROP_UNICODE | IME_PROP_SPECIAL_UI;
+	lpIMEInfo->fdwProperty = IME_PROP_UNICODE | IME_PROP_SPECIAL_UI | IME_PROP_END_UNLOAD;
 	lpIMEInfo->fdwConversionCaps = IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
 	lpIMEInfo->fdwSentenceCaps = IME_SMODE_NONE;
 	lpIMEInfo->fdwUICaps = UI_CAP_2700;

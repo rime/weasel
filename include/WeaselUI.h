@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <WeaselCommon.h>
+#include <functional>
 
 namespace weasel
 {

@@ -46,6 +46,7 @@ public:
 	static void Cleanup();
 
 	WeaselIME(HIMC hIMC);
+	~WeaselIME();
 	LRESULT OnIMESelect(BOOL fSelect);
 	LRESULT OnIMEFocus(BOOL fFocus);
 	LRESULT OnUIMessage(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp);
@@ -69,4 +70,8 @@ private:
 	bool m_composing;
 	bool m_preferCandidatePos;
 	weasel::Client m_client;
+	//是否支持ime消息
+	bool m_bSupportImeMsg;
+	BOOL WINAPI _ImmGenerateMessage(HIMC hIMC);
+	//
 };

@@ -4,6 +4,7 @@
 #include "Globals.h"
 #include "WeaselIPC.h"
 
+
 class CCandidateList;
 class CLangBarItemButton;
 class CCompartmentEventSink;

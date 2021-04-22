@@ -8,11 +8,18 @@
 #include <ResponseParser.h>
 #include "WeaselIME.h"
 #include <algorithm>
+//
+#if defined(_DEBUG)
+#	define _DUMP_FILE "g:\\msgdump.txt"
+#endif
+#include "msgdumpdef.hpp"
+//
 
 // logging disabled
-#define EZDBGONLYLOGGERVAR(...)
-#define EZDBGONLYLOGGERPRINT(...)
-#define EZDBGONLYLOGGERFUNCTRACKER
+#	define EZDBGONLYLOGGERVAR(...)
+#	define EZDBGONLYLOGGERPRINT(...)
+#	define EZDBGONLYLOGGERFUNCTRACKER
+
 
 HINSTANCE WeaselIME::s_hModule = 0;
 HIMCMap WeaselIME::s_instances;
@@ -97,16 +104,25 @@ WeaselIME::WeaselIME(HIMC hIMC)
 : m_hIMC(hIMC)
 , m_composing(false)
 , m_preferCandidatePos(false)
+, m_bSupportImeMsg(true)
 {
-	WCHAR path[MAX_PATH];
-	WCHAR fname[_MAX_FNAME];
-	WCHAR ext[_MAX_EXT];
+#if(_DUMP_MSG_WRITE_DISK)
+	OPEN_DUMP_FILE();
+#endif
+	WCHAR path[MAX_PATH-1] = { 0 };
+	WCHAR fname[_MAX_FNAME-1] = { 0 };
+	WCHAR ext[_MAX_EXT-1] = { 0 };
 	GetModuleFileNameW(NULL, path, _countof(path));
 	_wsplitpath_s(path, NULL, 0, NULL, 0, fname, _countof(fname), ext, _countof(ext));
-	if (iequals(L"chrome", fname) && iequals(L"exe", ext))
+	//if (iequals(L"chrome", fname) && iequals(L"exe",ext))  //iequals有越界问题,导致有些程序崩溃
+	if(wcscmp(L"chrome", fname)==0 && wcscmp(L"exe", ext)==0)
 		m_preferCandidatePos = true;
 }
-
+WeaselIME::~WeaselIME() {
+#if(_DUMP_MSG_WRITE_DISK)
+	CLOSE_DUMP_FILE();
+#endif
+}
 HINSTANCE WeaselIME::GetModuleInstance()
 {
 	return s_hModule;
@@ -132,6 +148,10 @@ HRESULT WeaselIME::RegisterUIClass()
 	wc.lpszClassName  = GetUIClassName();
 	wc.hbrBackground  = NULL;
 	wc.hIconSm        = NULL;
+
+#if(_DUMP_MSG_WRITE_DISK)
+	MSG_DUMP2(wc.lpfnWndProc);
+#endif
 
 	if (RegisterClassExW(&wc) == 0)
 	{
@@ -199,17 +219,22 @@ BOOL WeaselIME::IsIMEMessage(UINT uMsg)
 	return FALSE;
 }
 
+//https://stackoverflow.com/questions/58710090/why-does-a-lock-guard-on-a-mutex-reference-produce-c26110
+//https://docs.microsoft.com/en-us/cpp/code-quality/c26110?view=msvc-160
 std::shared_ptr<WeaselIME> WeaselIME::GetInstance(HIMC hIMC)
 {
 	if (!s_instances.is_valid())
 	{
 		return std::shared_ptr<WeaselIME>();
 	}
-	std::lock_guard<std::mutex> lock(s_instances.get_mutex());
-	std::shared_ptr<WeaselIME>& p = s_instances[hIMC];
+	//增加 _Guarded_by_ 声明，否则多线程会出现锁定失败问题,缓解
+	std::mutex &_mutex _Guarded_by_(m_mutex) = s_instances.get_mutex();
+	std::lock_guard<std::mutex> lock(_mutex);
+	std::shared_ptr<WeaselIME> &p = s_instances[hIMC];
 	if (!p)
 	{
-		p.reset(new WeaselIME(hIMC));
+		//p.reset(new WeaselIME(hIMC));
+		p = std::make_shared<WeaselIME>(hIMC);
 	}
 	return p;
 }
@@ -301,6 +326,16 @@ LRESULT WeaselIME::OnUIMessage(HWND hWnd, UINT uMsg, WPARAM wp, LPARAM lp)
 				_SetCompositionWindow(lpIMC);
 		}
 		break;
+	//WM_IME_SETCONTEXT
+	case WM_IME_SETCONTEXT:
+		{
+			_traceXX(L"WM_IME_SETCONTEXT | wp:%d lp:0x%x\r\n", wp, lp);
+			if (0 == lp) {
+				m_bSupportImeMsg = false;
+			}
+			break;
+		}
+	//
 	default:
 		if (!IsIMEMessage(uMsg))
 		{
@@ -350,6 +385,18 @@ LRESULT WeaselIME::_OnIMENotify(LPINPUTCONTEXT lpIMC, WPARAM wp, LPARAM lp)
 			}
 		}
 		break;
+	//
+	case IMN_SETCONVERSIONMODE:
+		{
+		if (ImmGetOpenStatus(m_hIMC)) {
+			if (m_preferCandidatePos)
+				_SetCandidatePos(lpIMC);
+			else
+				_SetCompositionWindow(lpIMC);
+			}
+		}
+		break;
+	//
 	default:
 		EZDBGONLYLOGGERPRINT("IMN_(0x%x): HIMC = 0x%x", wp, m_hIMC);
 	}
@@ -400,6 +447,7 @@ void WeaselIME::_SetCompositionWindow(LPINPUTCONTEXT lpIMC)
 BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeyState)
 {
 	EZDBGONLYLOGGERPRINT("Process key event: vKey = 0x%x, kinfo = 0x%x, HIMC = 0x%x", vKey, UINT32(kinfo), m_hIMC);
+	_traceXX(L"ProcessKeyEvent|vKey = 0x%x, kinfo = 0x%x, HIMC = 0x%x\r\n", vKey, UINT32(kinfo), m_hIMC);
 
 	if (!ImmGetOpenStatus(m_hIMC))  // gvim command mode
 	{
@@ -431,17 +479,19 @@ BOOL WeaselIME::ProcessKeyEvent(UINT vKey, KeyInfo kinfo, const LPBYTE lpbKeySta
 	{
 		if (!commit.empty())
 		{
+			_traceXX(L"ProcessKeyEvent|comstr:%s\r\n", commit.c_str());
 			_EndComposition(commit.c_str());
 		}
 		else if (status.composing != m_composing)
 		{
+			_traceXX(L"ProcessKeyEvent|status.composing != m_composing\r\n");
 			if (m_composing)
 				_EndComposition(NULL);
 			else
 				_StartComposition();
 		}
 	}
-
+	_traceXX(L"ProcessKeyEvent | accepted:%d ", (int)accepted);
 	return (BOOL)accepted;
 }
 
@@ -527,6 +577,20 @@ HRESULT WeaselIME::_EndComposition(LPCWSTR composition)
 		wcscpy_s(pInfo->szResultStr, composition);
 		lpCompStr->dwResultStrLen = wcslen(pInfo->szResultStr);
 
+		//一些全屏程序貌似接收不到WM_IME_COMPOSITION消息，所以通过
+		//WM_CHAR作为序列发送,必须PostMessage
+		if (!m_bSupportImeMsg) 
+		{
+			HWND hWnd_ = ::SetFocus(lpIMC->hWnd);
+			MSG msg = { lpIMC->hWnd,WM_CHAR,0,0,0,0 };
+			for (size_t i = 0; i < wcslen(pInfo->szResultStr); i++) {
+				msg.wParam = pInfo->szResultStr[i];
+				::PostMessage(msg.hwnd, msg.message, msg.wParam, msg.lParam);
+			}
+			_traceXX(L"hWnd:0x%x focusWnd:0x%x", lpIMC->hWnd, hWnd_);
+		}
+		//
+
 		ImmUnlockIMCC(lpIMC->hCompStr);
 		ImmUnlockIMC(m_hIMC);
 
@@ -537,6 +601,41 @@ HRESULT WeaselIME::_EndComposition(LPCWSTR composition)
 
 	m_composing = false;
 	return S_OK;
+}
+
+BOOL WINAPI WeaselIME::_ImmGenerateMessage(HIMC hIMC)
+{
+	LPINPUTCONTEXT data = ImmLockIMC(m_hIMC);
+
+	if (!data)
+	{
+		SetLastError(ERROR_INVALID_HANDLE);
+		return FALSE;
+	}
+
+	_traceXX(L"_ImmGenerateMessage | %i messages queued\n", data->dwNumMsgBuf);
+	if (data->dwNumMsgBuf > 0)
+	{
+		LPTRANSMSG lpTransMsg;
+		HIMCC hMsgBuf;
+		DWORD i, dwNumMsgBuf;
+
+		hMsgBuf = data->hMsgBuf;
+		dwNumMsgBuf = data->dwNumMsgBuf;
+
+		data->hMsgBuf = ImmCreateIMCC(0);
+		data->dwNumMsgBuf = 0;
+
+		lpTransMsg = reinterpret_cast<LPTRANSMSG>(ImmLockIMCC(hMsgBuf));
+		for (i = 0; i < dwNumMsgBuf; i++)
+			::PostMessage(data->hWnd, lpTransMsg[i].message, lpTransMsg[i].wParam, lpTransMsg[i].lParam);
+
+		ImmUnlockIMCC(hMsgBuf);
+		ImmDestroyIMCC(hMsgBuf);
+	}
+	ImmUnlockIMC(m_hIMC);
+
+	return TRUE;
 }
 
 HRESULT WeaselIME::_AddIMEMessage(UINT msg, WPARAM wp, LPARAM lp)
@@ -574,10 +673,10 @@ HRESULT WeaselIME::_AddIMEMessage(UINT msg, WPARAM wp, LPARAM lp)
 	ImmUnlockIMC(m_hIMC);
 
 	if (!ImmGenerateMessage(m_hIMC))
+	//if(!_ImmGenerateMessage(m_hIMC))
 	{
 		return E_FAIL;
 	}
-
 	return S_OK;
 }
 

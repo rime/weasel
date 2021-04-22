@@ -6,6 +6,10 @@
 #pragma once
 
 #include "targetver.h"
+#ifdef _DEBUG
+#	define _ATL_DEBUG_INTERFACES
+#endif // _DEBUG
+
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
@@ -13,9 +17,10 @@
 #include <Ole2.h>
 #include <OleCtl.h>
 #include <msctf.h>
-#include <assert.h>
+#include <cassert>
 
 #include <atlcomcli.h> 
+
 
 #include <map>
 #include <memory>
