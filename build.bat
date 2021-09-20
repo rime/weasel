@@ -200,12 +200,12 @@ set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
  --stagedir=stage_x64
 
 cd /d %BOOST_ROOT%
-if not exist bjam.exe call bootstrap.bat
+if not exist b2.exe call bootstrap.bat
 if errorlevel 1 goto error
-bjam %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
+b2 %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
 if errorlevel 1 goto error
 if %build_x64% == 1 (
-  bjam %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
+  b2 %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
   if errorlevel 1 goto error
 )
 exit /b
