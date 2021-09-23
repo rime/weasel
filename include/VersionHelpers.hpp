@@ -4,6 +4,12 @@
 typedef __success(return >= 0) LONG NTSTATUS;
 #endif
 
+#ifdef VERSIONHELPERAPI
+
+inline void InitVersion() {}
+
+#else
+
 #define VERSIONHELPERAPI inline bool
 
 #define _WIN32_WINNT_NT4            0x0400
@@ -219,3 +225,5 @@ IsWindowsServer()
 
 	return !VerifyVersionInfoW(&osvi, VER_PRODUCT_TYPE, dwlConditionMask);
 }
+
+#endif
