@@ -27,11 +27,11 @@ echo.
 
 if not defined BJAM_TOOLSET (
   rem the number actually means platform toolset, not %VisualStudioVersion%
-  set BJAM_TOOLSET=msvc-14.1
+  set BJAM_TOOLSET=msvc-14.2
 )
 
 if not defined PLATFORM_TOOLSET (
-  set PLATFORM_TOOLSET=v141_xp
+  set PLATFORM_TOOLSET=v142
 )
 
 if defined DEVTOOLS_PATH set PATH=%DEVTOOLS_PATH%%PATH%
