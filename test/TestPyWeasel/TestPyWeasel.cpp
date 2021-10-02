@@ -35,12 +35,15 @@ void test_pyweasel()
 	// 会话存在返回session_id，不存在返回0
 	BOOST_ASSERT(session_id == handler->FindSession(session_id));
 
-	memset(buffer, 0, sizeof(buffer));
+	auto eat = [](std::wstring& msg) -> bool {
+		// Windows控制台不能直接显示WideChar中文串，转为MultiByteString
+		std::cout << wcstomb(msg.c_str()) << std::endl;
+		return true;
+	};
+
 	// 输入 a，ProcessKeyEvent应返回TRUE，并将回应串写入buffer
-	BOOL taken = handler->ProcessKeyEvent(weasel::KeyEvent(L'a', 0), session_id, buffer);
+	BOOL taken = handler->ProcessKeyEvent(weasel::KeyEvent(L'a', 0), session_id, eat);
 	BOOST_ASSERT(taken);
-	// Windows控制台不能直接显示WideChar中文串，转为MultiByteString
-	std::cout << wcstomb(buffer) << std::endl;
 	
 	// 成功销毁会话，返回session_id；失败返回0
 	BOOST_ASSERT(session_id == handler->RemoveSession(session_id));
