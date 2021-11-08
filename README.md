@@ -5,7 +5,7 @@
 
 式恕堂 版權所無
 
-[![Download](https://api.bintray.com/packages/rime/weasel/release/images/download.svg)](https://bintray.com/rime/weasel/release/_latestVersion)
+[![Download](https://img.shields.io/github/v/release/rime/weasel)](https://github.com/rime/weasel/releases/latest)
 [![Build status](https://ci.appveyor.com/api/projects/status/github/rime/weasel?svg=true)](https://ci.appveyor.com/project/rime/weasel)
 [![GitHub Tag](https://img.shields.io/github/tag/rime/weasel.svg)](https://github.com/rime/weasel)
 
