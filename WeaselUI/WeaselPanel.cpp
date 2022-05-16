@@ -216,14 +216,22 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		CBrush brush;
 		brush.CreateSolidBrush(m_style.back_color);
 		CRgn rgn;
-		rgn.CreateRectRgnIndirect(&rc);
+		CPoint point(m_style.round_corner, m_style.round_corner);
+		rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, point.x, point.y);
 		dc.FillRgn(rgn, brush);
 
 		CPen pen;
 		pen.CreatePen(PS_SOLID | PS_INSIDEFRAME, m_style.border, m_style.border_color);
 		CPenHandle oldPen = dc.SelectPen(pen);
 		CBrushHandle oldBrush = dc.SelectBrush(brush);
-		dc.Rectangle(&rc);
+		dc.SelectPen(pen);
+		CRect rc1(rc.left, rc.top, rc.right-m_style.border/2, rc.bottom-m_style.border/2);
+		CPoint p2(point.x - m_style.border/2, point.y - m_style.border/2);
+		dc.RoundRect(rc1, p2);
+		rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, point.x, point.y);
+		SetWindowRgn(rgn, true);
+		rgn.DeleteObject();
+		DeleteObject(rc1);
 		dc.SelectPen(oldPen);
 		dc.SelectBrush(oldBrush);
 	}
