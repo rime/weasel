@@ -294,6 +294,10 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 {
 	Refresh();
 	//CenterWindow();
+	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
+	t |= WS_EX_LAYERED;
+	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
+	SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), 150, LWA_ALPHA);
 	GetWindowRect(&m_inputPos);
 	return TRUE;
 }
