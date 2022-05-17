@@ -217,21 +217,37 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		brush.CreateSolidBrush(m_style.back_color);
 		CRgn rgn;
 		CPoint point(m_style.round_corner, m_style.round_corner);
-		rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, point.x, point.y);
+		if (m_style.round_corner)
+		{
+			CBrush br2;
+			br2.CreateSolidBrush(m_style.border_color);
+			rgn.CreateRectRgn(rc.left + m_style.border, rc.top + m_style.border, rc.right - m_style.border, rc.bottom - m_style.border);
+			dc.FillRgn(rgn, br2);
+			br2.DeleteObject();
+			rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, point.x, point.y);
+		}
+		else
+		{
+			rgn.CreateRectRgnIndirect(&rc);
+		}
 		dc.FillRgn(rgn, brush);
 
 		CPen pen;
 		pen.CreatePen(PS_SOLID | PS_INSIDEFRAME, m_style.border, m_style.border_color);
 		CPenHandle oldPen = dc.SelectPen(pen);
 		CBrushHandle oldBrush = dc.SelectBrush(brush);
-		dc.SelectPen(pen);
-		CRect rc1(rc.left, rc.top, rc.right-m_style.border/2, rc.bottom-m_style.border/2);
-		CPoint p2(point.x - m_style.border/2, point.y - m_style.border/2);
-		dc.RoundRect(rc1, p2);
-		rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, point.x, point.y);
-		SetWindowRgn(rgn, true);
-		rgn.DeleteObject();
-		DeleteObject(rc1);
+		if (m_style.round_corner == 0)
+			dc.Rectangle(&rc);
+		else
+		{
+			CRect rc1(rc.left, rc.top, rc.right-m_style.border/2, rc.bottom-m_style.border/2);
+			CPoint p2(point.x - m_style.border/2, point.y - m_style.border/2);
+			dc.RoundRect(rc1, p2);
+			rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, point.x, point.y);
+			::SetWindowRgn(m_hWnd, rgn, true);
+			rgn.DeleteObject();
+			DeleteObject(rc1);
+		}
 		dc.SelectPen(oldPen);
 		dc.SelectBrush(oldBrush);
 	}
