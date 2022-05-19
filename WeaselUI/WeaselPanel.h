@@ -3,6 +3,9 @@
 #include <WeaselUI.h>
 #include "Layout.h"
 
+#include <gdiplus.h>
+#pragma comment(lib, "gdiplus.lib")
+
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 
 class WeaselPanel : 
@@ -47,4 +50,17 @@ private:
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;
 	CIcon m_iconAlpha;
+
+	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
+	ULONG_PTR _m_gdiplusToken;
+};
+
+class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
+{
+public:
+	GraphicsRoundRectPath();
+	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery);
+
+public:
+	void AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery);
 };

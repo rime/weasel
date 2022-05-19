@@ -10,6 +10,7 @@
 // for IDI_ZH, IDI_EN
 #include <resource.h>
 
+using namespace Gdiplus;
 using namespace weasel;
 
 WeaselPanel::WeaselPanel(weasel::UI &ui)
@@ -87,16 +88,18 @@ void WeaselPanel::Refresh()
 void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 {
 	rc.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-	CBrush brush;
-	brush.CreateSolidBrush(color);
-	CBrush oldBrush = dc.SelectBrush(brush);
-	CPen pen;
-	pen.CreatePen(PS_SOLID, 0, color);
-	CPen oldPen = dc.SelectPen(pen);
-	CPoint ptRoundCorner(m_style.round_corner, m_style.round_corner);
-	dc.RoundRect(rc, ptRoundCorner);
-	dc.SelectBrush(oldBrush);
-	dc.SelectPen(oldPen);
+	{
+		Graphics gBack(dc);
+		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+		GraphicsRoundRectPath bgPath;
+		bgPath.AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
+		Color border_color(GetRValue(color), GetGValue(color), GetBValue(color));
+		Color back_color(GetRValue(color), GetGValue(color), GetBValue(color));
+		SolidBrush gBrBack(back_color);
+		Pen gPenBorder(border_color, 0);
+		//gBack.DrawPath(&gPenBorder, &bgPath);
+		gBack.FillPath(&gBrBack, &bgPath);
+	}
 }
 
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
@@ -210,51 +213,39 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 {
 	CRect rc;
 	GetClientRect(&rc);
-
 	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
 	t |= WS_EX_LAYERED;
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
-	SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), 230, LWA_ALPHA);
-	//SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), m_style.alpha , LWA_ALPHA);
+	SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), 220, LWA_ALPHA);
 	// background
 	{
-		CBrush brush;
-		brush.CreateSolidBrush(m_style.back_color);
 		CRgn rgn;
 		CPoint point(m_style.round_corner, m_style.round_corner);
-		if (m_style.round_corner)
-		{
-			CBrush br2;
-			br2.CreateSolidBrush(m_style.border_color);
-			rgn.CreateRectRgn(rc.left + m_style.border, rc.top + m_style.border, rc.right - m_style.border, rc.bottom - m_style.border);
-			dc.FillRgn(rgn, br2);
-			br2.DeleteObject();
-			rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, point.x, point.y);
-		}
-		else
-		{
-			rgn.CreateRectRgnIndirect(&rc);
-		}
-		dc.FillRgn(rgn, brush);
 
-		CPen pen;
-		pen.CreatePen(PS_SOLID | PS_INSIDEFRAME, m_style.border, m_style.border_color);
-		CPenHandle oldPen = dc.SelectPen(pen);
-		CBrushHandle oldBrush = dc.SelectBrush(brush);
+		Graphics gBack(dc);
+		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+		GraphicsRoundRectPath bgPath;
+		
+		// 坐标修正，起点要-1，终点要+1
+		bgPath.AddRoundRect(rc.left+m_style.border/2 - 1, rc.top+m_style.border/2 - 1, rc.Width()-m_style.border+1, rc.Height()-m_style.border+1, m_style.round_corner, m_style.round_corner);
+
+		Color border_color(GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
+		Color back_color(GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
+		SolidBrush gBrBack(back_color);
+		Pen gPenBorder(border_color, m_style.border);
+
+		gBack.DrawPath(&gPenBorder, &bgPath);
+		gBack.FillPath(&gBrBack, &bgPath);
+
 		if (m_style.round_corner == 0)
 			dc.Rectangle(&rc);
 		else
 		{
-			CRect rc1(rc.left, rc.top, rc.right-m_style.border/2, rc.bottom-m_style.border/2);
-			CPoint p2(point.x - m_style.border/2, point.y - m_style.border/2);
-			dc.RoundRect(rc1, p2);
-			rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, point.x, point.y);
+			rgn.CreateRoundRectRgn(rc.left, rc.top,
+					rc.right+1, rc.bottom+1, point.x*2+1, point.y*2+1);
 			::SetWindowRgn(m_hWnd, rgn, true);
 			rgn.DeleteObject();
-			DeleteObject(rc1);
 		}
-		dc.SelectPen(oldPen);
-		dc.SelectBrush(oldBrush);
 	}
 
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
@@ -299,12 +290,14 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 {
 	Refresh();
 	//CenterWindow();
+	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
 	return TRUE;
 }
 
 LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	GdiplusShutdown(_m_gdiplusToken);
 	return 0;
 }
 
@@ -397,4 +390,31 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 	if (FAILED(_TextOutWithFallback(dc, x, y, rc, psz, cch))) {
 		dc.TextOutW(x, y, psz, cch);
 	}
+}
+
+GraphicsRoundRectPath::GraphicsRoundRectPath(void) : Gdiplus::GraphicsPath()
+{
+
+}
+GraphicsRoundRectPath::GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery) 
+	: Gdiplus::GraphicsPath()
+{
+	AddRoundRect(left, top, width, height, cornerx, cornery);
+}
+
+void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery)
+{
+	int elWid = 2 * cornerx;
+	int elHei = 2 * cornery;
+	AddArc(left, top, elWid, elHei, 180, 90);
+	AddLine(left + cornerx, top, left + width - cornerx, top);
+
+	AddArc(left + width - elWid, top, elWid, elHei, 270, 90);
+	AddLine(left + width, top + cornery, left + width, top + height - cornery);
+
+	AddArc(left + width - elWid, top + height - elHei, elWid, elHei, 0, 90);
+	AddLine(left + width - cornerx, top + height, left + cornerx, top + height);
+
+	AddArc(left, top + height - elHei, elWid, elHei, 90, 90);
+	AddLine(left, top + cornery, left, top + height - cornery);
 }
