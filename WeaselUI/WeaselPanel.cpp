@@ -213,14 +213,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 {
 	CRect rc;
 	GetClientRect(&rc);
-	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
-	t |= WS_EX_LAYERED;
-	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
-	SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), 220, LWA_ALPHA);
 	// background
 	{
 		CRgn rgn;
 		CPoint point(m_style.round_corner, m_style.round_corner);
+		dc.FillRect(&rc, m_style.border_color);
 
 		Graphics gBack(dc);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
@@ -237,15 +234,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.FillPath(&gBrBack, &bgPath);
 
-		if (m_style.round_corner == 0)
-			dc.Rectangle(&rc);
-		else
-		{
-			rgn.CreateRoundRectRgn(rc.left, rc.top,
-					rc.right+1, rc.bottom+1, point.x*2+1, point.y*2+1);
-			::SetWindowRgn(m_hWnd, rgn, true);
-			rgn.DeleteObject();
-		}
+		// 坐标修正
+		rgn.CreateRoundRectRgn(rc.left, rc.top,
+				rc.right+1, rc.bottom+1, point.x*2+1, point.y*2+1);
+		::SetWindowRgn(m_hWnd, rgn, true);
+		rgn.DeleteObject();
 	}
 
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
@@ -292,6 +285,11 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	//CenterWindow();
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
+
+	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
+	t |= WS_EX_LAYERED;
+	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
+	SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), 220, LWA_ALPHA);
 	return TRUE;
 }
 
