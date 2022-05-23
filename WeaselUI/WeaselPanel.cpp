@@ -97,7 +97,6 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 		Color back_color(GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
 		Pen gPenBorder(border_color, 0);
-		//gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.FillPath(&gBrBack, &bgPath);
 	}
 }
@@ -213,27 +212,29 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 {
 	CRect rc;
 	GetClientRect(&rc);
+	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
+	t |= WS_EX_LAYERED;
+	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
+	int alpha = (m_style.back_color >> 24) & 255 ? (m_style.back_color >> 24) : 255;
+	SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), alpha, LWA_ALPHA);
 	// background
 	{
 		CRgn rgn;
 		CPoint point(m_style.round_corner, m_style.round_corner);
-		dc.FillRect(&rc, m_style.border_color);
-
 		Graphics gBack(dc);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		GraphicsRoundRectPath bgPath;
 		
 		// 坐标修正，起点要-1，终点要+1
-		bgPath.AddRoundRect(rc.left+m_style.border/2 - 1, rc.top+m_style.border/2 - 1, rc.Width()-m_style.border+1, rc.Height()-m_style.border+1, m_style.round_corner, m_style.round_corner);
+		bgPath.AddRoundRect(rc.left+m_style.border/2 -1, rc.top+m_style.border/2 - 1, rc.Width()-m_style.border+1, rc.Height()-m_style.border+1, m_style.round_corner, m_style.round_corner);
 
 		Color border_color(GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Color back_color(GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
 		SolidBrush gBrBack(back_color);
-		Pen gPenBorder(border_color, m_style.border);
+		Pen gPenBorder(border_color, m_style.border*2);
 
 		gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.FillPath(&gBrBack, &bgPath);
-
 		// 坐标修正
 		rgn.CreateRoundRectRgn(rc.left, rc.top,
 				rc.right+1, rc.bottom+1, point.x*2+1, point.y*2+1);
@@ -286,10 +287,6 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
 
-	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
-	t |= WS_EX_LAYERED;
-	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
-	SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), 220, LWA_ALPHA);
 	return TRUE;
 }
 
@@ -402,17 +399,27 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(int left, int top, int width, int h
 
 void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery)
 {
-	int elWid = 2 * cornerx;
-	int elHei = 2 * cornery;
-	AddArc(left, top, elWid, elHei, 180, 90);
-	AddLine(left + cornerx, top, left + width - cornerx, top);
+	if(cornery > 0 && cornerx >0)
+	{
+		int elWid = 2 * cornerx;
+		int elHei = 2 * cornery;
+		AddArc(left, top, elWid, elHei, 180, 90);
+		AddLine(left + cornerx, top, left + width - cornerx, top);
 
-	AddArc(left + width - elWid, top, elWid, elHei, 270, 90);
-	AddLine(left + width, top + cornery, left + width, top + height - cornery);
+		AddArc(left + width - elWid, top, elWid, elHei, 270, 90);
+		AddLine(left + width, top + cornery, left + width, top + height - cornery);
 
-	AddArc(left + width - elWid, top + height - elHei, elWid, elHei, 0, 90);
-	AddLine(left + width - cornerx, top + height, left + cornerx, top + height);
+		AddArc(left + width - elWid, top + height - elHei, elWid, elHei, 0, 90);
+		AddLine(left + width - cornerx, top + height, left + cornerx, top + height);
 
-	AddArc(left, top + height - elHei, elWid, elHei, 90, 90);
-	AddLine(left, top + cornery, left, top + height - cornery);
+		AddArc(left, top + height - elHei, elWid, elHei, 90, 90);
+		AddLine(left, top + cornery, left, top + height - cornery);
+	}
+	else
+	{
+		AddLine(left, top, left + width - cornerx, top);
+		AddLine(left + width, top, left + width, top + height);
+		AddLine(left + width, top + height, left, top + height);
+		AddLine(left, top, left, top + height);
+	}
 }
