@@ -3,17 +3,17 @@ pull_requests:
   do_not_increment_build_number: true
 
 version: '{branch} build {build}'
-image: Visual Studio 2017
+image: Visual Studio 2019
 
 environment:
-  BOOST_ROOT: C:\Libraries\boost_1_69_0
-  CMAKE_GENERATOR: Visual Studio 15 2017
-  PLATFORM_TOOLSET: v141_xp
+  BOOST_ROOT: C:\boost_1_79_0
+  CMAKE_GENERATOR: Visual Studio 16 2019
+  PLATFORM_TOOLSET: v142
 
 cache:
   - boost.cached -> appveyor_build_boost.bat
-  - C:\Libraries\boost_1_69_0\stage -> appveyor_build_boost.bat
-  - C:\Libraries\boost_1_69_0\stage_x64 -> appveyor_build_boost.bat
+  - C:\boost_1_76_0\stage -> appveyor_build_boost.bat
+  - C:\boost_1_76_0\stage_x64 -> appveyor_build_boost.bat
 
 init:
   - git --version
