@@ -1,7 +1,7 @@
 ﻿#include "stdafx.h"
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
-#include <Usp10.h>
+//#include <Usp10.h>
 
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
@@ -417,10 +417,222 @@ static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const& rc,
 	return hr;
 }
 
+HBITMAP WeaselPanel::_CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch)
+{
+	int TextLength = cch;//(int)lstrlenW(inText);
+	//if (TextLength <= 0) return NULL;
+	// create DC and select font into it
+	HDC hTextDC = CreateCompatibleDC(NULL);
+	HFONT hOldFont = (HFONT)SelectObject(hTextDC, inFont);
+	HBITMAP hMyDIB = NULL;
+	// get text area
+	RECT TextArea = { 0, 0, 0, 0 };
+	DrawText(hTextDC, inText, TextLength, &TextArea, DT_CALCRECT);
+	if ((TextArea.right > TextArea.left) && (TextArea.bottom > TextArea.top))
+	{
+		BITMAPINFOHEADER BMIH;
+		memset(&BMIH, 0x0, sizeof(BITMAPINFOHEADER));
+		void* pvBits = NULL;
+		// dib setup
+		BMIH.biSize = sizeof(BMIH);
+		BMIH.biWidth = TextArea.right - TextArea.left;
+		BMIH.biHeight = TextArea.bottom - TextArea.top;
+		BMIH.biPlanes = 1;
+		BMIH.biBitCount = 32;
+		BMIH.biCompression = BI_RGB;
+
+		// create and select dib into dc
+		hMyDIB = CreateDIBSection(hTextDC, (LPBITMAPINFO)&BMIH, 0, (LPVOID*)&pvBits, NULL, 0);
+		HBITMAP hOldBMP = (HBITMAP)SelectObject(hTextDC, hMyDIB);
+		if (hOldBMP != NULL)
+		{
+			SetTextColor(hTextDC, 0x00FFFFFF);
+			SetBkColor(hTextDC, 0x00000000);
+			SetBkMode(hTextDC, OPAQUE);
+			// draw text to buffer
+			DrawText(hTextDC, inText, TextLength, &TextArea, DT_NOCLIP);
+			BYTE* DataPtr = (BYTE*)pvBits;
+			BYTE FillR = GetRValue(inColor);
+			BYTE FillG = GetGValue(inColor);
+			BYTE FillB = GetBValue(inColor);
+			BYTE ThisA;
+
+			for (int LoopY = 0; LoopY < BMIH.biHeight; LoopY++)
+			{
+				for (int LoopX = 0; LoopX < BMIH.biWidth; LoopX++)
+				{
+					ThisA = *DataPtr; // move alpha and premutiply with rgb
+					*DataPtr++ = (FillB * ThisA) >> 8;
+					*DataPtr++ = (FillG * ThisA) >> 8;
+					*DataPtr++ = (FillR * ThisA) >> 8;
+					*DataPtr++ = ThisA;
+				}
+			}
+			SelectObject(hTextDC, hOldBMP);
+		}
+	}
+	SelectObject(hTextDC, hOldFont);
+	DeleteDC(hTextDC);
+	return hMyDIB;
+	//return HBITMAP();
+}
+HBITMAP WeaselPanel::_CreateAlphaTextBitmapSSO(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch, HRESULT *hr, SCRIPT_STRING_ANALYSIS* ssa, CRect const& rc)
+{
+	int TextLength = cch;//(int)lstrlenW(inText);
+	//if (TextLength <= 0) return NULL;
+	// create DC and select font into it
+	HDC hTextDC = CreateCompatibleDC(NULL);
+	HFONT hOldFont = (HFONT)SelectObject(hTextDC, inFont);
+	HBITMAP hMyDIB = NULL;
+	// get text area
+	RECT TextArea = { 0, 0, 0, 0 };
+	//DrawText(hTextDC, inText, TextLength, &TextArea, DT_CALCRECT);
+	*hr = ScriptStringOut(*ssa, 0, 0, 0, rc, 0, 0, FALSE);
+	//if ((TextArea.right > TextArea.left) && (TextArea.bottom > TextArea.top))
+	{
+		BITMAPINFOHEADER BMIH;
+		memset(&BMIH, 0x0, sizeof(BITMAPINFOHEADER));
+		void* pvBits = NULL;
+		// dib setup
+		BMIH.biSize = sizeof(BMIH);
+		BMIH.biWidth = rc.right - rc.left; // TextArea.right - TextArea.left;
+		BMIH.biHeight = rc.bottom - rc.top;// TextArea.bottom - TextArea.top;
+		BMIH.biPlanes = 1;
+		BMIH.biBitCount = 32;
+		BMIH.biCompression = BI_RGB;
+
+		// create and select dib into dc
+		hMyDIB = CreateDIBSection(hTextDC, (LPBITMAPINFO)&BMIH, 0, (LPVOID*)&pvBits, NULL, 0);
+		HBITMAP hOldBMP = (HBITMAP)SelectObject(hTextDC, hMyDIB);
+		if (hOldBMP != NULL)
+		{
+			SetTextColor(hTextDC, 0x00FFFFFF);
+			SetBkColor(hTextDC, 0x00000000);
+			SetBkMode(hTextDC, OPAQUE);
+			// draw text to buffer
+			//DrawText(hTextDC, inText, TextLength, &TextArea, DT_NOCLIP);
+			*hr = ScriptStringOut(*ssa, 0, 0, 0, rc, 0, 0, FALSE);
+			BYTE* DataPtr = (BYTE*)pvBits;
+			BYTE FillR = GetRValue(inColor);
+			BYTE FillG = GetGValue(inColor);
+			BYTE FillB = GetBValue(inColor);
+			BYTE ThisA;
+
+			for (int LoopY = 0; LoopY < BMIH.biHeight; LoopY++)
+			{
+				for (int LoopX = 0; LoopX < BMIH.biWidth; LoopX++)
+				{
+					ThisA = *DataPtr; // move alpha and premutiply with rgb
+					*DataPtr++ = (FillB * ThisA) >> 8;
+					*DataPtr++ = (FillG * ThisA) >> 8;
+					*DataPtr++ = (FillR * ThisA) >> 8;
+					*DataPtr++ = ThisA;
+				}
+			}
+			SelectObject(hTextDC, hOldBMP);
+		}
+	}
+	SelectObject(hTextDC, hOldFont);
+	DeleteDC(hTextDC);
+	return hMyDIB;
+	//return HBITMAP();
+}
+HRESULT WeaselPanel::_TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
+{
+    SCRIPT_STRING_ANALYSIS ssa;
+    HRESULT hr;
+
+    hr = ScriptStringAnalyse(
+        dc,
+        psz, cch,
+        2 * cch + 16,
+        -1,
+        SSA_GLYPHS|SSA_FALLBACK|SSA_LINK,
+        0,
+        NULL, // control
+        NULL, // state
+        NULL, // piDx
+        NULL,
+        NULL, // pbInClass
+        &ssa);
+
+    if (SUCCEEDED(hr))
+    {
+		/*
+        hr = ScriptStringOut(
+            ssa, x, y, 0,
+            &rc,
+            0, 0, FALSE);
+			*/
+
+		HFONT TempFont = dc.GetCurrentFont();
+		HBITMAP MyBMP = _CreateAlphaTextBitmapSSO(psz, dc.GetCurrentFont(), dc.GetTextColor(), cch, &hr, &ssa, &rc);
+		DeleteObject(TempFont);
+		if (MyBMP)
+		{
+			// temporary dc select bmp into it
+			HDC hTempDC = CreateCompatibleDC(dc);
+			HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
+			if (hOldBMP)
+			{
+				BITMAP BMInf;
+				GetObject(MyBMP, sizeof(BITMAP), &BMInf);
+				// fill blend function and blend new text to window
+				BLENDFUNCTION bf;
+				bf.BlendOp = AC_SRC_OVER;
+				bf.BlendFlags = 0;
+				bf.SourceConstantAlpha = 255;
+				bf.AlphaFormat = AC_SRC_ALPHA;
+				AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
+				// clean up
+				SelectObject(hTempDC, hOldBMP);
+				DeleteObject(MyBMP);
+				DeleteDC(hTempDC);
+			}
+		}
+    }
+
+	ScriptStringFree(&ssa);
+	return hr;
+}
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
 {
-	if (FAILED(_TextOutWithFallback(dc, x, y, rc, psz, cch))) {
-		dc.TextOutW(x, y, psz, cch);
+	//if (FAILED(_TextOutWithFallback(dc, x, y, rc, psz, cch))) 
+	//if (FAILED(_TextOutWithFallback_ULW(dc, x, y, rc, psz, cch))) 
+	{
+		//dc.TextOutW(x, y, psz, cch);
+		//HFONT TempFont = dc.GetCurrentFont();
+
+		long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
+		CFont font;
+		font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
+		//CFontHandle oldFont = memDC.SelectFont(font);
+
+		HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
+		//DeleteObject(TempFont);
+		DeleteObject(font);
+		if (MyBMP)
+		{
+			// temporary dc select bmp into it
+			HDC hTempDC = CreateCompatibleDC(dc);
+			HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
+			if (hOldBMP)
+			{
+				BITMAP BMInf;
+				GetObject(MyBMP, sizeof(BITMAP), &BMInf);
+				// fill blend function and blend new text to window
+				BLENDFUNCTION bf;
+				bf.BlendOp = AC_SRC_OVER;
+				bf.BlendFlags = 0;
+				bf.SourceConstantAlpha = 255;
+				bf.AlphaFormat = AC_SRC_ALPHA;
+				AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
+				// clean up
+				SelectObject(hTempDC, hOldBMP);
+				DeleteObject(MyBMP);
+				DeleteDC(hTempDC);
+			}
+		}
 	}
 }
 

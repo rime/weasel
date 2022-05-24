@@ -2,6 +2,7 @@
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
 #include "Layout.h"
+#include <Usp10.h>
 
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
@@ -40,6 +41,9 @@ private:
 	bool _DrawCandidates(CDCHandle dc);
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch);
+	HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch);
+	HBITMAP _CreateAlphaTextBitmapSSO(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch, HRESULT* hr, SCRIPT_STRING_ANALYSIS* ssa, CRect const& rc);
+	HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch);
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
