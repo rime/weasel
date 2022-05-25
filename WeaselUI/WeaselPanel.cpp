@@ -93,10 +93,9 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		GraphicsRoundRectPath bgPath;
 		bgPath.AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
-		Color border_color(GetRValue(color), GetGValue(color), GetBValue(color));
-		Color back_color(GetRValue(color), GetGValue(color), GetBValue(color));
+		BYTE alpha = (BYTE)((color >> 24) & 255 ? (color >> 24) & 255 : 255);
+		Color back_color = Color::MakeARGB(alpha, GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
-		Pen gPenBorder(border_color, 0);
 		gBack.FillPath(&gBrBack, &bgPath);
 	}
 }
@@ -213,9 +212,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// background start
 	CRect rc;
 	GetClientRect(&rc);
-	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
-	t |= WS_EX_LAYERED;
-	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
 
 	SIZE sz = { rc.right - rc.left, rc.bottom - rc.top };
 	CDCHandle hdc = ::GetDC(m_hWnd);
@@ -230,10 +226,12 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	
 	bgPath.AddRoundRect(rc.left+m_style.border, rc.top+m_style.border, rc.Width()-m_style.border*2, rc.Height()-m_style.border*2, m_style.round_corner, m_style.round_corner);
 
-	Color border_color(GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
-	Color back_color(GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
+	int alpha = ((m_style.border_color >> 24) & 255) > 0 ? ((m_style.border_color >> 24) & 255) : 255;
+	Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
+	alpha = ((m_style.back_color >> 24) & 255) > 0 ? ((m_style.back_color >> 24) & 255) : 255;
+	Color back_color = Color::MakeARGB(alpha, GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
 	SolidBrush gBrBack(back_color);
-	Pen gPenBorder(border_color, m_style.border*2);
+	Pen gPenBorder(border_color, m_style.border);
 
 	gBack.DrawPath(&gPenBorder, &bgPath);
 	gBack.FillPath(&gBrBack, &bgPath);
@@ -282,12 +280,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	POINT ptSrc = { rect.left, rect.top };
 	POINT ptDest = { rc.left, rc.top };
 
-	int alpha = ((m_style.back_color >> 24) & 255) > 0 ? ((m_style.back_color >> 24) & 255) : 255;
 	BLENDFUNCTION bf;
 	bf.AlphaFormat = AC_SRC_ALPHA;
 	bf.BlendFlags = 0;
 	bf.BlendOp = AC_SRC_OVER;
-	bf.SourceConstantAlpha = alpha;
+	bf.SourceConstantAlpha = 255;
 	::UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, memDC, &ptDest, RGB(0,0,0), &bf, ULW_ALPHA);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
@@ -297,6 +294,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
+	t |= WS_EX_LAYERED;
+	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
 	Refresh();
 	//CenterWindow();
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
@@ -492,6 +492,7 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 		MyBMP = CreateDIBSection(hTextDC, (LPBITMAPINFO)&BMIH, 0, (LPVOID*)&pvBits, NULL, 0);
 		HBITMAP hOldBMP = (HBITMAP)SelectObject(hTextDC, MyBMP);
 		COLORREF inColor = dc.GetTextColor();
+		BYTE alpha = (inColor >> 24) & 255 > 0 ? ((inColor >> 24) & 255) : 255;
 		if (hOldBMP != NULL)
 		{
 			SetTextColor(hTextDC, 0x00FFFFFF);
@@ -533,7 +534,7 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 				BLENDFUNCTION bf;
 				bf.BlendOp = AC_SRC_OVER;
 				bf.BlendFlags = 0;
-				bf.SourceConstantAlpha = 255;
+				bf.SourceConstantAlpha = alpha;
 				bf.AlphaFormat = AC_SRC_ALPHA;
 				AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
 				// clean up
@@ -560,6 +561,7 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 		DeleteObject(font);
 		if (MyBMP)
 		{
+			BYTE alpha = (BYTE)((dc.GetTextColor() >> 24) & 255 ? (dc.GetTextColor() >> 24) & 255 : 255);
 			// temporary dc select bmp into it
 			HDC hTempDC = CreateCompatibleDC(dc);
 			HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
@@ -571,7 +573,7 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 				BLENDFUNCTION bf;
 				bf.BlendOp = AC_SRC_OVER;
 				bf.BlendFlags = 0;
-				bf.SourceConstantAlpha = 255;
+				bf.SourceConstantAlpha = alpha;
 				bf.AlphaFormat = AC_SRC_ALPHA;
 				AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
 				// clean up
