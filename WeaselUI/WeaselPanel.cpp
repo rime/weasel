@@ -210,56 +210,35 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
-	//RedrawWindow();
+	// background start
 	CRect rc;
 	GetClientRect(&rc);
 	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
 	t |= WS_EX_LAYERED;
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
-	//int alpha = (m_style.back_color >> 24) & 255 ? (m_style.back_color >> 24) : 255;
-	//SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), alpha, LWA_ALPHA);
-	// background
-	//{
 
-#if 0	
-		HDC screenDC = ::GetDC(NULL);
-		CRect rect;
-		GetWindowRect(&rect);
-		POINT ptSrc = { rect.left, rect.top };
-		POINT ptDest = { 0,0 };
-		BitBlt(dc, ptDest.x, ptDest.y, rect.Width(), rect.Height(), screenDC, ptSrc.x, ptSrc.y, SRCCOPY);
-		ReleaseDC(screenDC);
-#endif
-		SIZE sz = { rc.right - rc.left, rc.bottom - rc.top };
-		CDCHandle hdc = ::GetDC(m_hWnd);
-		CDCHandle memDC = ::CreateCompatibleDC(hdc);
-		HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
-		::SelectObject(memDC, memBitmap);
+	SIZE sz = { rc.right - rc.left, rc.bottom - rc.top };
+	CDCHandle hdc = ::GetDC(m_hWnd);
+	CDCHandle memDC = ::CreateCompatibleDC(hdc);
+	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
+	::SelectObject(memDC, memBitmap);
 
-		CRgn rgn;
-		CPoint point(m_style.round_corner, m_style.round_corner);
-		Graphics gBack(memDC);
-		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-		GraphicsRoundRectPath bgPath;
-		
-		// 坐标修正，起点要-1，终点要+1
-		//bgPath.AddRoundRect(rc.left+m_style.border/2 -1, rc.top+m_style.border/2 - 1, rc.Width()-m_style.border+1, rc.Height()-m_style.border+1, m_style.round_corner*2, m_style.round_corner*2);
-		bgPath.AddRoundRect(rc.left+m_style.border, rc.top+m_style.border, rc.Width()-m_style.border*2, rc.Height()-m_style.border*2, m_style.round_corner, m_style.round_corner);
+	CPoint point(m_style.round_corner, m_style.round_corner);
+	Graphics gBack(memDC);
+	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+	GraphicsRoundRectPath bgPath;
+	
+	bgPath.AddRoundRect(rc.left+m_style.border, rc.top+m_style.border, rc.Width()-m_style.border*2, rc.Height()-m_style.border*2, m_style.round_corner, m_style.round_corner);
 
-		Color border_color(GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
-		Color back_color(GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
-		SolidBrush gBrBack(back_color);
-		Pen gPenBorder(border_color, m_style.border*2);
+	Color border_color(GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
+	Color back_color(GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
+	SolidBrush gBrBack(back_color);
+	Pen gPenBorder(border_color, m_style.border*2);
 
-		gBack.DrawPath(&gPenBorder, &bgPath);
-		gBack.FillPath(&gBrBack, &bgPath);
-		gBack.ReleaseHDC(memDC);
-		// 坐标修正
-		//rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right+1, rc.bottom+1, point.x*2+1, point.y*2+1);
-		//::SetWindowRgn(m_hWnd, rgn, true);
-		rgn.DeleteObject();
-	//}
-
+	gBack.DrawPath(&gPenBorder, &bgPath);
+	gBack.FillPath(&gBrBack, &bgPath);
+	gBack.ReleaseHDC(memDC);
+	// background end
 	long height = -MulDiv(m_style.font_point, memDC.GetDeviceCaps(LOGPIXELSY), 72);
 
 	CFont font;
@@ -306,7 +285,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	int alpha = ((m_style.back_color >> 24) & 255) > 0 ? ((m_style.back_color >> 24) & 255) : 255;
 	BLENDFUNCTION bf;
 	bf.AlphaFormat = AC_SRC_ALPHA;
-	//bf.AlphaFormat = 0;
 	bf.BlendFlags = 0;
 	bf.BlendOp = AC_SRC_OVER;
 	bf.SourceConstantAlpha = alpha;
@@ -419,15 +397,12 @@ static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const& rc,
 
 HBITMAP WeaselPanel::_CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch)
 {
-	int TextLength = cch;//(int)lstrlenW(inText);
-	//if (TextLength <= 0) return NULL;
-	// create DC and select font into it
 	HDC hTextDC = CreateCompatibleDC(NULL);
 	HFONT hOldFont = (HFONT)SelectObject(hTextDC, inFont);
 	HBITMAP hMyDIB = NULL;
 	// get text area
 	RECT TextArea = { 0, 0, 0, 0 };
-	DrawText(hTextDC, inText, TextLength, &TextArea, DT_CALCRECT);
+	DrawText(hTextDC, inText, cch, &TextArea, DT_CALCRECT);
 	if ((TextArea.right > TextArea.left) && (TextArea.bottom > TextArea.top))
 	{
 		BITMAPINFOHEADER BMIH;
@@ -450,7 +425,7 @@ HBITMAP WeaselPanel::_CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORR
 			SetBkColor(hTextDC, 0x00000000);
 			SetBkMode(hTextDC, OPAQUE);
 			// draw text to buffer
-			DrawText(hTextDC, inText, TextLength, &TextArea, DT_NOCLIP);
+			DrawText(hTextDC, inText, cch, &TextArea, DT_NOCLIP);
 			BYTE* DataPtr = (BYTE*)pvBits;
 			BYTE FillR = GetRValue(inColor);
 			BYTE FillG = GetGValue(inColor);
@@ -474,76 +449,22 @@ HBITMAP WeaselPanel::_CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORR
 	SelectObject(hTextDC, hOldFont);
 	DeleteDC(hTextDC);
 	return hMyDIB;
-	//return HBITMAP();
 }
-HBITMAP WeaselPanel::_CreateAlphaTextBitmapSSO(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch, HRESULT *hr, SCRIPT_STRING_ANALYSIS* ssa, CRect const& rc)
-{
-	int TextLength = cch;//(int)lstrlenW(inText);
-	//if (TextLength <= 0) return NULL;
-	// create DC and select font into it
-	HDC hTextDC = CreateCompatibleDC(NULL);
-	HFONT hOldFont = (HFONT)SelectObject(hTextDC, inFont);
-	HBITMAP hMyDIB = NULL;
-	// get text area
-	RECT TextArea = { 0, 0, 0, 0 };
-	//DrawText(hTextDC, inText, TextLength, &TextArea, DT_CALCRECT);
-	*hr = ScriptStringOut(*ssa, 0, 0, 0, rc, 0, 0, FALSE);
-	//if ((TextArea.right > TextArea.left) && (TextArea.bottom > TextArea.top))
-	{
-		BITMAPINFOHEADER BMIH;
-		memset(&BMIH, 0x0, sizeof(BITMAPINFOHEADER));
-		void* pvBits = NULL;
-		// dib setup
-		BMIH.biSize = sizeof(BMIH);
-		BMIH.biWidth = rc.right - rc.left; // TextArea.right - TextArea.left;
-		BMIH.biHeight = rc.bottom - rc.top;// TextArea.bottom - TextArea.top;
-		BMIH.biPlanes = 1;
-		BMIH.biBitCount = 32;
-		BMIH.biCompression = BI_RGB;
 
-		// create and select dib into dc
-		hMyDIB = CreateDIBSection(hTextDC, (LPBITMAPINFO)&BMIH, 0, (LPVOID*)&pvBits, NULL, 0);
-		HBITMAP hOldBMP = (HBITMAP)SelectObject(hTextDC, hMyDIB);
-		if (hOldBMP != NULL)
-		{
-			SetTextColor(hTextDC, 0x00FFFFFF);
-			SetBkColor(hTextDC, 0x00000000);
-			SetBkMode(hTextDC, OPAQUE);
-			// draw text to buffer
-			//DrawText(hTextDC, inText, TextLength, &TextArea, DT_NOCLIP);
-			*hr = ScriptStringOut(*ssa, 0, 0, 0, rc, 0, 0, FALSE);
-			BYTE* DataPtr = (BYTE*)pvBits;
-			BYTE FillR = GetRValue(inColor);
-			BYTE FillG = GetGValue(inColor);
-			BYTE FillB = GetBValue(inColor);
-			BYTE ThisA;
-
-			for (int LoopY = 0; LoopY < BMIH.biHeight; LoopY++)
-			{
-				for (int LoopX = 0; LoopX < BMIH.biWidth; LoopX++)
-				{
-					ThisA = *DataPtr; // move alpha and premutiply with rgb
-					*DataPtr++ = (FillB * ThisA) >> 8;
-					*DataPtr++ = (FillG * ThisA) >> 8;
-					*DataPtr++ = (FillR * ThisA) >> 8;
-					*DataPtr++ = ThisA;
-				}
-			}
-			SelectObject(hTextDC, hOldBMP);
-		}
-	}
-	SelectObject(hTextDC, hOldFont);
-	DeleteDC(hTextDC);
-	return hMyDIB;
-	//return HBITMAP();
-}
-HRESULT WeaselPanel::_TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
+// textout for UpdateLayeredWindow
+static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const rc, LPCWSTR psz, int cch, long height, std::wstring fontface)
 {
     SCRIPT_STRING_ANALYSIS ssa;
     HRESULT hr;
+	CFont font;
+	font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, fontface.c_str());
+	int TextLength = cch;
+	HDC hTextDC = CreateCompatibleDC(NULL);
+	HFONT hOldFont = (HFONT)SelectObject(hTextDC, font);
+	HBITMAP MyBMP = NULL;
 
     hr = ScriptStringAnalyse(
-        dc,
+        hTextDC,
         psz, cch,
         2 * cch + 16,
         -1,
@@ -558,16 +479,47 @@ HRESULT WeaselPanel::_TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect 
 
     if (SUCCEEDED(hr))
     {
-		/*
-        hr = ScriptStringOut(
-            ssa, x, y, 0,
-            &rc,
-            0, 0, FALSE);
-			*/
 
-		HFONT TempFont = dc.GetCurrentFont();
-		HBITMAP MyBMP = _CreateAlphaTextBitmapSSO(psz, dc.GetCurrentFont(), dc.GetTextColor(), cch, &hr, &ssa, &rc);
-		DeleteObject(TempFont);
+		BITMAPINFOHEADER BMIH;
+		memset(&BMIH, 0x0, sizeof(BITMAPINFOHEADER));
+		void* pvBits = NULL;
+		BMIH.biSize = sizeof(BMIH);
+		BMIH.biWidth = rc.right - rc.left;
+		BMIH.biHeight = rc.bottom - rc.top;
+		BMIH.biPlanes = 1;
+		BMIH.biBitCount = 32;
+		BMIH.biCompression = BI_RGB;
+		MyBMP = CreateDIBSection(hTextDC, (LPBITMAPINFO)&BMIH, 0, (LPVOID*)&pvBits, NULL, 0);
+		HBITMAP hOldBMP = (HBITMAP)SelectObject(hTextDC, MyBMP);
+		COLORREF inColor = dc.GetTextColor();
+		if (hOldBMP != NULL)
+		{
+			SetTextColor(hTextDC, 0x00FFFFFF);
+			SetBkColor(hTextDC, 0x00000000);
+			SetBkMode(hTextDC, OPAQUE);
+			// draw text to buffer
+			hr = ScriptStringOut(ssa, 0, 0, 0, rc, 0, 0, FALSE);
+			BYTE* DataPtr = (BYTE*)pvBits;
+			BYTE FillR = GetRValue(inColor);
+			BYTE FillG = GetGValue(inColor);
+			BYTE FillB = GetBValue(inColor);
+			BYTE ThisA;
+			for (int LoopY = 0; LoopY < BMIH.biHeight; LoopY++)
+			{
+				for (int LoopX = 0; LoopX < BMIH.biWidth; LoopX++)
+				{
+					ThisA = *DataPtr; // move alpha and premutiply with rgb
+					*DataPtr++ = (FillB * ThisA) >> 8;
+					*DataPtr++ = (FillG * ThisA) >> 8;
+					*DataPtr++ = (FillR * ThisA) >> 8;
+					*DataPtr++ = ThisA;
+				}
+			}
+			SelectObject(hTextDC, hOldBMP);
+		}
+		SelectObject(hTextDC, hOldFont);
+		DeleteDC(hTextDC);
+		DeleteObject(font);
 		if (MyBMP)
 		{
 			// temporary dc select bmp into it
@@ -597,19 +549,14 @@ HRESULT WeaselPanel::_TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect 
 }
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
 {
-	//if (FAILED(_TextOutWithFallback(dc, x, y, rc, psz, cch))) 
-	//if (FAILED(_TextOutWithFallback_ULW(dc, x, y, rc, psz, cch))) 
+	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	if (FAILED(_TextOutWithFallback_ULW(dc, x, y, rc, psz, cch, height, m_style.font_face ))) 
 	{
-		//dc.TextOutW(x, y, psz, cch);
-		//HFONT TempFont = dc.GetCurrentFont();
-
 		long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 		CFont font;
 		font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-		//CFontHandle oldFont = memDC.SelectFont(font);
 
 		HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
-		//DeleteObject(TempFont);
 		DeleteObject(font);
 		if (MyBMP)
 		{
@@ -653,22 +600,20 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 		int elWid = 2 * cornerx;
 		int elHei = 2 * cornery;
 		AddArc(left, top, elWid, elHei, 180, 90);
-		AddLine(left + cornerx, top, left + width - cornerx, top);
+		AddLine(left + cornerx - 1, top, left + width - cornerx + 1, top);
 
 		AddArc(left + width - elWid, top, elWid, elHei, 270, 90);
-		AddLine(left + width, top + cornery, left + width, top + height - cornery);
+		AddLine(left + width, top + cornery-1, left + width, top + height - cornery+1);
 
 		AddArc(left + width - elWid, top + height - elHei, elWid, elHei, 0, 90);
-		AddLine(left + width - cornerx, top + height, left + cornerx, top + height);
+		AddLine(left + width - cornerx+1, top + height, left + cornerx-1, top + height);
 
 		AddArc(left, top + height - elHei, elWid, elHei, 90, 90);
-		AddLine(left, top + cornery, left, top + height - cornery);
+		AddLine(left, top + cornery-1, left, top + height - cornery+1);
 	}
 	else
 	{
-		AddLine(left, top, left + width - cornerx, top);
-		AddLine(left + width, top, left + width, top + height);
-		AddLine(left + width, top + height, left, top + height);
-		AddLine(left, top, left, top + height);
+		Gdiplus::Rect& rc = Rect(left, top, width, height);
+		AddRectangle(rc);
 	}
 }

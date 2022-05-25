@@ -42,8 +42,6 @@ private:
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch);
 	HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch);
-	HBITMAP _CreateAlphaTextBitmapSSO(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch, HRESULT* hr, SCRIPT_STRING_ANALYSIS* ssa, CRect const& rc);
-	HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch);
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
