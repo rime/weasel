@@ -164,9 +164,11 @@ namespace weasel
 		int hilite_spacing;
 		int hilite_padding;
 		int round_corner;
+		int round_corner_ex;
 		// color scheme
 		int text_color;
 		int candidate_text_color;
+		int candidate_back_color;
 		int label_text_color;
 		int comment_text_color;
 		int back_color;
@@ -197,8 +199,10 @@ namespace weasel
 			hilite_spacing(0),
 			hilite_padding(0),
 			round_corner(0),
+			round_corner_ex(0),
 			text_color(0),
 			candidate_text_color(0),
+			candidate_back_color(0),
 			label_text_color(0),
 			comment_text_color(0),
 			back_color(0),
@@ -235,9 +239,11 @@ namespace boost {
 			ar & s.hilite_spacing;
 			ar & s.hilite_padding;
 			ar & s.round_corner;
+			ar & s.round_corner_ex;
 			// color scheme
 			ar & s.text_color;
 			ar & s.candidate_text_color;
+			ar & s.candidate_back_color;
 			ar & s.label_text_color;
 			ar & s.comment_text_color;
 			ar & s.back_color;

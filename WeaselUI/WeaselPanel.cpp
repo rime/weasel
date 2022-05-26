@@ -173,7 +173,15 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			dc.SetTextColor(m_style.hilited_label_text_color);
 		}
 		else
+		{
+			CRect candidateBackRect;
+			candidateBackRect.left = m_layout->GetCandidateLabelRect(i).left;
+			candidateBackRect.right = m_layout->GetCandidateCommentRect(i).right;
+			candidateBackRect.top = m_layout->GetCandidateLabelRect(i).top;
+			candidateBackRect.bottom = m_layout->GetCandidateLabelRect(i).bottom;
+			_HighlightText(dc, candidateBackRect, m_style.candidate_back_color);
 			dc.SetTextColor(m_style.label_text_color);
+		}
 
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
@@ -224,7 +232,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 	GraphicsRoundRectPath bgPath;
 	
-	bgPath.AddRoundRect(rc.left+m_style.border, rc.top+m_style.border, rc.Width()-m_style.border*2, rc.Height()-m_style.border*2, m_style.round_corner, m_style.round_corner);
+	bgPath.AddRoundRect(rc.left+m_style.border, rc.top+m_style.border, rc.Width()-m_style.border*2, rc.Height()-m_style.border*2, m_style.round_corner_ex, m_style.round_corner_ex);
 
 	int alpha = ((m_style.border_color >> 24) & 255) > 0 ? ((m_style.border_color >> 24) & 255) : 255;
 	Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));

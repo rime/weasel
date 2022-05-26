@@ -617,6 +617,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
 	RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner);
+	RimeConfigGetInt(config, "style/layout/round_corner_ex", &style.round_corner_ex);
 	// color scheme
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
 	{
@@ -626,6 +627,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		if (!RimeConfigGetInt(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color))
 		{
 			style.candidate_text_color = style.text_color;
+		}
+		if (!RimeConfigGetInt(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color))
+		{
+			style.candidate_back_color = style.back_color;
 		}
 		RimeConfigGetInt(config, (prefix + "/back_color").c_str(), &style.back_color);
 		if (!RimeConfigGetInt(config, (prefix + "/border_color").c_str(), &style.border_color))
