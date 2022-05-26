@@ -607,19 +607,22 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 {
 	if(cornery > 0 && cornerx >0)
 	{
-		int elWid = 2 * cornerx;
-		int elHei = 2 * cornery;
+		int cnx = ((cornerx*2 <= width) ? cornerx : (width/2));
+		int cny = ((cornery*2 <= height) ? cornery : (height/2));
+		int elWid = 2 * cnx;
+		int elHei = 2 * cny;
+
 		AddArc(left, top, elWid, elHei, 180, 90);
-		AddLine(left + cornerx - 1, top, left + width - cornerx + 1, top);
+		AddLine(left + cnx , top, left + width - cnx , top);
 
 		AddArc(left + width - elWid, top, elWid, elHei, 270, 90);
-		AddLine(left + width, top + cornery-1, left + width, top + height - cornery+1);
+		AddLine(left + width, top + cny, left + width, top + height - cny);
 
 		AddArc(left + width - elWid, top + height - elHei, elWid, elHei, 0, 90);
-		AddLine(left + width - cornerx+1, top + height, left + cornerx-1, top + height);
+		AddLine(left + width - cnx, top + height, left + cnx, top + height);
 
 		AddArc(left, top + height - elHei, elWid, elHei, 90, 90);
-		AddLine(left, top + cornery-1, left, top + height - cornery+1);
+		AddLine(left, top + cny, left, top + height - cny);
 	}
 	else
 	{
