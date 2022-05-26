@@ -226,24 +226,27 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	CDCHandle memDC = ::CreateCompatibleDC(hdc);
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 	::SelectObject(memDC, memBitmap);
+	// 获取候选数，消除当候选数为0，又处于inline_preedit状态时出现一個空白的小方框或者圆角矩形的情况
+	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+	if(!(candidates.size()==0 && m_style.inline_preedit))
+	{
+		Graphics gBack(memDC);
+		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+		GraphicsRoundRectPath bgPath;
 
-	CPoint point(m_style.round_corner, m_style.round_corner);
-	Graphics gBack(memDC);
-	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-	GraphicsRoundRectPath bgPath;
-	
-	bgPath.AddRoundRect(rc.left+m_style.border, rc.top+m_style.border, rc.Width()-m_style.border*2, rc.Height()-m_style.border*2, m_style.round_corner_ex, m_style.round_corner_ex);
+		bgPath.AddRoundRect(rc.left+m_style.border, rc.top+m_style.border, rc.Width()-m_style.border*2, rc.Height()-m_style.border*2, m_style.round_corner_ex, m_style.round_corner_ex);
 
-	int alpha = ((m_style.border_color >> 24) & 255) > 0 ? ((m_style.border_color >> 24) & 255) : 255;
-	Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
-	alpha = ((m_style.back_color >> 24) & 255) > 0 ? ((m_style.back_color >> 24) & 255) : 255;
-	Color back_color = Color::MakeARGB(alpha, GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
-	SolidBrush gBrBack(back_color);
-	Pen gPenBorder(border_color, m_style.border);
+		int alpha = ((m_style.border_color >> 24) & 255) > 0 ? ((m_style.border_color >> 24) & 255) : 255;
+		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
+		alpha = ((m_style.back_color >> 24) & 255) > 0 ? ((m_style.back_color >> 24) & 255) : 255;
+		Color back_color = Color::MakeARGB(alpha, GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
+		SolidBrush gBrBack(back_color);
+		Pen gPenBorder(border_color, m_style.border);
 
-	gBack.DrawPath(&gPenBorder, &bgPath);
-	gBack.FillPath(&gBrBack, &bgPath);
-	gBack.ReleaseHDC(memDC);
+		gBack.DrawPath(&gPenBorder, &bgPath);
+		gBack.FillPath(&gBrBack, &bgPath);
+		gBack.ReleaseHDC(memDC);
+	}
 	// background end
 	long height = -MulDiv(m_style.font_point, memDC.GetDeviceCaps(LOGPIXELSY), 72);
 
