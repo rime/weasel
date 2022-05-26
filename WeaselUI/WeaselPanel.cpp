@@ -175,8 +175,16 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		else
 		{
 			CRect candidateBackRect;
-			candidateBackRect.left = m_layout->GetCandidateLabelRect(i).left;
-			candidateBackRect.right = m_layout->GetCandidateCommentRect(i).right;
+			if(m_style.layout_type == m_style.LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == m_style.LAYOUT_HORIZONTAL)
+			{
+				candidateBackRect.left = m_layout->GetCandidateLabelRect(i).left;
+				candidateBackRect.right = m_layout->GetCandidateCommentRect(i).right;
+			}
+			else
+			{
+				candidateBackRect.left = m_layout->GetHighlightRect().left;
+				candidateBackRect.right = m_layout->GetHighlightRect().right;
+			}
 			candidateBackRect.top = m_layout->GetCandidateLabelRect(i).top;
 			candidateBackRect.bottom = m_layout->GetCandidateLabelRect(i).bottom;
 			_HighlightText(dc, candidateBackRect, m_style.candidate_back_color);
