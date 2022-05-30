@@ -93,7 +93,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		GraphicsRoundRectPath bgPath;
 		bgPath.AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
-		BYTE alpha = (BYTE)((color >> 24) & 255 ? (color >> 24) & 255 : 255);
+		BYTE alpha = (BYTE)((color >> 24) & 255);
 		Color back_color = Color::MakeARGB(alpha, GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
 		gBack.FillPath(&gBrBack, &bgPath);
@@ -244,9 +244,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 		bgPath.AddRoundRect(rc.left+m_style.border, rc.top+m_style.border, rc.Width()-m_style.border*2, rc.Height()-m_style.border*2, m_style.round_corner_ex, m_style.round_corner_ex);
 
-		int alpha = ((m_style.border_color >> 24) & 255) > 0 ? ((m_style.border_color >> 24) & 255) : 255;
+		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
-		alpha = ((m_style.back_color >> 24) & 255) > 0 ? ((m_style.back_color >> 24) & 255) : 255;
+		alpha = (m_style.back_color >> 24) & 255;
 		Color back_color = Color::MakeARGB(alpha, GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
 		SolidBrush gBrBack(back_color);
 		Pen gPenBorder(border_color, m_style.border);
@@ -511,7 +511,7 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 		MyBMP = CreateDIBSection(hTextDC, (LPBITMAPINFO)&BMIH, 0, (LPVOID*)&pvBits, NULL, 0);
 		HBITMAP hOldBMP = (HBITMAP)SelectObject(hTextDC, MyBMP);
 		COLORREF inColor = dc.GetTextColor();
-		BYTE alpha = (inColor >> 24) & 255 > 0 ? ((inColor >> 24) & 255) : 255;
+		BYTE alpha = (inColor >> 24) & 255 ;
 		if (hOldBMP != NULL)
 		{
 			SetTextColor(hTextDC, 0x00FFFFFF);
@@ -580,7 +580,7 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 		DeleteObject(font);
 		if (MyBMP)
 		{
-			BYTE alpha = (BYTE)((dc.GetTextColor() >> 24) & 255 ? (dc.GetTextColor() >> 24) & 255 : 255);
+			BYTE alpha = (BYTE)((dc.GetTextColor() >> 24) & 255) ;
 			// temporary dc select bmp into it
 			HDC hTempDC = CreateCompatibleDC(dc);
 			HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
