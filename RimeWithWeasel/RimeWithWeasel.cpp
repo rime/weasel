@@ -647,8 +647,14 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/candidate_spacing", &style.candidate_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
-	RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner);
-	RimeConfigGetInt(config, "style/layout/round_corner_ex", &style.round_corner_ex);
+	// round_corner as alias of hilited_corner_radius
+	if(!RimeConfigGetInt(config, "style/layout/hilited_corner_radius", &style.round_corner))
+	{
+		RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner);
+	}
+	// neither round_corner_ex or corner_radius set, fallback to round_corner
+	if(!RimeConfigGetInt(config, "style/layout/corner_radius", &style.round_corner_ex))
+		RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner_ex);
 	// color scheme
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
 	{
