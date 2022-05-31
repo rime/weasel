@@ -3,9 +3,17 @@
 #include <WeaselUI.h>
 #include "Layout.h"
 #include <Usp10.h>
+#include <d2d1.h>
+#include <dwrite.h>
 
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dwrite.lib")
+
+#ifndef D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT
+	#define D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT  ( 0x00000004 )
+#endif
 
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 
@@ -55,6 +63,13 @@ private:
 
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
+	bool _isVistaSp2OrGrater;
+	
+	float dpiScaleX_, dpiScaleY_;
+	// variable for d2d dwrite
+	ID2D1Factory* pD2d1Factory;
+	IDWriteFactory* pDWFactory;
+	ID2D1DCRenderTarget* pRenderTarget;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath

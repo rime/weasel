@@ -235,9 +235,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 	::SelectObject(memDC, memBitmap);
 	// 获取候选数，消除当候选数为0，又处于inline_preedit状态时出现一個空白的小方框或者圆角矩形的情况
-	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
-	if(!(candidates.size()==0 && m_style.inline_preedit))
-	{
+	//const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+	//if(!(candidates.size()==0 && m_style.inline_preedit))
+	//{
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		GraphicsRoundRectPath bgPath;
@@ -254,7 +254,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.FillPath(&gBrBack, &bgPath);
 		gBack.ReleaseHDC(memDC);
-	}
+	//}
 	// background end
 	long height = -MulDiv(m_style.font_point, memDC.GetDeviceCaps(LOGPIXELSY), 72);
 
@@ -321,6 +321,30 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
 
+	_isVistaSp2OrGrater = IsWindowsVistaSP2OrGreater();
+
+    //get the dpi information
+    HDC screen = ::GetDC(0);
+    dpiScaleX_ = GetDeviceCaps(screen, LOGPIXELSX) / 96.0f;
+    dpiScaleY_ = GetDeviceCaps(screen, LOGPIXELSY) / 96.0f;
+    ::ReleaseDC(0, screen);
+
+	// prepare d2d1 resources
+	HRESULT hResult = S_OK;
+	// create factory
+	hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2d1Factory);
+	// create IDWriteFactory
+	hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWFactory));
+	/* ID2D1HwndRenderTarget */
+	const D2D1_PIXEL_FORMAT format =
+		D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
+			D2D1_ALPHA_MODE_PREMULTIPLIED);
+	const D2D1_RENDER_TARGET_PROPERTIES properties =
+		D2D1::RenderTargetProperties(
+			D2D1_RENDER_TARGET_TYPE_DEFAULT,
+			format);
+	pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
+	pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
 	return TRUE;
 }
 
@@ -567,38 +591,95 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 	ScriptStringFree(&ssa);
 	return hr;
 }
+
+static HRESULT _TextOutWithFallback_D2D 
+(
+		CDCHandle dc, 
+		CRect const rc, LPCWSTR psz, int cch, int font_point, float scaleX, float scaleY, 
+		COLORREF gdiColor,
+		std::wstring fontface, 
+		ID2D1DCRenderTarget* pRenderTarget,
+		IDWriteFactory* pDWFactory)
+{
+	CRect rect(rc.left/scaleX, rc.top/scaleY, rc.right/scaleX, rc.bottom/scaleY);
+	pRenderTarget->BindDC(dc, &rc);
+	pRenderTarget->BeginDraw();
+
+	float r = (float)(GetRValue(gdiColor))/255.0f;
+	float g = (float)(GetGValue(gdiColor))/255.0f;
+	float b = (float)(GetBValue(gdiColor))/255.0f;
+
+	// alpha 
+	float alpha = (float)((gdiColor >> 24) & 255) / 255.0f;
+	ID2D1SolidColorBrush* pBrush = NULL;
+	pRenderTarget->CreateSolidColorBrush(
+		D2D1::ColorF(r,g,b,alpha),
+		&pBrush);
+	// create text format
+	IDWriteTextFormat* pTextFormat = NULL;
+	pDWFactory->CreateTextFormat(
+		fontface.c_str(), NULL,
+		DWRITE_FONT_WEIGHT_NORMAL, 
+		DWRITE_FONT_STYLE_NORMAL,
+		DWRITE_FONT_STRETCH_NORMAL,
+		font_point*scaleX, L"", &pTextFormat);
+	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+
+	if (NULL != pBrush && NULL != pTextFormat)
+	{
+		D2D1_RECT_F rectf = D2D1::RectF(0.0f, 0.0f, rc.Width()/scaleX, rc.Height()/scaleY);
+		pRenderTarget->DrawTextW( 
+				psz, cch, pTextFormat, &rectf, pBrush,
+				(D2D1_DRAW_TEXT_OPTIONS)D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT,
+				DWRITE_MEASURING_MODE_GDI_CLASSIC
+		);
+	}
+	pTextFormat->Release();
+	pBrush->Release();
+	pRenderTarget->EndDraw();
+	return S_OK;
+}
+
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
 {
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	if (FAILED(_TextOutWithFallback_ULW(dc, x, y, rc, psz, cch, height, m_style.font_face ))) 
+	if (_isVistaSp2OrGrater)
 	{
-		long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-		CFont font;
-		font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-
-		HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
-		DeleteObject(font);
-		if (MyBMP)
+		_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dpiScaleX_, dpiScaleY_,
+			dc.GetTextColor(), m_style.font_face, pRenderTarget, pDWFactory);
+	}
+	else
+	{ 
+		if (FAILED(_TextOutWithFallback_ULW(dc, x, y, rc, psz, cch, height, m_style.font_face ))) 
 		{
-			BYTE alpha = (BYTE)((dc.GetTextColor() >> 24) & 255) ;
-			// temporary dc select bmp into it
-			HDC hTempDC = CreateCompatibleDC(dc);
-			HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
-			if (hOldBMP)
+			CFont font;
+			font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
+
+			HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
+			DeleteObject(font);
+			if (MyBMP)
 			{
-				BITMAP BMInf;
-				GetObject(MyBMP, sizeof(BITMAP), &BMInf);
-				// fill blend function and blend new text to window
-				BLENDFUNCTION bf;
-				bf.BlendOp = AC_SRC_OVER;
-				bf.BlendFlags = 0;
-				bf.SourceConstantAlpha = alpha;
-				bf.AlphaFormat = AC_SRC_ALPHA;
-				AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
-				// clean up
-				SelectObject(hTempDC, hOldBMP);
-				DeleteObject(MyBMP);
-				DeleteDC(hTempDC);
+				BYTE alpha = (BYTE)((dc.GetTextColor() >> 24) & 255) ;
+				// temporary dc select bmp into it
+				HDC hTempDC = CreateCompatibleDC(dc);
+				HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
+				if (hOldBMP)
+				{
+					BITMAP BMInf;
+					GetObject(MyBMP, sizeof(BITMAP), &BMInf);
+					// fill blend function and blend new text to window
+					BLENDFUNCTION bf;
+					bf.BlendOp = AC_SRC_OVER;
+					bf.BlendFlags = 0;
+					bf.SourceConstantAlpha = alpha;
+					bf.AlphaFormat = AC_SRC_ALPHA;
+					AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
+					// clean up
+					SelectObject(hTempDC, hOldBMP);
+					DeleteObject(MyBMP);
+					DeleteDC(hTempDC);
+				}
 			}
 		}
 	}
