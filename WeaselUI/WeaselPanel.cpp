@@ -344,7 +344,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 			D2D1_RENDER_TARGET_TYPE_DEFAULT,
 			format);
 	pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
-	pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+	//pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	return TRUE;
 }
 
@@ -494,6 +494,34 @@ HBITMAP WeaselPanel::_CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORR
 	return hMyDIB;
 }
 
+static bool isEmoji(int value)
+{
+	if ((value >= 0xd800 && value <= 0xdbff))
+		return true;
+	else if ((0x2100 <= value && value <= 0x27ff && value != 0x263b)
+		|| (0x2b05 <= value && value <= 0x2b07)
+		|| (0x2934 <= value && value <= 0x2935)
+		|| (0x3297 <= value && value <= 0x3299)
+		|| value == 0xa9 || value == 0xae || value == 0x303d || value == 0x3030
+		|| value == 0x2b55 || value == 0x2b1c || value == 0x2b1b || value == 0x2b50
+		|| value == 0x231a)
+	{
+		return true;
+	}
+	return false;
+}
+
+static bool isEmojiInsideWstr(std::wstring wstr)
+{
+	int index = 0;
+	for (index = 0; index < wstr.length(); index++)
+	{
+		if (isEmoji(wstr.at(index)))
+			return true;
+	}
+	return false;
+}
+
 // textout for UpdateLayeredWindow
 static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const rc, LPCWSTR psz, int cch, long height, std::wstring fontface)
 {
@@ -622,13 +650,15 @@ static HRESULT _TextOutWithFallback_D2D
 		DWRITE_FONT_WEIGHT_NORMAL, 
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
-		font_point*scaleX, L"", &pTextFormat);
-	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		font_point * scaleX, L"", &pTextFormat);
+	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
 	if (NULL != pBrush && NULL != pTextFormat)
 	{
-		D2D1_RECT_F rectf = D2D1::RectF(0.0f, 0.0f, rc.Width()/scaleX, rc.Height()/scaleY);
+		//D2D1_RECT_F rectf = D2D1::RectF(0.0f, 0.0f, rc.Width()* scaleX, rc.Height() * scaleY);
+		D2D1_RECT_F rectf = D2D1::RectF(0.0f, 0.0f, rc.Width(), rc.Height());
 		pRenderTarget->DrawTextW( 
 				psz, cch, pTextFormat, &rectf, pBrush,
 				(D2D1_DRAW_TEXT_OPTIONS)D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT,
@@ -644,7 +674,7 @@ static HRESULT _TextOutWithFallback_D2D
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
 {
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	if (_isVistaSp2OrGrater)
+	if (_isVistaSp2OrGrater && isEmojiInsideWstr(psz))
 	{
 		_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dpiScaleX_, dpiScaleY_,
 			dc.GetTextColor(), m_style.font_face, pRenderTarget, pDWFactory);
