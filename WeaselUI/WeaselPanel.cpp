@@ -344,7 +344,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 			D2D1_RENDER_TARGET_TYPE_DEFAULT,
 			format);
 	pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
-	pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+	pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	return TRUE;
 }
 
