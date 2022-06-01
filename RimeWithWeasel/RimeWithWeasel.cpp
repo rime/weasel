@@ -539,7 +539,38 @@ static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
 		(GetRValue(fcolor) * 2 + GetRValue(bcolor)) / 3,
 		(GetGValue(fcolor) * 2 + GetGValue(bcolor)) / 3,
 		(GetBValue(fcolor) * 2 + GetBValue(bcolor)) / 3
-		);
+		) | ((((fcolor >> 24)+(bcolor >> 24)/2) << 24));
+}
+
+static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* value)
+{
+	int tmp = 0;
+	if (!RimeConfigGetInt(config, key, &tmp)) return False;
+	char color[16] = { 0 };
+	if (!RimeConfigGetString(config, key, color, 16))
+		return False;
+	// hex number
+	if (color[0] == '0' && (color[1]=='x' || color[1]=='X'))
+	{
+		if (strlen(color) <= 8 && strlen(color) > 2)	// 0xbbggrr ~ 0x? 
+		{
+			// 0xbbggrr
+			RimeConfigGetInt(config, key, value);
+			*value |= 0xff000000;
+			return True;
+		}
+		else
+			return RimeConfigGetInt(config, key, value);
+	}
+	// regular number or other stuff
+	else
+	{
+		if (!RimeConfigGetInt(config, key, &tmp))
+			return False;
+		else
+			*value = tmp | 0xff000000;
+	}
+	return True;
 }
 
 static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
@@ -616,60 +647,68 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/candidate_spacing", &style.candidate_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
-	RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner);
-	RimeConfigGetInt(config, "style/layout/round_corner_ex", &style.round_corner_ex);
+	// round_corner as alias of hilited_corner_radius
+	if(!RimeConfigGetInt(config, "style/layout/hilited_corner_radius", &style.round_corner))
+	{
+		RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner);
+	}
+	// neither round_corner_ex or corner_radius set, fallback to round_corner
+	if(!RimeConfigGetInt(config, "style/layout/corner_radius", &style.round_corner_ex))
+		RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner_ex);
 	// color scheme
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
 	{
 		std::string prefix("preset_color_schemes/");
 		prefix += buffer;
-		RimeConfigGetInt(config, (prefix + "/text_color").c_str(), &style.text_color);
-		if (!RimeConfigGetInt(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color))
+		RimeConfigGetColor32b(config, (prefix + "/back_color").c_str(), &style.back_color);
+		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color);
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color))
 		{
 			style.candidate_text_color = style.text_color;
 		}
-		if (!RimeConfigGetInt(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color))
 		{
 			style.candidate_back_color = style.back_color;
 		}
-		RimeConfigGetInt(config, (prefix + "/back_color").c_str(), &style.back_color);
-		if (!RimeConfigGetInt(config, (prefix + "/border_color").c_str(), &style.border_color))
+
+		if (!RimeConfigGetColor32b(config, (prefix + "/border_color").c_str(), &style.border_color))
 		{
 			style.border_color = style.text_color;
 		}
-		if (!RimeConfigGetInt(config, (prefix + "/hilited_text_color").c_str(), &style.hilited_text_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_text_color").c_str(), &style.hilited_text_color))
 		{
 			style.hilited_text_color = style.text_color;
 		}
-		if (!RimeConfigGetInt(config, (prefix + "/hilited_back_color").c_str(), &style.hilited_back_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_back_color").c_str(), &style.hilited_back_color))
 		{
 			style.hilited_back_color = style.back_color;
 		}
-		if (!RimeConfigGetInt(config, (prefix + "/hilited_candidate_text_color").c_str(), &style.hilited_candidate_text_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_text_color").c_str(), &style.hilited_candidate_text_color))
 		{
 			style.hilited_candidate_text_color = style.hilited_text_color;
 		}
-		if (!RimeConfigGetInt(config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color))
 		{
 			style.hilited_candidate_back_color = style.hilited_back_color;
 		}
-		if (!RimeConfigGetInt(config, (prefix + "/label_color").c_str(), &style.label_text_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color))
 		{
 			style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);
 		}
-		if (!RimeConfigGetInt(config, (prefix + "/hilited_label_color").c_str(), &style.hilited_label_text_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_label_color").c_str(), &style.hilited_label_text_color))
 		{
 			style.hilited_label_text_color = blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color);
 		}
 		style.comment_text_color = style.label_text_color;
 		style.hilited_comment_text_color = style.hilited_label_text_color;
-		if (RimeConfigGetInt(config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color))
+		if (RimeConfigGetColor32b(config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color))
 		{
 			style.hilited_comment_text_color = style.comment_text_color;
 		}
-		RimeConfigGetInt(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
+		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
 	}
 }
+
 
 static void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options)
 {
