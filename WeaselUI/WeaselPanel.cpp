@@ -96,6 +96,27 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 		BYTE alpha = (BYTE)((color >> 24) & 255);
 		Color back_color = Color::MakeARGB(alpha, GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
+		if (m_style.shadow_radius)
+		{
+			Color sdbc = Color::MakeARGB(alpha/4, GetRValue(color), GetGValue(color), GetBValue(color));
+			int r = sdbc.GetR();
+			int g = sdbc.GetG();
+			int b = sdbc.GetB();
+			int a = sdbc.GetA();
+			int factor = (alpha/4)/m_style.shadow_radius;
+			for (int i = 1; i < m_style.shadow_radius; i++)
+			{
+				GraphicsRoundRectPath sdp;
+				sdp.AddRoundRect(rc.left + m_style.shadow_radius - i, rc.top + m_style.shadow_radius - i,
+					rc.Width() + 2*i, rc.Height() + 2*i, m_style.round_corner, m_style.round_corner);
+				Color sdpc = Color::MakeARGB(factor, r, g, b);
+				SolidBrush sdpbr(sdpc);
+				gBack.FillPath(&sdpbr, &sdp);
+				sdp.operator delete;
+				sdpbr.operator delete;
+				::DeleteObject(&sdpc);
+			}
+		}
 		gBack.FillPath(&gBrBack, &bgPath);
 	}
 }
