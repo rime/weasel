@@ -151,6 +151,7 @@ namespace weasel
 		std::wstring font_face;
 		int font_point;
 		bool inline_preedit;
+		bool color_font;
 		bool display_tray_icon;
 		std::wstring label_text_format;
 		// layout
@@ -187,6 +188,7 @@ namespace weasel
 			font_point(0),
 			inline_preedit(false),
 			preedit_type(COMPOSITION),
+			color_font(0),
 			display_tray_icon(false),
 			label_text_format(L"%s."),
 			layout_type(LAYOUT_VERTICAL),
@@ -226,6 +228,7 @@ namespace boost {
 			ar & s.font_face;
 			ar & s.font_point;
 			ar & s.inline_preedit;
+			ar & s.color_font;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
 			ar & s.label_text_format;

@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
+#include <vector>
 //#include <Usp10.h>
 
 #include "VerticalLayout.h"
@@ -12,6 +13,7 @@
 
 using namespace Gdiplus;
 using namespace weasel;
+using namespace std;
 
 WeaselPanel::WeaselPanel(weasel::UI &ui)
 	: m_layout(NULL), 
@@ -256,9 +258,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 	::SelectObject(memDC, memBitmap);
 	// 获取候选数，消除当候选数为0，又处于inline_preedit状态时出现一個空白的小方框或者圆角矩形的情况
-	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
-	if(!(candidates.size()==0 && m_style.inline_preedit))
-	{
+	//const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+	//if(!(candidates.size()==0 && m_style.inline_preedit))
+	//{
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		GraphicsRoundRectPath bgPath;
@@ -275,7 +277,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.FillPath(&gBrBack, &bgPath);
 		gBack.ReleaseHDC(memDC);
-	}
+	//}
 	// background end
 	long height = -MulDiv(m_style.font_point, memDC.GetDeviceCaps(LOGPIXELSY), 72);
 
@@ -342,6 +344,30 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
 
+	_isVistaSp2OrGrater = IsWindowsVistaSP2OrGreater();
+
+    //get the dpi information
+    HDC screen = ::GetDC(0);
+    dpiScaleX_ = GetDeviceCaps(screen, LOGPIXELSX) / 96.0f;
+    dpiScaleY_ = GetDeviceCaps(screen, LOGPIXELSY) / 96.0f;
+    ::ReleaseDC(0, screen);
+
+	// prepare d2d1 resources
+	HRESULT hResult = S_OK;
+	// create factory
+	hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2d1Factory);
+	// create IDWriteFactory
+	hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWFactory));
+	/* ID2D1HwndRenderTarget */
+	const D2D1_PIXEL_FORMAT format =
+		D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
+			D2D1_ALPHA_MODE_PREMULTIPLIED);
+	const D2D1_RENDER_TARGET_PROPERTIES properties =
+		D2D1::RenderTargetProperties(
+			D2D1_RENDER_TARGET_TYPE_DEFAULT,
+			format);
+	pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
+	//pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	return TRUE;
 }
 
@@ -491,6 +517,34 @@ HBITMAP WeaselPanel::_CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORR
 	return hMyDIB;
 }
 
+static bool isEmoji(int value)
+{
+	if ((value >= 0xd800 && value <= 0xdbff))
+		return true;
+	else if ((0x2100 <= value && value <= 0x27ff && value != 0x263b)
+		|| (0x2b05 <= value && value <= 0x2b07)
+		|| (0x2934 <= value && value <= 0x2935)
+		|| (0x3297 <= value && value <= 0x3299)
+		|| value == 0xa9 || value == 0xae || value == 0x303d || value == 0x3030
+		|| value == 0x2b55 || value == 0x2b1c || value == 0x2b1b || value == 0x2b50
+		|| value == 0x231a)
+	{
+		return true;
+	}
+	return false;
+}
+
+static bool isEmojiInsideWstr(std::wstring wstr)
+{
+	int index = 0;
+	for (index = 0; index < wstr.length(); index++)
+	{
+		if (isEmoji(wstr.at(index)))
+			return true;
+	}
+	return false;
+}
+
 // textout for UpdateLayeredWindow
 static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const rc, LPCWSTR psz, int cch, long height, std::wstring fontface)
 {
@@ -588,38 +642,251 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 	ScriptStringFree(&ssa);
 	return hr;
 }
+
+inline static size_t utf(const wchar_t* src, ULONG& des)
+{
+	if (!src || (*src) == 0) return 0;
+
+	wchar_t w1 = src[0];
+	if (w1 >= 0xD800 && w1 <= 0xDFFF)
+	{
+		if (w1 < 0xDC00)
+		{
+			wchar_t w2 = src[1];
+			if (w2 >= 0xDC00 && w2 <= 0xDFFF)
+			{
+				des = (w2 & 0x03FF) + (((w1 & 0x03FF) + 0x40) << 10);
+				return 2;
+			}
+		}
+		return 0; // the src is invalid  
+	}
+	else
+	{
+		des = w1;
+		return 1;
+	}
+}
+
+//DWRITE_TEXT_RANGE textRange = { 7, 12 };
+static vector<DWRITE_TEXT_RANGE> CheckEmojiRange(wstring str)
+{
+	vector<DWRITE_TEXT_RANGE> rng;
+	int i = 0;
+	wchar_t* utf16 = &str[0];
+	ULONG unicode = 0;
+	UINT32 sc = 0, ec = 0;
+	size_t sz = 0;
+	BOOL isEmjtmp = FALSE;
+	BOOL isEmoji = FALSE;
+	while (i < str.size())
+	{
+		sz = utf(utf16, unicode);
+		if (
+			(unicode >= 0x2700 && unicode <= 0x27bf)
+			|| (unicode >= 0x1f650 && unicode <= 0x1f67f)
+			|| (unicode >= 0x1f600 && unicode <= 0x1f64f)
+			|| (unicode >= 0x1f300 && unicode <= 0x1f5ff)
+			|| (unicode >= 0x1f900 && unicode <= 0x1f9ff)
+			|| (unicode >= 0x1fa70 && unicode <= 0x1faff)
+			|| (unicode >= 0x1f680 && unicode <= 0x1f6ff)
+			|| (unicode >= 0x2600 && unicode <= 0x26ff)
+			)
+			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
+		else
+			isEmjtmp = FALSE;
+		if (isEmoji == TRUE && (*utf16 == 0x200d)) /* 如果前面的字符是Emoji 后面链接符号也认为是Emoji的一部分 */
+		{
+			isEmjtmp = TRUE;
+			sz = 1;
+		}
+		if (isEmoji == FALSE && isEmjtmp == TRUE)    /* 如果前面不是emoji而当前文字为emoji 则这是emoji字符串的开始 */
+		{
+			sc = i;
+		}
+		if (isEmoji == TRUE && isEmjtmp == FALSE)    /* 如果前面是emoji 而当前文字不是emoji，则这是emoji字符串的结尾 */
+		{
+			ec = i;
+			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
+		}
+		isEmoji = isEmjtmp;
+		if ((i == str.size() - sz) && isEmjtmp == TRUE)  /* 最后一个字符，刚好为emoji， 这是emoji字符串结尾*/
+		{
+			ec = i + sz;
+			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
+		}
+		if (i < str.size())
+		{
+			i += sz;
+			utf16 += sz;
+		}
+	}
+	return rng;
+}
+
+static vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(wstring str)
+{
+	vector<DWRITE_TEXT_RANGE> rng;
+	int i = 0;
+	wchar_t* utf16 = &str[0];
+	ULONG unicode = 0;
+	UINT32 sc = 0, ec = 0;
+	size_t sz = 0;
+	BOOL isEmjtmp = FALSE;
+	BOOL isEmoji = TRUE;
+	while (i < str.size())
+	{
+		sz = utf(utf16, unicode);
+		if (
+			(unicode >= 0x2700 && unicode <= 0x27bf)
+			|| (unicode >= 0x1f650 && unicode <= 0x1f67f)
+			|| (unicode >= 0x1f600 && unicode <= 0x1f64f)
+			|| (unicode >= 0x1f300 && unicode <= 0x1f5ff)
+			|| (unicode >= 0x1f900 && unicode <= 0x1f9ff)
+			|| (unicode >= 0x1fa70 && unicode <= 0x1faff)
+			|| (unicode >= 0x1f680 && unicode <= 0x1f6ff)
+			|| (unicode >= 0x2600 && unicode <= 0x26ff)
+			)
+			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
+		else
+			isEmjtmp = FALSE;
+		if (isEmoji == TRUE && (*utf16 == 0x200d)) /* 如果前面的字符是Emoji 后面链接符号也认为是Emoji的一部分 */
+		{
+			isEmjtmp = TRUE;
+			sz = 1;
+		}
+		if (isEmoji == TRUE && isEmjtmp == FALSE)    /* 如果前面不是emoji而当前文字为emoji 则这是emoji字符串的开始 */
+		{
+			sc = i;
+		}
+		if (isEmoji == FALSE && isEmjtmp == TRUE)    /* 如果前面是emoji 而当前文字不是emoji，则这是emoji字符串的结尾 */
+		{
+			ec = i;
+			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
+		}
+		isEmoji = isEmjtmp;
+		if ((i == str.size() - sz) && isEmjtmp == FALSE)  /* 最后一个字符，刚好为emoji， 这是emoji字符串结尾*/
+		{
+			ec = i + sz;
+			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
+		}
+		if (i < str.size())
+		{
+			i += sz;
+			utf16 += sz;
+		}
+	}
+	return rng;
+}
+static HRESULT _TextOutWithFallback_D2D 
+(
+		CDCHandle dc, 
+		CRect const rc, LPCWSTR psz, int cch, int font_point, float scaleX, float scaleY, 
+		COLORREF gdiColor,
+		std::wstring fontface, 
+		ID2D1DCRenderTarget* pRenderTarget,
+		IDWriteFactory* pDWFactory)
+{
+	float r = (float)(GetRValue(gdiColor))/255.0f;
+	float g = (float)(GetGValue(gdiColor))/255.0f;
+	float b = (float)(GetBValue(gdiColor))/255.0f;
+
+	// alpha 
+	float alpha = (float)((gdiColor >> 24) & 255) / 255.0f;
+	ID2D1SolidColorBrush* pBrush = NULL;
+	pRenderTarget->CreateSolidColorBrush( D2D1::ColorF(r,g,b,alpha), &pBrush);
+	// create text format
+	IDWriteTextFormat* pTextFormat = NULL;
+	pDWFactory->CreateTextFormat(
+		fontface.c_str(), NULL,
+		DWRITE_FONT_WEIGHT_NORMAL, 
+		DWRITE_FONT_STYLE_NORMAL,
+		DWRITE_FONT_STRETCH_NORMAL,
+		font_point * scaleX, L"", &pTextFormat);
+	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+
+	if (NULL != pBrush && NULL != pTextFormat)
+	{
+		IDWriteTextLayout* pTextLayout = NULL;
+		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, 0, 0, &pTextLayout);
+		vector<DWRITE_TEXT_RANGE> rng;
+		rng = CheckNotEmojiRange(psz);
+
+		DWRITE_TEXT_METRICS txtMetrics;
+		pTextLayout->GetMetrics(&txtMetrics);
+		D2D1_SIZE_F size;
+		size = D2D1::SizeF(ceil(txtMetrics.widthIncludingTrailingWhitespace), ceil(txtMetrics.height));
+		int left = rc.left, top=rc.top;
+#if 0
+		if(size.width > rc.Width())
+			left = rc.left - (size.width - rc.Width()) / 2;
+		else
+			left = rc.left + (size.width - rc.Width()) / 2;
+		//left = rc.left;
+
+		if (size.height > rc.Height())
+			top = rc.top - (size.height - rc.Height()) / 2;
+		else
+			top = rc.top + (size.height - rc.Height()) / 2;
+#endif
+		CRect rect(left, top, left + max(size.width, rc.Width()), top + max(size.height, rc.Height()));
+
+		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat,
+			max(size.width, rc.Width()),
+			max(size.height, rc.Height()),
+			&pTextLayout
+		);
+		pRenderTarget->BindDC(dc, &rect);
+		pRenderTarget->BeginDraw();
+		pRenderTarget->DrawTextLayout({ 0.0f, 0.0f }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		pRenderTarget->EndDraw();
+	}
+	pTextFormat->Release();
+	pBrush->Release();
+	return S_OK;
+}
+
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
 {
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	if (FAILED(_TextOutWithFallback_ULW(dc, x, y, rc, psz, cch, height, m_style.font_face ))) 
+	if (_isVistaSp2OrGrater && m_style.color_font )
 	{
-		long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-		CFont font;
-		font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-
-		HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
-		DeleteObject(font);
-		if (MyBMP)
+		_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dpiScaleX_, dpiScaleY_,
+			dc.GetTextColor(), m_style.font_face, pRenderTarget, pDWFactory);
+	}
+	else
+	{ 
+		if (FAILED(_TextOutWithFallback_ULW(dc, x, y, rc, psz, cch, height, m_style.font_face ))) 
 		{
-			BYTE alpha = (BYTE)((dc.GetTextColor() >> 24) & 255) ;
-			// temporary dc select bmp into it
-			HDC hTempDC = CreateCompatibleDC(dc);
-			HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
-			if (hOldBMP)
+			CFont font;
+			font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
+
+			HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
+			DeleteObject(font);
+			if (MyBMP)
 			{
-				BITMAP BMInf;
-				GetObject(MyBMP, sizeof(BITMAP), &BMInf);
-				// fill blend function and blend new text to window
-				BLENDFUNCTION bf;
-				bf.BlendOp = AC_SRC_OVER;
-				bf.BlendFlags = 0;
-				bf.SourceConstantAlpha = alpha;
-				bf.AlphaFormat = AC_SRC_ALPHA;
-				AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
-				// clean up
-				SelectObject(hTempDC, hOldBMP);
-				DeleteObject(MyBMP);
-				DeleteDC(hTempDC);
+				BYTE alpha = (BYTE)((dc.GetTextColor() >> 24) & 255) ;
+				// temporary dc select bmp into it
+				HDC hTempDC = CreateCompatibleDC(dc);
+				HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
+				if (hOldBMP)
+				{
+					BITMAP BMInf;
+					GetObject(MyBMP, sizeof(BITMAP), &BMInf);
+					// fill blend function and blend new text to window
+					BLENDFUNCTION bf;
+					bf.BlendOp = AC_SRC_OVER;
+					bf.BlendFlags = 0;
+					bf.SourceConstantAlpha = alpha;
+					bf.AlphaFormat = AC_SRC_ALPHA;
+					AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
+					// clean up
+					SelectObject(hTempDC, hOldBMP);
+					DeleteObject(MyBMP);
+					DeleteDC(hTempDC);
+				}
 			}
 		}
 	}
