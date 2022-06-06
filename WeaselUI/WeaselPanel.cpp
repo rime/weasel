@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
+#include <vector>
 //#include <Usp10.h>
 
 #include "VerticalLayout.h"
@@ -12,6 +13,7 @@
 
 using namespace Gdiplus;
 using namespace weasel;
+using namespace std;
 
 WeaselPanel::WeaselPanel(weasel::UI &ui)
 	: m_layout(NULL), 
@@ -96,6 +98,27 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 		BYTE alpha = (BYTE)((color >> 24) & 255);
 		Color back_color = Color::MakeARGB(alpha, GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
+		if (m_style.shadow_radius)
+		{
+			Color sdbc = Color::MakeARGB(alpha/4, GetRValue(color), GetGValue(color), GetBValue(color));
+			int r = sdbc.GetR();
+			int g = sdbc.GetG();
+			int b = sdbc.GetB();
+			int a = sdbc.GetA();
+			int factor = (alpha/4)/m_style.shadow_radius;
+			for (int i = 1; i < m_style.shadow_radius; i++)
+			{
+				GraphicsRoundRectPath sdp;
+				sdp.AddRoundRect(rc.left + m_style.shadow_radius - i, rc.top + m_style.shadow_radius - i,
+					rc.Width() + 2*i, rc.Height() + 2*i, m_style.round_corner, m_style.round_corner);
+				Color sdpc = Color::MakeARGB(factor, r, g, b);
+				SolidBrush sdpbr(sdpc);
+				gBack.FillPath(&sdpbr, &sdp);
+				sdp.operator delete;
+				sdpbr.operator delete;
+				::DeleteObject(&sdpc);
+			}
+		}
 		gBack.FillPath(&gBrBack, &bgPath);
 	}
 }
@@ -620,6 +643,141 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 	return hr;
 }
 
+inline static size_t utf(const wchar_t* src, ULONG& des)
+{
+	if (!src || (*src) == 0) return 0;
+
+	wchar_t w1 = src[0];
+	if (w1 >= 0xD800 && w1 <= 0xDFFF)
+	{
+		if (w1 < 0xDC00)
+		{
+			wchar_t w2 = src[1];
+			if (w2 >= 0xDC00 && w2 <= 0xDFFF)
+			{
+				des = (w2 & 0x03FF) + (((w1 & 0x03FF) + 0x40) << 10);
+				return 2;
+			}
+		}
+		return 0; // the src is invalid  
+	}
+	else
+	{
+		des = w1;
+		return 1;
+	}
+}
+
+//DWRITE_TEXT_RANGE textRange = { 7, 12 };
+static vector<DWRITE_TEXT_RANGE> CheckEmojiRange(wstring str)
+{
+	vector<DWRITE_TEXT_RANGE> rng;
+	int i = 0;
+	wchar_t* utf16 = &str[0];
+	ULONG unicode = 0;
+	UINT32 sc = 0, ec = 0;
+	size_t sz = 0;
+	BOOL isEmjtmp = FALSE;
+	BOOL isEmoji = FALSE;
+	while (i < str.size())
+	{
+		sz = utf(utf16, unicode);
+		if (
+			(unicode >= 0x2700 && unicode <= 0x27bf)
+			|| (unicode >= 0x1f650 && unicode <= 0x1f67f)
+			|| (unicode >= 0x1f600 && unicode <= 0x1f64f)
+			|| (unicode >= 0x1f300 && unicode <= 0x1f5ff)
+			|| (unicode >= 0x1f900 && unicode <= 0x1f9ff)
+			|| (unicode >= 0x1fa70 && unicode <= 0x1faff)
+			|| (unicode >= 0x1f680 && unicode <= 0x1f6ff)
+			|| (unicode >= 0x2600 && unicode <= 0x26ff)
+			)
+			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
+		else
+			isEmjtmp = FALSE;
+		if (isEmoji == TRUE && (*utf16 == 0x200d)) /* 如果前面的字符是Emoji 后面链接符号也认为是Emoji的一部分 */
+		{
+			isEmjtmp = TRUE;
+			sz = 1;
+		}
+		if (isEmoji == FALSE && isEmjtmp == TRUE)    /* 如果前面不是emoji而当前文字为emoji 则这是emoji字符串的开始 */
+		{
+			sc = i;
+		}
+		if (isEmoji == TRUE && isEmjtmp == FALSE)    /* 如果前面是emoji 而当前文字不是emoji，则这是emoji字符串的结尾 */
+		{
+			ec = i;
+			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
+		}
+		isEmoji = isEmjtmp;
+		if ((i == str.size() - sz) && isEmjtmp == TRUE)  /* 最后一个字符，刚好为emoji， 这是emoji字符串结尾*/
+		{
+			ec = i + sz;
+			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
+		}
+		if (i < str.size())
+		{
+			i += sz;
+			utf16 += sz;
+		}
+	}
+	return rng;
+}
+
+static vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(wstring str)
+{
+	vector<DWRITE_TEXT_RANGE> rng;
+	int i = 0;
+	wchar_t* utf16 = &str[0];
+	ULONG unicode = 0;
+	UINT32 sc = 0, ec = 0;
+	size_t sz = 0;
+	BOOL isEmjtmp = FALSE;
+	BOOL isEmoji = TRUE;
+	while (i < str.size())
+	{
+		sz = utf(utf16, unicode);
+		if (
+			(unicode >= 0x2700 && unicode <= 0x27bf)
+			|| (unicode >= 0x1f650 && unicode <= 0x1f67f)
+			|| (unicode >= 0x1f600 && unicode <= 0x1f64f)
+			|| (unicode >= 0x1f300 && unicode <= 0x1f5ff)
+			|| (unicode >= 0x1f900 && unicode <= 0x1f9ff)
+			|| (unicode >= 0x1fa70 && unicode <= 0x1faff)
+			|| (unicode >= 0x1f680 && unicode <= 0x1f6ff)
+			|| (unicode >= 0x2600 && unicode <= 0x26ff)
+			)
+			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
+		else
+			isEmjtmp = FALSE;
+		if (isEmoji == TRUE && (*utf16 == 0x200d)) /* 如果前面的字符是Emoji 后面链接符号也认为是Emoji的一部分 */
+		{
+			isEmjtmp = TRUE;
+			sz = 1;
+		}
+		if (isEmoji == TRUE && isEmjtmp == FALSE)    /* 如果前面不是emoji而当前文字为emoji 则这是emoji字符串的开始 */
+		{
+			sc = i;
+		}
+		if (isEmoji == FALSE && isEmjtmp == TRUE)    /* 如果前面是emoji 而当前文字不是emoji，则这是emoji字符串的结尾 */
+		{
+			ec = i;
+			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
+		}
+		isEmoji = isEmjtmp;
+		if ((i == str.size() - sz) && isEmjtmp == FALSE)  /* 最后一个字符，刚好为emoji， 这是emoji字符串结尾*/
+		{
+			ec = i + sz;
+			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
+		}
+		if (i < str.size())
+		{
+			i += sz;
+			utf16 += sz;
+		}
+	}
+	return rng;
+}
 static HRESULT _TextOutWithFallback_D2D 
 (
 		CDCHandle dc, 
@@ -629,10 +787,6 @@ static HRESULT _TextOutWithFallback_D2D
 		ID2D1DCRenderTarget* pRenderTarget,
 		IDWriteFactory* pDWFactory)
 {
-	CRect rect(rc.left/scaleX, rc.top/scaleY, rc.right/scaleX, rc.bottom/scaleY);
-	pRenderTarget->BindDC(dc, &rc);
-	pRenderTarget->BeginDraw();
-
 	float r = (float)(GetRValue(gdiColor))/255.0f;
 	float g = (float)(GetGValue(gdiColor))/255.0f;
 	float b = (float)(GetBValue(gdiColor))/255.0f;
@@ -640,9 +794,7 @@ static HRESULT _TextOutWithFallback_D2D
 	// alpha 
 	float alpha = (float)((gdiColor >> 24) & 255) / 255.0f;
 	ID2D1SolidColorBrush* pBrush = NULL;
-	pRenderTarget->CreateSolidColorBrush(
-		D2D1::ColorF(r,g,b,alpha),
-		&pBrush);
+	pRenderTarget->CreateSolidColorBrush( D2D1::ColorF(r,g,b,alpha), &pBrush);
 	// create text format
 	IDWriteTextFormat* pTextFormat = NULL;
 	pDWFactory->CreateTextFormat(
@@ -651,30 +803,55 @@ static HRESULT _TextOutWithFallback_D2D
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
 		font_point * scaleX, L"", &pTextFormat);
-	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 
 	if (NULL != pBrush && NULL != pTextFormat)
 	{
-		//D2D1_RECT_F rectf = D2D1::RectF(0.0f, 0.0f, rc.Width()* scaleX, rc.Height() * scaleY);
-		D2D1_RECT_F rectf = D2D1::RectF(0.0f, 0.0f, rc.Width(), rc.Height());
-		pRenderTarget->DrawTextW( 
-				psz, cch, pTextFormat, &rectf, pBrush,
-				(D2D1_DRAW_TEXT_OPTIONS)D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT,
-				DWRITE_MEASURING_MODE_GDI_CLASSIC
+		IDWriteTextLayout* pTextLayout = NULL;
+		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, 0, 0, &pTextLayout);
+		vector<DWRITE_TEXT_RANGE> rng;
+		rng = CheckNotEmojiRange(psz);
+
+		DWRITE_TEXT_METRICS txtMetrics;
+		pTextLayout->GetMetrics(&txtMetrics);
+		D2D1_SIZE_F size;
+		size = D2D1::SizeF(ceil(txtMetrics.widthIncludingTrailingWhitespace), ceil(txtMetrics.height));
+		int left = rc.left, top=rc.top;
+#if 0
+		if(size.width > rc.Width())
+			left = rc.left - (size.width - rc.Width()) / 2;
+		else
+			left = rc.left + (size.width - rc.Width()) / 2;
+		//left = rc.left;
+
+		if (size.height > rc.Height())
+			top = rc.top - (size.height - rc.Height()) / 2;
+		else
+			top = rc.top + (size.height - rc.Height()) / 2;
+#endif
+		CRect rect(left, top, left + max(size.width, rc.Width()), top + max(size.height, rc.Height()));
+
+		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat,
+			max(size.width, rc.Width()),
+			max(size.height, rc.Height()),
+			&pTextLayout
 		);
+		pRenderTarget->BindDC(dc, &rect);
+		pRenderTarget->BeginDraw();
+		pRenderTarget->DrawTextLayout({ 0.0f, 0.0f }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		pRenderTarget->EndDraw();
 	}
 	pTextFormat->Release();
 	pBrush->Release();
-	pRenderTarget->EndDraw();
 	return S_OK;
 }
 
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
 {
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	if (_isVistaSp2OrGrater && isEmojiInsideWstr(psz))
+	if (_isVistaSp2OrGrater && m_style.color_font )
 	{
 		_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dpiScaleX_, dpiScaleY_,
 			dc.GetTextColor(), m_style.font_face, pRenderTarget, pDWFactory);

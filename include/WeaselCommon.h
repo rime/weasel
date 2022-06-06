@@ -151,6 +151,7 @@ namespace weasel
 		std::wstring font_face;
 		int font_point;
 		bool inline_preedit;
+		bool color_font;
 		bool display_tray_icon;
 		std::wstring label_text_format;
 		// layout
@@ -165,6 +166,7 @@ namespace weasel
 		int hilite_padding;
 		int round_corner;
 		int round_corner_ex;
+		int shadow_radius;
 		// color scheme
 		int text_color;
 		int candidate_text_color;
@@ -186,6 +188,7 @@ namespace weasel
 			font_point(0),
 			inline_preedit(false),
 			preedit_type(COMPOSITION),
+			color_font(0),
 			display_tray_icon(false),
 			label_text_format(L"%s."),
 			layout_type(LAYOUT_VERTICAL),
@@ -200,6 +203,7 @@ namespace weasel
 			hilite_padding(0),
 			round_corner(0),
 			round_corner_ex(0),
+			shadow_radius(0),
 			text_color(0),
 			candidate_text_color(0),
 			candidate_back_color(0),
@@ -224,6 +228,7 @@ namespace boost {
 			ar & s.font_face;
 			ar & s.font_point;
 			ar & s.inline_preedit;
+			ar & s.color_font;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
 			ar & s.label_text_format;
@@ -240,6 +245,7 @@ namespace boost {
 			ar & s.hilite_padding;
 			ar & s.round_corner;
 			ar & s.round_corner_ex;
+			ar & s.shadow_radius;
 			// color scheme
 			ar & s.text_color;
 			ar & s.candidate_text_color;

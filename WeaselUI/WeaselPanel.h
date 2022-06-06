@@ -11,10 +11,6 @@
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
-#ifndef D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT
-	#define D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT  ( 0x00000004 )
-#endif
-
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 
 class WeaselPanel : 
