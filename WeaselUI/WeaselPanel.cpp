@@ -682,15 +682,11 @@ static vector<DWRITE_TEXT_RANGE> CheckEmojiRange(wstring str)
 	while (i < str.size())
 	{
 		sz = utf(utf16, unicode);
+
 		if (
 			(unicode >= 0x2700 && unicode <= 0x27bf)
-			|| (unicode >= 0x1f650 && unicode <= 0x1f67f)
-			|| (unicode >= 0x1f600 && unicode <= 0x1f64f)
-			|| (unicode >= 0x1f300 && unicode <= 0x1f5ff)
-			|| (unicode >= 0x1f900 && unicode <= 0x1f9ff)
-			|| (unicode >= 0x1fa70 && unicode <= 0x1faff)
-			|| (unicode >= 0x1f680 && unicode <= 0x1f6ff)
 			|| (unicode >= 0x2600 && unicode <= 0x26ff)
+			|| (unicode >= 0x1f000 && unicode <= 0x1fbff)
 			)
 			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
 		else
@@ -739,13 +735,8 @@ static vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(wstring str)
 		sz = utf(utf16, unicode);
 		if (
 			(unicode >= 0x2700 && unicode <= 0x27bf)
-			|| (unicode >= 0x1f650 && unicode <= 0x1f67f)
-			|| (unicode >= 0x1f600 && unicode <= 0x1f64f)
-			|| (unicode >= 0x1f300 && unicode <= 0x1f5ff)
-			|| (unicode >= 0x1f900 && unicode <= 0x1f9ff)
-			|| (unicode >= 0x1fa70 && unicode <= 0x1faff)
-			|| (unicode >= 0x1f680 && unicode <= 0x1f6ff)
 			|| (unicode >= 0x2600 && unicode <= 0x26ff)
+			|| (unicode >= 0x1f000 && unicode <= 0x1fbff)
 			)
 			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
 		else
@@ -781,7 +772,7 @@ static vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(wstring str)
 static HRESULT _TextOutWithFallback_D2D 
 (
 		CDCHandle dc, 
-		CRect const rc, LPCWSTR psz, int cch, int font_point, float scaleX, float scaleY, 
+		CRect const rc, wstring psz, int cch, int font_point, float scaleX, float scaleY, 
 		COLORREF gdiColor,
 		std::wstring fontface, 
 		ID2D1DCRenderTarget* pRenderTarget,
@@ -811,9 +802,18 @@ static HRESULT _TextOutWithFallback_D2D
 	{
 		IDWriteTextLayout* pTextLayout = NULL;
 		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, 0, 0, &pTextLayout);
+		//IDWriteTypography* pWriteTypography = NULL;
+		//pDWFactory->CreateTypography(&pWriteTypography);
+		//pWriteTypography->AddFontFeature({ DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_6, 1 });
+		
 		vector<DWRITE_TEXT_RANGE> rng;
 		rng = CheckNotEmojiRange(psz);
+		for (auto r : rng)
+			pTextLayout->SetFontSize(font_point * scaleX * 96 / 72, r);
 
+		DWRITE_LINE_METRICS lineMatrics;
+		UINT32 lineCnt = 2;
+		pTextLayout->GetLineMetrics(&lineMatrics, 2, &lineCnt);
 		DWRITE_TEXT_METRICS txtMetrics;
 		pTextLayout->GetMetrics(&txtMetrics);
 		D2D1_SIZE_F size;
@@ -833,14 +833,18 @@ static HRESULT _TextOutWithFallback_D2D
 #endif
 		CRect rect(left, top, left + max(size.width, rc.Width()), top + max(size.height, rc.Height()));
 
+		pTextLayout->SetMaxWidth(rc.Width());
+		pTextLayout->SetMaxHeight(rc.Height());
+#if 0
 		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat,
 			max(size.width, rc.Width()),
 			max(size.height, rc.Height()),
 			&pTextLayout
 		);
+#endif
 		pRenderTarget->BindDC(dc, &rect);
 		pRenderTarget->BeginDraw();
-		pRenderTarget->DrawTextLayout({ 0.0f, 0.0f }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		pRenderTarget->DrawTextLayout({ 0.0f, 0.0f - (size.height - rc.Height())/2 }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 		pRenderTarget->EndDraw();
 	}
 	pTextFormat->Release();
