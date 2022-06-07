@@ -842,9 +842,10 @@ static HRESULT _TextOutWithFallback_D2D
 			&pTextLayout
 		);
 #endif
+		float offset = (size.height > rc.Height()) ? (size.height - rc.Height()) / 2.0f : 0;
 		pRenderTarget->BindDC(dc, &rect);
 		pRenderTarget->BeginDraw();
-		pRenderTarget->DrawTextLayout({ 0.0f, 0.0f - (size.height - rc.Height())/2 }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		pRenderTarget->DrawTextLayout({ 0.0f, 0.0f - offset }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 		pRenderTarget->EndDraw();
 	}
 	pTextFormat->Release();
