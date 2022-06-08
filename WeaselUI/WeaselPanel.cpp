@@ -2,6 +2,7 @@
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
 #include <vector>
+#include <fstream>
 //#include <Usp10.h>
 
 #include "VerticalLayout.h"
@@ -348,10 +349,10 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	_isVistaSp2OrGrater = IsWindowsVistaSP2OrGreater();
 
     //get the dpi information
-    HDC screen = ::GetDC(0);
-    dpiScaleX_ = GetDeviceCaps(screen, LOGPIXELSX) / 96.0f;
-    dpiScaleY_ = GetDeviceCaps(screen, LOGPIXELSY) / 96.0f;
-    ::ReleaseDC(0, screen);
+    //HDC screen = ::GetDC(0);
+    //dpiScaleX_ = GetDeviceCaps(screen, LOGPIXELSX) / 96.0f;
+    //dpiScaleY_ = GetDeviceCaps(screen, LOGPIXELSY) / 96.0f;
+    //::ReleaseDC(0, screen);
 
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
@@ -369,6 +370,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 			format);
 	pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
 	//pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
 	return TRUE;
 }
 
@@ -655,16 +657,7 @@ static vector<DWRITE_TEXT_RANGE> CheckEmojiRange(wstring str)
 	while (i < str.size())
 	{
 		sz = Utf16ToUnicode(utf16, unicode);
-		if (
-			(unicode >= 0x2700 && unicode <= 0x27bf)
-			|| (unicode >= 0x1f650 && unicode <= 0x1f67f)
-			|| (unicode >= 0x1f600 && unicode <= 0x1f64f)
-			|| (unicode >= 0x1f300 && unicode <= 0x1f5ff)
-			|| (unicode >= 0x1f900 && unicode <= 0x1f9ff)
-			|| (unicode >= 0x1fa70 && unicode <= 0x1faff)
-			|| (unicode >= 0x1f680 && unicode <= 0x1f6ff)
-			|| (unicode >= 0x2600 && unicode <= 0x26ff)
-			)
+		if ( (unicode >= 0x2600 && unicode <= 0x27bf) || (unicode >= 0x1f000 && unicode <= 0x1fbff) )
 			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
 		else
 			isEmjtmp = FALSE;
@@ -700,7 +693,7 @@ static vector<DWRITE_TEXT_RANGE> CheckEmojiRange(wstring str)
 static vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(wstring str)
 {
 	vector<DWRITE_TEXT_RANGE> rng;
-	int i = 0;
+	size_t i = 0;
 	wchar_t* utf16 = &str[0];
 	ULONG unicode = 0;
 	UINT32 sc = 0, ec = 0;
@@ -710,16 +703,7 @@ static vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(wstring str)
 	while (i < str.size())
 	{
 		sz = Utf16ToUnicode(utf16, unicode);
-		if (
-			(unicode >= 0x2700 && unicode <= 0x27bf)
-			|| (unicode >= 0x1f650 && unicode <= 0x1f67f)
-			|| (unicode >= 0x1f600 && unicode <= 0x1f64f)
-			|| (unicode >= 0x1f300 && unicode <= 0x1f5ff)
-			|| (unicode >= 0x1f900 && unicode <= 0x1f9ff)
-			|| (unicode >= 0x1fa70 && unicode <= 0x1faff)
-			|| (unicode >= 0x1f680 && unicode <= 0x1f6ff)
-			|| (unicode >= 0x2600 && unicode <= 0x26ff)
-			)
+		if ( (unicode >= 0x2600 && unicode <= 0x27bf) || (unicode >= 0x1f000 && unicode <= 0x1fbff) )
 			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
 		else
 			isEmjtmp = FALSE;
@@ -775,7 +759,7 @@ static HRESULT _TextOutWithFallback_D2D
 		DWRITE_FONT_WEIGHT_NORMAL, 
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
-		font_point * scaleX, L"", &pTextFormat);
+		font_point * scaleX / 72.0f, L"", &pTextFormat);
 	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
@@ -785,25 +769,41 @@ static HRESULT _TextOutWithFallback_D2D
 		IDWriteTextLayout* pTextLayout = NULL;
 		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, 0, 0, &pTextLayout);
 		vector<DWRITE_TEXT_RANGE> rng;
-		rng = CheckNotEmojiRange(psz);
-
+		rng = CheckEmojiRange(psz);
+		for (auto r : rng)
+			pTextLayout->SetFontSize(font_point * scaleX / 96.0f , r);
 		DWRITE_TEXT_METRICS txtMetrics;
 		pTextLayout->GetMetrics(&txtMetrics);
 		D2D1_SIZE_F size;
 		size = D2D1::SizeF(ceil(txtMetrics.widthIncludingTrailingWhitespace), ceil(txtMetrics.height));
 		// maybe bug here in the future
 		CRect rect(rc.left, rc.top, rc.left + max(size.width, rc.Width()), rc.top + max(size.height, rc.Height()));
-
-		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat,
-			max(size.width, rc.Width()),
-			max(size.height, rc.Height()),
-			&pTextLayout
-		);
-		float offset = (size.height > rc.Height()) ? (size.height - rc.Height()) / 2.0f : 0;
+		pTextLayout->SetMaxWidth(rect.Width());
+		pTextLayout->SetMaxHeight(rect.Height());
+		// offset calc start
+		IDWriteFontCollection* collection;
+		WCHAR name[64];
+		UINT32 findex;
+		BOOL exists;
+		pTextFormat->GetFontFamilyName(name, 64);
+		pTextFormat->GetFontCollection(&collection);
+		collection->FindFamilyName(name, &findex, &exists);
+		IDWriteFontFamily* ffamily;
+		collection->GetFontFamily(findex, &ffamily);
+		IDWriteFont* font;
+		ffamily->GetFirstMatchingFont(pTextFormat->GetFontWeight(), pTextFormat->GetFontStretch(), pTextFormat->GetFontStyle(), &font);
+		DWRITE_FONT_METRICS metrics;
+		font->GetMetrics(&metrics);
+		float ratio = pTextFormat->GetFontSize() / (float)metrics.designUnitsPerEm;
+		int offset = static_cast<int>((-metrics.strikethroughPosition + metrics.descent) * ratio);
+		ffamily->Release();
+		collection->Release();
+		font->Release();
+		// offset calc end
 		pRenderTarget->BindDC(dc, &rect);
 		pRenderTarget->BeginDraw();
 		if(pTextLayout != NULL)
-			pRenderTarget->DrawTextLayout({ 0.0f, 0.0f - offset}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+			pRenderTarget->DrawTextLayout({ 0.0f, 0.0f + offset}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 		pRenderTarget->EndDraw();
 	}
 	pTextFormat->Release();
