@@ -21,10 +21,10 @@ namespace weasel
 		virtual CRect GetCandidateTextRect(int id) const { return _candidateTextRects[id]; }
 		virtual CRect GetCandidateCommentRect(int id) const { return _candidateCommentRects[id]; }
 		virtual CRect GetStatusIconRect() const { return _statusIconRect; }
-
 		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const;
 		virtual bool IsInlinePreedit() const;
 		virtual bool ShouldDisplayStatusIcon() const;
+		void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const;
 
 	protected:
 		/* Utility functions */

@@ -32,7 +32,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		dc.GetTextExtent(_context.aux.str.c_str(), _context.aux.str.length(), &size);
+		//dc.GetTextExtent(_context.aux.str.c_str(), _context.aux.str.length(), &size);
+		GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
@@ -47,14 +48,16 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
-		dc.GetTextExtent(label.c_str(), label.length(), &size);
+		//dc.GetTextExtent(label.c_str(), label.length(), &size);
+		GetTextExtentDCMultiline(dc, label, label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
 		w += space;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
-		dc.GetTextExtent(text.c_str(), text.length(), &size);
+		//dc.GetTextExtent(text.c_str(), text.length(), &size);
+		GetTextExtentDCMultiline(dc, text, text.length(), &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx + space, h = max(h, size.cy);
 
@@ -62,7 +65,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 		if (!comments.at(i).str.empty())
 		{
 			const std::wstring& comment = comments.at(i).str;
-			dc.GetTextExtent(comment.c_str(), comment.length(), &size);
+			//dc.GetTextExtent(comment.c_str(), comment.length(), &size);
+			GetTextExtentDCMultiline(dc, comment, comment.length(), &size);
 			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
 			w += size.cx + space, h = max(h, size.cy);
 		}

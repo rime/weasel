@@ -7,13 +7,46 @@ StandardLayout::StandardLayout(const UIStyle &style, const Context &context, con
 	: Layout(style, context, status)
 {
 }
-
 std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const
 {
 	wchar_t buffer[128];
 	swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
 	return std::wstring(buffer);
 }
+
+// std::wstring°æ±¾
+static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim) {
+    std::wregex re{ delim };
+    return std::vector<std::wstring> {
+        std::wsregex_token_iterator(in.begin(), in.end(), re, -1),
+            std::wsregex_token_iterator()
+    };
+}
+void weasel::StandardLayout::GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const
+{
+	std::vector<std::wstring> lines;
+	lines = ws_split(wszString, L"\r");
+	lpSize->cx = 0;
+	lpSize->cy = 0;
+	if (lines.size() == 1)
+		dc.GetTextExtent(wszString.c_str(), nCount, lpSize);
+	else if(lines.size() > 1)
+	{
+		std::vector<CSize> sizes;
+		CSize sz;
+		for (auto line : lines)
+		{
+			dc.GetTextExtent(line.c_str(), nCount, &sz);
+			sizes.push_back(sz);
+		}
+		for (auto size : sizes)
+		{
+			lpSize->cx = (size.cx > lpSize->cx) ? size.cx : lpSize->cx;
+			lpSize->cy += size.cy;
+		}
+	}
+}
+
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 {
@@ -22,7 +55,8 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 	CSize size(0, 0);
 	if (!preedit.empty())
 	{
-		dc.GetTextExtent(preedit.c_str(), preedit.length(), &size);
+		//dc.GetTextExtent(preedit.c_str(), preedit.length(), &size);
+		GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
 		for (size_t i = 0; i < attrs.size(); i++)
 		{
 			if (attrs[i].type == weasel::HIGHLIGHTED)

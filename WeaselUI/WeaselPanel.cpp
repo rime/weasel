@@ -3,6 +3,7 @@
 #include <WeaselCommon.h>
 #include <vector>
 #include <fstream>
+#include <d2d1_1.h>
 //#include <Usp10.h>
 
 #include "VerticalLayout.h"
@@ -20,7 +21,10 @@ WeaselPanel::WeaselPanel(weasel::UI &ui)
 	: m_layout(NULL), 
 	  m_ctx(ui.ctx()), 
 	  m_status(ui.status()), 
-	  m_style(ui.style())
+	  m_style(ui.style()),
+	  _isVistaSp2OrGrater(false),
+	  dpiScaleX_(0.0f),
+	  dpiScaleY_(0.0f)
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -101,11 +105,10 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 		SolidBrush gBrBack(back_color);
 		if (m_style.shadow_radius)
 		{
-			Color centrColor = Color::MakeARGB(alpha/2, GetRValue(color), GetGValue(color), GetBValue(color));
-			int r = centrColor.GetR();
-			int g = centrColor.GetG();
-			int b = centrColor.GetB();
-			int a = centrColor.GetA();
+			BYTE r = GetRValue(color);
+			BYTE g = GetGValue(color);
+			BYTE b = GetBValue(color);
+			Color centrColor = Color::MakeARGB(alpha/2, r, g, b);
 			Color edgeColor = Color::MakeARGB(0, r, g, b);
 			GraphicsRoundRectPath shadowPath;
 			shadowPath.AddRoundRect(rc.left + m_style.shadow_radius, rc.top + m_style.shadow_radius,
@@ -125,6 +128,55 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 	}
 }
 
+void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor)
+{
+	rc.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+	{
+		Graphics gBack(dc);
+		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+		GraphicsRoundRectPath bgPath;
+		bgPath.AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
+		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
+		SolidBrush gBrBack(back_color);
+		if (m_style.shadow_radius)
+		{
+			BYTE r = GetRValue(shadowColor);
+			BYTE g = GetGValue(shadowColor);
+			BYTE b = GetBValue(shadowColor);
+#if 0
+			Color centrColor = Color::MakeARGB(shadowColor >> 24, r, g, b);
+			Color edgeColor = Color::MakeARGB(0, r, g, b);
+			GraphicsRoundRectPath shadowPath;
+			shadowPath.AddRoundRect(rc.left + m_style.shadow_radius, rc.top + m_style.shadow_radius,
+				rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
+			Gdiplus::PathGradientBrush pathBr(&shadowPath);
+			Color colors[] = { edgeColor, edgeColor,edgeColor, edgeColor };
+			int count = 4;
+			pathBr.SetCenterColor(centrColor);
+			pathBr.SetSurroundColors(colors, &count);
+			pathBr.SetFocusScales(
+				((float)(rc.Width() - m_style.shadow_radius * 2)) / (float)rc.Width(),
+				((float)(rc.Height() - m_style.shadow_radius * 2)) / (float)rc.Height()
+			);
+			gBack.FillPath(&pathBr, &shadowPath);
+#else
+			Color brc = Color::MakeARGB((shadowColor >> 24) / m_style.shadow_radius, r, g, b);
+
+			for (int i = 0; i < m_style.shadow_radius; i++)
+			{
+				GraphicsRoundRectPath path;
+				path.AddRoundRect(rc.left + m_style.shadow_radius + i, rc.top + m_style.shadow_radius + i,
+					rc.Width() - 2 * i, rc.Height() - 2 * i, m_style.round_corner, m_style.round_corner);
+				SolidBrush br(brc);
+				gBack.FillPath(&br, &path);
+				DeleteObject(&path);
+				DeleteObject(&br);
+			}
+#endif
+		}
+		gBack.FillPath(&gBrBack, &bgPath);
+	}
+}
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
@@ -140,8 +192,8 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		if (range.start < range.end)
 		{
 			CSize selStart, selEnd;
-			dc.GetTextExtent(t.c_str(), range.start, &selStart);
-			dc.GetTextExtent(t.c_str(), range.end, &selEnd);
+			m_layout->GetTextExtentDCMultiline(dc, t, range.start, &selStart);
+			m_layout->GetTextExtentDCMultiline(dc, t, range.end, &selEnd);
 			int x = rc.left;
 			if (range.start > 0)
 			{
@@ -155,7 +207,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz[yyy]
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
 				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
-				_HighlightText(dc, rc_hi, m_style.hilited_back_color);
+				_HighlightTextEx(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color);
 				dc.SetTextColor(m_style.hilited_text_color);
 				dc.SetBkColor(m_style.hilited_back_color);
 				_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length());
@@ -194,7 +246,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		CRect rect;
 		if (i == m_ctx.cinfo.highlighted)
 		{
-			_HighlightText(dc, m_layout->GetHighlightRect(), m_style.hilited_candidate_back_color);
+			_HighlightTextEx(dc, m_layout->GetHighlightRect(), m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color);
 			dc.SetTextColor(m_style.hilited_label_text_color);
 		}
 		else
@@ -212,7 +264,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			}
 			candidateBackRect.top = m_layout->GetCandidateLabelRect(i).top;
 			candidateBackRect.bottom = m_layout->GetCandidateLabelRect(i).bottom;
-			_HighlightText(dc, candidateBackRect, m_style.candidate_back_color);
+			_HighlightTextEx(dc, candidateBackRect, m_style.candidate_back_color, m_style.candidate_shadow_color);
 			dc.SetTextColor(m_style.label_text_color);
 		}
 
@@ -460,7 +512,7 @@ static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const& rc,
             0, 0, FALSE);
     }
 
-	ScriptStringFree(&ssa);
+	hr = ScriptStringFree(&ssa);
 	return hr;
 }
 
@@ -657,7 +709,7 @@ static vector<DWRITE_TEXT_RANGE> CheckEmojiRange(wstring str)
 	while (i < str.size())
 	{
 		sz = Utf16ToUnicode(utf16, unicode);
-		if ( (unicode >= 0x2600 && unicode <= 0x27bf) || (unicode >= 0x1f000 && unicode <= 0x1fbff) )
+		if ( (unicode >= 0x2000 && unicode <= 0x27bf) || (unicode >= 0x1f000 && unicode <= 0x1fbff) )
 			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
 		else
 			isEmjtmp = FALSE;
@@ -703,7 +755,7 @@ static vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(wstring str)
 	while (i < str.size())
 	{
 		sz = Utf16ToUnicode(utf16, unicode);
-		if ( (unicode >= 0x2600 && unicode <= 0x27bf) || (unicode >= 0x1f000 && unicode <= 0x1fbff) )
+		if ( (unicode >= 0x2000 && unicode <= 0x27bf) || (unicode >= 0x1f000 && unicode <= 0x1fbff) )
 			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
 		else
 			isEmjtmp = FALSE;

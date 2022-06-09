@@ -712,6 +712,18 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		{
 			style.hilited_candidate_back_color = style.hilited_back_color;
 		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color))
+		{
+			style.hilited_candidate_shadow_color = (style.hilited_candidate_back_color & 0x00ffffff) | (((int)(style.hilited_candidate_back_color >> 25)) << 24);
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color))
+		{
+			style.hilited_shadow_color = (style.hilited_back_color & 0x00ffffff) | (((int)(style.hilited_back_color >> 25)) << 24);
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color))
+		{
+			style.candidate_shadow_color = (style.candidate_back_color & 0x00ffffff) | (((int)(style.candidate_back_color >> 25)) << 24);
+		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color))
 		{
 			style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);

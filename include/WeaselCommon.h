@@ -171,14 +171,17 @@ namespace weasel
 		int text_color;
 		int candidate_text_color;
 		int candidate_back_color;
+		int candidate_shadow_color;
 		int label_text_color;
 		int comment_text_color;
 		int back_color;
 		int border_color;
 		int hilited_text_color;
 		int hilited_back_color;
+		int hilited_shadow_color;
 		int hilited_candidate_text_color;
 		int hilited_candidate_back_color;
+		int hilited_candidate_shadow_color;
 		int hilited_label_text_color;
 		int hilited_comment_text_color;
 		// per client
@@ -207,14 +210,17 @@ namespace weasel
 			text_color(0),
 			candidate_text_color(0),
 			candidate_back_color(0),
+			candidate_shadow_color(0),
 			label_text_color(0),
 			comment_text_color(0),
 			back_color(0),
 			border_color(0),
 			hilited_text_color(0),
 			hilited_back_color(0),
+			hilited_shadow_color(0),
 			hilited_candidate_text_color(0),
 			hilited_candidate_back_color(0),
+			hilited_candidate_shadow_color(0),
 			hilited_label_text_color(0),
 			hilited_comment_text_color(0),
 			client_caps(0) {}
@@ -250,14 +256,17 @@ namespace boost {
 			ar & s.text_color;
 			ar & s.candidate_text_color;
 			ar & s.candidate_back_color;
+			ar & s.candidate_shadow_color;
 			ar & s.label_text_color;
 			ar & s.comment_text_color;
 			ar & s.back_color;
 			ar & s.border_color;
 			ar & s.hilited_text_color;
 			ar & s.hilited_back_color;
+			ar & s.hilited_shadow_color;
 			ar & s.hilited_candidate_text_color;
 			ar & s.hilited_candidate_back_color;
+			ar & s.hilited_candidate_shadow_color;
 			ar & s.hilited_label_text_color;
 			ar & s.hilited_comment_text_color;
 			// per client

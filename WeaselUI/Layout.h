@@ -2,6 +2,7 @@
 
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
+#include <regex>
 
 namespace weasel
 {
@@ -25,6 +26,7 @@ namespace weasel
 		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const = 0;
 		virtual bool IsInlinePreedit() const = 0;
 		virtual bool ShouldDisplayStatusIcon() const = 0;
+		virtual void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const = 0;
 
 	protected:
 		const UIStyle &_style;

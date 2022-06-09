@@ -44,6 +44,7 @@ private:
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
+	void _HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor);
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch);
 	HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch);
 
@@ -63,9 +64,9 @@ private:
 	
 	float dpiScaleX_, dpiScaleY_;
 	// variable for d2d dwrite
-	ID2D1Factory* pD2d1Factory;
-	IDWriteFactory* pDWFactory;
-	ID2D1DCRenderTarget* pRenderTarget;
+	ID2D1Factory* pD2d1Factory = NULL;
+	IDWriteFactory* pDWFactory = NULL;
+	ID2D1DCRenderTarget* pRenderTarget = NULL;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
