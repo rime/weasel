@@ -3,6 +3,7 @@
 #include <WeaselCommon.h>
 #include <vector>
 #include <fstream>
+#include <string>
 #include <d2d1_1.h>
 //#include <Usp10.h>
 
@@ -16,6 +17,9 @@
 using namespace Gdiplus;
 using namespace weasel;
 using namespace std;
+
+#define max3(a,b,c) max(max(a,b),c)
+#define min3(a,b,c) min(min(a,b),c)
 
 WeaselPanel::WeaselPanel(weasel::UI &ui)
 	: m_layout(NULL), 
@@ -262,8 +266,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 				candidateBackRect.left = m_layout->GetHighlightRect().left;
 				candidateBackRect.right = m_layout->GetHighlightRect().right;
 			}
-			candidateBackRect.top = m_layout->GetCandidateLabelRect(i).top;
-			candidateBackRect.bottom = m_layout->GetCandidateLabelRect(i).bottom;
+			candidateBackRect.top =m_layout->GetCandidateTextRect(i).top;
+			candidateBackRect.bottom = m_layout->GetCandidateTextRect(i).bottom;
 			_HighlightTextEx(dc, candidateBackRect, m_style.candidate_back_color, m_style.candidate_shadow_color);
 			dc.SetTextColor(m_style.label_text_color);
 		}
@@ -295,6 +299,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		}
 		drawn = true;
 	}
+
 	dc.SetTextColor(m_style.text_color);
 	return drawn;
 }

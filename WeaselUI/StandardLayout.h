@@ -25,6 +25,7 @@ namespace weasel
 		virtual bool IsInlinePreedit() const;
 		virtual bool ShouldDisplayStatusIcon() const;
 		void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const;
+		std::wstring StandardLayout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const;
 
 	protected:
 		/* Utility functions */

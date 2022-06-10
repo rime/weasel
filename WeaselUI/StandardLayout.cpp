@@ -15,36 +15,57 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 }
 
 // std::wstring°æ±¾
-static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim) {
-    std::wregex re{ delim };
-    return std::vector<std::wstring> {
-        std::wsregex_token_iterator(in.begin(), in.end(), re, -1),
-            std::wsregex_token_iterator()
-    };
+//static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim) {
+//    std::wregex re{ delim };
+//    return std::vector<std::wstring> {
+//        std::wsregex_token_iterator(in.begin(), in.end(), re, -1),
+//            std::wsregex_token_iterator()
+//    };
+//}
+// from https://www.wabiapp.com/WabiSampleSource/windows/convert_crlf_w.html
+std::wstring StandardLayout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const
+{
+	std::wstring strRet;
+	std::wstring::iterator ite = strString.begin();
+	std::wstring::iterator iteEnd = strString.end();
+	if (0 < strString.size()) {
+		wchar_t wNextChar = *ite++;
+		while (1) {
+			if ('\r' == wNextChar) {
+				strRet += strCRLF;
+				if (ite == iteEnd) { break; }
+				wNextChar = *ite++;
+				if ('\n' == wNextChar) {
+					if (ite == iteEnd) { break; }
+					wNextChar = *ite++;
+				}
+			}
+			else if ('\n' == wNextChar) {
+				strRet += strCRLF;
+				if (ite == iteEnd) { break; }
+				wNextChar = *ite++;
+				if ('\r' == wNextChar) {
+					if (ite == iteEnd) { break; }
+					wNextChar = *ite++;
+				}
+			}
+			else {
+				strRet += wNextChar;
+				if (ite == iteEnd) { break; }
+				wNextChar = *ite++;
+			}
+		};
+	}
+	return(strRet);
 }
+
 void weasel::StandardLayout::GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const
 {
-	std::vector<std::wstring> lines;
-	lines = ws_split(wszString, L"\r");
-	lpSize->cx = 0;
-	lpSize->cy = 0;
-	if (lines.size() == 1)
-		dc.GetTextExtent(wszString.c_str(), nCount, lpSize);
-	else if(lines.size() > 1)
-	{
-		std::vector<CSize> sizes;
-		CSize sz;
-		for (auto line : lines)
-		{
-			dc.GetTextExtent(line.c_str(), nCount, &sz);
-			sizes.push_back(sz);
-		}
-		for (auto size : sizes)
-		{
-			lpSize->cx = (size.cx > lpSize->cx) ? size.cx : lpSize->cx;
-			lpSize->cy += size.cy;
-		}
-	}
+	RECT TextArea = { 0, 0, 0, 0 };
+	wszString = ConvertCRLF(wszString,  L"\r");
+	DrawText(dc, wszString.c_str(), nCount, &TextArea, DT_CALCRECT);
+	lpSize->cx = TextArea.right - TextArea.left;
+	lpSize->cy = TextArea.bottom - TextArea.top;
 }
 
 
