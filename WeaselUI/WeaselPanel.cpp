@@ -880,11 +880,16 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 	if (_isVistaSp2OrGrater && m_style.color_font )
 	{
-		_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dpiScaleX_, dpiScaleY_,
-			dc.GetTextColor(), m_style.font_face, pRenderTarget, pDWFactory);
+		std::vector<DWRITE_TEXT_RANGE> rgn = CheckEmojiRange(psz);
+		if (rgn.size())
+			_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dpiScaleX_, dpiScaleY_,
+				dc.GetTextColor(), m_style.font_face, pRenderTarget, pDWFactory);
+		else
+			goto GDI_TextOut;
 	}
 	else
 	{ 
+	GDI_TextOut:
 		std::vector<std::wstring> lines;
 		lines = ws_split(psz, L"\r");
 		int offset = 0;
@@ -893,7 +898,6 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 			CSize size;
 			TEXTMETRIC tm;
 			dc.GetTextExtent(line.c_str(), line.length(), &size);
-			//m_layout->GetTextExtentDCMultiline(dc, line, line.length(), &size);
 			if (FAILED(_TextOutWithFallback_ULW(dc, x, y+offset, rc, line.c_str(), line.length(), height, m_style.font_face ))) 
 			{
 				CFont font;
