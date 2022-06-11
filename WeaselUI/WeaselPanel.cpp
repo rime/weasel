@@ -867,7 +867,14 @@ static HRESULT _TextOutWithFallback_D2D
 	pBrush->Release();
 	return S_OK;
 }
-
+static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim) 
+{
+    std::wregex re{ delim };
+    return std::vector<std::wstring> {
+        std::wsregex_token_iterator(in.begin(), in.end(), re, -1),
+            std::wsregex_token_iterator()
+    };
+}
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
 {
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
@@ -878,36 +885,47 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 	}
 	else
 	{ 
-		if (FAILED(_TextOutWithFallback_ULW(dc, x, y, rc, psz, cch, height, m_style.font_face ))) 
+		std::vector<std::wstring> lines;
+		lines = ws_split(psz, L"\r");
+		int offset = 0;
+		for (wstring line : lines)
 		{
-			CFont font;
-			font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-
-			HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
-			DeleteObject(font);
-			if (MyBMP)
+			CSize size;
+			TEXTMETRIC tm;
+			dc.GetTextExtent(line.c_str(), line.length(), &size);
+			//m_layout->GetTextExtentDCMultiline(dc, line, line.length(), &size);
+			if (FAILED(_TextOutWithFallback_ULW(dc, x, y+offset, rc, line.c_str(), line.length(), height, m_style.font_face ))) 
 			{
-				BYTE alpha = (BYTE)((dc.GetTextColor() >> 24) & 255) ;
-				// temporary dc select bmp into it
-				HDC hTempDC = CreateCompatibleDC(dc);
-				HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
-				if (hOldBMP)
+				CFont font;
+				font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
+
+				HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
+				DeleteObject(font);
+				if (MyBMP)
 				{
-					BITMAP BMInf;
-					GetObject(MyBMP, sizeof(BITMAP), &BMInf);
-					// fill blend function and blend new text to window
-					BLENDFUNCTION bf;
-					bf.BlendOp = AC_SRC_OVER;
-					bf.BlendFlags = 0;
-					bf.SourceConstantAlpha = alpha;
-					bf.AlphaFormat = AC_SRC_ALPHA;
-					AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
-					// clean up
-					SelectObject(hTempDC, hOldBMP);
-					DeleteObject(MyBMP);
-					DeleteDC(hTempDC);
+					BYTE alpha = (BYTE)((dc.GetTextColor() >> 24) & 255) ;
+					// temporary dc select bmp into it
+					HDC hTempDC = CreateCompatibleDC(dc);
+					HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
+					if (hOldBMP)
+					{
+						BITMAP BMInf;
+						GetObject(MyBMP, sizeof(BITMAP), &BMInf);
+						// fill blend function and blend new text to window
+						BLENDFUNCTION bf;
+						bf.BlendOp = AC_SRC_OVER;
+						bf.BlendFlags = 0;
+						bf.SourceConstantAlpha = alpha;
+						bf.AlphaFormat = AC_SRC_ALPHA;
+						AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
+						// clean up
+						SelectObject(hTempDC, hOldBMP);
+						DeleteObject(MyBMP);
+						DeleteDC(hTempDC);
+					}
 				}
 			}
+			offset += size.cy;
 		}
 	}
 }
