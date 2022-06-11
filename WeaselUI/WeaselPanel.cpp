@@ -701,9 +701,9 @@ inline static size_t Utf16ToUnicode(const wchar_t* src, ULONG& des)
 }
 
 // wstring中查找所有emoji字符的range
-static vector<DWRITE_TEXT_RANGE> CheckEmojiRange(wstring str)
+static std::vector<DWRITE_TEXT_RANGE> CheckEmojiRange(std::wstring str)
 {
-	vector<DWRITE_TEXT_RANGE> rng;
+	std::vector<DWRITE_TEXT_RANGE> rng;
 	int i = 0;
 	wchar_t* utf16 = &str[0];
 	ULONG unicode = 0;
@@ -747,9 +747,9 @@ static vector<DWRITE_TEXT_RANGE> CheckEmojiRange(wstring str)
 	return rng;
 }
 // wstring中查找所有非emoji字符的range
-static vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(wstring str)
+static std::vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(std::wstring str)
 {
-	vector<DWRITE_TEXT_RANGE> rng;
+	std::vector<DWRITE_TEXT_RANGE> rng;
 	size_t i = 0;
 	wchar_t* utf16 = &str[0];
 	ULONG unicode = 0;
@@ -792,14 +792,32 @@ static vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(wstring str)
 	}
 	return rng;
 }
-static HRESULT _TextOutWithFallback_D2D 
-(
-		CDCHandle dc, 
-		CRect const rc, wstring psz, int cch, int font_point, float scaleX, float scaleY, 
-		COLORREF gdiColor,
-		std::wstring fontface, 
-		ID2D1DCRenderTarget* pRenderTarget,
-		IDWriteFactory* pDWFactory)
+
+static inline int CallFontOffsetDW(IDWriteTextFormat* pTextFormat)
+{
+	// offset calc start
+	IDWriteFontCollection* collection;
+	WCHAR name[64];
+	UINT32 findex;
+	BOOL exists;
+	pTextFormat->GetFontFamilyName(name, 64);
+	pTextFormat->GetFontCollection(&collection);
+	collection->FindFamilyName(name, &findex, &exists);
+	IDWriteFontFamily* ffamily;
+	collection->GetFontFamily(findex, &ffamily);
+	IDWriteFont* font;
+	ffamily->GetFirstMatchingFont(pTextFormat->GetFontWeight(), pTextFormat->GetFontStretch(), pTextFormat->GetFontStyle(), &font);
+	DWRITE_FONT_METRICS metrics;
+	font->GetMetrics(&metrics);
+	float ratio = pTextFormat->GetFontSize() / (float)metrics.designUnitsPerEm;
+	int offset = static_cast<int>((-metrics.strikethroughPosition + metrics.descent) * ratio);
+	ffamily->Release();
+	collection->Release();
+	font->Release();
+	// offset calc end
+	return offset;
+}
+HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, int font_point, COLORREF gdiColor, std::wstring fontface )
 {
 	float r = (float)(GetRValue(gdiColor))/255.0f;
 	float g = (float)(GetGValue(gdiColor))/255.0f;
@@ -816,7 +834,7 @@ static HRESULT _TextOutWithFallback_D2D
 		DWRITE_FONT_WEIGHT_NORMAL, 
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
-		font_point * scaleX / 72.0f, L"", &pTextFormat);
+		font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
 	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
@@ -828,7 +846,7 @@ static HRESULT _TextOutWithFallback_D2D
 		vector<DWRITE_TEXT_RANGE> rng;
 		rng = CheckEmojiRange(psz);
 		for (auto r : rng)
-			pTextLayout->SetFontSize(font_point * scaleX / 96.0f , r);
+			pTextLayout->SetFontSize(font_point * dpiScaleX_ / 96.0f , r);
 		DWRITE_TEXT_METRICS txtMetrics;
 		pTextLayout->GetMetrics(&txtMetrics);
 		D2D1_SIZE_F size;
@@ -837,26 +855,7 @@ static HRESULT _TextOutWithFallback_D2D
 		CRect rect(rc.left, rc.top, rc.left + max(size.width, rc.Width()), rc.top + max(size.height, rc.Height()));
 		pTextLayout->SetMaxWidth(rect.Width());
 		pTextLayout->SetMaxHeight(rect.Height());
-		// offset calc start
-		IDWriteFontCollection* collection;
-		WCHAR name[64];
-		UINT32 findex;
-		BOOL exists;
-		pTextFormat->GetFontFamilyName(name, 64);
-		pTextFormat->GetFontCollection(&collection);
-		collection->FindFamilyName(name, &findex, &exists);
-		IDWriteFontFamily* ffamily;
-		collection->GetFontFamily(findex, &ffamily);
-		IDWriteFont* font;
-		ffamily->GetFirstMatchingFont(pTextFormat->GetFontWeight(), pTextFormat->GetFontStretch(), pTextFormat->GetFontStyle(), &font);
-		DWRITE_FONT_METRICS metrics;
-		font->GetMetrics(&metrics);
-		float ratio = pTextFormat->GetFontSize() / (float)metrics.designUnitsPerEm;
-		int offset = static_cast<int>((-metrics.strikethroughPosition + metrics.descent) * ratio);
-		ffamily->Release();
-		collection->Release();
-		font->Release();
-		// offset calc end
+		int offset = CallFontOffsetDW(pTextFormat);
 		pRenderTarget->BindDC(dc, &rect);
 		pRenderTarget->BeginDraw();
 		if(pTextLayout != NULL)
@@ -882,8 +881,7 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 	{
 		std::vector<DWRITE_TEXT_RANGE> rgn = CheckEmojiRange(psz);
 		if (rgn.size())
-			_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dpiScaleX_, dpiScaleY_,
-				dc.GetTextColor(), m_style.font_face, pRenderTarget, pDWFactory);
+			_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dc.GetTextColor(), m_style.font_face);
 		else
 			goto GDI_TextOut;
 	}
