@@ -167,6 +167,8 @@ namespace weasel
 		int round_corner;
 		int round_corner_ex;
 		int shadow_radius;
+		int shadow_offset_x;
+		int shadow_offset_y;
 		// color scheme
 		int text_color;
 		int candidate_text_color;
@@ -207,6 +209,8 @@ namespace weasel
 			round_corner(0),
 			round_corner_ex(0),
 			shadow_radius(0),
+			shadow_offset_x(0),
+			shadow_offset_y(0),
 			text_color(0),
 			candidate_text_color(0),
 			candidate_back_color(0),
@@ -252,6 +256,8 @@ namespace boost {
 			ar & s.round_corner;
 			ar & s.round_corner_ex;
 			ar & s.shadow_radius;
+			ar & s.shadow_offset_x;
+			ar & s.shadow_offset_y;
 			// color scheme
 			ar & s.text_color;
 			ar & s.candidate_text_color;
