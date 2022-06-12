@@ -637,9 +637,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 	::SelectObject(memDC, memBitmap);
 	// 获取候选数，消除当候选数为0，又处于inline_preedit状态时出现一個空白的小方框或者圆角矩形的情况
-	//const std::vector<Text> &candidates(m_ctx.cinfo.candies);
-	//if(!(candidates.size()==0 && m_style.inline_preedit))
-	//{
+	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+	if(!(candidates.size()==0 && m_style.inline_preedit))
+	{
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		GraphicsRoundRectPath bgPath;
@@ -656,7 +656,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.FillPath(&gBrBack, &bgPath);
 		gBack.ReleaseHDC(memDC);
-	//}
+	}
 	// background end
 	long height = -MulDiv(m_style.font_point, memDC.GetDeviceCaps(LOGPIXELSY), 72);
 
