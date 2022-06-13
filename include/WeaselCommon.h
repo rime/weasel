@@ -177,6 +177,7 @@ namespace weasel
 		int label_text_color;
 		int comment_text_color;
 		int back_color;
+		int shadow_color;
 		int border_color;
 		int hilited_text_color;
 		int hilited_back_color;
@@ -218,6 +219,7 @@ namespace weasel
 			label_text_color(0),
 			comment_text_color(0),
 			back_color(0),
+			shadow_color(0),
 			border_color(0),
 			hilited_text_color(0),
 			hilited_back_color(0),
@@ -266,6 +268,7 @@ namespace boost {
 			ar & s.label_text_color;
 			ar & s.comment_text_color;
 			ar & s.back_color;
+			ar & s.shadow_color;
 			ar & s.border_color;
 			ar & s.hilited_text_color;
 			ar & s.hilited_back_color;

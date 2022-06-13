@@ -493,10 +493,11 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurOffsetX * 2, (INT)rc.Height() + blurOffsetY * 2, PixelFormat32bppARGB);
 		Gdiplus::Graphics gg(pBitmapDropShadow);
 		gg.SetSmoothingMode(SmoothingModeHighQuality);
-		CRect rect(blurOffsetX + m_style.shadow_offset_x,
-			blurOffsetY + m_style.shadow_offset_y, 
-			rc.Width() + blurOffsetX + m_style.shadow_offset_x,
-			rc.Height() + blurOffsetY + m_style.shadow_offset_y);
+		CRect rect(
+				blurOffsetX + m_style.shadow_offset_x,
+				blurOffsetY + m_style.shadow_offset_y, 
+				rc.Width() + blurOffsetX + m_style.shadow_offset_x,
+				rc.Height() + blurOffsetY + m_style.shadow_offset_y);
 		GraphicsRoundRectPath path(rect, radius);
 		SolidBrush br(brc);
 		gg.FillPath(&br, &path);
@@ -507,6 +508,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	if(color & 0xff000000)
 		gBack.FillPath(&gBrBack, &bgPath);
 }
+
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
@@ -572,8 +574,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	const std::vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::vector<Text> &labels(m_ctx.cinfo.labels);
 
-	int ox = abs(m_style.shadow_offset_x);
-	int oy = abs(m_style.shadow_offset_y);
+	int ox = abs(m_style.shadow_offset_x)*2;
+	int oy = abs(m_style.shadow_offset_y)*2;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		CRect rect;
@@ -655,8 +657,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 	::SelectObject(memDC, memBitmap);
 
-	int ox = abs(m_style.shadow_offset_x);
-	int oy = abs(m_style.shadow_offset_y);
+	int ox = abs(m_style.shadow_offset_x)*2;
+	int oy = abs(m_style.shadow_offset_y)*2;
 	// 获取候选数，消除当候选数为0，又处于inline_preedit状态时出现一個空白的小方框或者圆角矩形的情况
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
 	CRect trc;
@@ -665,15 +667,18 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		trc = rc;
-		trc.DeflateRect(2 * ox + m_style.border, 2 * oy + m_style.border);
+		trc.DeflateRect(ox + m_style.border, oy + m_style.border);
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Pen gPenBorder(border_color, m_style.border);
-		if (m_style.shadow_radius)
-			_HighlightTextEx(memDC, trc, m_style.back_color, 0x20000000, ox * 4, oy * 4, m_style.round_corner_ex);
+		if (m_style.shadow_radius && (m_style.shadow_color & 0xff000000))
+			_HighlightTextEx(memDC, trc, m_style.back_color, m_style.shadow_color, ox*2, oy*2, m_style.round_corner_ex);
 		else
-			gBack.FillPath(new SolidBrush(Color::MakeARGB(255, 0xee, 0xee, 0xee)), &bgPath);
+		{
+			Color back_color = Color::MakeARGB((m_style.back_color>>24), GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
+			gBack.FillPath(new SolidBrush(back_color), &bgPath);
+		}
 		gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.ReleaseHDC(memDC);
 	}
@@ -693,18 +698,18 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// draw preedit string
 	if (!m_layout->IsInlinePreedit())
 	{
-		trc = OffsetRect(m_layout->GetPreeditRect(), ox * 2, oy * 2);
+		trc = OffsetRect(m_layout->GetPreeditRect(), ox, oy);
 		drawn |= _DrawPreedit(m_ctx.preedit, memDC, trc);
 	}
 	
 	// draw auxiliary string
-	trc = OffsetRect(m_layout->GetAuxiliaryRect(), ox * 2, oy * 2);
+	trc = OffsetRect(m_layout->GetAuxiliaryRect(), ox, oy);
 	drawn |= _DrawPreedit(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
 
 	// status icon (I guess Metro IME stole my idea :)
 	if (m_layout->ShouldDisplayStatusIcon())
 	{
-		const CRect iconRect(OffsetRect(m_layout->GetStatusIconRect(), m_style.shadow_offset_x*2, m_style.shadow_offset_y*2));
+		const CRect iconRect(OffsetRect(m_layout->GetStatusIconRect(), ox, oy));
 		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
 		memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 		drawn = true;

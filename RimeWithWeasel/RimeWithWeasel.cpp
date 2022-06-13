@@ -676,6 +676,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		std::string prefix("preset_color_schemes/");
 		prefix += buffer;
 		RimeConfigGetColor32b(config, (prefix + "/back_color").c_str(), &style.back_color);
+		if (!RimeConfigGetColor32b(config, (prefix + "/shadow_color").c_str(), &style.shadow_color))
+		{
+			style.shadow_color = 0x00000000;
+		}
 		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color);
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color))
 		{
