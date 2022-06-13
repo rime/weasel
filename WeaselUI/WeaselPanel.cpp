@@ -486,7 +486,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner);
 		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
-		if (m_style.shadow_radius)
+		if (m_style.shadow_radius && (shadowColor & 0xff000000))
 		{
 			BYTE r = GetRValue(shadowColor);
 			BYTE g = GetGValue(shadowColor);
@@ -506,7 +506,8 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			gBack.DrawImage(pBitmapDropShadow, rc.left - gapx, rc.top - gapy);
 			pBitmapDropShadow->operator delete;
 		}
-		gBack.FillPath(&gBrBack, &bgPath);
+		if(color & 0xff000000)
+			gBack.FillPath(&gBrBack, &bgPath);
 	}
 }
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
@@ -652,16 +653,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		CRect trc = InsetRect(rc, m_style.border, m_style.border);
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
-
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
-		alpha = (m_style.back_color >> 24) & 255;
-		Color back_color = Color::MakeARGB(alpha, GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
-		SolidBrush gBrBack(back_color);
 		Pen gPenBorder(border_color, m_style.border);
-
 		gBack.DrawPath(&gPenBorder, &bgPath);
-		gBack.FillPath(&gBrBack, &bgPath);
+		_HighlightTextEx(memDC, trc, m_style.back_color, 0x00000000);
 		gBack.ReleaseHDC(memDC);
 	}
 	// background end
