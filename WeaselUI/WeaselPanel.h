@@ -75,6 +75,7 @@ class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
 public:
 	GraphicsRoundRectPath();
 	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery);
+	GraphicsRoundRectPath(const CRect rc, int corner);
 
 public:
 	void AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery);

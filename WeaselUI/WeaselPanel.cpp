@@ -354,6 +354,16 @@ void DoGaussianBlurPower(Gdiplus::Bitmap* img, float radiusX, float radiusY, int
 }
 /* end  image gauss blur functions from https://github.com/kenjinote/DropShadow/  */
 #pragma region "gause blur"
+static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
+{
+	CRect res(rc.left + offsetx, rc.top + offsety, rc.right + offsetx, rc.bottom + offsety);
+	return res;
+}
+static CRect InsetRect(const CRect rc, int offsetx, int offsety)
+{
+	CRect res(rc.left + offsetx, rc.top + offsety, rc.right - offsetx, rc.bottom - offsety);
+	return res;
+}
 
  WeaselPanel::WeaselPanel(weasel::UI &ui)
 	: m_layout(NULL), 
@@ -473,8 +483,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	{
 		Graphics gBack(dc);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-		GraphicsRoundRectPath bgPath;
-		bgPath.AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
+		GraphicsRoundRectPath bgPath(rc, m_style.round_corner);
 		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
 		if (m_style.shadow_radius)
@@ -489,13 +498,12 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + gapx * 2, (INT)rc.Height() + gapy * 2, PixelFormat32bppARGB);
 			Gdiplus::Graphics gg(pBitmapDropShadow);
 			gg.SetSmoothingMode(SmoothingModeHighQuality);
-			GraphicsRoundRectPath path;
-			path.AddRoundRect(gapx + m_style.shadow_offset_x, gapy + m_style.shadow_offset_y,
-				rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
+			CRect rect(gapx + m_style.shadow_offset_x, gapy + m_style.shadow_offset_y, rc.Width() + gapx + m_style.shadow_offset_x, rc.Height() + gapy + m_style.shadow_offset_y);
+			GraphicsRoundRectPath path(rect, m_style.round_corner);
 			SolidBrush br(brc);
 			gg.FillPath(&br, &path);
 			DoGaussianBlur(pBitmapDropShadow, m_style.shadow_radius, m_style.shadow_radius);
-			gBack.DrawImage(pBitmapDropShadow, rc.left - (m_style.margin_x - m_style.hilite_padding), rc.top - (m_style.margin_y - m_style.hilite_padding));
+			gBack.DrawImage(pBitmapDropShadow, rc.left - gapx, rc.top - gapy);
 			pBitmapDropShadow->operator delete;
 		}
 		gBack.FillPath(&gBrBack, &bgPath);
@@ -642,9 +650,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	{
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-		GraphicsRoundRectPath bgPath;
-
-		bgPath.AddRoundRect(rc.left+m_style.border, rc.top+m_style.border, rc.Width()-m_style.border*2, rc.Height()-m_style.border*2, m_style.round_corner_ex, m_style.round_corner_ex);
+		CRect trc = InsetRect(rc, m_style.border, m_style.border);
+		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
 
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
@@ -1262,6 +1269,11 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(int left, int top, int width, int h
 	: Gdiplus::GraphicsPath()
 {
 	AddRoundRect(left, top, width, height, cornerx, cornery);
+}
+
+GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner)
+{
+	AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), corner, corner);
 }
 
 void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery)
