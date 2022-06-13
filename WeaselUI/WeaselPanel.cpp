@@ -21,7 +21,7 @@ using namespace std;
 #define max3(a,b,c) max(max(a,b),c)
 #define min3(a,b,c) min(min(a,b),c)
 
-#pragma region "gause blur"
+//#pragma region "gause blur"
 /* start image gauss blur functions from https://github.com/kenjinote/DropShadow/  */
 #define myround(x) (int)((x)+0.5)
 
@@ -353,15 +353,10 @@ void DoGaussianBlurPower(Gdiplus::Bitmap* img, float radiusX, float radiusY, int
 	delete pBitmap;
 }
 /* end  image gauss blur functions from https://github.com/kenjinote/DropShadow/  */
-#pragma region "gause blur"
+//#pragma region "gause blur"
 static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
 {
 	CRect res(rc.left + offsetx, rc.top + offsety, rc.right + offsetx, rc.bottom + offsety);
-	return res;
-}
-static CRect InsetRect(const CRect rc, int offsetx, int offsety)
-{
-	CRect res(rc.left + offsetx, rc.top + offsety, rc.right - offsetx, rc.bottom - offsety);
 	return res;
 }
 
@@ -395,6 +390,10 @@ void WeaselPanel::_ResizeWindow()
 	dc.SelectFont(font);
 
 	CSize size = m_layout->GetContentSize();
+	if (m_style.shadow_offset_x)
+		size.cx += abs(m_style.shadow_offset_x * 4);
+	if (m_style.shadow_offset_y)
+		size.cy += abs(m_style.shadow_offset_y * 4);
 	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
@@ -479,37 +478,34 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 
 void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius)
 {
-	rc.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+	Graphics gBack(dc);
+	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+	GraphicsRoundRectPath bgPath(rc, radius);
+	Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
+	SolidBrush gBrBack(back_color);
+	if (m_style.shadow_radius && (shadowColor & 0xff000000))
 	{
-		Graphics gBack(dc);
-		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-		GraphicsRoundRectPath bgPath(rc, radius);
-		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
-		SolidBrush gBrBack(back_color);
-		if (m_style.shadow_radius && (shadowColor & 0xff000000))
-		{
-			BYTE r = GetRValue(shadowColor);
-			BYTE g = GetGValue(shadowColor);
-			BYTE b = GetBValue(shadowColor);
-			Color brc = Color::MakeARGB((BYTE)(shadowColor >> 24), r, g, b);
-			static Bitmap* pBitmapDropShadow;
-			pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurOffsetX * 2, (INT)rc.Height() + blurOffsetY * 2, PixelFormat32bppARGB);
-			Gdiplus::Graphics gg(pBitmapDropShadow);
-			gg.SetSmoothingMode(SmoothingModeHighQuality);
-			CRect rect(blurOffsetX + m_style.shadow_offset_x,
-				blurOffsetY + m_style.shadow_offset_y, 
-				rc.Width() + blurOffsetX + m_style.shadow_offset_x,
-				rc.Height() + blurOffsetY + m_style.shadow_offset_y);
-			GraphicsRoundRectPath path(rect, radius);
-			SolidBrush br(brc);
-			gg.FillPath(&br, &path);
-			DoGaussianBlur(pBitmapDropShadow, m_style.shadow_radius, m_style.shadow_radius);
-			gBack.DrawImage(pBitmapDropShadow, rc.left - blurOffsetX, rc.top - blurOffsetY);
-			pBitmapDropShadow->operator delete;
-		}
-		if(color & 0xff000000)
-			gBack.FillPath(&gBrBack, &bgPath);
+		BYTE r = GetRValue(shadowColor);
+		BYTE g = GetGValue(shadowColor);
+		BYTE b = GetBValue(shadowColor);
+		Color brc = Color::MakeARGB((BYTE)(shadowColor >> 24), r, g, b);
+		static Bitmap* pBitmapDropShadow;
+		pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurOffsetX * 2, (INT)rc.Height() + blurOffsetY * 2, PixelFormat32bppARGB);
+		Gdiplus::Graphics gg(pBitmapDropShadow);
+		gg.SetSmoothingMode(SmoothingModeHighQuality);
+		CRect rect(blurOffsetX + m_style.shadow_offset_x,
+			blurOffsetY + m_style.shadow_offset_y, 
+			rc.Width() + blurOffsetX + m_style.shadow_offset_x,
+			rc.Height() + blurOffsetY + m_style.shadow_offset_y);
+		GraphicsRoundRectPath path(rect, radius);
+		SolidBrush br(brc);
+		gg.FillPath(&br, &path);
+		DoGaussianBlur(pBitmapDropShadow, m_style.shadow_radius, m_style.shadow_radius);
+		gBack.DrawImage(pBitmapDropShadow, rc.left - blurOffsetX, rc.top - blurOffsetY);
+		pBitmapDropShadow->operator delete;
 	}
+	if(color & 0xff000000)
+		gBack.FillPath(&gBrBack, &bgPath);
 }
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
@@ -576,12 +572,16 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	const std::vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::vector<Text> &labels(m_ctx.cinfo.labels);
 
+	int ox = abs(m_style.shadow_offset_x);
+	int oy = abs(m_style.shadow_offset_y);
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		CRect rect;
 		if (i == m_ctx.cinfo.highlighted)
 		{
-			_HighlightTextEx(dc, m_layout->GetHighlightRect(), m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color,
+			rect = OffsetRect(m_layout->GetHighlightRect(), ox, oy);
+			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+			_HighlightTextEx(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color,
 				(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y - m_style.hilite_padding), m_style.round_corner);
 			dc.SetTextColor(m_style.hilited_label_text_color);
 		}
@@ -600,6 +600,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			}
 			candidateBackRect.top =m_layout->GetCandidateTextRect(i).top;
 			candidateBackRect.bottom = m_layout->GetCandidateTextRect(i).bottom;
+			candidateBackRect = OffsetRect(candidateBackRect, ox, oy);
+			candidateBackRect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			_HighlightTextEx(dc, candidateBackRect, m_style.candidate_back_color, m_style.candidate_shadow_color,
 				(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y-m_style.hilite_padding), m_style.round_corner);
 			dc.SetTextColor(m_style.label_text_color);
@@ -608,6 +610,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(i);
+		rect = OffsetRect(rect, ox, oy);
 		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length());
 
 		// Draw text
@@ -617,6 +620,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		else
 			dc.SetTextColor(m_style.candidate_text_color);
 		rect = m_layout->GetCandidateTextRect(i);
+		rect = OffsetRect(rect, ox, oy);
 		_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length());
 		
 		// Draw comment
@@ -628,6 +632,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			else
 				dc.SetTextColor(m_style.comment_text_color);
 			rect = m_layout->GetCandidateCommentRect(i);
+			rect = OffsetRect(rect, ox, oy);
 			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length());
 		}
 		drawn = true;
@@ -649,19 +654,27 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	CDCHandle memDC = ::CreateCompatibleDC(hdc);
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 	::SelectObject(memDC, memBitmap);
+
+	int ox = abs(m_style.shadow_offset_x);
+	int oy = abs(m_style.shadow_offset_y);
 	// 获取候选数，消除当候选数为0，又处于inline_preedit状态时出现一個空白的小方框或者圆角矩形的情况
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+	CRect trc;
 	if(!(candidates.size()==0 && m_style.inline_preedit))
 	{
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-		CRect trc = InsetRect(rc, m_style.border, m_style.border);
+		trc = rc;
+		trc.DeflateRect(2 * ox + m_style.border, 2 * oy + m_style.border);
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Pen gPenBorder(border_color, m_style.border);
+		if (m_style.shadow_radius)
+			_HighlightTextEx(memDC, trc, m_style.back_color, 0x20000000, ox * 4, oy * 4, m_style.round_corner_ex);
+		else
+			gBack.FillPath(new SolidBrush(Color::MakeARGB(255, 0xee, 0xee, 0xee)), &bgPath);
 		gBack.DrawPath(&gPenBorder, &bgPath);
-		_HighlightTextEx(memDC, trc, m_style.back_color, 0x40000000, m_style.shadow_offset_x*2, m_style.shadow_offset_y*2, m_style.round_corner_ex);
 		gBack.ReleaseHDC(memDC);
 	}
 	// background end
@@ -679,15 +692,19 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 	// draw preedit string
 	if (!m_layout->IsInlinePreedit())
-		drawn |= _DrawPreedit(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
+	{
+		trc = OffsetRect(m_layout->GetPreeditRect(), ox * 2, oy * 2);
+		drawn |= _DrawPreedit(m_ctx.preedit, memDC, trc);
+	}
 	
 	// draw auxiliary string
+	trc = OffsetRect(m_layout->GetAuxiliaryRect(), ox * 2, oy * 2);
 	drawn |= _DrawPreedit(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
 
 	// status icon (I guess Metro IME stole my idea :)
 	if (m_layout->ShouldDisplayStatusIcon())
 	{
-		const CRect iconRect(m_layout->GetStatusIconRect());
+		const CRect iconRect(OffsetRect(m_layout->GetStatusIconRect(), m_style.shadow_offset_x*2, m_style.shadow_offset_y*2));
 		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
 		memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 		drawn = true;
