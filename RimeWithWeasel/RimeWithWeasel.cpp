@@ -627,6 +627,11 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.label_text_format = utf8towcs(label_text_format);
 	}
+	Bool dropshadow = True;
+	if (RimeConfigGetBool(config, "style/dropshadow", &dropshadow))
+	{
+		style.dropshadow = dropshadow;
+	}
 	// layout (alternative to style/horizontal)
 	char layout_type[256] = {0};
 	if (RimeConfigGetString(config, "style/layout/type", layout_type, sizeof(layout_type) - 1))
@@ -656,11 +661,11 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/shadow_radius", &style.shadow_radius);
 	if (!RimeConfigGetInt(config, "style/layout/shadow_offset_x", &style.shadow_offset_x))
 	{
-		style.shadow_offset_x == style.shadow_radius;
+		style.shadow_offset_x = style.shadow_radius;
 	}
 	if (!RimeConfigGetInt(config, "style/layout/shadow_offset_y", &style.shadow_offset_y))
 	{
-		style.shadow_offset_y == style.shadow_radius;
+		style.shadow_offset_y = style.shadow_radius;
 	}
 	// round_corner as alias of hilited_corner_radius
 	if(!RimeConfigGetInt(config, "style/layout/hilited_corner_radius", &style.round_corner))

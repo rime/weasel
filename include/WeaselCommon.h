@@ -166,6 +166,7 @@ namespace weasel
 		int hilite_padding;
 		int round_corner;
 		int round_corner_ex;
+		bool dropshadow;
 		int shadow_radius;
 		int shadow_offset_x;
 		int shadow_offset_y;
@@ -210,6 +211,7 @@ namespace weasel
 			round_corner(0),
 			round_corner_ex(0),
 			shadow_radius(0),
+			dropshadow(false),
 			shadow_offset_x(0),
 			shadow_offset_y(0),
 			text_color(0),
@@ -258,6 +260,7 @@ namespace boost {
 			ar & s.round_corner;
 			ar & s.round_corner_ex;
 			ar & s.shadow_radius;
+			ar & s.dropshadow;
 			ar & s.shadow_offset_x;
 			ar & s.shadow_offset_y;
 			// color scheme

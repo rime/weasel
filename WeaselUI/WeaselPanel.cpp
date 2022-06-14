@@ -483,7 +483,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	Graphics gBack(dc);
 	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 	// 必须back_color和shadow_color都是非完全透明色才做绘制，不接受透明back_color下还绘制shadow的设定
-	if (m_style.shadow_radius && (shadowColor & 0xff000000) && (color & 0xff000000))	
+	if (m_style.shadow_radius && (shadowColor & 0xff000000))	
 	{
 		BYTE r = GetRValue(shadowColor);
 		BYTE g = GetGValue(shadowColor);
@@ -493,14 +493,41 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurOffsetX * 2, (INT)rc.Height() + blurOffsetY * 2, PixelFormat32bppARGB);
 		Gdiplus::Graphics gg(pBitmapDropShadow);
 		gg.SetSmoothingMode(SmoothingModeHighQuality);
+
 		CRect rect(
 				blurOffsetX + m_style.shadow_offset_x,
 				blurOffsetY + m_style.shadow_offset_y, 
 				rc.Width() + blurOffsetX + m_style.shadow_offset_x,
 				rc.Height() + blurOffsetY + m_style.shadow_offset_y);
-		GraphicsRoundRectPath path(rect, radius);
-		SolidBrush br(brc);
-		gg.FillPath(&br, &path);
+		if (m_style.dropshadow)
+		{
+			CRect rect(
+					blurOffsetX + m_style.shadow_offset_x,
+					blurOffsetY + m_style.shadow_offset_y, 
+					rc.Width() + blurOffsetX + m_style.shadow_offset_x,
+					rc.Height() + blurOffsetY + m_style.shadow_offset_y);
+			GraphicsRoundRectPath path(rect, radius);
+			SolidBrush br(brc);
+			gg.FillPath(&br, &path);
+		}
+		else
+		{
+			int pensize = max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
+			int alpha = ((shadowColor >> 24) & 255);
+			Color scolor = Color::MakeARGB(alpha, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
+			Pen penShadow(scolor, pensize);
+			CRect rcShadowEx = OffsetRect(rect, -m_style.shadow_offset_x, -m_style.shadow_offset_y);
+			//rcShadowEx.InflateRect(pensize / 4, pensize / 4);
+			CRect rcErase = rcShadowEx;
+			//rcErase.InflateRect(pensize / 2, pensize / 2);
+			GraphicsRoundRectPath path(rcShadowEx, radius);
+			GraphicsRoundRectPath epath(rcErase, radius);
+			gg.DrawPath(&penShadow, &path);
+			gg.SetCompositingMode(CompositingMode::CompositingModeSourceCopy);
+			SolidBrush solidBrush(Color::Transparent);
+			gg.FillPath(&solidBrush, &epath);
+			gg.SetCompositingMode(CompositingMode::CompositingModeSourceOver);
+		}
 		DoGaussianBlur(pBitmapDropShadow, m_style.shadow_radius, m_style.shadow_radius);
 		gBack.DrawImage(pBitmapDropShadow, rc.left - blurOffsetX, rc.top - blurOffsetY);
 		pBitmapDropShadow->operator delete;
@@ -581,6 +608,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 
 	int ox = abs(m_style.shadow_offset_x)*2 + m_style.shadow_radius*2;
 	int oy = abs(m_style.shadow_offset_y)*2 + m_style.shadow_radius*2;
+	int bkx = abs((m_style.margin_x - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
+	int bky = abs((m_style.margin_y - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		CRect rect;
@@ -588,8 +617,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		{
 			rect = OffsetRect(m_layout->GetHighlightRect(), ox, oy);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-			_HighlightTextEx(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color,
-				(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y - m_style.hilite_padding), m_style.round_corner);
+			_HighlightTextEx(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, bkx, bky, m_style.round_corner);
 			dc.SetTextColor(m_style.hilited_label_text_color);
 		}
 		else
@@ -609,8 +637,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			candidateBackRect.bottom = m_layout->GetCandidateTextRect(i).bottom;
 			candidateBackRect = OffsetRect(candidateBackRect, ox, oy);
 			candidateBackRect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-			_HighlightTextEx(dc, candidateBackRect, m_style.candidate_back_color, m_style.candidate_shadow_color,
-				(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y-m_style.hilite_padding), m_style.round_corner);
+			_HighlightTextEx(dc, candidateBackRect, m_style.candidate_back_color, m_style.candidate_shadow_color, bkx, bky, m_style.round_corner);
 			dc.SetTextColor(m_style.label_text_color);
 		}
 
