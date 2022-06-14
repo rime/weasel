@@ -482,7 +482,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 {
 	Graphics gBack(dc);
 	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-	// 必须back_color和shadow_color都是非完全透明色才做绘制，不接受透明back_color下还绘制shadow的设定
+	// 必须shadow_color都是非完全透明色才做绘制
 	if (m_style.shadow_radius && (shadowColor & 0xff000000))	
 	{
 		BYTE r = GetRValue(shadowColor);
