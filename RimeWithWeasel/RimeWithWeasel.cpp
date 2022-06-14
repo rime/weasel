@@ -659,14 +659,8 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
 	RimeConfigGetInt(config, "style/layout/shadow_radius", &style.shadow_radius);
-	if (!RimeConfigGetInt(config, "style/layout/shadow_offset_x", &style.shadow_offset_x))
-	{
-		style.shadow_offset_x = style.shadow_radius;
-	}
-	if (!RimeConfigGetInt(config, "style/layout/shadow_offset_y", &style.shadow_offset_y))
-	{
-		style.shadow_offset_y = style.shadow_radius;
-	}
+	RimeConfigGetInt(config, "style/layout/shadow_offset_x", &style.shadow_offset_x);
+	RimeConfigGetInt(config, "style/layout/shadow_offset_y", &style.shadow_offset_y);
 	// round_corner as alias of hilited_corner_radius
 	if(!RimeConfigGetInt(config, "style/layout/hilited_corner_radius", &style.round_corner))
 	{
