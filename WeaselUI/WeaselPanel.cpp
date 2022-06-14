@@ -391,9 +391,11 @@ void WeaselPanel::_ResizeWindow()
 
 	CSize size = m_layout->GetContentSize();
 	if (m_style.shadow_offset_x)
-		size.cx += abs(m_style.shadow_offset_x * 4);
+		size.cx += abs(m_style.shadow_offset_x * 4) ;
 	if (m_style.shadow_offset_y)
-		size.cy += abs(m_style.shadow_offset_y * 4);
+		size.cy += abs(m_style.shadow_offset_y * 4) ;
+	size.cx += m_style.shadow_radius * 4;
+	size.cy += m_style.shadow_radius * 4;
 	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
@@ -480,10 +482,8 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 {
 	Graphics gBack(dc);
 	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-	GraphicsRoundRectPath bgPath(rc, radius);
-	Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
-	SolidBrush gBrBack(back_color);
-	if (m_style.shadow_radius && (shadowColor & 0xff000000))
+	// 必须back_color和shadow_color都是非完全透明色才做绘制，不接受透明back_color下还绘制shadow的设定
+	if (m_style.shadow_radius && (shadowColor & 0xff000000) && (color & 0xff000000))	
 	{
 		BYTE r = GetRValue(shadowColor);
 		BYTE g = GetGValue(shadowColor);
@@ -505,8 +505,13 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		gBack.DrawImage(pBitmapDropShadow, rc.left - blurOffsetX, rc.top - blurOffsetY);
 		pBitmapDropShadow->operator delete;
 	}
-	if(color & 0xff000000)
+	if (color & 0xff000000)	// 必须back_color非完全透明才绘制
+	{
+		GraphicsRoundRectPath bgPath(rc, radius);
+		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
+		SolidBrush gBrBack(back_color);
 		gBack.FillPath(&gBrBack, &bgPath);
+	}
 }
 
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
@@ -574,8 +579,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	const std::vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::vector<Text> &labels(m_ctx.cinfo.labels);
 
-	int ox = abs(m_style.shadow_offset_x)*2;
-	int oy = abs(m_style.shadow_offset_y)*2;
+	int ox = abs(m_style.shadow_offset_x)*2 + m_style.shadow_radius*2;
+	int oy = abs(m_style.shadow_offset_y)*2 + m_style.shadow_radius*2;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		CRect rect;
@@ -656,9 +661,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	CDCHandle memDC = ::CreateCompatibleDC(hdc);
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 	::SelectObject(memDC, memBitmap);
-
-	int ox = abs(m_style.shadow_offset_x)*2;
-	int oy = abs(m_style.shadow_offset_y)*2;
+	
+	int ox = abs(m_style.shadow_offset_x)*2 + m_style.shadow_radius*2;
+	int oy = abs(m_style.shadow_offset_y)*2 + m_style.shadow_radius*2;
 	// 获取候选数，消除当候选数为0，又处于inline_preedit状态时出现一個空白的小方框或者圆角矩形的情况
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
 	CRect trc;
