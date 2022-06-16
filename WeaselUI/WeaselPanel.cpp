@@ -379,6 +379,10 @@ WeaselPanel::~WeaselPanel()
 {
 	if (m_layout != NULL)
 		delete m_layout;
+	//SafeRelease(&pTextFormat);
+	//SafeRelease(&pRenderTarget);
+	//SafeRelease(&pDWFactory);
+	//SafeRelease(&pD2d1Factory);
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -1210,18 +1214,15 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 	float alpha = (float)((gdiColor >> 24) & 255) / 255.0f;
 	ID2D1SolidColorBrush* pBrush = NULL;
 	pRenderTarget->CreateSolidColorBrush( D2D1::ColorF(r,g,b,alpha), &pBrush);
-	// create text format
-	IDWriteTextFormat* pTextFormat = NULL;
 	pDWFactory->CreateTextFormat(
-		fontface.c_str(), NULL,
+		m_style.font_face.c_str(), NULL,
 		DWRITE_FONT_WEIGHT_NORMAL, 
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
-		font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
+		m_style.font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
 	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-
 	if (NULL != pBrush && NULL != pTextFormat)
 	{
 		IDWriteTextLayout* pTextLayout = NULL;

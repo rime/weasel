@@ -3,6 +3,7 @@
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
 #include <regex>
+#include <dwrite.h>
 
 namespace weasel
 {
@@ -12,6 +13,7 @@ namespace weasel
 		Layout(const UIStyle &style, const Context &context, const Status &status);
 
 		virtual void DoLayout(CDCHandle dc) = 0;
+		virtual void DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat) = 0;
 		/* All points in this class is based on the content area */
 		/* The top-left corner of the content area is always (0, 0) */
 		virtual CSize GetContentSize() const = 0;
@@ -27,6 +29,7 @@ namespace weasel
 		virtual bool IsInlinePreedit() const = 0;
 		virtual bool ShouldDisplayStatusIcon() const = 0;
 		virtual void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const = 0;
+		virtual void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat,  LPSIZE lpSize) const = 0;
 		
 		virtual std::wstring Layout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const = 0;
 	protected:

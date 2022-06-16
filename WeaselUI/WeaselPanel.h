@@ -68,6 +68,7 @@ private:
 	ID2D1Factory* pD2d1Factory = NULL;
 	IDWriteFactory* pDWFactory = NULL;
 	ID2D1DCRenderTarget* pRenderTarget = NULL;
+	IDWriteTextFormat* pTextFormat = NULL;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath

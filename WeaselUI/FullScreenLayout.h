@@ -11,6 +11,7 @@ namespace weasel
 		virtual ~FullScreenLayout();
 
 		virtual void DoLayout(CDCHandle dc);
+		virtual void DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat);
 
 	private:
 		bool AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& fontPoint, int& step);
