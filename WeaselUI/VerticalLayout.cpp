@@ -132,8 +132,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWr
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		//size = GetPreeditSize(dc, pTextFormat);
-		size = GetPreeditSize(dc);
+		size = GetPreeditSize(dc, pTextFormat, pDWFactory);
 		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
@@ -142,7 +141,6 @@ void VerticalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWr
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		//dc.GetTextExtent(_context.aux.str.c_str(), _context.aux.str.length(), &size);
 		GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
@@ -162,16 +160,14 @@ void VerticalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWr
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
-		//dc.GetTextExtent(label.c_str(), label.length(), &size);
-		GetTextExtentDCMultiline(dc, label, label.length(), &size);
+		GetTextSizeDW(label, label.length(), pTextFormat, pDWFactory, &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx + space, h = max(h, size.cy);
 		candidate_width += size.cx + space;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
-		//dc.GetTextExtent(text.c_str(), text.length(), &size);
-		GetTextExtentDCMultiline(dc, text, text.length(), &size);
+		GetTextSizeDW(text, text.length(), pTextFormat, pDWFactory, &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
 		candidate_width += size.cx;
@@ -184,8 +180,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWr
 			comment_shift_width = max(comment_shift_width, w - _style.margin_x);
 
 			const std::wstring& comment = comments.at(i).str;
-			//dc.GetTextExtent(comment.c_str(), comment.length(), &size);
-			GetTextExtentDCMultiline(dc, comment, comment.length(), &size);
+			GetTextSizeDW(comment, comment.length(), pTextFormat, pDWFactory, &size);
 			_candidateCommentRects[i].SetRect(0, height, size.cx, height + size.cy);
 			w += size.cx, h = max(h, size.cy);
 			comment_width += size.cx;

@@ -440,7 +440,10 @@ void WeaselPanel::Refresh()
 	CFont font;
 	font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
 	dc.SelectFont(font);
-	m_layout->DoLayout(dc, pTextFormat, pDWFactory);
+	if (m_style.color_font)
+		m_layout->DoLayout(dc, pTextFormat, pDWFactory);
+	else
+		m_layout->DoLayout(dc);
 	ReleaseDC(dc);
 
 	_ResizeWindow();
@@ -562,8 +565,16 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		if (range.start < range.end)
 		{
 			CSize selStart, selEnd;
-			m_layout->GetTextExtentDCMultiline(dc, t, range.start, &selStart);
-			m_layout->GetTextExtentDCMultiline(dc, t, range.end, &selEnd);
+			if (m_style.color_font)
+			{
+				m_layout->GetTextSizeDW(t, range.start, pTextFormat, pDWFactory, &selStart);
+				m_layout->GetTextSizeDW(t, range.end, pTextFormat, pDWFactory, &selEnd);
+			}
+			else
+			{
+				m_layout->GetTextExtentDCMultiline(dc, t, range.start, &selStart);
+				m_layout->GetTextExtentDCMultiline(dc, t, range.end, &selEnd);
+			}
 			int x = rc.left;
 			if (range.start > 0)
 			{
@@ -577,6 +588,8 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz[yyy]
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
 				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
+				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+				OffsetRect(rc_hi, -m_style.hilite_padding, 0);
 				_HighlightTextEx(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, 
 					(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y - m_style.hilite_padding), m_style.round_corner);
 				dc.SetTextColor(m_style.hilited_text_color);
@@ -1234,40 +1247,15 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 	float alpha = (float)((gdiColor >> 24) & 255) / 255.0f;
 	ID2D1SolidColorBrush* pBrush = NULL;
 	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(r, g, b, alpha), &pBrush);
-#if 0
-	pDWFactory->CreateTextFormat(
-		fontface.c_str(), NULL,
-		DWRITE_FONT_WEIGHT_NORMAL,
-		DWRITE_FONT_STYLE_NORMAL,
-		DWRITE_FONT_STRETCH_NORMAL,
-		font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
-	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-#endif
 	if (NULL != pBrush && NULL != pTextFormat)
 	{
 		IDWriteTextLayout* pTextLayout = NULL;
 		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, 0, 0, &pTextLayout);
-#if 0
-		vector<DWRITE_TEXT_RANGE> rng;
-		rng = CheckEmojiRange(psz);
-		for (auto r : rng)
-			pTextLayout->SetFontSize(font_point * dpiScaleX_ / 96.0f , r);
-#endif
-		DWRITE_TEXT_METRICS txtMetrics;
-		pTextLayout->GetMetrics(&txtMetrics);
-		D2D1_SIZE_F size;
-		size = D2D1::SizeF(ceil(txtMetrics.widthIncludingTrailingWhitespace), ceil(txtMetrics.height));
-		// maybe bug here in the future
-		CRect rect(rc.left, rc.top, rc.left + max(size.width, rc.Width()), rc.top + max(size.height, rc.Height()));
-		pTextLayout->SetMaxWidth(rect.Width());
-		pTextLayout->SetMaxHeight(rect.Height());
 		int offset = CallFontOffsetDW(pTextFormat);
-		pRenderTarget->BindDC(dc, &rect);
+		pRenderTarget->BindDC(dc, &rc);
 		pRenderTarget->BeginDraw();
-		if(pTextLayout != NULL)
-			pRenderTarget->DrawTextLayout({ 0.0f, 0.0f + offset}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		if (pTextLayout != NULL)
+			pRenderTarget->DrawTextLayout({ 0.0f, (float)(rc.Height() / 2) }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 		pRenderTarget->EndDraw();
 	}
 	//pTextFormat->Release();
