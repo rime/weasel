@@ -68,23 +68,31 @@ void weasel::StandardLayout::GetTextExtentDCMultiline(CDCHandle dc, std::wstring
 	lpSize->cy = TextArea.bottom - TextArea.top;
 }
 
-void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, LPSIZE lpSize) const
+void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory, LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
-	IDWriteFactory* pDWFactory;
-	hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWFactory));
 	IDWriteTextLayout* pTextLayout = NULL;
+	if(pDWFactory == NULL)
+		::MessageBox(NULL, L"factory null", L"omg factory", 0 );
+	if(pTextFormat == NULL)
+		::MessageBox(NULL, L"format null", L"omg format standardlayout.cpp", 0 );
+
 	// 创建文本布局 
-	hr = pDWFactory->CreateTextLayout(text.c_str(), text.length(), pTextFormat, 0.0f, 0.0f, &pTextLayout);
+	if(pTextFormat != NULL)
+		hr = pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0.0f, 0.0f, &pTextLayout);
 	if (SUCCEEDED(hr))
 	{
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;
 		hr = pTextLayout->GetMetrics(&textMetrics);
-		sz = D2D1::SizeF(ceil(textMetrics.widthIncludingTrailingWhitespace), ceil(textMetrics.height));
+		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
+	}
+	else
+	{
+		::MessageBox(NULL, L"failed create textlayout", L"ooo", 0 );
 	}
 	SafeRelease(&pTextLayout);
 }
@@ -96,7 +104,6 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 	CSize size(0, 0);
 	if (!preedit.empty())
 	{
-		//dc.GetTextExtent(preedit.c_str(), preedit.length(), &size);
 		GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
 		for (size_t i = 0; i < attrs.size(); i++)
 		{
@@ -120,16 +127,14 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 	return size;
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, IDWriteTextFormat* pTextFormat) const
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const
 {
 	const std::wstring &preedit = _context.preedit.str;
 	const std::vector<weasel::TextAttribute> &attrs = _context.preedit.attributes;
 	CSize size(0, 0);
 	if (!preedit.empty())
 	{
-		//dc.GetTextExtent(preedit.c_str(), preedit.length(), &size);
-		//GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
-		GetTextSizeDW(preedit, preedit.length(), pTextFormat, &size);
+		GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWFactory, &size);
 		for (size_t i = 0; i < attrs.size(); i++)
 		{
 			if (attrs[i].type == weasel::HIGHLIGHTED)

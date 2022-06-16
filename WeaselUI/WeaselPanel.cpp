@@ -366,9 +366,9 @@ static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
 	  m_status(ui.status()), 
 	  m_style(ui.style()),
 	  _isVistaSp2OrGrater(false),
-	  _m_gdiplusToken(0),
-	  dpiScaleX_(0.0f),
-	  dpiScaleY_(0.0f)
+	  _m_gdiplusToken(0)
+	  //dpiScaleX_(0.0f),
+	  //dpiScaleY_(0.0f)
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -379,10 +379,12 @@ WeaselPanel::~WeaselPanel()
 {
 	if (m_layout != NULL)
 		delete m_layout;
-	//SafeRelease(&pTextFormat);
-	//SafeRelease(&pRenderTarget);
-	//SafeRelease(&pDWFactory);
-	//SafeRelease(&pD2d1Factory);
+#if 0
+	SafeRelease(&pTextFormat);
+	SafeRelease(&pRenderTarget);
+	SafeRelease(&pDWFactory);
+	SafeRelease(&pD2d1Factory);
+#endif
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -438,7 +440,7 @@ void WeaselPanel::Refresh()
 	CFont font;
 	font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
 	dc.SelectFont(font);
-	m_layout->DoLayout(dc);
+	m_layout->DoLayout(dc, pTextFormat, pDWFactory);
 	ReleaseDC(dc);
 
 	_ResizeWindow();
@@ -731,6 +733,17 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	
 	bool drawn = false;
 
+#if 1
+	pDWFactory->CreateTextFormat(
+		m_style.font_face.c_str(), NULL,
+		DWRITE_FONT_WEIGHT_NORMAL,
+		DWRITE_FONT_STYLE_NORMAL,
+		DWRITE_FONT_STRETCH_NORMAL,
+		m_style.font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
+	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+#endif
 	// draw preedit string
 	if (!m_layout->IsInlinePreedit())
 	{
@@ -783,7 +796,6 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
 	t |= WS_EX_LAYERED;
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
-	Refresh();
 	//CenterWindow();
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
@@ -799,20 +811,28 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
 	// create factory
-	hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2d1Factory);
+	if(pD2d1Factory == NULL)
+		hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2d1Factory);
 	// create IDWriteFactory
-	hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWFactory));
+	if(pDWFactory == NULL)
+		hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWFactory));
 	/* ID2D1HwndRenderTarget */
-	const D2D1_PIXEL_FORMAT format =
-		D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
-			D2D1_ALPHA_MODE_PREMULTIPLIED);
-	const D2D1_RENDER_TARGET_PROPERTIES properties =
-		D2D1::RenderTargetProperties(
-			D2D1_RENDER_TARGET_TYPE_DEFAULT,
-			format);
-	pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
-	//pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+	if (pRenderTarget == NULL)
+	{
+		const D2D1_PIXEL_FORMAT format = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
+		const D2D1_RENDER_TARGET_PROPERTIES properties = D2D1::RenderTargetProperties( D2D1_RENDER_TARGET_TYPE_DEFAULT, format);
+		pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
+	}
 	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
+	if(pTextFormat == NULL)
+		hResult = pDWFactory->CreateTextFormat(m_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, m_style.font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
+	if( pTextFormat != NULL)
+	{
+		pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+	}
+	Refresh();
 	return TRUE;
 }
 
@@ -1213,24 +1233,28 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 	// alpha 
 	float alpha = (float)((gdiColor >> 24) & 255) / 255.0f;
 	ID2D1SolidColorBrush* pBrush = NULL;
-	pRenderTarget->CreateSolidColorBrush( D2D1::ColorF(r,g,b,alpha), &pBrush);
+	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(r, g, b, alpha), &pBrush);
+#if 0
 	pDWFactory->CreateTextFormat(
-		m_style.font_face.c_str(), NULL,
-		DWRITE_FONT_WEIGHT_NORMAL, 
+		fontface.c_str(), NULL,
+		DWRITE_FONT_WEIGHT_NORMAL,
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
-		m_style.font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
+		font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
 	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+#endif
 	if (NULL != pBrush && NULL != pTextFormat)
 	{
 		IDWriteTextLayout* pTextLayout = NULL;
 		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, 0, 0, &pTextLayout);
+#if 0
 		vector<DWRITE_TEXT_RANGE> rng;
 		rng = CheckEmojiRange(psz);
 		for (auto r : rng)
 			pTextLayout->SetFontSize(font_point * dpiScaleX_ / 96.0f , r);
+#endif
 		DWRITE_TEXT_METRICS txtMetrics;
 		pTextLayout->GetMetrics(&txtMetrics);
 		D2D1_SIZE_F size;
@@ -1246,7 +1270,7 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 			pRenderTarget->DrawTextLayout({ 0.0f, 0.0f + offset}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 		pRenderTarget->EndDraw();
 	}
-	pTextFormat->Release();
+	//pTextFormat->Release();
 	pBrush->Release();
 	return S_OK;
 }
@@ -1263,11 +1287,15 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 	if (_isVistaSp2OrGrater && m_style.color_font )
 	{
+#if 0
 		std::vector<DWRITE_TEXT_RANGE> rgn = CheckEmojiRange(psz);
 		if (rgn.size())
 			_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dc.GetTextColor(), m_style.font_face);
 		else
 			goto GDI_TextOut;
+#else
+		_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dc.GetTextColor(), m_style.font_face);
+#endif
 	}
 	else
 	{ 

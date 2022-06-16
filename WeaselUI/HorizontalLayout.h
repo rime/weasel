@@ -10,6 +10,6 @@ namespace weasel
 		HorizontalLayout(const UIStyle &style, const Context &context, const Status &status);
 
 		virtual void DoLayout(CDCHandle dc);
-		virtual void DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat);
+		virtual void DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory);
 	};
 };

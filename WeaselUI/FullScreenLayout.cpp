@@ -73,7 +73,7 @@ void FullScreenLayout::DoLayout(CDCHandle dc)
 
 	_contentSize.SetSize(workArea.Width(), workArea.Height());
 }
-void FullScreenLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat)
+void FullScreenLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory)
 {
 	if (_context.empty())
 	{

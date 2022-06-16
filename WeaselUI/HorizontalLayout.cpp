@@ -104,7 +104,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width, height);
 }
-void HorizontalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat)
+void HorizontalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory)
 {
 	const std::vector<Text> &candidates(_context.cinfo.candies);
 	const std::vector<Text> &comments(_context.cinfo.comments);
@@ -119,7 +119,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat)
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		size = GetPreeditSize(dc, pTextFormat);
+		size = GetPreeditSize(dc, pTextFormat, pDWFactory);
 		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
@@ -128,7 +128,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat)
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		//dc.GetTextExtent(_context.aux.str.c_str(), _context.aux.str.length(), &size);
 		GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
@@ -144,16 +143,14 @@ void HorizontalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat)
 
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
-		//dc.GetTextExtent(label.c_str(), label.length(), &size);
-		GetTextExtentDCMultiline(dc, label, label.length(), &size);
+		GetTextSizeDW(label, label.length(), pTextFormat, pDWFactory, &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
 		w += space;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
-		//dc.GetTextExtent(text.c_str(), text.length(), &size);
-		GetTextExtentDCMultiline(dc, text, text.length(), &size);
+		GetTextSizeDW(text, text.length(), pTextFormat, pDWFactory, &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx + space, h = max(h, size.cy);
 
@@ -161,8 +158,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat)
 		if (!comments.at(i).str.empty())
 		{
 			const std::wstring& comment = comments.at(i).str;
-			//dc.GetTextExtent(comment.c_str(), comment.length(), &size);
-			GetTextExtentDCMultiline(dc, comment, comment.length(), &size);
+			GetTextSizeDW(comment, comment.length(), pTextFormat, pDWFactory, &size);
 			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
 			w += size.cx + space, h = max(h, size.cy);
 		}

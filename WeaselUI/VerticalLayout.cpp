@@ -117,7 +117,7 @@ void VerticalLayout::DoLayout(CDCHandle dc)
 		width - _style.margin_x,
 		_candidateTextRects[id].bottom);
 }
-void VerticalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat)
+void VerticalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory)
 {
 	const std::vector<Text> &candidates(_context.cinfo.candies);
 	const std::vector<Text> &comments(_context.cinfo.comments);
@@ -132,7 +132,8 @@ void VerticalLayout::DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat)
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		size = GetPreeditSize(dc, pTextFormat);
+		//size = GetPreeditSize(dc, pTextFormat);
+		size = GetPreeditSize(dc);
 		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
