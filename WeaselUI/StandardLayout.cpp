@@ -73,10 +73,6 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
 	IDWriteTextLayout* pTextLayout = NULL;
-	if(pDWFactory == NULL)
-		::MessageBox(NULL, L"factory null", L"omg factory", 0 );
-	if(pTextFormat == NULL)
-		::MessageBox(NULL, L"format null", L"omg format standardlayout.cpp", 0 );
 
 	// 创建文本布局 
 	if(pTextFormat != NULL)
@@ -89,10 +85,6 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
-	}
-	else
-	{
-		::MessageBox(NULL, L"failed create textlayout", L"ooo", 0 );
 	}
 	SafeRelease(&pTextLayout);
 }
