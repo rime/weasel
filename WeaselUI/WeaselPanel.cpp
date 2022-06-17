@@ -379,12 +379,10 @@ WeaselPanel::~WeaselPanel()
 {
 	if (m_layout != NULL)
 		delete m_layout;
-#if 0
 	SafeRelease(&pTextFormat);
 	SafeRelease(&pRenderTarget);
 	SafeRelease(&pDWFactory);
 	SafeRelease(&pD2d1Factory);
-#endif
 }
 
 void WeaselPanel::_ResizeWindow()
