@@ -624,6 +624,16 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		else if (!std::strcmp(preedit_type, "preview"))
 			style.preedit_type = weasel::UIStyle::PREVIEW;
 	}
+	char align_type[20] = { 0 };
+	if (RimeConfigGetString(config, "style/layout/align_type", align_type, sizeof(align_type) - 1))
+	{
+		if (!std::strcmp(align_type, "top"))
+			style.align_type = weasel::UIStyle::ALIGN_TOP;
+		else if (!std::strcmp(align_type, "center"))
+			style.align_type = weasel::UIStyle::ALIGN_CENTER;
+		else
+			style.align_type = weasel::UIStyle::ALIGN_BOTTOM;
+	}
 	Bool display_tray_icon = False;
 	if (RimeConfigGetBool(config, "style/display_tray_icon", &display_tray_icon) || initialize)
 	{

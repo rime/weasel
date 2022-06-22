@@ -146,6 +146,14 @@ namespace weasel
 			LAYOUT_TYPE_LAST
 		};
 
+		enum LayoutAlignType
+		{
+			ALIGN_BOTTOM = 0,
+			ALIGN_CENTER,
+			ALIGN_TOP
+		};
+
+		LayoutAlignType align_type;
 		PreeditType preedit_type;
 		LayoutType layout_type;
 		std::wstring font_face;
@@ -202,6 +210,7 @@ namespace weasel
 			label_font_point(0),
 			comment_font_point(0),
 			inline_preedit(false),
+			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
 			color_font(0),
 			display_tray_icon(false),
@@ -254,6 +263,7 @@ namespace boost {
 			ar & s.label_font_point;
 			ar & s.comment_font_point;
 			ar & s.inline_preedit;
+			ar & s.align_type;
 			ar & s.color_font;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;

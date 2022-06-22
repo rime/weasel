@@ -911,6 +911,8 @@ void WeaselPanel::_RepositionWindow()
 	if (y < rcWorkArea.top)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
+	//y -= (abs(m_style.shadow_offset_y) + m_style.shadow_radius) * 2;
+	//x -= (abs(m_style.shadow_offset_x) + m_style.shadow_radius) * 2;
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
 }

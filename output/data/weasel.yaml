@@ -12,7 +12,11 @@ app_options:
 style:
   color_scheme: aqua
   font_face: Microsoft YaHei
+  label_font_face: Microsoft YaHei
+  comment_font_face: Microsoft YaHei
   font_point: 14
+  label_font_point: 14
+  comment_font_point: 14
   horizontal: false
   fullscreen: false
   inline_preedit: false
@@ -20,6 +24,7 @@ style:
   display_tray_icon: false
   label_format: "%s."
   layout:
+    align_type: bottom
     min_width: 160
     min_height: 0
     border_width: 3
@@ -30,6 +35,10 @@ style:
     hilite_spacing: 4
     hilite_padding: 2
     round_corner: 4
+    corner_radius: 4
+    shadow_radius: 0
+    shadow_offset_x: 4
+    shadow_offset_y: 4
 
 preset_color_schemes:
   aqua:

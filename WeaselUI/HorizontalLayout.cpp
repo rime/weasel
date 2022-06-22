@@ -71,6 +71,28 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
 	}
+#if 0
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	{
+		int ol = 0, ot = 0, oc = 0;
+		if (_style.align_type == UIStyle::ALIGN_CENTER)
+		{
+			ol = (h - _candidateLabelRects[i].Height()) / 2;
+			ot = (h - _candidateTextRects[i].Height()) / 2;
+			oc = (h - _candidateCommentRects[i].Height()) / 2;
+		}
+		else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
+		{
+			ol = (h - _candidateLabelRects[i].Height()) ;
+			ot = (h - _candidateTextRects[i].Height()) ;
+			oc = (h - _candidateCommentRects[i].Height()) ;
+
+		}
+		_candidateLabelRects[i].OffsetRect(0, ol);
+		_candidateTextRects[i].OffsetRect(0, ot);
+		_candidateCommentRects[i].OffsetRect(0, oc);
+	}
+#endif
 	w += _style.margin_x;
 
 	/* Highlighted Candidate */
@@ -255,6 +277,26 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		{
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
+	}
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	{
+		int ol = 0, ot = 0, oc = 0;
+		if (_style.align_type == UIStyle::ALIGN_CENTER)
+		{
+			ol = (h - _candidateLabelRects[i].Height()) / 2;
+			ot = (h - _candidateTextRects[i].Height()) / 2;
+			oc = (h - _candidateCommentRects[i].Height()) / 2;
+		}
+		else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
+		{
+			ol = (h - _candidateLabelRects[i].Height()) ;
+			ot = (h - _candidateTextRects[i].Height()) ;
+			oc = (h - _candidateCommentRects[i].Height()) ;
+
+		}
+		_candidateLabelRects[i].OffsetRect(0, ol);
+		//_candidateTextRects[i].OffsetRect(0, ot);
+		_candidateCommentRects[i].OffsetRect(0, oc);
 	}
 	w += _style.margin_x;
 

@@ -289,8 +289,27 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		}
 		//w += margin;
 		//width = max(width, w);
+
+		int ol = 0, ot = 0, oc = 0;
+		if (_style.align_type == UIStyle::ALIGN_CENTER)
+		{
+			ol = (h - _candidateLabelRects[i].Height()) / 2;
+			ot = (h - _candidateTextRects[i].Height()) / 2;
+			oc = (h - _candidateCommentRects[i].Height()) / 2;
+		}
+		else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
+		{
+			ol = (h - _candidateLabelRects[i].Height()) ;
+			ot = (h - _candidateTextRects[i].Height()) ;
+			oc = (h - _candidateCommentRects[i].Height()) ;
+
+		}
+		_candidateLabelRects[i].OffsetRect(0, ol);
+		//_candidateTextRects[i].OffsetRect(0, ot);
+		_candidateCommentRects[i].OffsetRect(0, oc);
 		height += h;
 	}
+
 	/* comments are left-aligned to the right of the longest candidate who has a comment */
 	int max_content_width = max(max_candidate_width, comment_shift_width + max_comment_width);
 	width = max(width, max_content_width + 2 * _style.margin_x);
@@ -322,4 +341,8 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		_candidateTextRects[id].top,
 		width - _style.margin_x,
 		_candidateTextRects[id].bottom);
+
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	{
+	}
 }
