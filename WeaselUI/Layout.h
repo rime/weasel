@@ -22,7 +22,7 @@ public:
 	DirectWriteResources();
 	~DirectWriteResources();
 
-	DirectWriteResources(std::wstring label_font_face, int label_font_point,
+	HRESULT InitResources(std::wstring label_font_face, int label_font_point,
 		std::wstring font_face, int font_point,
 		std::wstring comment_font_face, int comment_font_point);
 

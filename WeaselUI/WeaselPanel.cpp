@@ -379,10 +379,6 @@ WeaselPanel::~WeaselPanel()
 		delete m_layout;
 	if (pDWR != NULL)
 		delete pDWR;
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pRenderTarget);
-	SafeRelease(&pDWFactory);
-	SafeRelease(&pD2d1Factory);
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -439,7 +435,8 @@ void WeaselPanel::Refresh()
 	font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
 	dc.SelectFont(font);
 	if (m_style.color_font)
-		m_layout->DoLayout(dc, pTextFormat, pDWFactory);
+		//m_layout->DoLayout(dc, pDWR->pTextFormat, pDWR->pDWFactory);
+		m_layout->DoLayout(dc, pDWR);
 	else
 		m_layout->DoLayout(dc);
 	ReleaseDC(dc);
@@ -565,8 +562,8 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			CSize selStart, selEnd;
 			if (m_style.color_font)
 			{
-				m_layout->GetTextSizeDW(t, range.start, pTextFormat, pDWFactory, &selStart);
-				m_layout->GetTextSizeDW(t, range.end, pTextFormat, pDWFactory, &selEnd);
+				m_layout->GetTextSizeDW(t, range.start, pDWR->pTextFormat, pDWR->pDWFactory, &selStart);
+				m_layout->GetTextSizeDW(t, range.end, pDWR->pTextFormat, pDWR->pDWFactory, &selEnd);
 			}
 			else
 			{
@@ -745,15 +742,15 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	bool drawn = false;
 
 #if 1
-	pDWFactory->CreateTextFormat(
+	pDWR->pDWFactory->CreateTextFormat(
 		m_style.font_face.c_str(), NULL,
 		DWRITE_FONT_WEIGHT_NORMAL,
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
-		m_style.font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
-	pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-	pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-	pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		m_style.font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pTextFormat);
+	pDWR->pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+	pDWR->pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+	pDWR->pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 #endif
 	// draw preedit string
 	if (!m_layout->IsInlinePreedit())
@@ -813,39 +810,50 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 	_isVistaSp2OrGrater = IsWindowsVistaSP2OrGreater();
 
-    //get the dpi information
-    //HDC screen = ::GetDC(0);
-    //dpiScaleX_ = GetDeviceCaps(screen, LOGPIXELSX) / 96.0f;
-    //dpiScaleY_ = GetDeviceCaps(screen, LOGPIXELSY) / 96.0f;
-    //::ReleaseDC(0, screen);
-
+	pDWR = new DirectWriteResources();
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
 	// create factory
-	if(pD2d1Factory == NULL)
-		hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2d1Factory);
+	if(pDWR->pD2d1Factory == NULL)
+		hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pDWR->pD2d1Factory);
 	// create IDWriteFactory
-	if(pDWFactory == NULL)
-		hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWFactory));
+	if(pDWR->pDWFactory == NULL)
+		hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWR->pDWFactory));
 	/* ID2D1HwndRenderTarget */
-	if (pRenderTarget == NULL)
+	if (pDWR->pRenderTarget == NULL)
 	{
 		const D2D1_PIXEL_FORMAT format = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
 		const D2D1_RENDER_TARGET_PROPERTIES properties = D2D1::RenderTargetProperties( D2D1_RENDER_TARGET_TYPE_DEFAULT, format);
-		pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
+		pDWR->pD2d1Factory->CreateDCRenderTarget(&properties, &pDWR->pRenderTarget);
 	}
-	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
-	if(pTextFormat == NULL)
-		hResult = pDWFactory->CreateTextFormat(m_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, m_style.font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
-	if( pTextFormat != NULL)
+	pDWR->pD2d1Factory->GetDesktopDpi(&pDWR->dpiScaleX_, &pDWR->dpiScaleY_);
+	if(pDWR->pTextFormat == NULL)
+		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				m_style.font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pTextFormat);
+	if( pDWR->pTextFormat != NULL)
 	{
-		pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pDWR->pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pDWR->pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pDWR->pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	}
-	pDWR = new DirectWriteResources(m_style.label_font_face, m_style.label_font_point,
-		m_style.font_face, m_style.font_point,
-		m_style.comment_font_face, m_style.comment_font_point);
+	if(pDWR->pLabelTextFormat == NULL)
+		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				m_style.font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pLabelTextFormat);
+	if( pDWR->pLabelTextFormat != NULL)
+	{
+		pDWR->pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pDWR->pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pDWR->pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+	}
+	if(pDWR->pCommentTextFormat == NULL)
+		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				m_style.font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pCommentTextFormat);
+	if( pDWR->pCommentTextFormat != NULL)
+	{
+		pDWR->pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pDWR->pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pDWR->pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+	}
 	Refresh();
 	return TRUE;
 }
@@ -1272,21 +1280,20 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 	// alpha 
 	float alpha = (float)((gdiColor >> 24) & 255) / 255.0f;
 	ID2D1SolidColorBrush* pBrush = NULL;
-	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(r, g, b, alpha), &pBrush);
-	if (NULL != pBrush && NULL != pTextFormat)
+	pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(r, g, b, alpha), &pBrush);
+	if (NULL != pBrush && NULL != pDWR->pTextFormat)
 	{
 		IDWriteTextLayout* pTextLayout = NULL;
-		pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, 0, 0, &pTextLayout);
+		pDWR->pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pDWR->pTextFormat, 0, 0, &pTextLayout);
 		CSize sz;
-		m_layout->GetTextSizeDW(psz.c_str(), psz.length(), pTextFormat, pDWFactory, &sz);
+		m_layout->GetTextSizeDW(psz.c_str(), psz.length(), pDWR->pTextFormat, pDWR->pDWFactory, &sz);
 		float offsetx = (rc.Width() - sz.cx) / 2.0f;
-		pRenderTarget->BindDC(dc, &rc);
-		pRenderTarget->BeginDraw();
+		pDWR->pRenderTarget->BindDC(dc, &rc);
+		pDWR->pRenderTarget->BeginDraw();
 		if (pTextLayout != NULL)
-			pRenderTarget->DrawTextLayout({ offsetx, (float)(rc.Height() / 2) }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
-		pRenderTarget->EndDraw();
+			pDWR->pRenderTarget->DrawTextLayout({ offsetx, (float)(rc.Height() / 2) }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		pDWR->pRenderTarget->EndDraw();
 	}
-	//pTextFormat->Release();
 	pBrush->Release();
 	return S_OK;
 }

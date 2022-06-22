@@ -60,12 +60,6 @@ private:
 	ULONG_PTR _m_gdiplusToken;
 	bool _isVistaSp2OrGrater;
 	
-	float dpiScaleX_, dpiScaleY_;
-	// variable for d2d dwrite
-	ID2D1Factory* pD2d1Factory = NULL;
-	IDWriteFactory* pDWFactory = NULL;
-	ID2D1DCRenderTarget* pRenderTarget = NULL;
-	IDWriteTextFormat* pTextFormat = NULL;
 	DirectWriteResources* pDWR = NULL;
 };
 

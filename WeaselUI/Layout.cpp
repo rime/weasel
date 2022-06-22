@@ -29,17 +29,9 @@ DirectWriteResources::~DirectWriteResources()
 	SafeRelease(&pD2d1Factory);
 }
 
-DirectWriteResources::DirectWriteResources(std::wstring label_font_face, int label_font_point,
+HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
 	std::wstring font_face, int font_point,
-	std::wstring comment_font_face, int comment_font_point) :
-	dpiScaleX_(0),
-	dpiScaleY_(0),
-	pD2d1Factory(NULL),
-	pDWFactory(NULL),
-	pRenderTarget(NULL),
-	pTextFormat(NULL),
-	pLabelTextFormat(NULL),
-	pCommentTextFormat(NULL)
+	std::wstring comment_font_face, int comment_font_point) 
 {
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
@@ -91,4 +83,5 @@ DirectWriteResources::DirectWriteResources(std::wstring label_font_face, int lab
 		pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	}
+	return hResult;
 }
