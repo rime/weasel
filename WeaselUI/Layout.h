@@ -4,6 +4,36 @@
 #include <WeaselUI.h>
 #include <regex>
 #include <dwrite.h>
+#include <d2d1.h>
+
+template <class T> void SafeRelease(T** ppT)
+{
+	if (*ppT)
+	{
+		(*ppT)->Release();
+		*ppT = NULL;
+	}
+}
+
+
+class DirectWriteResources
+{
+public:
+	DirectWriteResources();
+	~DirectWriteResources();
+
+	DirectWriteResources(std::wstring label_font_face, int label_font_point,
+		std::wstring font_face, int font_point,
+		std::wstring comment_font_face, int comment_font_point);
+
+	float dpiScaleX_, dpiScaleY_;
+	ID2D1Factory* pD2d1Factory;
+	IDWriteFactory* pDWFactory;
+	ID2D1DCRenderTarget* pRenderTarget;
+	IDWriteTextFormat* pTextFormat;
+	IDWriteTextFormat* pLabelTextFormat;
+	IDWriteTextFormat* pCommentTextFormat;
+};
 
 namespace weasel
 {
@@ -14,6 +44,7 @@ namespace weasel
 
 		virtual void DoLayout(CDCHandle dc) = 0;
 		virtual void DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) = 0;
+		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR) = 0;
 		/* All points in this class is based on the content area */
 		/* The top-left corner of the content area is always (0, 0) */
 		virtual CSize GetContentSize() const = 0;

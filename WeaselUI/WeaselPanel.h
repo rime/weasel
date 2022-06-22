@@ -3,14 +3,11 @@
 #include <WeaselUI.h>
 #include "Layout.h"
 #include <Usp10.h>
-#include <d2d1.h>
-#include <dwrite.h>
 
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
-
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 
 class WeaselPanel : 
@@ -69,6 +66,7 @@ private:
 	IDWriteFactory* pDWFactory = NULL;
 	ID2D1DCRenderTarget* pRenderTarget = NULL;
 	IDWriteTextFormat* pTextFormat = NULL;
+	DirectWriteResources* pDWR = NULL;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath

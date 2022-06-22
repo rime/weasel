@@ -12,6 +12,7 @@ namespace weasel
 
 		virtual void DoLayout(CDCHandle dc);
 		virtual void DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory);
+		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR);
 
 	private:
 		bool AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& fontPoint, int& step);

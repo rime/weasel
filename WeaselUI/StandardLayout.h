@@ -10,14 +10,6 @@ namespace weasel
 {
 	const int MAX_CANDIDATES_COUNT = 10;
 	const int STATUS_ICON_SIZE = GetSystemMetrics(SM_CXICON);
-	template <class T> void SafeRelease(T** ppT)
-	{
-		if (*ppT)
-		{
-			(*ppT)->Release();
-			*ppT = NULL;
-		}
-	}
 	class StandardLayout: public Layout
 	{
 	public:
@@ -27,6 +19,7 @@ namespace weasel
 
 		virtual void DoLayout(CDCHandle dc) = 0;
 		virtual void DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFacroty) = 0;
+		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR) = 0;
 		virtual CSize GetContentSize() const { return _contentSize; }
 		virtual CRect GetPreeditRect() const { return _preeditRect; }
 		virtual CRect GetAuxiliaryRect() const { return _auxiliaryRect; }

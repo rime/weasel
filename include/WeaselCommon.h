@@ -149,7 +149,11 @@ namespace weasel
 		PreeditType preedit_type;
 		LayoutType layout_type;
 		std::wstring font_face;
+		std::wstring label_font_face;
+		std::wstring comment_font_face;
 		int font_point;
+		int label_font_point;
+		int comment_font_point;
 		bool inline_preedit;
 		bool color_font;
 		bool display_tray_icon;
@@ -192,7 +196,11 @@ namespace weasel
 		int client_caps;
 
 		UIStyle() : font_face(),
+			label_font_face(),
+			comment_font_face(),
 			font_point(0),
+			label_font_point(0),
+			comment_font_point(0),
 			inline_preedit(false),
 			preedit_type(COMPOSITION),
 			color_font(0),
@@ -240,7 +248,11 @@ namespace boost {
 		void serialize(Archive &ar, weasel::UIStyle &s, const unsigned int version)
 		{
 			ar & s.font_face;
+			ar & s.label_font_face;
+			ar & s.comment_font_face;
 			ar & s.font_point;
+			ar & s.label_font_point;
+			ar & s.comment_font_point;
 			ar & s.inline_preedit;
 			ar & s.color_font;
 			ar & s.preedit_type;

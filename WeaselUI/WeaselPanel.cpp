@@ -4,8 +4,6 @@
 #include <vector>
 #include <fstream>
 #include <string>
-#include <d2d1_1.h>
-//#include <Usp10.h>
 
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
@@ -379,6 +377,8 @@ WeaselPanel::~WeaselPanel()
 {
 	if (m_layout != NULL)
 		delete m_layout;
+	if (pDWR != NULL)
+		delete pDWR;
 	SafeRelease(&pTextFormat);
 	SafeRelease(&pRenderTarget);
 	SafeRelease(&pDWFactory);
@@ -843,6 +843,9 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	}
+	pDWR = new DirectWriteResources(m_style.label_font_face, m_style.label_font_point,
+		m_style.font_face, m_style.font_point,
+		m_style.comment_font_face, m_style.comment_font_point);
 	Refresh();
 	return TRUE;
 }
@@ -1399,3 +1402,4 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 		AddRectangle(rc);
 	}
 }
+
