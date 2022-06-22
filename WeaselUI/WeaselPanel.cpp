@@ -435,7 +435,6 @@ void WeaselPanel::Refresh()
 	font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
 	dc.SelectFont(font);
 	if (m_style.color_font)
-		//m_layout->DoLayout(dc, pDWR->pTextFormat, pDWR->pDWFactory);
 		m_layout->DoLayout(dc, pDWR);
 	else
 		m_layout->DoLayout(dc);
@@ -576,7 +575,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
-				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length());
+				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat);
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			{
@@ -589,7 +588,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 					(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y - m_style.hilite_padding), m_style.round_corner);
 				dc.SetTextColor(m_style.hilited_text_color);
 				dc.SetBkColor(m_style.hilited_back_color);
-				_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length());
+				_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat);
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
 				x += (selEnd.cx - selStart.cx);
@@ -600,13 +599,13 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
-				_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length());
+				_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat);
 			}
 		}
 		else
 		{
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
-			_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length());
+			_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat);
 		}
 		drawn = true;
 	}
@@ -624,6 +623,16 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	int oy = abs(m_style.shadow_offset_y)*2 + m_style.shadow_radius*2;
 	int bkx = abs((m_style.margin_x - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
 	int bky = abs((m_style.margin_y - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
+
+#if 0
+	locale& loc = locale::global(locale(locale(), "", LC_CTYPE)); // 2
+	wofstream wofs(L"C:\\Users\\vm10\\Desktop\\log.txt");
+	locale::global(loc); // 3
+	wofs<<m_style.label_font_face<<L",\t" << m_style.font_face<<L",\t" <<m_style.comment_font_face<<L",\t" <<endl;
+	wofs<<m_style.label_font_point<<L",\t" << m_style.font_point<<L",\t" <<m_style.comment_font_point<<L",\t" <<endl;
+	wofs << endl;
+	wofs.close();
+#endif
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		CRect rect;
@@ -659,7 +668,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(i);
 		rect = OffsetRect(rect, ox, oy);
-		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length());
+		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat);
 
 		// Draw text
 		std::wstring text = candidates.at(i).str;
@@ -669,7 +678,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			dc.SetTextColor(m_style.candidate_text_color);
 		rect = m_layout->GetCandidateTextRect(i);
 		rect = OffsetRect(rect, ox, oy);
-		_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length());
+		_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat);
 		
 		// Draw comment
 		std::wstring comment = comments.at(i).str;
@@ -681,7 +690,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 				dc.SetTextColor(m_style.comment_text_color);
 			rect = m_layout->GetCandidateCommentRect(i);
 			rect = OffsetRect(rect, ox, oy);
-			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length());
+			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat);
 		}
 		drawn = true;
 	}
@@ -741,17 +750,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	
 	bool drawn = false;
 
-#if 1
-	pDWR->pDWFactory->CreateTextFormat(
-		m_style.font_face.c_str(), NULL,
-		DWRITE_FONT_WEIGHT_NORMAL,
-		DWRITE_FONT_STYLE_NORMAL,
-		DWRITE_FONT_STRETCH_NORMAL,
-		m_style.font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pTextFormat);
-	pDWR->pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-	pDWR->pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-	pDWR->pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-#endif
 	// draw preedit string
 	if (!m_layout->IsInlinePreedit())
 	{
@@ -837,8 +835,8 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		pDWR->pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	}
 	if(pDWR->pLabelTextFormat == NULL)
-		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
-				m_style.font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pLabelTextFormat);
+		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.label_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				m_style.label_font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pLabelTextFormat);
 	if( pDWR->pLabelTextFormat != NULL)
 	{
 		pDWR->pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -846,8 +844,8 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		pDWR->pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	}
 	if(pDWR->pCommentTextFormat == NULL)
-		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
-				m_style.font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pCommentTextFormat);
+		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.comment_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				m_style.comment_font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pCommentTextFormat);
 	if( pDWR->pCommentTextFormat != NULL)
 	{
 		pDWR->pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -1271,7 +1269,7 @@ static inline int CalcFontHeightDW(IDWriteTextFormat* pTextFormat)
 	return height;
 }
 
-HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, int font_point, COLORREF gdiColor, std::wstring fontface )
+HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
 {
 	float r = (float)(GetRValue(gdiColor))/255.0f;
 	float g = (float)(GetGValue(gdiColor))/255.0f;
@@ -1284,9 +1282,11 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 	if (NULL != pBrush && NULL != pDWR->pTextFormat)
 	{
 		IDWriteTextLayout* pTextLayout = NULL;
-		pDWR->pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pDWR->pTextFormat, 0, 0, &pTextLayout);
+		if (pTextFormat == NULL)
+			pTextFormat = pDWR->pTextFormat;
+		pDWR->pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, 0, 0, &pTextLayout);
 		CSize sz;
-		m_layout->GetTextSizeDW(psz.c_str(), psz.length(), pDWR->pTextFormat, pDWR->pDWFactory, &sz);
+		m_layout->GetTextSizeDW(psz.c_str(), psz.length(), pTextFormat, pDWR->pDWFactory, &sz);
 		float offsetx = (rc.Width() - sz.cx) / 2.0f;
 		pDWR->pRenderTarget->BindDC(dc, &rc);
 		pDWR->pRenderTarget->BeginDraw();
@@ -1305,24 +1305,15 @@ static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wst
             std::wsregex_token_iterator()
     };
 }
-void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
+void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat)
 {
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 	if (_isVistaSp2OrGrater && m_style.color_font )
 	{
-#if 0
-		std::vector<DWRITE_TEXT_RANGE> rgn = CheckEmojiRange(psz);
-		if (rgn.size())
-			_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dc.GetTextColor(), m_style.font_face);
-		else
-			goto GDI_TextOut;
-#else
-		_TextOutWithFallback_D2D(dc, rc, psz, cch, m_style.font_point, dc.GetTextColor(), m_style.font_face);
-#endif
+		_TextOutWithFallback_D2D(dc, rc, psz, cch, dc.GetTextColor(), pTextFormat);
 	}
 	else
 	{ 
-	GDI_TextOut:
 		std::vector<std::wstring> lines;
 		lines = ws_split(psz, L"\r");
 		int offset = 0;

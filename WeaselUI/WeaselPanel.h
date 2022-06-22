@@ -42,9 +42,9 @@ private:
 	bool _DrawCandidates(CDCHandle dc);
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
 	void _HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius );
-	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch);
+	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat);
 	HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch);
-	HRESULT _TextOutWithFallback_D2D(CDCHandle dc, CRect const rc, std::wstring psz, int cch, int font_point, COLORREF gdiColor, std::wstring fontface);
+	HRESULT _TextOutWithFallback_D2D(CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;

@@ -592,26 +592,19 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.label_font_face = utf8towcs(buffer);
 	}
-	else
-	{
-		style.label_font_face = style.font_face;
-	}
+	memset(buffer, '\0', sizeof(buffer));
 	if (RimeConfigGetString(config, "style/comment_font_face", buffer, BUF_SIZE))
 	{
 		style.comment_font_face = utf8towcs(buffer);
 	}
-	else
-	{
-		style.comment_font_face = style.font_face;
-	}
 	RimeConfigGetInt(config, "style/font_point", &style.font_point);
 	if (!RimeConfigGetInt(config, "style/label_font_point", &style.label_font_point))
 	{
-		style.label_font_point = style.font_point;
+		RimeConfigGetInt(config, "style/font_point", &style.label_font_point);
 	}
 	if (!RimeConfigGetInt(config, "style/comment_font_point", &style.comment_font_point))
 	{
-		style.comment_font_point = style.font_point;
+		RimeConfigGetInt(config, "style/font_point", &style.comment_font_point);
 	}
 	Bool inline_preedit = False;
 	if (RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit) || initialize)
