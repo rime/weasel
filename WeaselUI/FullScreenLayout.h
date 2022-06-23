@@ -11,7 +11,6 @@ namespace weasel
 		virtual ~FullScreenLayout();
 
 		virtual void DoLayout(CDCHandle dc);
-		virtual void DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory);
 		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR);
 
 	private:

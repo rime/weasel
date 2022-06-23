@@ -655,11 +655,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.label_text_format = utf8towcs(label_text_format);
 	}
-	Bool dropshadow = True;
-	if (RimeConfigGetBool(config, "style/dropshadow", &dropshadow) || initialize)
-	{
-		style.dropshadow = !!dropshadow;
-	}
 	// layout (alternative to style/horizontal)
 	char layout_type[256] = {0};
 	if (RimeConfigGetString(config, "style/layout/type", layout_type, sizeof(layout_type) - 1))

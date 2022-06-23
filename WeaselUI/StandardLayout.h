@@ -18,7 +18,6 @@ namespace weasel
 		/* Layout */
 
 		virtual void DoLayout(CDCHandle dc) = 0;
-		virtual void DoLayout(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFacroty) = 0;
 		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR) = 0;
 		virtual CSize GetContentSize() const { return _contentSize; }
 		virtual CRect GetPreeditRect() const { return _preeditRect; }

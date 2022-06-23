@@ -502,7 +502,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				blurOffsetY + m_style.shadow_offset_y, 
 				rc.Width() + blurOffsetX + m_style.shadow_offset_x,
 				rc.Height() + blurOffsetY + m_style.shadow_offset_y);
-		if (m_style.dropshadow)
+		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
 		{
 			CRect rect(
 					blurOffsetX + m_style.shadow_offset_x,
