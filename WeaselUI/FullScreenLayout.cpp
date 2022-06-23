@@ -38,14 +38,16 @@ void FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	int fontPoint = _style.font_point;
 	int step = 32;
 	do {
+#if 0
 		long fontHeight = -MulDiv(fontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
 		CFont font;
 		font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, _style.font_face.c_str());
 		dc.SelectFont(font);
+#endif
 
 		m_layout->DoLayout(dc, pFonts);
 	}
-	while (AdjustFontPoint(dc, workArea, fontPoint, step));
+	while (AdjustFontPoint(dc, workArea, pFonts, step));
 
 	if (fontPoint < 4) fontPoint = 4;
 	else if (fontPoint > 2048) fontPoint = 2048;
@@ -157,6 +159,38 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, int&
 			step = -step >> 1;
 		}
 		fontPoint += step;
+		return true;
+	}
+
+	return false;
+}
+
+bool weasel::FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, GDIFonts* pFonts, int& step)
+{
+	if (_context.empty() || step == 0)
+		return false;
+
+	CSize sz = m_layout->GetContentSize();
+	if (sz.cx > workArea.Width() || sz.cy > workArea.Height())
+	{
+		if (step > 0)
+		{
+			step = - (step >> 1);
+		}
+		pFonts->_LabelFontPoint += step;
+		pFonts->_TextFontPoint += step;
+		pFonts->_CommentFontPoint += step;
+		return true;
+	}
+	else if (sz.cx <= workArea.Width() * 31 / 32 && sz.cy <= workArea.Height() * 31 / 32)
+	{
+		if (step < 0)
+		{
+			step = -step >> 1;
+		}
+		pFonts->_LabelFontPoint += step;
+		pFonts->_TextFontPoint += step;
+		pFonts->_CommentFontPoint += step;
 		return true;
 	}
 

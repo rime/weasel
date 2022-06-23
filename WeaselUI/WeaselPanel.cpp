@@ -430,10 +430,10 @@ void WeaselPanel::Refresh()
 	_CreateLayout();
 
 	CDCHandle dc = GetDC();
-	long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	CFont font;
-	font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-	dc.SelectFont(font);
+	//long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	//CFont font;
+	//font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
+	//dc.SelectFont(font);
 	if (m_style.color_font)
 		m_layout->DoLayout(dc, pDWR);
 	else
@@ -624,15 +624,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	int bkx = abs((m_style.margin_x - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
 	int bky = abs((m_style.margin_y - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
 
-#if 0
-	locale& loc = locale::global(locale(locale(), "", LC_CTYPE)); // 2
-	wofstream wofs(L"C:\\Users\\vm10\\Desktop\\log.txt");
-	locale::global(loc); // 3
-	wofs<<m_style.label_font_face<<L",\t" << m_style.font_face<<L",\t" <<m_style.comment_font_face<<L",\t" <<endl;
-	wofs<<m_style.label_font_point<<L",\t" << m_style.font_point<<L",\t" <<m_style.comment_font_point<<L",\t" <<endl;
-	wofs << endl;
-	wofs.close();
-#endif
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		CRect rect;
@@ -668,7 +659,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(i);
 		rect = OffsetRect(rect, ox, oy);
-		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, m_style.label_font_point, m_style.label_font_face);
+		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, pFonts->_LabelFontPoint, pFonts->_LabelFontFace);
 
 		// Draw text
 		std::wstring text = candidates.at(i).str;
@@ -678,7 +669,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			dc.SetTextColor(m_style.candidate_text_color);
 		rect = m_layout->GetCandidateTextRect(i);
 		rect = OffsetRect(rect, ox, oy);
-		_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, m_style.font_point, m_style.font_face);
+		_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 		
 		// Draw comment
 		std::wstring comment = comments.at(i).str;
@@ -690,7 +681,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 				dc.SetTextColor(m_style.comment_text_color);
 			rect = m_layout->GetCandidateCommentRect(i);
 			rect = OffsetRect(rect, ox, oy);
-			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, m_style.comment_font_point, m_style.comment_font_face);
+			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, pFonts->_CommentFontPoint, pFonts->_CommentFontFace);
 		}
 		drawn = true;
 	}
@@ -793,8 +784,14 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HDC screenDC = ::GetDC(NULL);
 	CRect rect;
 	GetWindowRect(&rect);
-	POINT ptSrc = { rect.left, rect.top };
-	POINT ptDest = { rc.left, rc.top };
+	POINT ptSrc = {
+		rect.left,
+		rect.top 
+	};
+	POINT ptDest = {
+		rc.left,
+		rc.top 
+	};
 
 	BLENDFUNCTION bf;
 	bf.AlphaFormat = AC_SRC_ALPHA;
