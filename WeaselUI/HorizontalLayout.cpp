@@ -8,18 +8,19 @@ HorizontalLayout::HorizontalLayout(const UIStyle &style, const Context &context,
 {
 }
 
-void HorizontalLayout::DoLayout(CDCHandle dc)
+void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 {
 	const std::vector<Text> &candidates(_context.cinfo.candies);
 	const std::vector<Text> &comments(_context.cinfo.comments);
 	const std::vector<Text> &labels(_context.cinfo.labels);
-
+	CFont oldFont;
 	CSize size;
 	//dc.GetTextExtent(L"\x4e2d", 1, &size);
 	//const int space = size.cx / 4;
 	const int space = _style.hilite_spacing;
 	int width = 0, height = _style.margin_y;
 
+	oldFont = dc.SelectFont(pFonts->_TextFont);
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
@@ -46,6 +47,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 			w += _style.candidate_spacing;
 
 		/* Label */
+		oldFont = dc.SelectFont(pFonts->_LabelFont);
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextExtentDCMultiline(dc, label, label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
@@ -53,12 +55,14 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 		w += space;
 
 		/* Text */
+		oldFont = dc.SelectFont(pFonts->_TextFont);
 		const std::wstring& text = candidates.at(i).str;
 		GetTextExtentDCMultiline(dc, text, text.length(), &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx + space, h = max(h, size.cy);
 
 		/* Comment */
+		oldFont = dc.SelectFont(pFonts->_CommentFont);
 		if (!comments.at(i).str.empty())
 		{
 			const std::wstring& comment = comments.at(i).str;
@@ -71,7 +75,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
 	}
-#if 0
+	dc.SelectFont(oldFont);
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int ol = 0, ot = 0, oc = 0;
@@ -92,7 +96,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc)
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
 	}
-#endif
 	w += _style.margin_x;
 
 	/* Highlighted Candidate */

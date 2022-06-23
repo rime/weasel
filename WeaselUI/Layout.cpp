@@ -85,3 +85,18 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	}
 	return hResult;
 }
+
+GDIFonts::GDIFonts():
+	_LabelFont(NULL),
+	_TextFont(NULL),
+	_CommentFont(NULL)
+{
+}
+
+GDIFonts::~GDIFonts()
+{
+	_LabelFont.DeleteObject();
+	_TextFont.DeleteObject();
+	_CommentFont.DeleteObject();
+
+}

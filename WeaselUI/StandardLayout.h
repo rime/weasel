@@ -17,7 +17,7 @@ namespace weasel
 
 		/* Layout */
 
-		virtual void DoLayout(CDCHandle dc) = 0;
+		virtual void DoLayout(CDCHandle dc, GDIFonts* pFonts = 0) = 0;
 		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR) = 0;
 		virtual CSize GetContentSize() const { return _contentSize; }
 		virtual CRect GetPreeditRect() const { return _preeditRect; }

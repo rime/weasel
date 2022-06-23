@@ -13,7 +13,7 @@ FullScreenLayout::~FullScreenLayout()
 	delete m_layout;
 }
 
-void FullScreenLayout::DoLayout(CDCHandle dc)
+void FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 {
 	if (_context.empty())
 	{
@@ -43,7 +43,7 @@ void FullScreenLayout::DoLayout(CDCHandle dc)
 		font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, _style.font_face.c_str());
 		dc.SelectFont(font);
 
-		m_layout->DoLayout(dc);
+		m_layout->DoLayout(dc, pFonts);
 	}
 	while (AdjustFontPoint(dc, workArea, fontPoint, step));
 

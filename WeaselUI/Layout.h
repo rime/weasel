@@ -37,6 +37,7 @@ public:
 
 class GDIFonts
 {
+public:
 	GDIFonts();
 	~GDIFonts();
 
@@ -52,7 +53,7 @@ namespace weasel
 	public:
 		Layout(const UIStyle &style, const Context &context, const Status &status);
 
-		virtual void DoLayout(CDCHandle dc) = 0;
+		virtual void DoLayout(CDCHandle dc, GDIFonts* pFonts = 0) = 0;
 		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR) = 0;
 		/* All points in this class is based on the content area */
 		/* The top-left corner of the content area is always (0, 0) */
