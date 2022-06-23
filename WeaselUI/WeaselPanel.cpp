@@ -718,7 +718,10 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
 
 	bool hide_candidates = false;
-	if (m_style.hide_candidates_when_single == True && m_style.inline_preedit == True && candidates.size() == 1)
+	if (m_style.hide_candidates_when_single == True 
+		&& m_style.inline_preedit == True 
+		&& candidates.size() == 1 
+		&& m_style.preedit_type == UIStyle::PreeditType::PREVIEW)
 		hide_candidates = True;
 
 	CRect trc;
