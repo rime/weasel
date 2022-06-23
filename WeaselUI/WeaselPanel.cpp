@@ -716,8 +716,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	int oy = abs(m_style.shadow_offset_y)*2 + m_style.shadow_radius*2;
 	// 获取候选数，消除当候选数为0，又处于inline_preedit状态时出现一個空白的小方框或者圆角矩形的情况
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+
+	bool hide_candidates = false;
+	if (m_style.hide_candidates_when_single == True && m_style.inline_preedit == True && candidates.size() == 1)
+		hide_candidates = True;
+
 	CRect trc;
-	if(!(candidates.size()==0))
+	if(!(candidates.size()==0) && !hide_candidates)
 	{
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
@@ -751,7 +756,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	bool drawn = false;
 
 	// draw preedit string
-	if (!m_layout->IsInlinePreedit())
+	if (!m_layout->IsInlinePreedit() && !hide_candidates)
 	{
 		trc = OffsetRect(m_layout->GetPreeditRect(), ox, oy);
 		drawn |= _DrawPreedit(m_ctx.preedit, memDC, trc);
@@ -770,6 +775,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		drawn = true;
 	}
 
+	if(!hide_candidates)
 	// draw candidates
 	drawn |= _DrawCandidates(memDC);
 

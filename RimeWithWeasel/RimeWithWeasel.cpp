@@ -611,6 +611,11 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.inline_preedit = !!inline_preedit;
 	}
+	Bool hide_candidates_when_single = False;
+	if (RimeConfigGetBool(config, "style/hide_candidates_when_single", &hide_candidates_when_single) || initialize)
+	{
+		style.hide_candidates_when_single = !!hide_candidates_when_single;
+	}
 	Bool color_font = False;
 	if (RimeConfigGetBool(config, "style/color_font", &color_font) || initialize)
 	{

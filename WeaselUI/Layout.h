@@ -35,6 +35,16 @@ public:
 	IDWriteTextFormat* pCommentTextFormat;
 };
 
+class GDIFonts
+{
+	GDIFonts();
+	~GDIFonts();
+
+	CFont _LabelFont;
+	CFont _TextFont;
+	CFont _CommentFont;
+};
+
 namespace weasel
 {
 	class Layout
