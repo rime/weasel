@@ -15,6 +15,7 @@ namespace weasel
 
 	private:
 		bool AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& fontPoint, int& step);
+		bool AdjustFontPoint(CDCHandle dc, const CRect& workArea, GDIFonts* pFonts, int& step);
 
 		const CRect& mr_inputPos;
 		Layout* m_layout;

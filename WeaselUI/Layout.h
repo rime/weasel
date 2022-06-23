@@ -38,12 +38,23 @@ public:
 class GDIFonts
 {
 public:
-	GDIFonts();
-	~GDIFonts();
-
-	CFont _LabelFont;
-	CFont _TextFont;
-	CFont _CommentFont;
+	GDIFonts() {};
+	~GDIFonts(){}
+	GDIFonts(std::wstring labelFontFace, int labelFontPoint, std::wstring textFontFace, int textFontPoint, std::wstring commentFontFace, int commentFontPoint) 
+	{
+		_LabelFontFace		= labelFontFace;
+		_LabelFontPoint		= labelFontPoint;
+		_TextFontFace		= textFontFace;
+		_TextFontPoint		= textFontPoint;
+		_CommentFontFace	= commentFontFace;
+		_CommentFontPoint	= commentFontPoint;
+	}
+	std::wstring _LabelFontFace;
+	std::wstring _TextFontFace;
+	std::wstring _CommentFontFace;
+	int _LabelFontPoint;
+	int _TextFontPoint;
+	int _CommentFontPoint;
 };
 
 namespace weasel

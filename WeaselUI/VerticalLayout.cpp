@@ -13,14 +13,21 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	const std::vector<Text> &candidates(_context.cinfo.candies);
 	const std::vector<Text> &comments(_context.cinfo.comments);
 	const std::vector<Text> &labels(_context.cinfo.labels);
-	CFont oldFont;
 	CSize size;
 	//const int space = size.cx / 4;
 	const int space = _style.hilite_spacing;
 	int width = 0, height = _style.margin_y;
+	CFont labelFont, textFont, commentFont;
+	CFontHandle oldFont;
+	long hlabel = -MulDiv(pFonts->_LabelFontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	long htext = -MulDiv(pFonts->_TextFontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	long hcmmt = -MulDiv(pFonts->_CommentFontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	labelFont.CreateFontW(hlabel, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_LabelFontFace.c_str());
+	textFont.CreateFontW(htext, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_TextFontFace.c_str());
+	commentFont.CreateFontW(hcmmt, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_CommentFontFace.c_str());
 
 	/* Preedit */
-	oldFont = dc.SelectFont(pFonts->_TextFont);
+	oldFont = dc.SelectFont(textFont);
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc);
@@ -50,7 +57,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		int w = _style.margin_x, h = 0;
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
-		oldFont = dc.SelectFont(pFonts->_LabelFont);
+		oldFont = dc.SelectFont(labelFont);
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextExtentDCMultiline(dc, label, label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
@@ -58,8 +65,8 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		candidate_width += size.cx + space;
 
 		/* Text */
+		oldFont = dc.SelectFont(textFont);
 		const std::wstring& text = candidates.at(i).str;
-		oldFont = dc.SelectFont(pFonts->_TextFont);
 		GetTextExtentDCMultiline(dc, text, text.length(), &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
@@ -67,7 +74,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		max_candidate_width = max(max_candidate_width, candidate_width);
 
 		/* Comment */
-		oldFont = dc.SelectFont(pFonts->_CommentFont);
+		oldFont = dc.SelectFont(commentFont);
 		if (!comments.at(i).str.empty())
 		{
 			w += space;

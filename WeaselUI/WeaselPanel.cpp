@@ -748,9 +748,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// background end
 	long height = -MulDiv(m_style.font_point, memDC.GetDeviceCaps(LOGPIXELSY), 72);
 
+#if 0
 	CFont font;
 	font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
 	CFontHandle oldFont = memDC.SelectFont(font);
+#endif
 
 	memDC.SetTextColor(m_style.text_color);
 	memDC.SetBkColor(m_style.back_color);
@@ -786,7 +788,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	if (!drawn)
 		ShowWindow(SW_HIDE);
 
-	memDC.SelectFont(oldFont);	
+	//memDC.SelectFont(oldFont);	
 
 	HDC screenDC = ::GetDC(NULL);
 	CRect rect;
@@ -861,21 +863,9 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		pDWR->pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pDWR->pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	}
-	pFonts = new GDIFonts();
-	/*
-	long height = -MulDiv(m_style.font_point, memDC.GetDeviceCaps(LOGPIXELSY), 72);
-
-	CFont font;
-	font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-	*/
-	CDCHandle dc = GetDC();
-	long heightLabel = -MulDiv(m_style.label_font_point, dc.GetDeviceCaps(LOGPIXELSX), 72);
-	long heightText = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSX), 72);
-	long heightComment = -MulDiv(m_style.comment_font_point, dc.GetDeviceCaps(LOGPIXELSX), 72);
-	pFonts->_LabelFont.CreateFontW(heightLabel, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.label_font_face.c_str());
-	pFonts->_TextFont.CreateFontW(heightText, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-	pFonts->_CommentFont.CreateFontW(heightComment, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.comment_font_face.c_str());
-	ReleaseDC(dc);
+	pFonts = new GDIFonts(m_style.label_font_face, m_style.label_font_point,
+		m_style.font_face, m_style.font_point,
+		m_style.comment_font_face, m_style.comment_font_point);
 	Refresh();
 	return TRUE;
 }
