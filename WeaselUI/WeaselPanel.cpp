@@ -456,30 +456,26 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				rc.Height() + blurOffsetY + m_style.shadow_offset_y);
 		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
 		{
-			CRect rect(
-					blurOffsetX + m_style.shadow_offset_x,
-					blurOffsetY + m_style.shadow_offset_y, 
-					rc.Width() + blurOffsetX + m_style.shadow_offset_x,
-					rc.Height() + blurOffsetY + m_style.shadow_offset_y);
 			GraphicsRoundRectPath path(rect, radius);
 			SolidBrush br(brc);
 			gg.FillPath(&br, &path);
 		}
 		else
 		{
-			int pensize = max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
+			int pensize = 1;
 			int alpha = ((shadowColor >> 24) & 255);
+			int step = alpha / m_style.shadow_radius;
 			Color scolor = Color::MakeARGB(alpha, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
 			Pen penShadow(scolor, (Gdiplus::REAL)pensize);
-			CRect rcShadowEx = OffsetRect(rect, -m_style.shadow_offset_x, -m_style.shadow_offset_y);
-			CRect rcErase = rcShadowEx;
-			GraphicsRoundRectPath path(rcShadowEx, radius);
-			GraphicsRoundRectPath epath(rcErase, radius);
-			gg.DrawPath(&penShadow, &path);
-			gg.SetCompositingMode(CompositingMode::CompositingModeSourceCopy);
-			SolidBrush solidBrush(Color::Transparent);
-			gg.FillPath(&solidBrush, &epath);
-			gg.SetCompositingMode(CompositingMode::CompositingModeSourceOver);
+			CRect rcShadowEx = rect;
+			for (int i = 0; i < m_style.shadow_radius; i++)
+			{
+				GraphicsRoundRectPath path(rcShadowEx, radius + i);
+				gg.DrawPath(&penShadow, &path);
+				scolor = Color::MakeARGB(alpha - i * step, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
+				penShadow.SetColor(scolor);
+				rcShadowEx.InflateRect(2, 2);
+			}
 		}
 		DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
 		gBack.DrawImage(pBitmapDropShadow, rc.left - blurOffsetX, rc.top - blurOffsetY);
