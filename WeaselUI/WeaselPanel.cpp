@@ -486,7 +486,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	Graphics gBack(dc);
 	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 	// 必须shadow_color都是非完全透明色才做绘制
-	if (m_style.shadow_radius && (shadowColor & 0xff000000))	
+	if (m_style.shadow_radius && (shadowColor & 0xff000000) 
+		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN 
+		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)	
 	{
 		BYTE r = GetRValue(shadowColor);
 		BYTE g = GetGValue(shadowColor);
@@ -566,6 +568,10 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			}
 			else
 			{
+				long height = -MulDiv(pFonts->_TextFontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
+				CFont font;
+				font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_TextFontFace.c_str());
+				dc.SelectFont(font);
 				m_layout->GetTextExtentDCMultiline(dc, t, range.start, &selStart);
 				m_layout->GetTextExtentDCMultiline(dc, t, range.end, &selEnd);
 			}
@@ -575,7 +581,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
-				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, m_style.font_point, m_style.font_face);
+				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			{
@@ -588,7 +594,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 					(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y - m_style.hilite_padding), m_style.round_corner);
 				dc.SetTextColor(m_style.hilited_text_color);
 				dc.SetBkColor(m_style.hilited_back_color);
-				_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, m_style.font_point, m_style.font_face);
+				_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
 				x += (selEnd.cx - selStart.cx);
@@ -599,13 +605,13 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
-				_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, m_style.font_point, m_style.font_face);
+				_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 			}
 		}
 		else
 		{
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
-			_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, m_style.font_point, m_style.font_face);
+			_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 		}
 		drawn = true;
 	}
@@ -737,17 +743,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		gBack.ReleaseHDC(memDC);
 	}
 	// background end
-	long height = -MulDiv(m_style.font_point, memDC.GetDeviceCaps(LOGPIXELSY), 72);
 
-#if 0
-	CFont font;
-	font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-	CFontHandle oldFont = memDC.SelectFont(font);
-#endif
-
-	memDC.SetTextColor(m_style.text_color);
-	memDC.SetBkColor(m_style.back_color);
-	memDC.SetBkMode(TRANSPARENT);
+	if (!m_style.color_font)
+	{
+		memDC.SetTextColor(m_style.text_color);
+		memDC.SetBkColor(m_style.back_color);
+		memDC.SetBkMode(TRANSPARENT);
+	}
 	
 	bool drawn = false;
 
@@ -778,8 +780,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	/* Nothing drawn, hide candidate window */
 	if (!drawn)
 		ShowWindow(SW_HIDE);
-
-	//memDC.SelectFont(oldFont);	
 
 	HDC screenDC = ::GetDC(NULL);
 	CRect rect;
@@ -922,8 +922,11 @@ void WeaselPanel::_RepositionWindow()
 	if (y < rcWorkArea.top)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
-	//y -= (abs(m_style.shadow_offset_y) + m_style.shadow_radius) * 2;
-	//x -= (abs(m_style.shadow_offset_x) + m_style.shadow_radius) * 2;
+	if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+	{
+		x -= (abs(m_style.shadow_offset_x) + m_style.shadow_radius) * 2;
+		y -= (abs(m_style.shadow_offset_y) + m_style.shadow_radius) * 2;
+	}
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
 }

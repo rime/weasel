@@ -38,13 +38,6 @@ void FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	int fontPoint = _style.font_point;
 	int step = 32;
 	do {
-#if 0
-		long fontHeight = -MulDiv(fontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-		CFont font;
-		font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, _style.font_face.c_str());
-		dc.SelectFont(font);
-#endif
-
 		m_layout->DoLayout(dc, pFonts);
 	}
 	while (AdjustFontPoint(dc, workArea, pFonts, step));
@@ -101,14 +94,9 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	int fontPoint = _style.font_point;
 	int step = 32;
 	do {
-		long fontHeight = -MulDiv(fontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-		CFont font;
-		font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, _style.font_face.c_str());
-		dc.SelectFont(font);
-
-		m_layout->DoLayout(dc);
+		m_layout->DoLayout(dc, pDWR);
 	}
-	while (AdjustFontPoint(dc, workArea, fontPoint, step));
+	while (AdjustFontPoint(dc, workArea, pDWR, step));
 
 	if (fontPoint < 4) fontPoint = 4;
 	else if (fontPoint > 2048) fontPoint = 2048;
@@ -137,11 +125,13 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	_contentSize.SetSize(workArea.Width(), workArea.Height());
 }
 
-bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& fontPoint, int& step)
+bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, DirectWriteResources* pDWR, int& step)
 {
 	if (_context.empty() || step == 0)
 		return false;
-
+	int fontPointLabel		= pDWR->pLabelTextFormat->GetFontSize();
+	int fontPoint			= pDWR->pTextFormat->GetFontSize();
+	int fontPointComment	= pDWR->pCommentTextFormat->GetFontSize();
 	CSize sz = m_layout->GetContentSize();
 	if (sz.cx > workArea.Width() || sz.cy > workArea.Height())
 	{
@@ -149,7 +139,24 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, int&
 		{
 			step = - (step >> 1);
 		}
-		fontPoint += step;
+		fontPoint += step* pDWR->dpiScaleX_ / 72.0f;
+		fontPointLabel += step* pDWR->dpiScaleX_ / 72.0f;
+		fontPointComment += step* pDWR->dpiScaleX_ / 72.0f;
+		pDWR->pDWFactory->CreateTextFormat(_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				fontPoint, L"", &pDWR->pTextFormat);
+		pDWR->pDWFactory->CreateTextFormat(_style.label_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				fontPointLabel, L"", &pDWR->pLabelTextFormat);
+		pDWR->pDWFactory->CreateTextFormat(_style.comment_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				fontPointComment, L"", &pDWR->pCommentTextFormat);
+		pDWR->pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pDWR->pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pDWR->pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pDWR->pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pDWR->pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pDWR->pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pDWR->pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pDWR->pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pDWR->pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 		return true;
 	}
 	else if (sz.cx <= workArea.Width() * 31 / 32 && sz.cy <= workArea.Height() * 31 / 32)
@@ -158,7 +165,24 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, int&
 		{
 			step = -step >> 1;
 		}
-		fontPoint += step;
+		fontPoint += step* pDWR->dpiScaleX_ / 72.0f;
+		fontPointLabel += step* pDWR->dpiScaleX_ / 72.0f;
+		fontPointComment += step* pDWR->dpiScaleX_ / 72.0f;
+		pDWR->pDWFactory->CreateTextFormat(_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				fontPoint, L"", &pDWR->pTextFormat);
+		pDWR->pDWFactory->CreateTextFormat(_style.label_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				fontPointLabel, L"", &pDWR->pLabelTextFormat);
+		pDWR->pDWFactory->CreateTextFormat(_style.comment_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
+				fontPointComment, L"", &pDWR->pCommentTextFormat);
+		pDWR->pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pDWR->pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pDWR->pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pDWR->pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pDWR->pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pDWR->pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pDWR->pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pDWR->pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pDWR->pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 		return true;
 	}
 
