@@ -16,10 +16,6 @@ using namespace Gdiplus;
 using namespace weasel;
 using namespace std;
 
-#define max3(a,b,c) max(max(a,b),c)
-#define min3(a,b,c) min(min(a,b),c)
-
-//#pragma region "gause blur"
 /* start image gauss blur functions from https://github.com/kenjinote/DropShadow/  */
 #define myround(x) (int)((x)+0.5)
 
@@ -29,7 +25,7 @@ inline void boxesForGauss(double sigma, int* sizes, int n)
 	int wl = (int)floor(wIdeal);
 	if (wl % 2 == 0) --wl;
 
-	const double wu = (LONGLONG)wl + 2;
+	const double wu = (double)wl + 2;
 
 	const double mIdeal = (12 * sigma * sigma - n * (LONGLONG)wl * wl - 4 *(LONGLONG)n * wl - 3 * (LONGLONG)n) / (-4 * (LONGLONG)wl - 4);
 	const int m = myround(mIdeal);
@@ -351,7 +347,6 @@ void DoGaussianBlurPower(Gdiplus::Bitmap* img, float radiusX, float radiusY, int
 	delete pBitmap;
 }
 /* end  image gauss blur functions from https://github.com/kenjinote/DropShadow/  */
-//#pragma region "gause blur"
 static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
 {
 	CRect res(rc.left + offsetx, rc.top + offsety, rc.right + offsetx, rc.bottom + offsety);
@@ -384,11 +379,6 @@ WeaselPanel::~WeaselPanel()
 void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
-	long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	CFont font;
-	font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-	dc.SelectFont(font);
-
 	CSize size = m_layout->GetContentSize();
 	if (m_style.shadow_offset_x)
 		size.cx += abs(m_style.shadow_offset_x * 4) ;
@@ -430,10 +420,6 @@ void WeaselPanel::Refresh()
 	_CreateLayout();
 
 	CDCHandle dc = GetDC();
-	//long fontHeight = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	//CFont font;
-	//font.CreateFontW(fontHeight, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-	//dc.SelectFont(font);
 	if (m_style.color_font)
 		m_layout->DoLayout(dc, pDWR);
 	else
@@ -445,47 +431,11 @@ void WeaselPanel::Refresh()
 	RedrawWindow();
 }
 
-void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
-{
-	rc.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-	{
-		Graphics gBack(dc);
-		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-		GraphicsRoundRectPath bgPath;
-		bgPath.AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
-		BYTE alpha = (BYTE)((color >> 24) & 255);
-		Color back_color = Color::MakeARGB(alpha, GetRValue(color), GetGValue(color), GetBValue(color));
-		SolidBrush gBrBack(back_color);
-		if (m_style.shadow_radius)
-		{
-			BYTE r = GetRValue(color);
-			BYTE g = GetGValue(color);
-			BYTE b = GetBValue(color);
-			Color centrColor = Color::MakeARGB(alpha/2, r, g, b);
-			Color edgeColor = Color::MakeARGB(0, r, g, b);
-			GraphicsRoundRectPath shadowPath;
-			shadowPath.AddRoundRect(rc.left + m_style.shadow_radius, rc.top + m_style.shadow_radius,
-				rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
-			PathGradientBrush pathBr(&shadowPath);
-			Color colors[] = { edgeColor, edgeColor,edgeColor, edgeColor };
-			int count = 1;
-			pathBr.SetCenterColor(centrColor);
-			pathBr.SetSurroundColors(colors, &count);
-			pathBr.SetFocusScales(
-				((float)(rc.Width() - m_style.shadow_radius * 2)) / (float)rc.Width(),
-				((float)(rc.Height() - m_style.shadow_radius * 2)) / (float)rc.Height()
-			);
-			gBack.FillPath(&pathBr, &shadowPath);
-		}
-		gBack.FillPath(&gBrBack, &bgPath);
-	}
-}
-
 void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius)
 {
 	Graphics gBack(dc);
 	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-	// 必须shadow_color都是非完全透明色才做绘制
+	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
 	if (m_style.shadow_radius && (shadowColor & 0xff000000) 
 		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN 
 		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)	
@@ -520,11 +470,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			int pensize = max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
 			int alpha = ((shadowColor >> 24) & 255);
 			Color scolor = Color::MakeARGB(alpha, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
-			Pen penShadow(scolor, pensize);
+			Pen penShadow(scolor, (Gdiplus::REAL)pensize);
 			CRect rcShadowEx = OffsetRect(rect, -m_style.shadow_offset_x, -m_style.shadow_offset_y);
-			//rcShadowEx.InflateRect(pensize / 4, pensize / 4);
 			CRect rcErase = rcShadowEx;
-			//rcErase.InflateRect(pensize / 2, pensize / 2);
 			GraphicsRoundRectPath path(rcShadowEx, radius);
 			GraphicsRoundRectPath epath(rcErase, radius);
 			gg.DrawPath(&penShadow, &path);
@@ -533,9 +481,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			gg.FillPath(&solidBrush, &epath);
 			gg.SetCompositingMode(CompositingMode::CompositingModeSourceOver);
 		}
-		DoGaussianBlur(pBitmapDropShadow, m_style.shadow_radius, m_style.shadow_radius);
+		DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
 		gBack.DrawImage(pBitmapDropShadow, rc.left - blurOffsetX, rc.top - blurOffsetY);
-		pBitmapDropShadow->operator delete;
+		delete pBitmapDropShadow;
 	}
 	if (color & 0xff000000)	// 必须back_color非完全透明才绘制
 	{
@@ -570,10 +518,14 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			{
 				long height = -MulDiv(pFonts->_TextFontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
 				CFont font;
+				CFontHandle oldFont;
 				font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_TextFontFace.c_str());
-				dc.SelectFont(font);
+				oldFont = dc.SelectFont(font);
 				m_layout->GetTextExtentDCMultiline(dc, t, range.start, &selStart);
 				m_layout->GetTextExtentDCMultiline(dc, t, range.end, &selEnd);
+				dc.SelectFont(oldFont);
+				font.DeleteObject();
+				oldFont.DeleteObject();
 			}
 			int x = rc.left;
 			if (range.start > 0)
@@ -711,9 +663,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	
 	int ox = abs(m_style.shadow_offset_x)*2 + m_style.shadow_radius*2;
 	int oy = abs(m_style.shadow_offset_y)*2 + m_style.shadow_radius*2;
-	// 获取候选数，消除当候选数为0，又处于inline_preedit状态时出现一個空白的小方框或者圆角矩形的情况
-	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
 
+	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set */
+	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
 	bool hide_candidates = false;
 	if (m_style.hide_candidates_when_single == True 
 		&& m_style.inline_preedit == True 
@@ -722,7 +674,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		hide_candidates = True;
 
 	CRect trc;
-	if(!(candidates.size()==0) && !hide_candidates)
+	/* (candidate not empty or (input not empty and not inline_preedit)) and not hide_candidates */
+	if(
+		(!(candidates.size()==0) 
+			|| ((!m_ctx.aux.str.empty() || !m_ctx.preedit.str.empty()) && !m_style.inline_preedit)) 
+		&& !hide_candidates)
 	{
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
@@ -731,7 +687,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
-		Pen gPenBorder(border_color, m_style.border);
+		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
 		if (m_style.shadow_radius && (m_style.shadow_color & 0xff000000))
 			_HighlightTextEx(memDC, trc, m_style.back_color, m_style.shadow_color, ox*2, oy*2, m_style.round_corner_ex);
 		else
@@ -773,9 +729,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		drawn = true;
 	}
 
-	if(!hide_candidates)
 	// draw candidates
-	drawn |= _DrawCandidates(memDC);
+	if(!hide_candidates)
+		drawn |= _DrawCandidates(memDC);
 
 	/* Nothing drawn, hide candidate window */
 	if (!drawn)
@@ -833,9 +789,15 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		pDWR->pD2d1Factory->CreateDCRenderTarget(&properties, &pDWR->pRenderTarget);
 	}
 	pDWR->pD2d1Factory->GetDesktopDpi(&pDWR->dpiScaleX_, &pDWR->dpiScaleY_);
+	pDWR->dpiScaleX_ /= 72.0f;
+	pDWR->dpiScaleY_ /= 72.0f;
+	//CDCHandle dc = GetDC();
+	//pDWR->dpiScaleX_ = dc.GetDeviceCaps(LOGPIXELSX) / 72;
+	//pDWR->dpiScaleY_ = dc.GetDeviceCaps(LOGPIXELSY) / 72;
+	//ReleaseDC(dc);
 	if(pDWR->pTextFormat == NULL)
 		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
-				m_style.font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pTextFormat);
+				m_style.font_point * pDWR->dpiScaleX_, L"", &pDWR->pTextFormat);
 	if( pDWR->pTextFormat != NULL)
 	{
 		pDWR->pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -844,7 +806,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	}
 	if(pDWR->pLabelTextFormat == NULL)
 		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.label_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
-				m_style.label_font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pLabelTextFormat);
+				m_style.label_font_point * pDWR->dpiScaleX_, L"", &pDWR->pLabelTextFormat);
 	if( pDWR->pLabelTextFormat != NULL)
 	{
 		pDWR->pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -853,7 +815,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	}
 	if(pDWR->pCommentTextFormat == NULL)
 		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.comment_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
-				m_style.comment_font_point * pDWR->dpiScaleX_ / 72.0f, L"", &pDWR->pCommentTextFormat);
+				m_style.comment_font_point * pDWR->dpiScaleX_, L"", &pDWR->pCommentTextFormat);
 	if( pDWR->pCommentTextFormat != NULL)
 	{
 		pDWR->pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -1117,6 +1079,7 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 	return hr;
 }
 
+#if 0
 // utf16* to unicode and return length of utf16
 inline static size_t Utf16ToUnicode(const wchar_t* src, ULONG& des)
 {
@@ -1147,7 +1110,7 @@ inline static size_t Utf16ToUnicode(const wchar_t* src, ULONG& des)
 static std::vector<DWRITE_TEXT_RANGE> CheckEmojiRange(std::wstring str)
 {
 	std::vector<DWRITE_TEXT_RANGE> rng;
-	int i = 0;
+	size_t i = 0;
 	wchar_t* utf16 = &str[0];
 	ULONG unicode = 0;
 	UINT32 sc = 0, ec = 0;
@@ -1235,7 +1198,6 @@ static std::vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(std::wstring str)
 	}
 	return rng;
 }
-
 static inline int CalcFontOffsetDW(IDWriteTextFormat* pTextFormat)
 {
 	// offset calc start
@@ -1284,6 +1246,7 @@ static inline int CalcFontHeightDW(IDWriteTextFormat* pTextFormat)
 	// offset calc end
 	return height;
 }
+#endif
 
 HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
 {
@@ -1323,13 +1286,13 @@ static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wst
 }
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, int font_point, std::wstring font_face)
 {
-	long height = -MulDiv(font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 	if (_isVistaSp2OrGrater && m_style.color_font )
 	{
 		_TextOutWithFallback_D2D(dc, rc, psz, cch, dc.GetTextColor(), pTextFormat);
 	}
 	else
 	{ 
+		long height = -MulDiv(font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 		std::vector<std::wstring> lines;
 		lines = ws_split(psz, L"\r");
 		int offset = 0;
@@ -1385,12 +1348,10 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(int left, int top, int width, int h
 {
 	AddRoundRect(left, top, width, height, cornerx, cornery);
 }
-
 GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner)
 {
 	AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), corner, corner);
 }
-
 void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery)
 {
 	if(cornery > 0 && cornerx >0)

@@ -56,7 +56,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	if(pTextFormat == NULL)
 		hResult = pDWFactory->CreateTextFormat(font_face.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
-			font_point * dpiScaleX_ / 72.0f, L"", &pTextFormat);
+			font_point * dpiScaleX_, L"", &pTextFormat);
 	if( pTextFormat != NULL)
 	{
 		pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -66,7 +66,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	if(pLabelTextFormat == NULL)
 		hResult = pDWFactory->CreateTextFormat(label_font_face.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
-			label_font_point * dpiScaleX_ / 72.0f, L"", &pLabelTextFormat);
+			label_font_point * dpiScaleX_, L"", &pLabelTextFormat);
 	if( pLabelTextFormat != NULL)
 	{
 		pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -76,7 +76,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	if(pCommentTextFormat == NULL)
 		hResult = pDWFactory->CreateTextFormat(comment_font_face.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
-			comment_font_point * dpiScaleX_ / 72.0f, L"", &pCommentTextFormat);
+			comment_font_point * dpiScaleX_, L"", &pCommentTextFormat);
 	if( pCommentTextFormat != NULL)
 	{
 		pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);

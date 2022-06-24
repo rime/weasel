@@ -139,9 +139,9 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, Dire
 		{
 			step = - (step >> 1);
 		}
-		fontPoint += step* pDWR->dpiScaleX_ / 72.0f;
-		fontPointLabel += step* pDWR->dpiScaleX_ / 72.0f;
-		fontPointComment += step* pDWR->dpiScaleX_ / 72.0f;
+		fontPoint += step* pDWR->dpiScaleX_;
+		fontPointLabel += step* pDWR->dpiScaleX_;
+		fontPointComment += step* pDWR->dpiScaleX_;
 		pDWR->pDWFactory->CreateTextFormat(_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
 				fontPoint, L"", &pDWR->pTextFormat);
 		pDWR->pDWFactory->CreateTextFormat(_style.label_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
@@ -165,9 +165,9 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, Dire
 		{
 			step = -step >> 1;
 		}
-		fontPoint += step* pDWR->dpiScaleX_ / 72.0f;
-		fontPointLabel += step* pDWR->dpiScaleX_ / 72.0f;
-		fontPointComment += step* pDWR->dpiScaleX_ / 72.0f;
+		fontPoint += step* pDWR->dpiScaleX_;
+		fontPointLabel += step* pDWR->dpiScaleX_;
+		fontPointComment += step* pDWR->dpiScaleX_;
 		pDWR->pDWFactory->CreateTextFormat(_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
 				fontPoint, L"", &pDWR->pTextFormat);
 		pDWR->pDWFactory->CreateTextFormat(_style.label_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 

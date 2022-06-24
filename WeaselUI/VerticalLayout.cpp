@@ -140,6 +140,11 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		_candidateTextRects[id].top,
 		width - _style.margin_x,
 		_candidateTextRects[id].bottom);
+
+	labelFont.DeleteObject();
+	textFont.DeleteObject();
+	commentFont.DeleteObject();
+	oldFont.DeleteObject();
 }
 
 void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)

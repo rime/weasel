@@ -132,6 +132,10 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	}
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width, height);
+	labelFont.DeleteObject();
+	textFont.DeleteObject();
+	commentFont.DeleteObject();
+	oldFont.DeleteObject();
 }
 
 void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
