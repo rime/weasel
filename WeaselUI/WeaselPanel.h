@@ -6,7 +6,8 @@
 
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
-
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dwrite.lib")
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 
 class WeaselPanel : 
@@ -39,9 +40,10 @@ private:
 	void _RepositionWindow();
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
-	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
-	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch);
+	void _HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius );
+	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, int font_point, std::wstring font_face);
 	HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch);
+	HRESULT _TextOutWithFallback_D2D(CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
@@ -55,6 +57,10 @@ private:
 
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
+	bool _isVistaSp2OrGrater;
+	
+	DirectWriteResources* pDWR = NULL;
+	GDIFonts* pFonts = NULL;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
@@ -62,6 +68,7 @@ class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
 public:
 	GraphicsRoundRectPath();
 	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery);
+	GraphicsRoundRectPath(const CRect rc, int corner);
 
 public:
 	void AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery);

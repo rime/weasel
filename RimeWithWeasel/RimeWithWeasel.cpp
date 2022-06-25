@@ -5,6 +5,7 @@
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
 #include <VersionHelpers.hpp>
+#include <math.h>
 
 #include <rime_api.h>
 
@@ -586,11 +587,39 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.font_face = utf8towcs(buffer);
 	}
+	memset(buffer, '\0', sizeof(buffer));
+	if (RimeConfigGetString(config, "style/label_font_face", buffer, BUF_SIZE))
+	{
+		style.label_font_face = utf8towcs(buffer);
+	}
+	memset(buffer, '\0', sizeof(buffer));
+	if (RimeConfigGetString(config, "style/comment_font_face", buffer, BUF_SIZE))
+	{
+		style.comment_font_face = utf8towcs(buffer);
+	}
 	RimeConfigGetInt(config, "style/font_point", &style.font_point);
+	if (!RimeConfigGetInt(config, "style/label_font_point", &style.label_font_point))
+	{
+		RimeConfigGetInt(config, "style/font_point", &style.label_font_point);
+	}
+	if (!RimeConfigGetInt(config, "style/comment_font_point", &style.comment_font_point))
+	{
+		RimeConfigGetInt(config, "style/font_point", &style.comment_font_point);
+	}
 	Bool inline_preedit = False;
 	if (RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit) || initialize)
 	{
 		style.inline_preedit = !!inline_preedit;
+	}
+	Bool hide_candidates_when_single = False;
+	if (RimeConfigGetBool(config, "style/hide_candidates_when_single", &hide_candidates_when_single) || initialize)
+	{
+		style.hide_candidates_when_single = !!hide_candidates_when_single;
+	}
+	Bool color_font = False;
+	if (RimeConfigGetBool(config, "style/color_font", &color_font) || initialize)
+	{
+		style.color_font = !!color_font;
 	}
 	char preedit_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
@@ -599,6 +628,16 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 			style.preedit_type = weasel::UIStyle::COMPOSITION;
 		else if (!std::strcmp(preedit_type, "preview"))
 			style.preedit_type = weasel::UIStyle::PREVIEW;
+	}
+	char align_type[20] = { 0 };
+	if (RimeConfigGetString(config, "style/layout/align_type", align_type, sizeof(align_type) - 1))
+	{
+		if (!std::strcmp(align_type, "top"))
+			style.align_type = weasel::UIStyle::ALIGN_TOP;
+		else if (!std::strcmp(align_type, "center"))
+			style.align_type = weasel::UIStyle::ALIGN_CENTER;
+		else
+			style.align_type = weasel::UIStyle::ALIGN_BOTTOM;
 	}
 	Bool display_tray_icon = False;
 	if (RimeConfigGetBool(config, "style/display_tray_icon", &display_tray_icon) || initialize)
@@ -647,6 +686,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/candidate_spacing", &style.candidate_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
+	RimeConfigGetInt(config, "style/layout/shadow_radius", &style.shadow_radius);
+	RimeConfigGetInt(config, "style/layout/shadow_offset_x", &style.shadow_offset_x);
+	RimeConfigGetInt(config, "style/layout/shadow_offset_y", &style.shadow_offset_y);
 	// round_corner as alias of hilited_corner_radius
 	if(!RimeConfigGetInt(config, "style/layout/hilited_corner_radius", &style.round_corner))
 	{
@@ -661,6 +703,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		std::string prefix("preset_color_schemes/");
 		prefix += buffer;
 		RimeConfigGetColor32b(config, (prefix + "/back_color").c_str(), &style.back_color);
+		if (!RimeConfigGetColor32b(config, (prefix + "/shadow_color").c_str(), &style.shadow_color))
+		{
+			style.shadow_color = 0x00000000;
+		}
 		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color);
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color))
 		{
@@ -690,6 +736,18 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color))
 		{
 			style.hilited_candidate_back_color = style.hilited_back_color;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color))
+		{
+			style.hilited_candidate_shadow_color = 0x20000000;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color))
+		{
+			style.hilited_shadow_color = 0x20000000;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color))
+		{
+			style.candidate_shadow_color = 0x20000000;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color))
 		{

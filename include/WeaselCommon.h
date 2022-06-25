@@ -146,11 +146,25 @@ namespace weasel
 			LAYOUT_TYPE_LAST
 		};
 
+		enum LayoutAlignType
+		{
+			ALIGN_BOTTOM = 0,
+			ALIGN_CENTER,
+			ALIGN_TOP
+		};
+
+		LayoutAlignType align_type;
 		PreeditType preedit_type;
 		LayoutType layout_type;
 		std::wstring font_face;
+		std::wstring label_font_face;
+		std::wstring comment_font_face;
 		int font_point;
+		int label_font_point;
+		int comment_font_point;
 		bool inline_preedit;
+		bool hide_candidates_when_single;
+		bool color_font;
 		bool display_tray_icon;
 		std::wstring label_text_format;
 		// layout
@@ -165,27 +179,41 @@ namespace weasel
 		int hilite_padding;
 		int round_corner;
 		int round_corner_ex;
+		int shadow_radius;
+		int shadow_offset_x;
+		int shadow_offset_y;
 		// color scheme
 		int text_color;
 		int candidate_text_color;
 		int candidate_back_color;
+		int candidate_shadow_color;
 		int label_text_color;
 		int comment_text_color;
 		int back_color;
+		int shadow_color;
 		int border_color;
 		int hilited_text_color;
 		int hilited_back_color;
+		int hilited_shadow_color;
 		int hilited_candidate_text_color;
 		int hilited_candidate_back_color;
+		int hilited_candidate_shadow_color;
 		int hilited_label_text_color;
 		int hilited_comment_text_color;
 		// per client
 		int client_caps;
 
 		UIStyle() : font_face(),
+			label_font_face(),
+			comment_font_face(),
 			font_point(0),
+			label_font_point(0),
+			comment_font_point(0),
 			inline_preedit(false),
+			hide_candidates_when_single(false),
+			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
+			color_font(0),
 			display_tray_icon(false),
 			label_text_format(L"%s."),
 			layout_type(LAYOUT_VERTICAL),
@@ -200,17 +228,24 @@ namespace weasel
 			hilite_padding(0),
 			round_corner(0),
 			round_corner_ex(0),
+			shadow_radius(0),
+			shadow_offset_x(0),
+			shadow_offset_y(0),
 			text_color(0),
 			candidate_text_color(0),
 			candidate_back_color(0),
+			candidate_shadow_color(0),
 			label_text_color(0),
 			comment_text_color(0),
 			back_color(0),
+			shadow_color(0),
 			border_color(0),
 			hilited_text_color(0),
 			hilited_back_color(0),
+			hilited_shadow_color(0),
 			hilited_candidate_text_color(0),
 			hilited_candidate_back_color(0),
+			hilited_candidate_shadow_color(0),
 			hilited_label_text_color(0),
 			hilited_comment_text_color(0),
 			client_caps(0) {}
@@ -222,8 +257,15 @@ namespace boost {
 		void serialize(Archive &ar, weasel::UIStyle &s, const unsigned int version)
 		{
 			ar & s.font_face;
+			ar & s.label_font_face;
+			ar & s.comment_font_face;
 			ar & s.font_point;
+			ar & s.label_font_point;
+			ar & s.comment_font_point;
 			ar & s.inline_preedit;
+			ar & s.hide_candidates_when_single;
+			ar & s.align_type;
+			ar & s.color_font;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
 			ar & s.label_text_format;
@@ -240,18 +282,25 @@ namespace boost {
 			ar & s.hilite_padding;
 			ar & s.round_corner;
 			ar & s.round_corner_ex;
+			ar & s.shadow_radius;
+			ar & s.shadow_offset_x;
+			ar & s.shadow_offset_y;
 			// color scheme
 			ar & s.text_color;
 			ar & s.candidate_text_color;
 			ar & s.candidate_back_color;
+			ar & s.candidate_shadow_color;
 			ar & s.label_text_color;
 			ar & s.comment_text_color;
 			ar & s.back_color;
+			ar & s.shadow_color;
 			ar & s.border_color;
 			ar & s.hilited_text_color;
 			ar & s.hilited_back_color;
+			ar & s.hilited_shadow_color;
 			ar & s.hilited_candidate_text_color;
 			ar & s.hilited_candidate_back_color;
+			ar & s.hilited_candidate_shadow_color;
 			ar & s.hilited_label_text_color;
 			ar & s.hilited_comment_text_color;
 			// per client
