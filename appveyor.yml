@@ -6,7 +6,7 @@ version: '{branch} build {build}'
 image: Visual Studio 2019
 
 environment:
-  BOOST_ROOT: C:\boost_1_79_0
+  BOOST_ROOT: C:\boost_1_76_0
   CMAKE_GENERATOR: Visual Studio 16 2019
   PLATFORM_TOOLSET: v142
 
