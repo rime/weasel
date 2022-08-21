@@ -99,8 +99,8 @@ ibus::Keycode TranslateKeycode(UINT vkey, KeyInfo kinfo)
 
 	case VK_ESCAPE:	return ibus::Escape;
 
-	//case VK_CONVERT:	return 0;
-	//case VK_NONCONVERT:	return 0;
+	case VK_CONVERT:	return ibus::Henkan;
+	case VK_NONCONVERT:	return ibus::Muhenkan;
 	//case VK_ACCEPT:	return 0;
 	//case VK_MODECHANGE:	return 0;
 
@@ -175,6 +175,10 @@ ibus::Keycode TranslateKeycode(UINT vkey, KeyInfo kinfo)
 	case VK_RCONTROL:	return ibus::Control_R;
 	case VK_LMENU:	return ibus::Alt_L;
 	case VK_RMENU:	return ibus::Alt_R;
+	
+	case VK_OEM_AUTO: return ibus::Zenkaku_Hankaku;
+	case VK_OEM_ENLW: return ibus::Zenkaku_Hankaku;
+	
 	}
 	return ibus::Null;
 }
