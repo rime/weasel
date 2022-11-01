@@ -4,8 +4,10 @@
 typedef __success(return >= 0) LONG NTSTATUS;
 #endif
 
-#ifdef VERSIONHELPERAPI
-
+//#ifdef VERSIONHELPERAPI
+// Visual Studio comes with Windows SDK 10, VersionHelpers.h came with Windows 8.1 SDK, while windows sdk 8.1 came with VS2013 _MSC_VER=1800
+#if (_MSC_VER>=1800)
+#include <VersionHelpers.h>
 inline void InitVersion() {}
 
 #else
