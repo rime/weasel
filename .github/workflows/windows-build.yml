@@ -1,0 +1,79 @@
+name: Windows build
+on:
+  workflow_call:
+    inputs:
+      repository:
+        default: ${{ github.repository }}
+        required: false
+        type: string
+      rime_plugins:
+        required: false
+        type: string
+jobs:
+  build:
+    runs-on: windows-2019
+    env:
+      boost_version: 1.78.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
+      RIME_PLUGINS: ${{ inputs.rime_plugins }}
+    steps:
+      - name: Checkout last commit
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository }}
+          submodules: recursive
+
+      - name: Configure build environment
+        run: |
+          copy env.vs2019.bat env.bat
+          $git_ref_name = git describe --always
+          echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
+
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.BOOST_ROOT }}
+          key: ${{ runner.os }}-boost-${{ env.boost_version }}
+
+      - name: Install Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: .\install_boost.bat
+
+      - name: Check submodules
+        run: git submodule > submodule-status
+
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            librime
+            plum
+          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1.3
+
+      - name: Build dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: .\build.bat opencc
+
+      - name: Copy Rime files
+        run: .\github.install.bat
+
+
+      - name: Build Weasel
+        id: build_weasel
+        run: |
+          .\build.bat data
+          .\build.bat hant
+          .\build.bat installer
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          if-no-files-found: error
+          path: |
+            .\output\archives\weasel*.exe

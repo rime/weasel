@@ -1,0 +1,13 @@
+name: Commit CI
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - '![0-9]+.*'
+  pull_request:
+
+jobs:
+  windows:
+    uses: ./.github/workflows/windows-build.yml
