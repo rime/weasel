@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <codecvt>
 
 // UTF-8 conversion
 inline const char* wcstoutf8(const WCHAR* wstr)
@@ -51,5 +52,16 @@ std::wstring WeaselUserDataPath();
 const char* weasel_shared_data_dir();
 const char* weasel_user_data_dir();
 
+inline std::string to_byte_string(const std::wstring& input)
+{
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return converter.to_bytes(input);
+}
+
+inline std::wstring to_wide_string(const std::string& input)
+{
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return converter.from_bytes(input);
+}
 // resource
 std::string GetCustomResource(const char *name, const char *type);
