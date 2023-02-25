@@ -40,3 +40,8 @@ release-notes.html
 *.7z
 RELEASE_CHANGELOG.md
 deps/
+arm64x_wrapper/*.o
+arm64x_wrapper/*.dll
+arm64x_wrapper/*.ime
+arm64x_wrapper/*.lib
+arm64x_wrapper/*.exp

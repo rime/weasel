@@ -178,6 +178,18 @@ if errorlevel 1 goto error
 msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1
 if errorlevel 1 goto error
 
+if %build_arm64% == 1 (
+  pushd arm64x_wrapper
+  call build.bat
+  if errorlevel 1 goto error
+  popd
+
+  copy arm64x_wrapper\weaselARM64X.dll output
+  if errorlevel 1 goto error
+  copy arm64x_wrapper\weaselARM64X.ime output
+  if errorlevel 1 goto error
+)
+
 if %build_installer% == 1 (
   "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe ^
   /DWEASEL_VERSION=%WEASEL_VERSION% ^

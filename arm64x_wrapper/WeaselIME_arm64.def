@@ -1,0 +1,16 @@
+EXPORTS
+	ImeConversionList = weaselARM64.ime.ImeConversionList
+	ImeConfigure = weaselARM64.ime.ImeConfigure
+	ImeDestroy = weaselARM64.ime.ImeDestroy
+	ImeEscape = weaselARM64.ime.ImeEscape
+	ImeInquire = weaselARM64.ime.ImeInquire
+	ImeProcessKey = weaselARM64.ime.ImeProcessKey
+	ImeSelect = weaselARM64.ime.ImeSelect
+	ImeSetActiveContext = weaselARM64.ime.ImeSetActiveContext
+	ImeToAsciiEx = weaselARM64.ime.ImeToAsciiEx
+	NotifyIME = weaselARM64.ime.NotifyIME
+	ImeRegisterWord = weaselARM64.ime.ImeRegisterWord
+	ImeUnregisterWord = weaselARM64.ime.ImeUnregisterWord
+	ImeGetRegisterWordStyle = weaselARM64.ime.ImeGetRegisterWordStyle
+	ImeEnumRegisterWord = weaselARM64.ime.ImeEnumRegisterWord
+	ImeSetCompositionString = weaselARM64.ime.ImeSetCompositionString
