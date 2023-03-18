@@ -242,7 +242,9 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="fontClasses.cpp" />
     <ClCompile Include="FullScreenLayout.cpp" />
+    <ClCompile Include="GdiplusBlur.cpp" />
     <ClCompile Include="HorizontalLayout.cpp" />
     <ClCompile Include="Layout.cpp" />
     <ClCompile Include="StandardLayout.cpp" />
@@ -257,11 +259,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="VerticalLayout.cpp" />
+    <ClCompile Include="VHorizontalLayout.cpp" />
     <ClCompile Include="WeaselPanel.cpp" />
     <ClCompile Include="WeaselUI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="fontClasses.h" />
     <ClInclude Include="FullScreenLayout.h" />
+    <ClInclude Include="GdiplusBlur.h" />
     <ClInclude Include="HorizontalLayout.h" />
     <ClInclude Include="Layout.h" />
     <ClInclude Include="StandardLayout.h" />
@@ -269,6 +274,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="..\include\WeaselCommon.h" />
     <ClInclude Include="VerticalLayout.h" />
+    <ClInclude Include="VHorizontalLayout.h" />
     <ClInclude Include="WeaselPanel.h" />
     <ClInclude Include="..\include\WeaselUI.h" />
   </ItemGroup>
