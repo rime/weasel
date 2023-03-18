@@ -156,7 +156,7 @@ program_files:
   ; opencc data files
   SetOutPath $INSTDIR\data\opencc
   File "data\opencc\*.json"
-  File "data\opencc\*.ocd2"
+  File "data\opencc\*.ocd*"
   ; images
   SetOutPath $INSTDIR\data\preview
   File "data\preview\*.png"

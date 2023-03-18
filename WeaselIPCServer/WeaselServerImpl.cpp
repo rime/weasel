@@ -255,7 +255,7 @@ DWORD ServerImpl::OnUpdateInputPosition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, D
 	rc.right = rc.left + width;
 	rc.bottom = rc.top + height;
 
-	if (IsWindows8Point1OrGreater())
+	if (IsWindows8Point10OrGreaterEx())
 	{
 		using PPTLPFPMDPI = BOOL (WINAPI *)(HWND, LPPOINT);
 		PPTLPFPMDPI PhysicalToLogicalPointForPerMonitorDPI = (PPTLPFPMDPI)::GetProcAddress(m_hUser32Module, "PhysicalToLogicalPointForPerMonitorDPI");

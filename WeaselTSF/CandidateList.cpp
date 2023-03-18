@@ -257,7 +257,7 @@ void CCandidateList::Destroy()
 {
 	//EndUI();
 	Show(FALSE);
-	_DisposeUIWindow();
+	_DisposeUIWindowAll();
 }
 
 UIStyle & CCandidateList::style()
@@ -359,6 +359,17 @@ void CCandidateList::_DisposeUIWindow()
 	}
 
 	_ui->Destroy();
+}
+
+void CCandidateList::_DisposeUIWindowAll()
+{
+	if (_ui == nullptr)
+	{
+		return;
+	}
+
+	// call _ui->DestroyAll() to clean resources
+	_ui->DestroyAll();
 }
 
 void CCandidateList::_MakeUIWindow()

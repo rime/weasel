@@ -2,6 +2,7 @@
 //
 #include "stdafx.h"
 #include <WeaselUtility.h>
+#include <fstream>
 #include "WeaselDeployer.h"
 #include "Configurator.h"
 
@@ -57,11 +58,23 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	return ret;
 }
 
+static void CreateFileIfNotExist(std::string filename)
+{
+	std::string user_data_dir = weasel_user_data_dir();
+	std::wstring filepathw = to_wide_string(user_data_dir) + L"\\" + to_wide_string(filename);
+	DWORD dwAttrib = GetFileAttributes(filepathw.c_str());
+	if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+	{
+		std::wofstream o(filepathw, std::ios::app);
+		o.close();
+	}
+}
 static int Run(LPTSTR lpCmdLine)
 {
 	Configurator configurator;
 	configurator.Initialize();
-
+	CreateFileIfNotExist("default.custom.yaml");
+	CreateFileIfNotExist("weasel.custom.yaml");
 	bool deployment_scheduled = !wcscmp(L"/deploy", lpCmdLine);
 	if (deployment_scheduled)
 	{
