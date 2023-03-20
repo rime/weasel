@@ -231,16 +231,16 @@ IsWindowsServer()
 #endif
 inline BOOL GetVersionEx2(LPOSVERSIONINFOW lpVersionInformation)
 {
-	HMODULE hNtDll = GetModuleHandleW(L"NTDLL"); // èŽ·å–ntdll.dllçš„å¥æŸ„
-	typedef NTSTATUS(NTAPI* tRtlGetVersion)(PRTL_OSVERSIONINFOW povi); // RtlGetVersionçš„åŽŸåž‹
+	HMODULE hNtDll = GetModuleHandleW(L"NTDLL"); // »ñÈ¡ntdll.dllµÄ¾ä±ú
+	typedef NTSTATUS(NTAPI* tRtlGetVersion)(PRTL_OSVERSIONINFOW povi); // RtlGetVersionµÄÔ­ÐÍ
 	tRtlGetVersion pRtlGetVersion = NULL;
 	if (hNtDll)
 	{
-		pRtlGetVersion = (tRtlGetVersion)GetProcAddress(hNtDll, "RtlGetVersion"); // èŽ·å–RtlGetVersionåœ°å€
+		pRtlGetVersion = (tRtlGetVersion)GetProcAddress(hNtDll, "RtlGetVersion"); // »ñÈ¡RtlGetVersionµØÖ·
 	}
 	if (pRtlGetVersion)
 	{
-		return pRtlGetVersion((PRTL_OSVERSIONINFOW)lpVersionInformation) >= 0; // è°ƒç”¨RtlGetVersion
+		return pRtlGetVersion((PRTL_OSVERSIONINFOW)lpVersionInformation) >= 0; // µ÷ÓÃRtlGetVersion
 	}
 	return FALSE;
 }
@@ -254,12 +254,7 @@ static inline BOOL IsWinVersionGreaterThan(DWORD dwMajorVersion, DWORD dwMinorVe
 	else
 		return false;
 }
-static inline BOOL _IsBlurAvailable()
-{
-	OSVERSIONINFOEXW ovi = { sizeof ovi };
-	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
-	return (ovi.dwMajorVersion == 10 && ovi.dwMinorVersion == 0 && ovi.dwBuildNumber <= 22000);
-}
+
 #define IsBlurAvailable()	IsWinVersionGreaterThan(10, 0)
 #define IsWindows8Point10OrGreaterEx() IsWinVersionGreaterThan(6, 3)
 #define IsWindows10OrGreaterEx() IsWinVersionGreaterThan(10, 0)

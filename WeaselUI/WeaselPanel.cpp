@@ -160,6 +160,89 @@ void WeaselPanel::CleanUp()
 	pBrush = NULL;
 }
 
+#ifdef USE_CAPTURE_BY_CLICK
+static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
+{
+	if (!hDC || !lpRect || IsRectEmpty(lpRect)) return NULL;
+	HDC hMemDC;
+	HBITMAP hBitmap, hOldBitmap;
+	int nX, nY, nX2, nY2;
+	int nWidth, nHeight;
+
+	nX = lpRect->left;
+	nY = lpRect->top;
+	nX2 = lpRect->right;
+	nY2 = lpRect->bottom;
+	nWidth = nX2 - nX;
+	nHeight = nY2 - nY;
+
+	hMemDC = CreateCompatibleDC(hDC);
+	hBitmap = CreateCompatibleBitmap(hDC, nWidth, nHeight);
+	hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
+	StretchBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, nX, nY, nWidth, nHeight, SRCCOPY);
+	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+
+	DeleteDC(hMemDC);
+	DeleteObject(hOldBitmap);
+	return hBitmap;
+ }
+
+void WeaselPanel::_CaptureRect(CRect& rect)
+{
+	HDC ScreenDC = ::GetDC(NULL);
+	CRect rc;
+	GetWindowRect(&rc);
+	POINT WindowPosAtScreen = { rc.left, rc.top };
+	rect.OffsetRect(WindowPosAtScreen);
+	// capture input window
+	if (OpenClipboard()) {
+		HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
+		EmptyClipboard();
+		SetClipboardData(CF_BITMAP, bmp);
+		CloseClipboard();
+		DeleteObject(bmp);
+	}
+	ReleaseDC(ScreenDC);
+}
+
+LRESULT WeaselPanel::OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	bHandled = true;
+	return MA_NOACTIVATE;
+}
+
+LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if(!m_style.capture_by_click || hide_candidates)
+	{
+		bHandled = true;
+		return 0;
+	}
+	CPoint point;
+	point.x = GET_X_LPARAM(lParam);
+	point.y = GET_Y_LPARAM(lParam);
+	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+	CRect rect = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
+	rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+	for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+		if (rect.PtInRect(point))
+		{
+			// to do : call select candidate
+			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+			_CaptureRect(rect);
+			break;
+		}
+		else
+		{
+			_CaptureRect(rcw);
+			break;
+		}
+	}
+	bHandled = true;
+	return 0;
+}
+#endif
+
 void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, IsToRoundStruct rd = IsToRoundStruct(), COLORREF bordercolor=TRANS_COLOR)
 {
 	Gdiplus::Graphics g_back(dc);
@@ -216,7 +299,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 		hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 
 	// 必须back_color非完全透明才绘制
-	if COLORNOTTRANSPARENT(color)	{
+	if (COLORNOTTRANSPARENT(color))	{
 		Gdiplus::Color back_color = GDPCOLOR_FROM_COLORREF(color);
 		Gdiplus::SolidBrush back_brush(back_color);
 		g_back.FillPath(&back_brush, hiliteBackPath);
@@ -251,9 +334,14 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				range = attrs[j].range;
 
 		if (range.start < range.end) {
-			CSize selStart, selEnd;
-			m_layout->GetTextSizeDW(t, range.start, txtFormat, pDWR, &selStart);
-			m_layout->GetTextSizeDW(t, range.end, txtFormat, pDWR, &selEnd);
+			CSize beforeSz, hilitedSz, afterSz;
+			std::wstring before_str = t.substr(0, range.start);
+			std::wstring hilited_str = t.substr(range.start, range.end);
+			std::wstring after_str = t.substr(range.end);
+			m_layout->GetTextSizeDW(before_str, before_str.length(), txtFormat, pDWR, &beforeSz);
+			m_layout->GetTextSizeDW(hilited_str, hilited_str.length(), txtFormat, pDWR, &hilitedSz);
+			m_layout->GetTextSizeDW(after_str, after_str.length(), txtFormat, pDWR, &afterSz);
+
 			int x = rc.left;
 			int y = rc.top;
 
@@ -262,14 +350,14 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before;
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					rc_before = CRect(rc.left, y, rc.right, y + selStart.cy);
+					rc_before = CRect(rc.left, y, rc.right, y + beforeSz.cy);
 				else
-					rc_before = CRect(x, rc.top, rc.left + selStart.cx, rc.bottom);
+					rc_before = CRect(x, rc.top, rc.left + beforeSz.cx, rc.bottom);
 				_TextOut(rc_before, str_before.c_str(), str_before.length(), m_style.text_color, txtFormat);
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					y += selStart.cy + m_style.hilite_spacing;
+					y += beforeSz.cy + m_style.hilite_spacing;
 				else
-					x += selStart.cx + m_style.hilite_spacing;
+					x += beforeSz.cx + m_style.hilite_spacing;
 			}
 			{
 				// zzz[yyy]
@@ -277,24 +365,23 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				CRect rc_hi;
 				
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					rc_hi = CRect(rc.left, y, rc.right, y + (selEnd.cy - selStart.cy));
+					rc_hi = CRect(rc.left, y, rc.right, y + hilitedSz.cy);
 				else
-					rc_hi = CRect(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
+					rc_hi = CRect(x, rc.top, x + hilitedSz.cx, rc.bottom);
 				_TextOut(rc_hi, str_highlight.c_str(), str_highlight.length(), m_style.hilited_text_color, txtFormat);
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					y += rc_hi.Height() + m_style.hilite_spacing;
+					y += rc_hi.Height()+m_style.hilite_spacing;
 				else
-					x += rc_hi.Width() + m_style.hilite_spacing;
+					x += rc_hi.Width()+m_style.hilite_spacing;
 			}
 			if (range.end < static_cast<int>(t.length())) {
 				// zzz[yyy]xxx
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after;
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					rc_after = CRect(x, y, rc.right, max(rc.bottom, y));
+					rc_after = CRect(rc.left, y, rc.right, y + afterSz.cy);
 				else
-					rc_after = CRect(x, rc.top, max(rc.right, x), rc.bottom);
-
+					rc_after = CRect(x, rc.top, x + afterSz.cx, rc.bottom);
 				_TextOut(rc_after, str_after.c_str(), str_after.length(), m_style.text_color, txtFormat);
 			}
 		}
@@ -311,6 +398,7 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 {
 	bool drawn = false;
 	std::wstring const& t = text.str;
+	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat;
 
 	if (!t.empty()) {
 		weasel::TextRange range;
@@ -320,21 +408,33 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 				range = attrs[j].range;
 
 		if (range.start < range.end) {
-			CSize selStart, selEnd;
-			m_layout->GetTextSizeDW(t, range.start, pDWR->pPreeditTextFormat, pDWR, &selStart);
-			m_layout->GetTextSizeDW(t, range.end, pDWR->pPreeditTextFormat, pDWR, &selEnd);
-			int x = range.start > 0 ? rc.left + selStart.cx + m_style.hilite_spacing : rc.left;
-			int y = range.start > 0 ? rc.top + selStart.cy + m_style.hilite_spacing : rc.top;
-			CRect rc_hi;
-			if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-				rc_hi = CRect(rc.left, y, rc.right, y + (selEnd.cy - selStart.cy));
-			else
-				rc_hi = CRect(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
-			rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-			IsToRoundStruct rd = m_layout->GetTextRoundInfo();
-			_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
-			drawn = true;
+			CSize beforeSz, hilitedSz;
+			std::wstring before_str = t.substr(0, range.start);
+			std::wstring hilited_str = t.substr(range.start, range.end);
+			m_layout->GetTextSizeDW(before_str, before_str.length(), txtFormat, pDWR, &beforeSz);
+			m_layout->GetTextSizeDW(hilited_str, hilited_str.length(), txtFormat, pDWR, &hilitedSz);
+
+			int x = rc.left;
+			int y = rc.top;
+
+			if (range.start > 0) {
+				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+					y += beforeSz.cy + m_style.hilite_spacing;
+				else
+					x += beforeSz.cx + m_style.hilite_spacing;
+			}
+			{
+				CRect rc_hi;
+				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+					rc_hi = CRect(rc.left, y, rc.right, y + hilitedSz.cy);
+				else
+					rc_hi = CRect(x, rc.top, x + hilitedSz.cx, rc.bottom);
+				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+				IsToRoundStruct rd = m_layout->GetTextRoundInfo();
+				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
+			}
 		}
+		drawn = true;
 	}
 	return drawn;
 }
@@ -588,88 +688,6 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return TRUE;
 }
 
-#ifdef USE_CAPTURE_BY_CLICK
-static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
-{
-	if (!hDC || !lpRect || IsRectEmpty(lpRect)) return NULL;
-	HDC hMemDC;
-	HBITMAP hBitmap, hOldBitmap;
-	int nX, nY, nX2, nY2;
-	int nWidth, nHeight;
-
-	nX = lpRect->left;
-	nY = lpRect->top;
-	nX2 = lpRect->right;
-	nY2 = lpRect->bottom;
-	nWidth = nX2 - nX;
-	nHeight = nY2 - nY;
-
-	hMemDC = CreateCompatibleDC(hDC);
-	hBitmap = CreateCompatibleBitmap(hDC, nWidth, nHeight);
-	hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
-	StretchBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, nX, nY, nWidth, nHeight, SRCCOPY);
-	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
-
-	DeleteDC(hMemDC);
-	DeleteObject(hOldBitmap);
-	return hBitmap;
- }
-
-void WeaselPanel::_CaptureRect(CRect& rect)
-{
-	HDC ScreenDC = ::GetDC(NULL);
-	CRect rc;
-	GetWindowRect(&rc);
-	POINT WindowPosAtScreen = { rc.left, rc.top };
-	rect.OffsetRect(WindowPosAtScreen);
-	// capture input window
-	if (OpenClipboard()) {
-		HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
-		EmptyClipboard();
-		SetClipboardData(CF_BITMAP, bmp);
-		CloseClipboard();
-		DeleteObject(bmp);
-	}
-	ReleaseDC(ScreenDC);
-}
-
-LRESULT WeaselPanel::OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-	bHandled = true;
-	return MA_NOACTIVATE;
-}
-
-LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-	if(!m_style.capture_by_click || hide_candidates)
-	{
-		bHandled = true;
-		return 0;
-	}
-	CPoint point;
-	point.x = GET_X_LPARAM(lParam);
-	point.y = GET_Y_LPARAM(lParam);
-	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
-	CRect rect = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
-	rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-	for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-		if (rect.PtInRect(point))
-		{
-			// to do : call select candidate
-			rect.InflateRect(abs(m_style.margin_x) - m_style.hilite_padding, abs(m_style.margin_y) - m_style.hilite_padding);
-			_CaptureRect(rect);
-			break;
-		}
-		else
-		{
-			_CaptureRect(rcw);
-			break;
-		}
-	}
-	bHandled = true;
-	return 0;
-}
-#endif
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {

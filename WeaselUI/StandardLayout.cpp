@@ -45,10 +45,17 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
 		SafeRelease(&pDWR->pTextLayout);
-		size_t max_width;
 		
-		max_width = _style.max_width == 0 ? textMetrics.widthIncludingTrailingWhitespace : _style.max_width;
-		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.width, textMetrics.height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+		if(_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
+		{
+			size_t max_width = _style.max_width == 0 ? textMetrics.width : _style.max_width;
+			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, max_width, textMetrics.height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+		}
+		else
+		{
+			size_t max_height = _style.max_height == 0 ? textMetrics.height : _style.max_height;
+			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.width, max_height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+		}
 
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
@@ -76,43 +83,42 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	const std::wstring& preedit = text.str;
 	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
 	CSize size(0, 0);
-	if (!preedit.empty())
+	weasel::TextRange range;
+	for (size_t j = 0; j < attrs.size(); ++j)
+		if (attrs[j].type == weasel::HIGHLIGHTED)
+			range = attrs[j].range;
+	std::wstring before_str = preedit.substr(0, range.start);
+	std::wstring hilited_str = preedit.substr(range.start, range.end);
+	std::wstring after_str = preedit.substr(range.end);
+	CSize beforesz(0,0), hilitedsz(0,0), aftersz(0,0);
+	GetTextSizeDW(before_str, before_str.length(), pTextFormat, pDWR, &beforesz);
+	GetTextSizeDW(hilited_str, hilited_str.length(), pTextFormat, pDWR, &hilitedsz);
+	GetTextSizeDW(after_str, after_str.length(), pTextFormat, pDWR, &aftersz);
+	size_t width_max = 0, height_max = 0;
+	if(_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 	{
-		GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWR, &size);
-		for (size_t i = 0; i < attrs.size(); i++)
-		{
-			if (attrs[i].type == weasel::HIGHLIGHTED)
-			{
-				const weasel::TextRange &range = attrs[i].range;
-				if (range.start < range.end)
-				{
-					if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					{
-						if (range.start > 0)
-							size.cy += _style.hilite_spacing;
-						else
-							size.cy += _style.hilite_padding;
-						if (range.end < static_cast<int>(preedit.length()))
-							size.cy += _style.hilite_spacing;
-						else
-							size.cy += _style.hilite_padding;
-					}
-					else
-					{
-						if (range.start > 0)
-							size.cx += _style.hilite_spacing;
-						else
-							size.cx += _style.hilite_padding;
-						if (range.end < static_cast<int>(preedit.length()))
-							size.cx += _style.hilite_spacing;
-						else
-							size.cx += _style.hilite_padding;
-					}
-				}
-				// only one highlighted, break to save time break;
-			}
-		}
+		width_max = max(width_max, beforesz.cx);
+		width_max = max(width_max, hilitedsz.cx);
+		width_max = max(width_max, aftersz.cx);
+		height_max += beforesz.cy + (beforesz.cy > 0) * _style.hilite_spacing;
+		height_max += hilitedsz.cy + (hilitedsz.cy > 0) * _style.hilite_spacing;
+		height_max += aftersz.cy + (aftersz.cy > 0) * _style.hilite_spacing;
+		if(range.start < range.end)
+			height_max += 2 * _style.hilite_padding;
 	}
+	else
+	{
+		height_max = max(height_max, beforesz.cy);
+		height_max = max(height_max, hilitedsz.cy);
+		height_max = max(height_max, aftersz.cy);
+		width_max += beforesz.cx + (beforesz.cx > 0) * _style.hilite_spacing;
+		width_max += hilitedsz.cx + (hilitedsz.cx > 0) * _style.hilite_spacing;
+		width_max += aftersz.cx + (aftersz.cx > 0) * _style.hilite_spacing;
+		if(range.start < range.end)
+			width_max += 2 * _style.hilite_padding;
+	}
+	size.cx = width_max;
+	size.cy = height_max;
 	return size;
 }
 
