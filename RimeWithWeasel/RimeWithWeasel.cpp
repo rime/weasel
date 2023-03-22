@@ -735,6 +735,8 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetString(config, "style/font_face", buffer, BUF_SIZE))
 	{
 		std::wstring tmp = utf8towcs(buffer);
+		// remove spaces around : , 
+		// remoove space to the line end
 		tmp = std::regex_replace(tmp, std::wregex(L"\\s*,\\s*"), L",");
 		tmp = std::regex_replace(tmp, std::wregex(L"\\s*:\\s*"), L":");
 		tmp = std::regex_replace(tmp, std::wregex(L"^\\s*|\\s*$"), L"");
@@ -744,6 +746,8 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetString(config, "style/label_font_face", buffer, BUF_SIZE))
 	{
 		std::wstring tmp = utf8towcs(buffer);
+		// remove spaces around : , 
+		// remoove space to the line end
 		tmp = std::regex_replace(tmp, std::wregex(L"\\s*,\\s*"), L",");
 		tmp = std::regex_replace(tmp, std::wregex(L"\\s*:\\s*"), L":");
 		tmp = std::regex_replace(tmp, std::wregex(L"^\\s*|\\s*$"), L"");
@@ -753,6 +757,8 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetString(config, "style/comment_font_face", buffer, BUF_SIZE))
 	{
 		std::wstring tmp = utf8towcs(buffer);
+		// remove spaces around : , 
+		// remoove space to the line end
 		tmp = std::regex_replace(tmp, std::wregex(L"\\s*,\\s*"), L",");
 		tmp = std::regex_replace(tmp, std::wregex(L"\\s*:\\s*"), L":");
 		tmp = std::regex_replace(tmp, std::wregex(L"^\\s*|\\s*$"), L"");
