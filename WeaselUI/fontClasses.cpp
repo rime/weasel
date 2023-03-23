@@ -2,6 +2,33 @@
 #include <string>
 #include "fontClasses.h"
 
+std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim) 
+{
+	std::wregex re{ delim };
+	return std::vector<std::wstring> {
+		std::wsregex_token_iterator(in.begin(), in.end(), re, -1),
+			std::wsregex_token_iterator()
+	};
+}
+
+std::vector<std::string> c_split(const char* in, const char* delim) 
+{
+	std::regex re{ delim };
+	return std::vector<std::string> {
+		std::cregex_token_iterator(in, in + strlen(in),re, -1),
+			std::cregex_token_iterator()
+	};
+}
+
+std::vector<std::wstring> wc_split(const wchar_t* in, const wchar_t* delim) 
+{
+	std::wregex re{ delim };
+	return std::vector<std::wstring> {
+		std::wcregex_token_iterator(in, in + wcslen(in),re, -1),
+			std::wcregex_token_iterator()
+	};
+}
+
 DirectWriteResources::DirectWriteResources(weasel::UIStyle& style) :
 	_style(style),
 	dpiScaleX_(0),
@@ -69,7 +96,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	std::vector<std::wstring> fontFaceStrVector;
 
 	// text font text format set up
-	boost::algorithm::split(fontFaceStrVector, font_face, boost::algorithm::is_any_of(L","));
+	fontFaceStrVector = ws_split(font_face, L",");
 	// set main font a invalid font name, to make every font range customizable
 	const std::wstring _mainFontFace = L"_InvalidFontName_";
 	DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
@@ -97,7 +124,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	}
 	fontFaceStrVector.swap(std::vector<std::wstring>());
 
-	boost::algorithm::split(fontFaceStrVector, font_face, boost::algorithm::is_any_of(L","));
+	fontFaceStrVector = ws_split(font_face, L",");
 	//_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(L":[a-zA-Z_]+", std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
@@ -120,7 +147,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	fontFaceStrVector.swap(std::vector<std::wstring>());
 
 	// label font text format set up
-	boost::algorithm::split(fontFaceStrVector, label_font_face, boost::algorithm::is_any_of(L","));
+	fontFaceStrVector = ws_split(label_font_face, L",");
 	// setup weight and style of label_font_face
 	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(L":[a-zA-Z_]+", std::wregex::icase), L"");
@@ -139,13 +166,12 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 			pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pLabelTextFormat->SetWordWrapping(wrapping);
-		//if (fontFaceStrVector.size() > 1)
-			_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
+		_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
 	}
 	fontFaceStrVector.swap(std::vector<std::wstring>());
 
 	// comment font text format set up
-	boost::algorithm::split(fontFaceStrVector, comment_font_face, boost::algorithm::is_any_of(L","));
+	fontFaceStrVector = ws_split(comment_font_face, L",");
 	// setup weight and style of label_font_face
 	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(L":[a-zA-Z_]+", std::wregex::icase), L"");
@@ -179,42 +205,42 @@ HRESULT DirectWriteResources::InitResources(UIStyle& style)
 
 void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle)
 {
-	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":thin", boost::wregex::icase)))
+	if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":thin", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_THIN;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_light", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":extra_light", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_LIGHT;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_light", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":ultra_light", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_LIGHT;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":light", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":light", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_LIGHT;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":semi_light", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":semi_light", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":medium", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":medium", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_MEDIUM;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":demi_bold", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":demi_bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_DEMI_BOLD;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":semi_bold", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":semi_bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":bold", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_BOLD;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_bold", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":extra_bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BOLD;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_bold", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":ultra_bold", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BOLD;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":black", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":black", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_BLACK;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":heavy", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":heavy", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_HEAVY;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_black", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":extra_black", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BLACK;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_black", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":ultra_black", std::wregex::icase)))
 		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BLACK;
 	else
 		fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 
-	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":italic", boost::wregex::icase)))
+	if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":italic", std::wregex::icase)))
 		fontStyle = DWRITE_FONT_STYLE_ITALIC;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":oblique", boost::wregex::icase)))
+	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":oblique", std::wregex::icase)))
 		fontStyle = DWRITE_FONT_STYLE_OBLIQUE;
 	else
 		fontStyle = DWRITE_FONT_STYLE_NORMAL;
@@ -230,7 +256,7 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std:
 	std::vector<std::wstring> fallbackFontsVector;
 	for (UINT32 i = 0; i < fontVector.size(); i++)
 	{
-		boost::algorithm::split(fallbackFontsVector, fontVector[i], boost::algorithm::is_any_of(L":"));
+		fallbackFontsVector = ws_split(fontVector[i], L":");
 		std::wstring _fontFaceWstr, firstWstr, lastWstr;
 		if (fallbackFontsVector.size() == 3)
 		{

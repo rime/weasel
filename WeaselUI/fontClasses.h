@@ -3,10 +3,9 @@
 #include <WeaselUI.h>
 #include <vector>
 #include <regex>
+#include <iterator>
 #include <d2d1.h>
 #include <dwrite_2.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
 
 using namespace weasel;
 
