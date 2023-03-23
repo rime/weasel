@@ -112,7 +112,6 @@ STDAPI DllCanUnloadNow()
 
 STDAPI DllRegisterServer()
 {
-	InitVersion();
 	if (!RegisterServer() || !RegisterProfiles() || !RegisterCategories())
 	{
 		DllUnregisterServer();

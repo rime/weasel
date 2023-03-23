@@ -30,7 +30,6 @@ typedef enum MONITOR_DPI_TYPE {
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
-	InitVersion();
 	if( !IsWindows8Point10OrGreaterEx() )
 	{
 		::MessageBox(NULL, L"僅支持Windows 8.1或更高版本系統", L"系統版本過低", MB_ICONERROR);

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "SecurityAttribute.h"
 #include <Sddl.h>
-#include <VersionHelpers.hpp>
 
 #ifndef SDDL_ALL_APP_PACKAGES
 #define SDDL_ALL_APP_PACKAGES TEXT("AC")
@@ -59,25 +58,18 @@ namespace weasel {
 	{
 		// Privileges for UWP and IE protected mode
 		// https://stackoverflow.com/questions/39138674/accessing-named-pipe-servers-from-within-ie-epm-bho
-		if (IsWindowsVistaOrGreater())
-		{
-			ConvertStringSecurityDescriptorToSecurityDescriptor(
-				IsWindows8OrGreater() ? LOW_INTEGRITY_SDDL_SACL
-				                        SDDL_DACL
-				                        SDDL_DELIMINATOR
-				                        LOCAL_SYSTEM_FILE_ACCESS
-				                        EVERYONE_FILE_ACCESS
-				                        ALL_APP_PACKAGES_FILE_ACCESS
-				                      : LOW_INTEGRITY_SDDL_SACL
-				                        SDDL_DACL
-				                        SDDL_DELIMINATOR
-				                        LOCAL_SYSTEM_FILE_ACCESS
-				                        EVERYONE_FILE_ACCESS,
+
+		ConvertStringSecurityDescriptorToSecurityDescriptor(
+				LOW_INTEGRITY_SDDL_SACL
+				SDDL_DACL
+				SDDL_DELIMINATOR
+				LOCAL_SYSTEM_FILE_ACCESS
+				EVERYONE_FILE_ACCESS
+				ALL_APP_PACKAGES_FILE_ACCESS
+				,
 				SDDL_REVISION_1,
 				&pd,
 				NULL);
-		}
-
 		sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 		sa.lpSecurityDescriptor = pd;
 		sa.bInheritHandle = TRUE;

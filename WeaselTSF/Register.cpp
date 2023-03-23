@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "Register.h"
 #include <strsafe.h>
-#include <VersionHelpers.hpp>
 
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
@@ -45,7 +44,6 @@ BOOL RegisterProfiles()
 	ULONG cchIconFile = GetModuleFileNameW(g_hInst, achIconFile, ARRAYSIZE(achIconFile));
 	HRESULT hr;
 
-	if (IsWindows8OrGreater())
 	{
 		CComPtr<ITfInputProcessorProfileMgr> pInputProcessorProfileMgr;
 		hr = pInputProcessorProfileMgr.CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_ALL);
@@ -68,34 +66,7 @@ BOOL RegisterProfiles()
 		if (FAILED(hr))
 			return FALSE;
 	}
-	else
-	{
-		CComPtr<ITfInputProcessorProfiles> pInputProcessorProfiles;
-		hr = pInputProcessorProfiles.CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER);
-		if (FAILED(hr))
-			return FALSE;
 
-		hr = pInputProcessorProfiles->Register(c_clsidTextService);
-		if (FAILED(hr))
-			return FALSE;
-
-		hr = pInputProcessorProfiles->AddLanguageProfile(
-			c_clsidTextService,
-			TEXTSERVICE_LANGID,
-			c_guidProfile,
-			TEXTSERVICE_DESC,
-			(ULONG)wcslen(TEXTSERVICE_DESC),
-			achIconFile,
-			cchIconFile,
-			TEXTSERVICE_ICON_INDEX);
-		if (FAILED(hr))
-			return FALSE;
-
-		hr = pInputProcessorProfiles->SubstituteKeyboardLayout(
-			c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, FindIME());
-		if (FAILED(hr))
-			return FALSE;
-	}
 	return TRUE;
 }
 
@@ -103,7 +74,6 @@ void UnregisterProfiles()
 {
 	HRESULT hr;
 
-	if (IsWindows8OrGreater())
 	{
 		CComPtr<ITfInputProcessorProfileMgr> pInputProcessorProfileMgr;
 		hr = pInputProcessorProfileMgr.CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_ALL);
@@ -116,23 +86,7 @@ void UnregisterProfiles()
 			c_guidProfile,
 			0);
 	}
-	else
-	{
-		ITfInputProcessorProfiles *pInputProcessProfiles;
-		hr = CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_INPROC_SERVER,
-			IID_ITfInputProcessorProfiles, (void **)&pInputProcessProfiles);
-		if (FAILED(hr))
-			return;
 
-		pInputProcessProfiles->SubstituteKeyboardLayout(
-			c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, NULL);
-		pInputProcessProfiles->RemoveLanguageProfile(
-			c_clsidTextService,
-			TEXTSERVICE_LANGID,
-			c_guidProfile);
-		pInputProcessProfiles->Unregister(c_clsidTextService);
-		pInputProcessProfiles->Release();
-	}
 }
 
 BOOL RegisterCategories()
@@ -156,7 +110,6 @@ BOOL RegisterCategories()
 	if (hr != S_OK)
 		goto Exit;
 
-	if (IsWindows8OrGreater())
 	{
 		hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
 		if (hr != S_OK)
@@ -191,7 +144,6 @@ void UnregisterCategories()
 	if (hr != S_OK)
 		goto UnregisterExit;
 
-	if (IsWindows8OrGreater())
 	{
 		hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
 		if (hr != S_OK)
