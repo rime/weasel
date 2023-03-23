@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
+#include <ShellScalingApi.h>
 #include "VersionHelpers.hpp"
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
@@ -15,6 +16,8 @@
 #define TRANS_COLOR		0x00000000
 #define GDPCOLOR_FROM_COLORREF(color)	Gdiplus::Color::MakeARGB(((color >> 24) & 0xff), GetRValue(color), GetGValue(color), GetBValue(color))
 
+#pragma comment(lib, "Shcore.lib")
+
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
@@ -22,6 +25,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_style(ui.style()),
 	m_ostyle(ui.ostyle()),
 	m_candidateCount(0),
+	dpi(0),
 	hide_candidates(false),
 	pDWR(NULL),
 	m_blurer(new GdiplusBlur()),
@@ -133,16 +137,24 @@ void WeaselPanel::Refresh()
 
 void WeaselPanel::InitFontRes(void)
 {
+	HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+	UINT dpiX = 0, dpiY = 0;
+	if (hMonitor)
+		GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
 	// prepare d2d1 resources
 	if (pDWR == NULL)
-		pDWR = new DirectWriteResources(m_style);
+		pDWR = new DirectWriteResources(m_style, dpiX);
 	// if style changed, re-initialize font resources
 	else if (m_ostyle != m_style)
-		pDWR->InitResources(m_style);
+		pDWR->InitResources(m_style, dpiX);
+	else if( dpiX != dpi)
+		pDWR->InitResources(m_style, dpiX);
+
 	// create color brush if null
 	if (pBrush == NULL)
 		pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
 	m_ostyle = m_style;
+	dpi = dpiX;
 }
 
 void WeaselPanel::CleanUp()
@@ -686,6 +698,20 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	GetWindowRect(&m_inputPos);
 	Refresh();
 	return TRUE;
+}
+
+LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	Refresh();
+#if 0
+	if (pDWR == NULL)
+		pDWR = new DirectWriteResources(m_style);
+	// if style changed, re-initialize font resources
+	else //if (m_ostyle != m_style)
+		pDWR->InitResources(m_style);
+	Refresh();
+#endif
+	return LRESULT();
 }
 
 

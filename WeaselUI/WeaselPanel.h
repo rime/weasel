@@ -92,6 +92,7 @@ public:
 	BEGIN_MSG_MAP(WeaselPanel)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+		MESSAGE_HANDLER(WM_DPICHANGED, OnDpiChanged)
 #ifdef USE_CAPTURE_BY_CLICK
 		MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnActivate)
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLeftClicked)
@@ -101,6 +102,7 @@ public:
 
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) { return 0; };
+	LRESULT OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 #ifdef USE_CAPTURE_BY_CLICK
 	LRESULT OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -152,6 +154,8 @@ private:
 	// for gdiplus drawings
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
+
+	UINT dpi;
 
 	CRect rcw;
 	BYTE m_candidateCount;

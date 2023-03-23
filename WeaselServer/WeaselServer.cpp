@@ -11,10 +11,12 @@
 #include <WeaselUtility.h>
 #include <winsparkle.h>
 #include <functional>
+#include <ShellScalingApi.h>
+#include <WinUser.h>
 #include <memory>
-
+#pragma comment(lib, "Shcore.lib")
 CAppModule _Module;
-
+#if 0
 typedef enum PROCESS_DPI_AWARENESS {
 	PROCESS_DPI_UNAWARE = 0,
 	PROCESS_SYSTEM_DPI_AWARE = 1,
@@ -27,7 +29,7 @@ typedef enum MONITOR_DPI_TYPE {
 	MDT_RAW_DPI = 2,
 	MDT_DEFAULT = MDT_EFFECTIVE_DPI
 } MONITOR_DPI_TYPE;
-
+#endif
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
 	if( !IsWindows8Point10OrGreaterEx() )
@@ -37,6 +39,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	}
 	// Set DPI awareness (Windows 8.1+)
 	// IsWindows8Point1OrGreater seems not good 
+	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+#if 0
 	if (IsWindows8Point10OrGreaterEx())
 	{
 		using PSPDA = HRESULT (WINAPI *)(PROCESS_DPI_AWARENESS);
@@ -48,6 +52,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 			::FreeLibrary(shcore_module);
 		}
 	}
+#endif
 
 	// 防止服务进程开启输入法
 	ImmDisableIME(-1);
