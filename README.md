@@ -116,3 +116,6 @@ Rime 輸入法（不限於 Windows 平臺）功能、使用方法與配置相關
 其他技術交流請寄 Rime 開發者 <rimeime@gmail.com>
 
 謝謝！
+
+如果您觉得我改得还行，欢迎为我正在计划中的小键盘捐一个轴/键帽😀😀
+![alipay](https://user-images.githubusercontent.com/4023160/227187475-65fc18c6-ec47-419b-836d-89a24f8f05e4.jpg)
