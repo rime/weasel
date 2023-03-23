@@ -43,7 +43,6 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
 	, m_active_session(0)
 	, m_disabled(true)
 	, _UpdateUICallback(NULL)
-	, m_vista_greater(IsWindowsVistaOrGreater())
 {
 	_Setup();
 }
@@ -435,15 +434,17 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	// Dangerous, don't touch
 	static char app_name[50];
 	RimeGetProperty(session_id, "client_app", app_name, sizeof(app_name) - 1);
-	if (utf8towcs(app_name) == std::wstring(L"explorer.exe") && m_vista_greater) {
+	if (utf8towcs(app_name) == std::wstring(L"explorer.exe")) {
 		boost::thread th([=]() {
 			::Sleep(100);
 			if (_UpdateUICallback) _UpdateUICallback();
 		});
 	}
+#if 0
 	else {
 		if (_UpdateUICallback) _UpdateUICallback();
 	}
+#endif
 
 	m_message_type.clear();
 	m_message_value.clear();
