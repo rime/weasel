@@ -9,4 +9,5 @@
 // Refer to MSDN for the latest info on corresponding values for different platforms.
 #ifndef _WIN32_WINNT            // Specifies that the minimum required platform is Windows XP.
 #define _WIN32_WINNT 0x0603     // Change this to the appropriate value to target other versions of Windows.
+#define NTDDI_VERSION  NTDDI_WINBLUE
 #endif

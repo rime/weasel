@@ -29,7 +29,7 @@ std::vector<std::wstring> wc_split(const wchar_t* in, const wchar_t* delim)
 	};
 }
 
-DirectWriteResources::DirectWriteResources(weasel::UIStyle& style) :
+DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0) :
 	_style(style),
 	dpiScaleX_(0),
 	dpiScaleY_(0),
@@ -59,11 +59,19 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style) :
 		pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	}
 	//get the dpi information
-	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
-	dpiScaleX_ /= 72.0f;
-	dpiScaleY_ /= 72.0f;
+	if (dpi == 0)
+	{
+		pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
+		dpiScaleX_ /= 72.0f;
+		dpiScaleY_ /= 72.0f;
+	}
+	else
+	{
+		dpiScaleX_ = dpi / 72.0f;
+		dpiScaleY_ = dpi / 72.0f;
+	}
 
-	InitResources(style);
+	InitResources(style, dpi);
 }
 
 DirectWriteResources::~DirectWriteResources()
@@ -196,11 +204,28 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	return hResult;
 }
 
-HRESULT DirectWriteResources::InitResources(UIStyle& style)
+HRESULT DirectWriteResources::InitResources(UIStyle& style, UINT dpi = 0)
 {
 	_style = style;
+	if(dpi)
+	{
+		dpiScaleX_ = dpi / 72.0f;
+		dpiScaleY_ = dpi / 72.0f;
+	}
 	return InitResources(style.label_font_face, style.label_font_point, style.font_face, style.font_point, 
 		style.comment_font_face, style.comment_font_point, style.layout_type==UIStyle::LAYOUT_VERTICAL_TEXT);
+}
+
+void weasel::DirectWriteResources::SetDpi(UINT dpi)
+{
+	dpiScaleX_ = dpi / 72.0f;
+	dpiScaleY_ = dpi / 72.0f;
+	
+	SafeRelease(&pPreeditTextFormat);
+	SafeRelease(&pTextFormat);
+	SafeRelease(&pLabelTextFormat);
+	SafeRelease(&pCommentTextFormat);
+	InitResources(_style);
 }
 
 void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle)
