@@ -35,7 +35,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 			MARK_WIDTH = sg.cx;
 			MARK_HEIGHT = sg.cy;
-			MARK_GAP = MARK_WIDTH + 4;
+			MARK_GAP = MARK_WIDTH + 4 * dpiScale;
 		}
 #endif
 	}

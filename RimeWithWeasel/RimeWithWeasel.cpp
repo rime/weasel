@@ -866,6 +866,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.mark_text = utf8towcs(mark_text);
 	}
 #endif
+	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
+	RimeConfigGetInt(config, "style/layout/max_width", &style.max_width);
+	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
+	RimeConfigGetInt(config, "style/layout/max_height", &style.max_height);
 	// layout (alternative to style/horizontal)
 	char layout_type[256] = {0};
 	if (RimeConfigGetString(config, "style/layout/type", layout_type, sizeof(layout_type) - 1))
@@ -884,10 +888,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		else
 			LOG(WARNING) << "Invalid style type: " << layout_type;
 	}
-	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
-	RimeConfigGetInt(config, "style/layout/max_width", &style.max_width);
-	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
-	RimeConfigGetInt(config, "style/layout/max_height", &style.max_height);
+	// disable max_width when full screen
+	if( style.layout_type == weasel::UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || style.layout_type == weasel::UIStyle::LAYOUT_VERTICAL_FULLSCREEN )
+		style.max_width = 0;
 	if (!RimeConfigGetInt(config, "style/layout/border", &style.border)) {
 		RimeConfigGetInt(config, "style/layout/border_width", &style.border);
 	}
