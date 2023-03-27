@@ -23,7 +23,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
-		MARK_GAP = MARK_HEIGHT + 4;
+		MARK_GAP = MARK_HEIGHT + 4 * dpiScale;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 #else
@@ -35,9 +35,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
 		// icon size wider then preedit text
-		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
+		int xoffset = (STATUS_ICON_SIZE * dpiScale >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE * dpiScale - size.cx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing;
+		width += size.cx + xoffset * 2 + _style.spacing * dpiScale;
 		height = max(height, offsetY + real_margin_y + size.cy);
 	}
 
@@ -46,9 +46,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	{
 		size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat, pDWR);
 		// icon size wider then preedit text
-		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
+		int xoffset = (STATUS_ICON_SIZE * dpiScale >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE * dpiScale - size.cx) / 2 : 0;
 		_auxiliaryRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing;
+		width += size.cx + xoffset * 2 + _style.spacing * dpiScale;
 		height = max(height, offsetY + real_margin_y + size.cy);
 	}
 	/* Candidates */
@@ -70,7 +70,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			wid = max(wid, size.cx);
 
 			/* Text */
-			h += _style.hilite_spacing * labelFontValid;
+			h += _style.hilite_spacing * dpiScale * labelFontValid;
 			const std::wstring& text = candidates.at(i).str;
 			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
 			_candidateTextRects[i].SetRect(w, h, w + size.cx * textFontValid, h + size.cy);
@@ -81,7 +81,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			/* Comment */
 			if (!comments.at(i).str.empty() && cmtFontValid)
 			{
-				h += _style.hilite_spacing;
+				h += _style.hilite_spacing * dpiScale;
 				const std::wstring& comment = comments.at(i).str;
 				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
 				_candidateCommentRects[i].SetRect(w, 0, w + size.cx * cmtFontValid, size.cy * cmtFontValid);
@@ -95,9 +95,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			}
 			wids[i] = wid;
 			max_comment_heihgt = max(max_comment_heihgt, _candidateCommentRects[i].Height());
-			w += wid + _style.candidate_spacing;
+			w += wid + _style.candidate_spacing * dpiScale;
 		}
-		w -= _style.candidate_spacing;
+		w -= _style.candidate_spacing * dpiScale;
 	}
 
 	width = max(width, w);
@@ -130,7 +130,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			// offset rects
 			_candidateLabelRects[i].OffsetRect(ol, 0);
 			_candidateTextRects[i].OffsetRect(ot, 0);
-			_candidateCommentRects[i].OffsetRect(oc, max_content_height + _style.hilite_spacing);
+			_candidateCommentRects[i].OffsetRect(oc, max_content_height + _style.hilite_spacing * dpiScale);
 			// define  _candidateRects
 			_candidateRects[i].left = min(_candidateLabelRects[i].left, _candidateTextRects[i].left);
 			_candidateRects[i].left = min(_candidateRects[i].left, _candidateCommentRects[i].left);
@@ -159,20 +159,20 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				if(i == candidates_count - 1)
 					offset = base_left - _candidateRects[i].left;
 				else
-					offset = _candidateRects[i+1].right + _style.candidate_spacing - _candidateRects[i].left;
+					offset = _candidateRects[i+1].right + _style.candidate_spacing * dpiScale - _candidateRects[i].left;
 				_candidateRects[i].OffsetRect(offset, 0);
 				_candidateLabelRects[i].OffsetRect(offset, 0);
 				_candidateTextRects[i].OffsetRect(offset, 0);
 				_candidateCommentRects[i].OffsetRect(offset, 0);
 			}
 			if (!IsInlinePreedit() && !_context.preedit.str.empty())
-				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - _preeditRect.left, 0);
+				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing * dpiScale - _preeditRect.left, 0);
 			if (!_context.aux.str.empty())
-				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - _auxiliaryRect.left, 0);
+				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing * dpiScale - _auxiliaryRect.left, 0);
 		}
 	}
 	else
-		width -= _style.spacing;
+		width -= _style.spacing * dpiScale;
 
 	height += real_margin_y;
 	_highlightRect = _candidateRects[id];
@@ -187,11 +187,11 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	_PrepareRoundInfo(dc);
 
 	// truely draw content size calculation
-	int deflatex = offsetX - _style.border / 2;
-	int deflatey = offsetY - _style.border / 2;
+	int deflatex = offsetX - _style.border * dpiScale / 2;
+	int deflatey = offsetY - _style.border * dpiScale / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);
 	// eliminate the 1 pixel gap when border width odd and padding equal to margin
-	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
+	if ((int)(_style.border * dpiScale) % 2 == 0)	_contentRect.DeflateRect(1 * dpiScale, 1 * dpiScale);
 }
 
 void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDWR)
@@ -207,7 +207,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
-		MARK_GAP = MARK_HEIGHT + 4;
+		MARK_GAP = MARK_HEIGHT + 4 * dpiScale;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 #else
@@ -219,9 +219,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
 		// icon size wider then preedit text
-		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
+		int xoffset = (STATUS_ICON_SIZE * dpiScale >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE * dpiScale - size.cx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing;
+		width += size.cx + xoffset * 2 + _style.spacing * dpiScale;
 		height = max(height, offsetY + real_margin_y + size.cy);
 	}
 	/* Auxiliary */
@@ -229,9 +229,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	{
 		size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat, pDWR);
 		// icon size wider then auxiliary text
-		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
+		int xoffset = (STATUS_ICON_SIZE * dpiScale >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE * dpiScale - size.cx) / 2 : 0;
 		_auxiliaryRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing;
+		width += size.cx + xoffset * 2 + _style.spacing * dpiScale;
 		height = max(height, offsetY + real_margin_y + size.cy);
 	}
 	// candidates
@@ -246,7 +246,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 		for(auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; i++)
 		{
 			int current_cand_height = 0;
-			if( i > 0 )		h += _style.candidate_spacing;
+			if( i > 0 )		h += _style.candidate_spacing * dpiScale;
 			if( id == i )	h += base_offset;
 			/* Label */
 			std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
@@ -256,32 +256,32 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 			current_cand_height += size.cy * labelFontValid;
 
 			/* Text */
-			h += _style.hilite_spacing;
+			h += _style.hilite_spacing * dpiScale;
 			const std::wstring& text =candidates.at(i).str;
 			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
 			_candidateTextRects[i].SetRect(width, h, width + size.cx, h + size.cy * textFontValid);
 			h += size.cy * textFontValid;
-			current_cand_height += (size.cy + _style.hilite_spacing) * textFontValid;
+			current_cand_height += (size.cy + _style.hilite_spacing * dpiScale) * textFontValid;
 
 			/* Comment */
 			if (!comments.at(i).str.empty() && cmtFontValid )
 			{
 				const std::wstring& comment = comments.at(i).str;
 				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
-				h += _style.hilite_spacing;
+				h += _style.hilite_spacing * dpiScale;
 				_candidateCommentRects[i].SetRect(width, h, width + size.cx, h + size.cy * cmtFontValid);
 				h += size.cy * cmtFontValid;
-				current_cand_height += (size.cy + _style.hilite_spacing) * cmtFontValid;
+				current_cand_height += (size.cy + _style.hilite_spacing * dpiScale) * cmtFontValid;
 			}	
 			else
 				_candidateCommentRects[i].SetRect(width, h, width + size.cx, h);
 			int base_top = (i == id) ? _candidateLabelRects[i].top - base_offset : _candidateLabelRects[i].top;
-			if( _style.max_height > 0 && (base_top > real_margin_y + offsetY) && (_candidateCommentRects[i].bottom - offsetY + real_margin_y > _style.max_height) )
+			if( _style.max_height * dpiScale > 0 && (base_top > real_margin_y + offsetY) && (_candidateCommentRects[i].bottom - offsetY + real_margin_y > _style.max_height * dpiScale) )
 			{
 				max_height_of_cols = max(max_height_of_cols, _candidateCommentRects[i-1].bottom);
 				h = offsetY + real_margin_y + (i==id? base_offset : 0);
 				int ofy = h - _candidateLabelRects[i].top;
-				int ofx = width_of_cols[col_cnt] + _style.candidate_spacing;
+				int ofx = width_of_cols[col_cnt] + _style.candidate_spacing * dpiScale;
 				_candidateLabelRects[i].OffsetRect(ofx, ofy);
 				_candidateTextRects[i].OffsetRect(ofx, ofy);
 				_candidateCommentRects[i].OffsetRect(ofx, ofy);
@@ -335,7 +335,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 		_highlightRect = _candidateRects[id];
 	}
 	else
-		width -= _style.spacing + offsetX;
+		width -= _style.spacing * dpiScale + offsetX;
 	// reposition if not left to right
 	int first_cand_of_cols[MAX_CANDIDATES_COUNT] = {0};
 	int offset_of_cols[MAX_CANDIDATES_COUNT] = {0};
@@ -369,7 +369,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 				if(i == col_cnt)
 					offset = base_left - _candidateRects[first_cand_of_cols[i]].left;
 				else
-					offset = _candidateRects[first_cand_of_cols[i+1]].right + _style.candidate_spacing - _candidateRects[first_cand_of_cols[i]].left;
+					offset = _candidateRects[first_cand_of_cols[i+1]].right + _style.candidate_spacing * dpiScale - _candidateRects[first_cand_of_cols[i]].left;
 				offset_of_cols[i] = offset;
 				_candidateRects[first_cand_of_cols[i]].OffsetRect(offset_of_cols[i], 0);
 			}
@@ -383,9 +383,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 			}
 			_highlightRect = _candidateRects[id];
 			if (!IsInlinePreedit() && !_context.preedit.str.empty())
-				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - _preeditRect.left, 0);
+				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing * dpiScale - _preeditRect.left, 0);
 			if (!_context.aux.str.empty())
-				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - _auxiliaryRect.left, 0);
+				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing * dpiScale - _auxiliaryRect.left, 0);
 		}
 	}
 
@@ -393,8 +393,8 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	height += real_margin_y;
 	if (!_context.preedit.str.empty() && !candidates_count)
 	{
-		width = max(width, _style.min_width);
-		height = max(height, _style.min_height);
+		width = max(width, _style.min_width * dpiScale);
+		height = max(height, _style.min_height * dpiScale);
 	}
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + 2 * offsetX, height + offsetY);
@@ -404,10 +404,10 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	//CopyRect(_bgRect, _contentRect);
 	//_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
 	// truely draw content size calculation
-	int deflatex = offsetX - _style.border / 2;
-	int deflatey = offsetY - _style.border / 2;
+	int deflatex = offsetX - _style.border * dpiScale / 2;
+	int deflatey = offsetY - _style.border * dpiScale / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);
 	// eliminate the 1 pixel gap when border width odd and padding equal to margin
-	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
+	if ((int)(_style.border * dpiScale) % 2 == 0)	_contentRect.DeflateRect(1 * dpiScale, 1 * dpiScale);
 }
 

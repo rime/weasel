@@ -1,15 +1,16 @@
 #include "stdafx.h"
 #include "Layout.h"
 
-Layout::Layout(const UIStyle& style, const Context& context, const Status& status)
+Layout::Layout(const UIStyle& style, const Context& context, const Status& status, const int dpi)
 	: _style(style), _context(context), _status(status), 
 	candidates(_context.cinfo.candies),
 	comments(_context.cinfo.comments),
 	labels(_context.cinfo.labels),
 	id(_context.cinfo.highlighted),
 	candidates_count(candidates.size()),
-	real_margin_x((abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding),
-	real_margin_y((abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding),
+	dpiScale((float)dpi/ 96.0f),
+	real_margin_x((abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) * dpiScale : _style.hilite_padding * dpiScale),
+	real_margin_y((abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) * dpiScale : _style.hilite_padding * dpiScale),
 	labelFontValid(!!(_style.label_font_point > 0)),
 	textFontValid(!!(_style.font_point > 0)),
 	cmtFontValid(!!(_style.comment_font_point > 0))
@@ -27,6 +28,8 @@ Layout::Layout(const UIStyle& style, const Context& context, const Status& statu
 	}
 	offsetX += _style.border + 1;
 	offsetY += _style.border + 1;
+	offsetX *= dpiScale;
+	offsetY *= dpiScale;
 }
 
 GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft)
