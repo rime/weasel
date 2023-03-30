@@ -10,7 +10,6 @@
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
-#define PREPAREBITMAPINFOHEADER(width, height)	{40, width, height, 1, 32, BI_RGB, 0, 0, 0, 0, 0}
 #define COLORTRANSPARENT(color)		((color & 0xff000000) == 0)
 #define COLORNOTTRANSPARENT(color)	((color & 0xff000000) != 0)
 #define TRANS_COLOR		0x00000000
@@ -93,8 +92,7 @@ void WeaselPanel::_CreateLayout()
 			layout = new HorizontalLayout(m_style, m_ctx, m_status, dpi);
 		}
 
-		if ((m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||
-					m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN) && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
+		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 		{
 			layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout, dpi);
 		}
@@ -120,17 +118,17 @@ void WeaselPanel::Refresh()
 	// 2. margin_negative, and not in show tips mode( ascii switching / half-full switching / simp-trad switching / error tips), and not in schema menu
 	hide_candidates = inline_no_candidates || (margin_negative && !show_tips && !show_schema_menu);
 
-	InitFontRes();
-	_CreateLayout();
-
-	CDCHandle dc = GetDC();
-	m_layout->DoLayout(dc, pDWR);
-	ReleaseDC(dc);
-	_ResizeWindow();
-	_RepositionWindow();
 	// only RedrawWindow if no need to hide candidates window
 	if(!hide_candidates)
 	{ 
+		InitFontRes();
+		_CreateLayout();
+
+		CDCHandle dc = GetDC();
+		m_layout->DoLayout(dc, pDWR);
+		ReleaseDC(dc);
+		_ResizeWindow();
+		_RepositionWindow();
 		RedrawWindow();
 	}
 }
@@ -723,6 +721,7 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
+	if(hide_candidates) return;
 	m_inputPos = rc;
 	if (m_style.shadow_offset_y >= 0)	m_inputPos.OffsetRect(0, 10);
 	// with parameter to avoid vertical flicker
@@ -748,34 +747,42 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	int width = (rcWindow.right - rcWindow.left);
 	int height = (rcWindow.bottom - rcWindow.top);
 	// keep panel visible
-	rcWorkArea.right -= width;
-	rcWorkArea.bottom -= height;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
-	if (m_style.shadow_radius > 0) {
-		x -= (m_style.shadow_offset_x >= 0) ? m_layout->offsetX : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_x - m_style.hilite_padding) * dpi / 96.0f);
-		if(adj)
-		{
-			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding) * dpi / 96.0f);
-			y -= m_style.shadow_radius / 2;
-		}
-	}
-	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
+	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 	{
-		x -= width;
-		x += m_layout->offsetX;
-	}
-	if (x > rcWorkArea.right)
-		x = rcWorkArea.right;
-	if (x < rcWorkArea.left)
 		x = rcWorkArea.left;
-	// show panel above the input focus if we're around the bottom
-	if (y > rcWorkArea.bottom)
-		y = m_inputPos.top - height;
-	if (y > rcWorkArea.bottom)
-		y = rcWorkArea.bottom;
-	if (y < rcWorkArea.top)
 		y = rcWorkArea.top;
+	}
+	else
+	{
+		rcWorkArea.right -= width;
+		rcWorkArea.bottom -= height;
+		if (m_style.shadow_radius > 0) {
+			x -= (m_style.shadow_offset_x >= 0) ? m_layout->offsetX : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_x - m_style.hilite_padding) * dpi / 96.0f);
+			if(adj)
+			{
+				y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding) * dpi / 96.0f);
+				y -= m_style.shadow_radius / 2;
+			}
+		}
+		if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
+		{
+			x -= width;
+			x += m_layout->offsetX;
+		}
+		if (x > rcWorkArea.right)
+			x = rcWorkArea.right;
+		if (x < rcWorkArea.left)
+			x = rcWorkArea.left;
+		// show panel above the input focus if we're around the bottom
+		if (y > rcWorkArea.bottom)
+			y = m_inputPos.top - height;
+		if (y > rcWorkArea.bottom)
+			y = rcWorkArea.bottom;
+		if (y < rcWorkArea.top)
+			y = rcWorkArea.top;
+	}
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
 	// reposition window only if the position changed

@@ -25,7 +25,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		}
 	}
 
-	int step = 256;
+	int step = 32;
 	do {
 		m_layout->DoLayout(dc, pDWR);
 #ifdef USE_HILITE_MARK
