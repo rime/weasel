@@ -14,6 +14,8 @@
 #define COLORNOTTRANSPARENT(color)	((color & 0xff000000) != 0)
 #define TRANS_COLOR		0x00000000
 #define GDPCOLOR_FROM_COLORREF(color)	Gdiplus::Color::MakeARGB(((color >> 24) & 0xff), GetRValue(color), GetGValue(color), GetBValue(color))
+#define IS_FULLSCREENLAYOUT(style)	(style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+#define NOT_FULLSCREENLAYOUT(style)	(style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN && style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 
 #pragma comment(lib, "Shcore.lib")
 
@@ -81,18 +83,16 @@ void WeaselPanel::_CreateLayout()
 	}
 	else
 	{
-		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL ||
-				m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 		{
 			layout = new VerticalLayout(m_style, m_ctx, m_status, dpi);
 		}
-		else if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL ||
-				m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+		else if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 		{
 			layout = new HorizontalLayout(m_style, m_ctx, m_status, dpi);
 		}
 
-		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+		if (IS_FULLSCREENLAYOUT(m_style))
 		{
 			layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout, dpi);
 		}
@@ -267,7 +267,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 	int blurMarginX = m_layout->offsetX * 3;
 	int blurMarginY = m_layout->offsetY * 3;
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	if ( m_style.shadow_radius && COLORNOTTRANSPARENT(shadowColor) && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN ) {
+	if ( m_style.shadow_radius && COLORNOTTRANSPARENT(shadowColor) && NOT_FULLSCREENLAYOUT(m_style) ) {
 		CRect rect(
 			blurMarginX + m_style.shadow_offset_x,
 			blurMarginY + m_style.shadow_offset_y,
@@ -308,9 +308,8 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 	}
 
 	GraphicsRoundRectPath* hiliteBackPath;
-	if (rd.Hemispherical && type!= BackType::BACKGROUND && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN) {
+	if (rd.Hemispherical && type!= BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style)) 
 		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex, rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
-	}
 	else // background or current candidate background not out of window background
 		hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 
@@ -647,8 +646,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			else
 				m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE * dpi / 96.0f, STATUS_ICON_SIZE * dpi / 96.0f, LR_DEFAULTCOLOR);
 			CRect iconRect(m_layout->GetStatusIconRect());
-			if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN 
-					|| m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+			if(IS_FULLSCREENLAYOUT(m_style))
 				iconRect.OffsetRect(-1, -1);
 			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha :
 				((m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled : (m_status.full_shape ? m_iconFull : m_iconHalf)) );
@@ -747,42 +745,29 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	int width = (rcWindow.right - rcWindow.left);
 	int height = (rcWindow.bottom - rcWindow.top);
 	// keep panel visible
+	rcWorkArea.right -= width;
+	rcWorkArea.bottom -= height;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
-	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
-	{
-		x = rcWorkArea.left;
-		y = rcWorkArea.top;
-	}
-	else
-	{
-		rcWorkArea.right -= width;
-		rcWorkArea.bottom -= height;
-		if (m_style.shadow_radius > 0) {
-			x -= (m_style.shadow_offset_x >= 0) ? m_layout->offsetX : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_x - m_style.hilite_padding) * dpi / 96.0f);
-			if(adj)
-			{
-				y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding) * dpi / 96.0f);
-				y -= m_style.shadow_radius / 2;
-			}
-		}
-		if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
+	if (m_style.shadow_radius > 0) {
+		x -= (m_style.shadow_offset_x >= 0) ? m_layout->offsetX : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_x - m_style.hilite_padding) * dpi / 96.0f);
+		if(adj)
 		{
-			x -= width;
-			x += m_layout->offsetX;
+			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding) * dpi / 96.0f);
+			y -= m_style.shadow_radius / 2;
 		}
-		if (x > rcWorkArea.right)
-			x = rcWorkArea.right;
-		if (x < rcWorkArea.left)
-			x = rcWorkArea.left;
-		// show panel above the input focus if we're around the bottom
-		if (y > rcWorkArea.bottom)
-			y = m_inputPos.top - height;
-		if (y > rcWorkArea.bottom)
-			y = rcWorkArea.bottom;
-		if (y < rcWorkArea.top)
-			y = rcWorkArea.top;
 	}
+	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
+	{
+		x -= width;
+		x += m_layout->offsetX;
+	}
+	if (x > rcWorkArea.right) x = rcWorkArea.right;		// over workarea right
+	if (x < rcWorkArea.left) x = rcWorkArea.left;		// over workarea left
+	// show panel above the input focus if we're around the bottom
+	if (y > rcWorkArea.bottom) y = m_inputPos.top - height; // over workarea bottom
+	//if (y > rcWorkArea.bottom) y = rcWorkArea.bottom;
+	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
 	// reposition window only if the position changed
