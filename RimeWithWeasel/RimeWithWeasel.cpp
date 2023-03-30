@@ -850,7 +850,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	}
 	// disable max_width when full screen
 	if( style.layout_type == weasel::UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || style.layout_type == weasel::UIStyle::LAYOUT_VERTICAL_FULLSCREEN )
+	{
 		style.max_width = 0;
+		style.inline_preedit = false;
+	}
 	if (!RimeConfigGetInt(config, "style/layout/border", &style.border)) {
 		RimeConfigGetInt(config, "style/layout/border_width", &style.border);
 	}
