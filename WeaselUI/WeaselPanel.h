@@ -96,6 +96,9 @@ public:
 #ifdef USE_CAPTURE_BY_CLICK
 		MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnActivate)
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLeftClicked)
+		MESSAGE_HANDLER(WM_MOUSEHOVER, OnMouseHover)
+		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+		MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
 #endif
 		CHAIN_MSG_MAP(CDoubleBufferImpl<WeaselPanel>)
 	END_MSG_MAP()
@@ -106,6 +109,9 @@ public:
 #ifdef USE_CAPTURE_BY_CLICK
 	LRESULT OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 #endif
 
 	WeaselPanel(weasel::UI &ui);
@@ -120,6 +126,7 @@ public:
 private:
 #ifdef USE_CAPTURE_BY_CLICK
 	void _CaptureRect(CRect& rect);
+	bool m_mouse_entry = false;
 #endif
 	void _CreateLayout();
 	void _ResizeWindow();

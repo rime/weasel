@@ -118,17 +118,17 @@ void WeaselPanel::Refresh()
 	// 2. margin_negative, and not in show tips mode( ascii switching / half-full switching / simp-trad switching / error tips), and not in schema menu
 	hide_candidates = inline_no_candidates || (margin_negative && !show_tips && !show_schema_menu);
 
+	InitFontRes();
+	_CreateLayout();
+
+	CDCHandle dc = GetDC();
+	m_layout->DoLayout(dc, pDWR);
+	ReleaseDC(dc);
+	_ResizeWindow();
+	_RepositionWindow();
 	// only RedrawWindow if no need to hide candidates window
 	if(!hide_candidates)
 	{ 
-		InitFontRes();
-		_CreateLayout();
-
-		CDCHandle dc = GetDC();
-		m_layout->DoLayout(dc, pDWR);
-		ReleaseDC(dc);
-		_ResizeWindow();
-		_RepositionWindow();
 		RedrawWindow();
 	}
 }
@@ -227,6 +227,16 @@ LRESULT WeaselPanel::OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	return MA_NOACTIVATE;
 }
 
+static void SendInputKey(WORD key)
+{
+	INPUT inputs[2];
+	inputs[0].type = INPUT_KEYBOARD;
+	inputs[0].ki = {key, 0,0,0,0};
+	inputs[1].type = INPUT_KEYBOARD;
+	inputs[1].ki = {key, 0,KEYEVENTF_KEYUP,0,0};
+	::SendInput(sizeof(inputs) / sizeof(INPUT), inputs, sizeof(INPUT));
+}
+
 LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	if(!m_style.capture_by_click || hide_candidates)
@@ -238,23 +248,62 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	point.x = GET_X_LPARAM(lParam);
 	point.y = GET_Y_LPARAM(lParam);
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
-	CRect rect = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
-	rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+	CRect recth = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
+	recth.InflateRect(m_style.hilite_padding * dpi / 96, m_style.hilite_padding * dpi / 96);
+	// capture widow
+	if (recth.PtInRect(point)) _CaptureRect(recth);
+	else _CaptureRect(rcw);
+	// select by click
 	for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+		CRect rect = m_layout->GetCandidateRect((int)i);
+		rect.InflateRect(m_style.hilite_padding * dpi / 96, m_style.hilite_padding * dpi / 96);
 		if (rect.PtInRect(point))
 		{
-			// to do : call select candidate
-			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-			_CaptureRect(rect);
-			break;
-		}
-		else
-		{
-			_CaptureRect(rcw);
+			// if not select by number, to be test
+			if(i < MAX_CANDIDATES_COUNT - 1) SendInputKey(0x31 + i);
+			else	SendInputKey(0x30);
 			break;
 		}
 	}
 	bHandled = true;
+	return 0;
+}
+LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	CPoint point;
+	point.x = GET_X_LPARAM(lParam);
+	point.y = GET_Y_LPARAM(lParam);
+
+	for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+		CRect rect = m_layout->GetCandidateRect((int)i);
+		if (rect.PtInRect(point))
+		{
+			m_ctx.cinfo.highlighted = i;
+			Refresh();
+		}
+	}
+	bHandled = true;
+	return 0;
+}
+
+LRESULT WeaselPanel::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (m_mouse_entry == false)
+	{
+		TRACKMOUSEEVENT tme;
+		tme.cbSize = sizeof(TRACKMOUSEEVENT);
+		tme.dwFlags = TME_HOVER | TME_LEAVE;
+		tme.dwHoverTime = 10; // 40 ms 
+		tme.hwndTrack = m_hWnd;
+		TrackMouseEvent(&tme);
+	}
+	return 0;
+}
+
+LRESULT WeaselPanel::OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	m_mouse_entry = false;
+	Refresh();
 	return 0;
 }
 #endif
