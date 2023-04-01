@@ -25,9 +25,9 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 	// 创建文本布局 
 	if (pTextFormat != NULL)
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, _style.max_height * dpiScale, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, _style.max_height, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
 		else
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width * dpiScale, 0, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
 
 	if (SUCCEEDED(hr))
 	{
@@ -48,12 +48,12 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 		
 		if(_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
-			size_t max_width = _style.max_width * dpiScale == 0 ? textMetrics.width : _style.max_width * dpiScale;
+			size_t max_width = _style.max_width == 0 ? textMetrics.width : _style.max_width;
 			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, max_width, textMetrics.height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
 		}
 		else
 		{
-			size_t max_height = _style.max_height * dpiScale == 0 ? textMetrics.height : _style.max_height * dpiScale;
+			size_t max_height = _style.max_height == 0 ? textMetrics.height : _style.max_height;
 			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.width, max_height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
 		}
 
@@ -100,22 +100,22 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 		width_max = max(width_max, beforesz.cx);
 		width_max = max(width_max, hilitedsz.cx);
 		width_max = max(width_max, aftersz.cx);
-		height_max += beforesz.cy + (beforesz.cy > 0) * _style.hilite_spacing * dpiScale;
-		height_max += hilitedsz.cy + (hilitedsz.cy > 0) * _style.hilite_spacing * dpiScale;
-		height_max += aftersz.cy + (aftersz.cy > 0) * _style.hilite_spacing * dpiScale;
+		height_max += beforesz.cy + (beforesz.cy > 0) * _style.hilite_spacing;
+		height_max += hilitedsz.cy + (hilitedsz.cy > 0) * _style.hilite_spacing;
+		height_max += aftersz.cy + (aftersz.cy > 0) * _style.hilite_spacing;
 		if(range.start < range.end)
-			height_max += 2 * _style.hilite_padding * dpiScale;
+			height_max += 2 * _style.hilite_padding;
 	}
 	else
 	{
 		height_max = max(height_max, beforesz.cy);
 		height_max = max(height_max, hilitedsz.cy);
 		height_max = max(height_max, aftersz.cy);
-		width_max += beforesz.cx + (beforesz.cx > 0) * _style.hilite_spacing * dpiScale;
-		width_max += hilitedsz.cx + (hilitedsz.cx > 0) * _style.hilite_spacing * dpiScale;
-		width_max += aftersz.cx + (aftersz.cx > 0) * _style.hilite_spacing * dpiScale;
+		width_max += beforesz.cx + (beforesz.cx > 0) * _style.hilite_spacing;
+		width_max += hilitedsz.cx + (hilitedsz.cx > 0) * _style.hilite_spacing;
+		width_max += aftersz.cx + (aftersz.cx > 0) * _style.hilite_spacing;
 		if(range.start < range.end)
-			width_max += 2 * _style.hilite_padding * dpiScale;
+			width_max += 2 * _style.hilite_padding;
 	}
 	size.cx = width_max;
 	size.cy = height_max;
@@ -124,8 +124,8 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 
 bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect& rc, CDCHandle& dc)
 {
-	GraphicsRoundRectPath bgPath(_bgRect, _style.round_corner_ex * dpiScale);
-	GraphicsRoundRectPath hlPath(rc, _style.round_corner * dpiScale);
+	GraphicsRoundRectPath bgPath(_bgRect, _style.round_corner_ex);
+	GraphicsRoundRectPath hlPath(rc, _style.round_corner);
 
 	Gdiplus::Region bgRegion(&bgPath);
 	Gdiplus::Region hlRegion(&hlPath);
@@ -149,7 +149,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 	if(!_style.inline_preedit)
 	{
 		CRect textRect(_preeditRect);
-		textRect.InflateRect(_style.hilite_padding * dpiScale, _style.hilite_padding * dpiScale);
+		textRect.InflateRect(_style.hilite_padding, _style.hilite_padding);
 		textHemispherical = _IsHighlightOverCandidateWindow(textRect, dc);
 		const bool hilite_rd_info[3][2][4] = {
 			// vertical
@@ -184,7 +184,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 	if(candidates_count)
 	{
 		CRect cand0Rect(_candidateRects[0]);
-		cand0Rect.InflateRect(_style.hilite_padding * dpiScale, _style.hilite_padding * dpiScale);
+		cand0Rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
 		cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect, dc);
 		if(textHemispherical || cand0Hemispherical)
 		{
@@ -250,7 +250,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 			for (auto i = 0; i < candidates_count; i++)
 			{
 				CRect hilite_rect(_candidateRects[i]);
-				hilite_rect.InflateRect(_style.hilite_padding * dpiScale, _style.hilite_padding * dpiScale);
+				hilite_rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
 				bool current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(hilite_rect, dc);
 				int type = 0;	// default FIRST_CAND
 				if (candidates_count == 1)	// ONLY_CAND
@@ -309,33 +309,33 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 			int top = 0, middle = 0;
 			if(!_preeditRect.IsRectNull())
 			{
-				top = _preeditRect.bottom + _style.spacing * dpiScale;
+				top = _preeditRect.bottom + _style.spacing;
 				middle = (_preeditRect.left + _preeditRect.right) / 2;
 			}
 			else if(!_auxiliaryRect.IsRectNull())
 			{
-				top = _auxiliaryRect.bottom + _style.spacing * dpiScale;
+				top = _auxiliaryRect.bottom + _style.spacing;
 				middle = (_auxiliaryRect.left + _auxiliaryRect.right) / 2;
 			}
 			if(top && middle)
 			{
-				int bottom_alignment = *height - real_margin_y - STATUS_ICON_SIZE * dpiScale;
+				int bottom_alignment = *height - real_margin_y - STATUS_ICON_SIZE;
 				if( top > bottom_alignment )
 				{
-					*height = top + STATUS_ICON_SIZE * dpiScale + real_margin_y;
+					*height = top + STATUS_ICON_SIZE + real_margin_y;
 				}
 				else
 				{
 					top = bottom_alignment;
 				}
-				_statusIconRect.SetRect(middle - STATUS_ICON_SIZE * dpiScale / 2 + 1, top, middle + STATUS_ICON_SIZE * dpiScale, top + STATUS_ICON_SIZE * dpiScale / 2 + 1);
+				_statusIconRect.SetRect(middle - STATUS_ICON_SIZE / 2 + 1, top, middle + STATUS_ICON_SIZE, top + STATUS_ICON_SIZE / 2 + 1);
 			}
 			else
 			{
-				_statusIconRect.SetRect(0,0, STATUS_ICON_SIZE * dpiScale, STATUS_ICON_SIZE * dpiScale);
+				_statusIconRect.SetRect(0,0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
 				_statusIconRect.OffsetRect(offsetX, offsetY);
-				*width = STATUS_ICON_SIZE * dpiScale ;
-				*height = (_style.vertical_text_with_wrap? offsetY : 0) + STATUS_ICON_SIZE * dpiScale;
+				*width = STATUS_ICON_SIZE ;
+				*height = (_style.vertical_text_with_wrap? offsetY : 0) + STATUS_ICON_SIZE;
 			}
 		}
 		else
@@ -343,32 +343,32 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 			int left = 0, middle = 0;
 			if (!_preeditRect.IsRectNull())
 			{
-				left = _preeditRect.right + _style.spacing * dpiScale;
+				left = _preeditRect.right + _style.spacing;
 				middle = (_preeditRect.top + _preeditRect.bottom) / 2;
 			}
 			else if (!_auxiliaryRect.IsRectNull())
 			{
-				left = _auxiliaryRect.right + _style.spacing * dpiScale;
+				left = _auxiliaryRect.right + _style.spacing;
 				middle = (_auxiliaryRect.top + _auxiliaryRect.bottom) / 2;
 			}
 			if (left && middle)
 			{
-				int right_alignment = *width - real_margin_x - STATUS_ICON_SIZE * dpiScale;
+				int right_alignment = *width - real_margin_x - STATUS_ICON_SIZE;
 				if (left > right_alignment)
 				{
-					*width = left + STATUS_ICON_SIZE * dpiScale + real_margin_x;
+					*width = left + STATUS_ICON_SIZE + real_margin_x;
 				}
 				else
 				{
 					left = right_alignment;
 				}
-				_statusIconRect.SetRect(left, middle - STATUS_ICON_SIZE * dpiScale / 2 + 1, left + STATUS_ICON_SIZE * dpiScale, middle + STATUS_ICON_SIZE * dpiScale / 2 + 1);
+				_statusIconRect.SetRect(left, middle - STATUS_ICON_SIZE / 2 + 1, left + STATUS_ICON_SIZE, middle + STATUS_ICON_SIZE / 2 + 1);
 			}
 			else
 			{
-				_statusIconRect.SetRect(0, 0, STATUS_ICON_SIZE * dpiScale, STATUS_ICON_SIZE * dpiScale);
+				_statusIconRect.SetRect(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
 				_statusIconRect.OffsetRect(offsetX, offsetY);
-				*width = *height = STATUS_ICON_SIZE * dpiScale;
+				*width = *height = STATUS_ICON_SIZE;
 			}
 		}
 	}

@@ -14,7 +14,7 @@ namespace weasel
 	class StandardLayout: public Layout
 	{
 	public:
-		StandardLayout(const UIStyle &style, const Context &context, const Status &status, const int dpi = 96) : Layout(style, context, status, dpi){}
+		StandardLayout(const UIStyle &style, const Context &context, const Status &status) : Layout(style, context, status){}
 
 		/* Layout */
 

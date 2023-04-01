@@ -1,16 +1,15 @@
 #include "stdafx.h"
 #include "Layout.h"
 
-Layout::Layout(const UIStyle& style, const Context& context, const Status& status, const int dpi)
+Layout::Layout(const UIStyle& style, const Context& context, const Status& status)
 	: _style(style), _context(context), _status(status), 
 	candidates(_context.cinfo.candies),
 	comments(_context.cinfo.comments),
 	labels(_context.cinfo.labels),
 	id(_context.cinfo.highlighted),
 	candidates_count(candidates.size()),
-	dpiScale((float)dpi/ 96.0f),
-	real_margin_x((abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) * dpiScale : _style.hilite_padding * dpiScale),
-	real_margin_y((abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) * dpiScale : _style.hilite_padding * dpiScale),
+	real_margin_x((abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding),
+	real_margin_y((abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding),
 	labelFontValid(!!(_style.label_font_point > 0)),
 	textFontValid(!!(_style.font_point > 0)),
 	cmtFontValid(!!(_style.comment_font_point > 0))
@@ -28,8 +27,6 @@ Layout::Layout(const UIStyle& style, const Context& context, const Status& statu
 	}
 	offsetX += _style.border + 1;
 	offsetY += _style.border + 1;
-	offsetX *= dpiScale;
-	offsetY *= dpiScale;
 }
 
 GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft)
@@ -53,7 +50,7 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool ro
 		AddLine(rc.right - cnx * roundBottomRight, rc.bottom, rc.left + cnx * roundBottomLeft, rc.bottom);
 
 		AddArc(rc.left, rc.bottom - elHei * roundBottomLeft, elWid * roundBottomLeft, elHei * roundBottomLeft, 90, 90);
-		AddLine(rc.left, rc.top + cny * roundTopLeft - 1, rc.left, rc.bottom - cny * roundBottomLeft);
+		AddLine(rc.left, rc.top + cny * roundTopLeft, rc.left, rc.bottom - cny * roundBottomLeft);
 	}
 }
 
@@ -74,7 +71,7 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 		AddLine(left + width - cnx, top + height, left + cnx, top + height);
 
 		AddArc(left, top + height - elHei, elWid, elHei, 90, 90);
-		AddLine(left, top + cny-1, left, top + height - cny);
+		AddLine(left, top + cny, left, top + height - cny);
 	}
 	else {
 		Gdiplus::Rect& rc = Gdiplus::Rect(left, top, width, height);
