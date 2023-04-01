@@ -118,17 +118,17 @@ void WeaselPanel::Refresh()
 	// 2. margin_negative, and not in show tips mode( ascii switching / half-full switching / simp-trad switching / error tips), and not in schema menu
 	hide_candidates = inline_no_candidates || (margin_negative && !show_tips && !show_schema_menu);
 
-	InitFontRes();
-	_CreateLayout();
-
-	CDCHandle dc = GetDC();
-	m_layout->DoLayout(dc, pDWR);
-	ReleaseDC(dc);
-	_ResizeWindow();
-	_RepositionWindow();
 	// only RedrawWindow if no need to hide candidates window
 	if(!hide_candidates)
 	{ 
+		InitFontRes();
+		_CreateLayout();
+
+		CDCHandle dc = GetDC();
+		m_layout->DoLayout(dc, pDWR);
+		ReleaseDC(dc);
+		_ResizeWindow();
+		_RepositionWindow();
 		RedrawWindow();
 	}
 }
@@ -353,7 +353,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 
 	GraphicsRoundRectPath* hiliteBackPath;
 	if (rd.Hemispherical && type!= BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style)) 
-		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex, rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
+		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - m_style.border/2 + (m_style.border % 2), rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
 	else // background or current candidate background not out of window background
 		hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 
@@ -634,9 +634,9 @@ void WeaselPanel::_BlurBacktround(CRect& rc)
 		&& (m_style.back_color >> 24) > 0
 		&& m_isBlurAvailable)
 	{
-		int radiusx2 = (m_candidateCount == 0 && m_layout->ShouldDisplayStatusIcon() && m_ctx.aux.empty()) ? 0 : m_style.round_corner_ex * 2;
+		int radiusx2 = (m_candidateCount == 0 && m_layout->ShouldDisplayStatusIcon() && m_ctx.aux.empty()) ? 0 : m_style.round_corner_ex*2 + m_style.border/2 - !(m_style.border % 2);
 		rc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
-		SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right+m_style.border, rc.bottom+m_style.border, radiusx2, radiusx2), true);
+		SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right+2, rc.bottom+2, radiusx2, radiusx2), true);
 		setWindowCompositionAttribute(m_hWnd, &data);
 	}
 }
@@ -763,7 +763,6 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
-	if(hide_candidates) return;
 	m_inputPos = rc;
 	if (m_style.shadow_offset_y >= 0)	m_inputPos.OffsetRect(0, 10);
 	// with parameter to avoid vertical flicker
