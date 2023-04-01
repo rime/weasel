@@ -5,7 +5,7 @@ using namespace weasel;
 
 void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 {
-	const int space = _style.hilite_spacing * dpiScale;
+	const int space = _style.hilite_spacing;
 	int width = 0, height = real_margin_y;
 
 #ifdef USE_HILITE_MARK
@@ -15,7 +15,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
-		MARK_GAP = MARK_WIDTH + 4 * dpiScale;
+		MARK_GAP = MARK_WIDTH + 4;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 #else
@@ -29,9 +29,9 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
 		// icon size higher then preedit text
-		int yoffset = (STATUS_ICON_SIZE * dpiScale >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE * dpiScale - size.cy) / 2 : 0;
+		int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cy) / 2 : 0;
 		_preeditRect.SetRect(real_margin_x, height + yoffset, real_margin_x + size.cx, height + yoffset + size.cy);
-		height += size.cy + 2 * yoffset + _style.spacing * dpiScale;
+		height += size.cy + 2 * yoffset + _style.spacing;
 		width = max(width, real_margin_x * 2 + size.cx);
 		_preeditRect.OffsetRect(offsetX, offsetY);
 	}
@@ -41,9 +41,9 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	{
 		size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat, pDWR);
 		// icon size higher then auxiliary text
-		int yoffset = (STATUS_ICON_SIZE * dpiScale >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE * dpiScale - size.cy) / 2 : 0;
+		int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cy) / 2 : 0;
 		_auxiliaryRect.SetRect(real_margin_x, height + yoffset, real_margin_x + size.cx, height + yoffset + size.cy);
-		height += size.cy + 2 * yoffset + _style.spacing * dpiScale;
+		height += size.cy + 2 * yoffset + _style.spacing;
 		width = max(width, real_margin_x * 2 + size.cx);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 	}
@@ -56,7 +56,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		if (i > 0 )
-			height += _style.candidate_spacing * dpiScale;
+			height += _style.candidate_spacing;
 
 		int w = real_margin_x + base_offset, max_height_curren_candidate = 0;
 		int candidate_width = w, comment_width = 0;
@@ -154,14 +154,14 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	}
 
 	/* Trim the last spacing if no candidates */
-	if(candidates_count == 0) height -= _style.spacing * dpiScale;
+	if(candidates_count == 0) height -= _style.spacing;
 
 	height += real_margin_y;
 
 	if (!_context.preedit.str.empty() && !candidates.empty())
 	{
-		width = max(width, _style.min_width * dpiScale);
-		height = max(height, _style.min_height * dpiScale);
+		width = max(width, _style.min_width);
+		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
 	// candidate rectangle always align to right side, margin_x to the right edge
@@ -182,9 +182,5 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	_PrepareRoundInfo(dc);
 
 	// truely draw content size calculation
-	int deflatex = offsetX - _style.border * dpiScale / 2;
-	int deflatey = offsetY - _style.border * dpiScale / 2;
-	_contentRect.DeflateRect(deflatex, deflatey);
-	// eliminate the 1 pixel gap when border width odd and padding equal to margin
-	if ((int)(_style.border * dpiScale) % 2 == 0)	_contentRect.DeflateRect(1 * dpiScale, 1 * dpiScale);
+	_contentRect.DeflateRect(offsetX, offsetY);
 }

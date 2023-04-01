@@ -48,7 +48,7 @@ namespace weasel
 	class Layout
 	{
 	public:
-		Layout(const UIStyle &style, const Context &context, const Status &status, const int dpi = 96);
+		Layout(const UIStyle &style, const Context &context, const Status &status);
 
 		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL) = 0;
 		/* All points in this class is based on the content area */
@@ -73,7 +73,6 @@ namespace weasel
 		
 		int offsetX = 0;
 		int offsetY = 0;
-		float dpiScale = 1.0f;
 #ifdef USE_HILITE_MARK
 		int MARK_WIDTH = 4;
 		int MARK_GAP = 8;

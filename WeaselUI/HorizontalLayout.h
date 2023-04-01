@@ -7,8 +7,8 @@ namespace weasel
 	class HorizontalLayout: public StandardLayout
 	{
 	public:
-		HorizontalLayout(const UIStyle &style, const Context &context, const Status &status, const int dpi = 96)
-			: StandardLayout(style, context, status, dpi) {}
+		HorizontalLayout(const UIStyle &style, const Context &context, const Status &status)
+			: StandardLayout(style, context, status) {}
 		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL);
 	};
 };
