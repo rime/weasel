@@ -187,7 +187,11 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	_PrepareRoundInfo(dc);
 
 	// truely draw content size calculation
-	_contentRect.DeflateRect(offsetX, offsetY);
+	int deflatex = offsetX - _style.border / 2;
+	int deflatey = offsetY - _style.border / 2;
+	_contentRect.DeflateRect(deflatex, deflatey);
+	// eliminate the 1 pixel gap when border width odd and padding equal to margin
+	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 }
 
 void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDWR)
@@ -400,6 +404,10 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	//CopyRect(_bgRect, _contentRect);
 	//_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
 	// truely draw content size calculation
-	_contentRect.DeflateRect(offsetX, offsetY);
+	int deflatex = offsetX - _style.border / 2;
+	int deflatey = offsetY - _style.border / 2;
+	_contentRect.DeflateRect(deflatex, deflatey);
+	// eliminate the 1 pixel gap when border width odd and padding equal to margin
+	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 }
 
