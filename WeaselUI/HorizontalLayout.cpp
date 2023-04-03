@@ -98,6 +98,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				_candidateLabelRects[i].OffsetRect(ofx, ofy);
 				_candidateTextRects[i].OffsetRect(ofx, ofy);
 				_candidateCommentRects[i].OffsetRect(ofx, ofy);
+				if(i==id && i==(candidates_count - 1))
+					max_width_of_rows = max(max_width_of_rows, _candidateCommentRects[i].right);
 				mintop_of_rows[row_cnt] = height;
 				height += ofy;
 				// re calc rect position, decrease offsetX for origin 
@@ -161,8 +163,20 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	CopyRect(_bgRect, _contentRect);
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
 	// prepare round info for single row status, only for single row situation
-	if(!row_cnt)
-		_PrepareRoundInfo(dc);
+	_PrepareRoundInfo(dc);
+	if(row_cnt)	// row_cnt > 0, at least 2 candidates
+	{
+		_roundInfo[0].IsBottomLeftNeedToRound = false;
+		_roundInfo[candidates_count - 1].IsTopRightNeedToRound = false;
+		for(auto i = 1; i < candidates_count; i++)
+		{
+			_roundInfo[i].Hemispherical = _roundInfo[0].Hemispherical;
+			if(row_of_candidate[i] == row_cnt && row_of_candidate[i-1] == row_cnt - 1) 
+				_roundInfo[i].IsBottomLeftNeedToRound = true;
+			if(row_of_candidate[i] == 0 && row_of_candidate[i+1] == 1)
+				_roundInfo[i].IsTopRightNeedToRound = _style.inline_preedit;
+		}
+	}
 	// truely draw content size calculation
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;
