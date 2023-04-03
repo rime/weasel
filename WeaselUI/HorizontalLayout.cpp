@@ -31,7 +31,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		// icon size higher then preedit text
 		int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cy) / 2 : 0;
 		_preeditRect.SetRect(w, height + yoffset, w + size.cx, height + yoffset + size.cy);
-		height += size.cy + 2 * yoffset + _style.spacing;
+		height += size.cy + 2 * yoffset + _style.spacing - 1;
 		width = max(width, real_margin_x * 2 + size.cx);
 	}
 
@@ -42,7 +42,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		// icon size higher then auxiliary text
 		int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cy) / 2 : 0;
 		_auxiliaryRect.SetRect(w, height + yoffset, w + size.cx, height + yoffset + size.cy);
-		height += size.cy + 2 * yoffset + _style.spacing;
+		height += size.cy + 2 * yoffset + _style.spacing - 1;
 		width = max(width, real_margin_x * 2 + size.cx);
 	}
 	

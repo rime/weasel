@@ -31,7 +31,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		// icon size higher then preedit text
 		int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cy) / 2 : 0;
 		_preeditRect.SetRect(real_margin_x, height + yoffset, real_margin_x + size.cx, height + yoffset + size.cy);
-		height += size.cy + 2 * yoffset + _style.spacing;
+		height += size.cy + 2 * yoffset + _style.spacing - 1;
 		width = max(width, real_margin_x * 2 + size.cx);
 		_preeditRect.OffsetRect(offsetX, offsetY);
 	}
@@ -43,7 +43,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		// icon size higher then auxiliary text
 		int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cy) / 2 : 0;
 		_auxiliaryRect.SetRect(real_margin_x, height + yoffset, real_margin_x + size.cx, height + yoffset + size.cy);
-		height += size.cy + 2 * yoffset + _style.spacing;
+		height += size.cy + 2 * yoffset + _style.spacing - 1;
 		width = max(width, real_margin_x * 2 + size.cx);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 	}
