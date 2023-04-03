@@ -9,6 +9,8 @@
 #include <regex>
 #include <rime_api.h>
 
+#define ARGB2ABGR(value)	((value & 0xff000000) | ((value & 0x000000ff) << 16) | (value & 0x0000ff00) | ((value & 0x00ff0000) >> 16)) 
+
 static inline BOOL IsThemeLight()
 {
 	// only for windows 10 or greater, return false when lower version.
@@ -642,7 +644,7 @@ static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
 		) | ((((fcolor >> 24)+(bcolor >> 24)/2) << 24));
 }
 
-static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* value)
+static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* value, bool use_argb_value = false)
 {
 	int tmp = 0;
 	if (!RimeConfigGetInt(config, key, &tmp)) return False;
@@ -657,6 +659,7 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 		*value = (*value & 0xffffffff);
 		if(color_str.length() <= 8)
 			*value |= 0xff000000;
+		if(use_argb_value) *value = ARGB2ABGR(*value);
 		return True;
 	}
 	// regular number or other stuff
@@ -665,9 +668,12 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 		if (!RimeConfigGetInt(config, key, &tmp))
 			return False;
 		else
+		{
 			*value = (tmp | 0xff000000) & 0xffffffff;
+			if(use_argb_value) *value = ARGB2ABGR(*value);
+		}	
+		return True;
 	}
-	return True;
 }
 
 static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
@@ -901,99 +907,106 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 	{
 		std::string prefix("preset_color_schemes/");
 		prefix += buffer;
-		RimeConfigGetColor32b(config, (prefix + "/back_color").c_str(), &style.back_color);
+
+		Bool use_argb_value = False;
+		if( RimeConfigGetBool(config, (prefix + "/use_argb_value").c_str(), &use_argb_value) )
+			style.use_argb_value = !!use_argb_value;
+		else
+			style.use_argb_value = False;
+
+		RimeConfigGetColor32b(config, (prefix + "/back_color").c_str(), &style.back_color, style.use_argb_value);
 		style.back_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/shadow_color").c_str(), &style.shadow_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/shadow_color").c_str(), &style.shadow_color, style.use_argb_value))
 		{
 			style.shadow_color = 0x00000000;
 		}
 		style.shadow_color &= 0xffffffff;
-		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color);
+		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color, style.use_argb_value);
 		style.text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color, style.use_argb_value))
 		{
 			style.candidate_text_color = style.text_color;
 		}
 		style.candidate_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color, style.use_argb_value))
 		{
 			style.candidate_back_color = style.back_color & 0x00ffffff;
 		}
 		style.candidate_back_color &= 0xffffffff;
 
-		if (!RimeConfigGetColor32b(config, (prefix + "/border_color").c_str(), &style.border_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/border_color").c_str(), &style.border_color, style.use_argb_value))
 		{
 			style.border_color = style.text_color;
 		}
 		style.border_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_text_color").c_str(), &style.hilited_text_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_text_color").c_str(), &style.hilited_text_color, style.use_argb_value))
 		{
 			style.hilited_text_color = style.text_color;
 		}
 		style.hilited_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_back_color").c_str(), &style.hilited_back_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_back_color").c_str(), &style.hilited_back_color, style.use_argb_value))
 		{
 			style.hilited_back_color = style.back_color;
 		}
 		style.hilited_back_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_text_color").c_str(), &style.hilited_candidate_text_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_text_color").c_str(), &style.hilited_candidate_text_color, style.use_argb_value))
 		{
 			style.hilited_candidate_text_color = style.hilited_text_color;
 		}
 		style.hilited_candidate_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color, style.use_argb_value))
 		{
 			style.hilited_candidate_back_color = style.hilited_back_color;
 		}
 		style.hilited_candidate_back_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color, style.use_argb_value))
 		{
 			style.hilited_candidate_shadow_color = style.shadow_color  & 0x00ffffff;
 		}
 		style.hilited_candidate_shadow_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color, style.use_argb_value))
 		{
 			style.hilited_shadow_color = style.shadow_color  & 0x00ffffff;
 		}
 		style.hilited_shadow_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color, style.use_argb_value))
 		{
 			style.candidate_shadow_color = style.shadow_color & 0x00ffffff;
 		}
 		style.candidate_shadow_color &= 0xffffffff;
 #ifdef USE_CANDIDATE_BORDER
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_border_color").c_str(), &style.candidate_border_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_border_color").c_str(), &style.candidate_border_color, style.use_argb_value))
 		{
 			style.candidate_border_color = 0x00000000;
 		}
 		style.candidate_border_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_border_color").c_str(), &style.hilited_candidate_border_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_border_color").c_str(), &style.hilited_candidate_border_color, style.use_argb_value))
 		{
 			style.hilited_candidate_border_color = 0x00000000;
 		}
 		style.hilited_candidate_border_color &= 0xffffffff;
 #endif
-		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color, style.use_argb_value))
 		{
 			style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);
 		}
 		style.label_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_label_color").c_str(), &style.hilited_label_text_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_label_color").c_str(), &style.hilited_label_text_color, style.use_argb_value))
 		{
 			style.hilited_label_text_color = blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color);
 		}
 		style.hilited_label_text_color &= 0xffffffff;
 		style.comment_text_color = style.label_text_color;
 		style.hilited_comment_text_color = style.hilited_label_text_color;
-		if (RimeConfigGetColor32b(config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color))
+		if (RimeConfigGetColor32b(config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color, style.use_argb_value))
 		{
 			style.hilited_comment_text_color = style.comment_text_color;
 		}
 		style.comment_text_color &= 0xffffffff;
-		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
+		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color, style.use_argb_value);
 		style.hilited_comment_text_color &= 0xffffffff;
 #ifdef USE_HILITE_MARK
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_mark_color").c_str(), &style.hilited_mark_color))
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_mark_color").c_str(), &style.hilited_mark_color, style.use_argb_value))
 		{
 			// default transparent hilited_candidate_back_color
 			style.hilited_mark_color = style.hilited_candidate_back_color & 0x00ffffff;
