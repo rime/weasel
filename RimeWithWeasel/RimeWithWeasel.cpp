@@ -419,49 +419,35 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config))
 		return;
-	bool is_light = IsThemeLight();
-	RimeConfig configw = { NULL };
-	if (RimeConfigOpen("weasel", &configw))
-	{
-		if (m_ui)
-		{
-			_UpdateUIStyle(&configw, m_ui, true);
-			if (is_light)
-				m_base_style = m_ui->style();
-			else
-				m_base_style_dark = m_ui->style();
-		}
-		RimeConfigClose(&configw);
-	}
-	//m_ui->style() = m_base_style;
+	m_ui->style() = m_base_style;
 	_UpdateUIStyle(&config, m_ui, false);
-	const int BUF_SIZE = 2047;
-	char buffer[BUF_SIZE + 1];
-	memset(buffer, '\0', sizeof(buffer));
-	if (RimeConfigGetString(&config, "schema/icon", buffer, BUF_SIZE))
+	// load schema icon start
 	{
-		std::wstring tmp = utf8towcs(buffer);
-		std::wstring user_dir = utf8towcs(weasel_user_data_dir());
-		DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
-		if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+		const int BUF_SIZE = 2047;
+		char buffer[BUF_SIZE + 1];
+		memset(buffer, '\0', sizeof(buffer));
+		if (RimeConfigGetString(&config, "schema/icon", buffer, BUF_SIZE))
 		{
-			std::wstring share_dir = utf8towcs(weasel_shared_data_dir());
-			dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
+			std::wstring tmp = utf8towcs(buffer);
+			std::wstring user_dir = utf8towcs(weasel_user_data_dir());
+			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
 			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
-				m_ui->style().current_icon = L"";
+			{
+				std::wstring share_dir = utf8towcs(weasel_shared_data_dir());
+				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
+				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+					m_ui->style().current_icon = L"";
+				else
+					m_ui->style().current_icon = (share_dir + L"\\" + tmp);
+			}
 			else
-				m_ui->style().current_icon = (share_dir + L"\\" + tmp);
+				m_ui->style().current_icon = user_dir + L"\\" + tmp;
 		}
 		else
-			m_ui->style().current_icon = user_dir + L"\\" + tmp;
+			m_ui->style().current_icon = L"";
 	}
-	else
-		m_ui->style().current_icon = L"";
+	// load schema icon end
 	RimeConfigClose(&config);
-	if (is_light)
-		m_ui->style() = m_base_style;
-	else
-		m_ui->style() = m_base_style_dark;
 }
 
 bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& status) {
