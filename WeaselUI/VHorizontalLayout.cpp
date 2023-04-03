@@ -285,6 +285,8 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 				_candidateLabelRects[i].OffsetRect(ofx, ofy);
 				_candidateTextRects[i].OffsetRect(ofx, ofy);
 				_candidateCommentRects[i].OffsetRect(ofx, ofy);
+				if(i==id && i==(candidates_count - 1))
+					max_height_of_cols = max(max_height_of_cols, _candidateCommentRects[i].bottom);
 				minleft_of_cols[col_cnt] = width;
 				width += ofx;
 				h += current_cand_height;
