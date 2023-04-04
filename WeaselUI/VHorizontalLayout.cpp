@@ -285,8 +285,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 				_candidateLabelRects[i].OffsetRect(ofx, ofy);
 				_candidateTextRects[i].OffsetRect(ofx, ofy);
 				_candidateCommentRects[i].OffsetRect(ofx, ofy);
-				if(i==id && i==(candidates_count - 1))
-					max_height_of_cols = max(max_height_of_cols, _candidateCommentRects[i].bottom);
+				max_height_of_cols = max(max_height_of_cols, _candidateCommentRects[i].bottom);
 				minleft_of_cols[col_cnt] = width;
 				width += ofx;
 				h += current_cand_height;
@@ -403,8 +402,67 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 	// prepare temp rect _bgRect for roundinfo calculation
-	//CopyRect(_bgRect, _contentRect);
-	//_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
+	CopyRect(_bgRect, _contentRect);
+	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
+	_PrepareRoundInfo(dc);
+	if(_style.vertical_text_left_to_right)
+	{
+		for(auto i = 0; i < candidates_count; i++)
+		{
+			_roundInfo[i].Hemispherical = _roundInfo[0].Hemispherical;
+			if(_roundInfo[0].Hemispherical)
+			{
+				if(col_of_candidate[i] == col_cnt)
+				{
+					_roundInfo[i].IsTopRightNeedToRound = false;
+					_roundInfo[i].IsBottomRightNeedToRound = false;
+				}
+				if(col_of_candidate[i] == 0)
+				{
+					_roundInfo[i].IsTopLeftNeedToRound = false;
+					_roundInfo[i].IsBottomLeftNeedToRound = false;
+				}
+				if(i==0)
+					_roundInfo[i].IsTopLeftNeedToRound = _style.inline_preedit;
+				if(i==candidates_count - 1)
+					_roundInfo[i].IsBottomRightNeedToRound = true;
+
+				if(col_of_candidate[i] == col_cnt && col_cnt > 0 && col_of_candidate[i-1] == (col_cnt - 1))
+					_roundInfo[i].IsTopRightNeedToRound = true;
+				if(col_of_candidate[i] == 0 && col_cnt > 0 && col_of_candidate[i+1] == 1)
+					_roundInfo[i].IsBottomLeftNeedToRound = _style.inline_preedit;
+			}
+		}
+	}
+	else
+	{
+		for(auto i = 0; i < candidates_count; i++)
+		{
+			_roundInfo[i].Hemispherical = _roundInfo[0].Hemispherical;
+			if(_roundInfo[0].Hemispherical)
+			{
+				if(col_of_candidate[i] == 0)
+				{
+					_roundInfo[i].IsTopRightNeedToRound = false;
+					_roundInfo[i].IsBottomRightNeedToRound = false;
+				}
+				if(col_of_candidate[i] == col_cnt)
+				{
+					_roundInfo[i].IsTopLeftNeedToRound = false;
+					_roundInfo[i].IsBottomLeftNeedToRound = false;
+				}
+				if(i==0)
+					_roundInfo[i].IsTopRightNeedToRound = _style.inline_preedit;
+				if(i==candidates_count - 1)
+					_roundInfo[i].IsBottomLeftNeedToRound = true;
+				if(col_of_candidate[i] == col_cnt && col_cnt > 0 && col_of_candidate[i-1] == (col_cnt - 1))
+					_roundInfo[i].IsTopLeftNeedToRound = true;
+				if(col_of_candidate[i] == 0 && col_cnt > 0 && col_of_candidate[i+1] == 1)
+					_roundInfo[i].IsBottomRightNeedToRound = _style.inline_preedit;
+			}
+		}
+	}
+
 	// truely draw content size calculation
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;

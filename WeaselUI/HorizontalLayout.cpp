@@ -98,8 +98,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				_candidateLabelRects[i].OffsetRect(ofx, ofy);
 				_candidateTextRects[i].OffsetRect(ofx, ofy);
 				_candidateCommentRects[i].OffsetRect(ofx, ofy);
-				if(i==id && i==(candidates_count - 1))
-					max_width_of_rows = max(max_width_of_rows, _candidateCommentRects[i].right);
+				max_width_of_rows = max(max_width_of_rows, _candidateCommentRects[i].right);
 				mintop_of_rows[row_cnt] = height;
 				height += ofy;
 				// re calc rect position, decrease offsetX for origin 
