@@ -660,28 +660,39 @@ static inline int ConvertColorToAbgr(int color, ColorFormat fmt = COLOR_ABGR)
 
 static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* value, ColorFormat fmt = COLOR_ABGR)
 {
-	int tmp = 0;
-	if (!RimeConfigGetInt(config, key, &tmp)) return False;
 	char color[256] = { 0 };
 	if (!RimeConfigGetString(config, key, color, 256))
 		return False;
 	std::string color_str = std::string(color);
-	// hex number
-	if (std::regex_match(color_str, std::regex("^0x[0-9a-f]+$", std::regex::icase)))
+	// color code in start with # like "#ffffff7f" or hex number color code 0xffffff7f
+	if (std::regex_match(color_str, std::regex("^(0x|#)[0-9a-f]+$", std::regex::icase)))
 	{
-		RimeConfigGetInt(config, key, value);
-		*value = (*value & 0xffffffff);
-		if(color_str.length() <= 8)
+		std::string tmp = std::regex_replace(color_str, std::regex("#|0x"), "");
+		// limit first 8 code
+		tmp = tmp.substr(0, 8);
+		if(tmp.length() <= 6)	/* color code without alpha */
 		{
+			*value = std::stoi(tmp, 0, 16);
 			if(fmt != COLOR_RGBA) *value |= 0xff000000;
 			else *value = (*value << 8) | 0x000000ff;
 		}
+		else	/* color code with alpha */
+		{
+			// stoi limitation, split to handle
+			std::string tmp1 = tmp.substr(0, 6);
+			int value1 = std::stoi(tmp1, 0, 16);
+			tmp1 = tmp.substr(6);
+			int value2 = std::stoi(tmp1, 0, 16);
+			*value = (value1 << (tmp1.length() * 4)) | value2;
+		}
 		*value = ConvertColorToAbgr(*value, fmt);
+		*value = (*value & 0xffffffff);
 		return True;
 	}
-	// regular number or other stuff
+	// regular number or other stuff, if user use pure dec number, they should take care themselves
 	else
 	{
+		int tmp = 0;
 		if (!RimeConfigGetInt(config, key, &tmp))
 			return False;
 		else
@@ -937,7 +948,11 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 				fmt = COLOR_ARGB;
 			else if (!std::strcmp(color_format, "rgba"))
 				fmt = COLOR_RGBA;
+			else
+				fmt = COLOR_ABGR;
 		}
+		else
+			fmt = COLOR_ABGR;
 
 		RimeConfigGetColor32b(config, (prefix + "/back_color").c_str(), &style.back_color, fmt);
 		style.back_color &= 0xffffffff;
