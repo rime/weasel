@@ -18,6 +18,14 @@ typedef enum
 	COLOR_RGBA
 } ColorFormat;
 
+#ifdef USE_SHARP_COLOR_CODE
+	#define HEX_REGEX		std::regex("^(0x|#)[0-9a-f]+$", std::regex::icase)
+	#define TRIMHEAD_REGEX	std::regex("0x|#", std::regex::icase)
+#else
+	#define HEX_REGEX		std::regex("^0x[0-9a-f]+$", std::regex::icase)
+	#define TRIMHEAD_REGEX	std::regex("0x", std::regex::icase)
+#endif
+
 static inline BOOL IsThemeLight()
 {
 	// only for windows 10 or greater, return false when lower version.
@@ -664,10 +672,10 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 	if (!RimeConfigGetString(config, key, color, 256))
 		return False;
 	std::string color_str = std::string(color);
-	// color code in start with # like "#ffffff7f" or hex number color code 0xffffff7f
-	if (std::regex_match(color_str, std::regex("^(0x|#)[0-9a-f]+$", std::regex::icase)))
+	// color code hex 
+	if (std::regex_match(color_str, HEX_REGEX))
 	{
-		std::string tmp = std::regex_replace(color_str, std::regex("#|0x"), "");
+		std::string tmp = std::regex_replace(color_str, TRIMHEAD_REGEX, "");
 		// limit first 8 code
 		tmp = tmp.substr(0, 8);
 		if(tmp.length() <= 6)	/* color code without alpha */

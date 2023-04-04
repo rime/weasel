@@ -13,6 +13,7 @@
 #define USE_HILITE_MARK
 #define USE_CANDIDATE_BORDER
 #define USE_CAPTURE_BY_CLICK
+//#define USE_SHARP_COLOR_CODE
 
 //#define _DEBUG_
 namespace weasel
