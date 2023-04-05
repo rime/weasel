@@ -3,7 +3,8 @@ rem Customize your build environment and save the modified copy to env.bat
 rem REQUIRED: path to Boost source directory
 set BOOST_ROOT=C:\Libraries\boost_1_69_0
 
-rem OPTIONAL: Visual Studio version and platform toolset
+rem OPTIONAL: architecture, Visual Studio version and platform toolset
+set ARCH=Win32
 set BJAM_TOOLSET=msvc-14.1
 set PLATFORM_TOOLSET=v141_xp
 

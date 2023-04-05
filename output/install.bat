@@ -37,7 +37,7 @@ rem regsvr32.exe /s "%CD%\weasel.dll"
 goto next
 
 :win7_x64_install
-WeaselSetupx64.exe %install_option%
+WeaselSetup.exe %install_option%
 rem regsvr32.exe /s "%CD%\weasel.dll"
 rem regsvr32.exe /s "%CD%\weaselx64.dll"
 goto next
