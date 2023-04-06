@@ -423,9 +423,17 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 					_roundInfo[i].IsBottomLeftNeedToRound = false;
 				}
 				if(i==0)
+				{
 					_roundInfo[i].IsTopLeftNeedToRound = _style.inline_preedit;
+					if(col_cnt == 0)
+						_roundInfo[i].IsTopRightNeedToRound = true;
+				}
 				if(i==candidates_count - 1)
+				{
 					_roundInfo[i].IsBottomRightNeedToRound = true;
+					if(col_cnt == 0)
+						_roundInfo[i].IsBottomLeftNeedToRound = _style.inline_preedit;
+				}
 
 				if(col_of_candidate[i] == col_cnt && col_cnt > 0 && col_of_candidate[i-1] == (col_cnt - 1))
 					_roundInfo[i].IsTopRightNeedToRound = true;
@@ -452,9 +460,17 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 					_roundInfo[i].IsBottomLeftNeedToRound = false;
 				}
 				if(i==0)
+				{
 					_roundInfo[i].IsTopRightNeedToRound = _style.inline_preedit;
+					if(col_cnt ==0)
+						_roundInfo[i].IsTopLeftNeedToRound = true;
+				}
 				if(i==candidates_count - 1)
+				{
 					_roundInfo[i].IsBottomLeftNeedToRound = true;
+					if(col_cnt==0)
+						_roundInfo[i].IsBottomRightNeedToRound = _style.inline_preedit;
+				}
 				if(col_of_candidate[i] == col_cnt && col_cnt > 0 && col_of_candidate[i-1] == (col_cnt - 1))
 					_roundInfo[i].IsTopLeftNeedToRound = true;
 				if(col_of_candidate[i] == 0 && col_cnt > 0 && col_of_candidate[i+1] == 1)
