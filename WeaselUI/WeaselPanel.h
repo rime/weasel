@@ -77,11 +77,8 @@ typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_
 enum class BackType
 {
 	TEXT = 0,
-	FIRST_CAND = 1,
-	MID_CAND = 2,
-	LAST_CAND = 3,
-	ONLY_CAND = 4,
-	BACKGROUND = 5	// background
+	CAND = 1,
+	BACKGROUND = 2	// background
 };
 
 class WeaselPanel : 

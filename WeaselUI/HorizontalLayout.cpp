@@ -48,9 +48,10 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	
 	int row_cnt = 0;
 	int max_width_of_rows = 0;
-	int height_of_rows[MAX_CANDIDATES_COUNT] = {0};
-	int row_of_candidate[MAX_CANDIDATES_COUNT] = {0};
+	int height_of_rows[MAX_CANDIDATES_COUNT] = {0};		// height of every row
+	int row_of_candidate[MAX_CANDIDATES_COUNT] = {0};	// row info of every cand
 	int mintop_of_rows[MAX_CANDIDATES_COUNT] = {0};
+	// only when there are candidates
 	if(candidates_count)
 	{
 		w = offsetX + real_margin_x;
@@ -88,16 +89,19 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 
 			int base_left = (i==id) ? _candidateLabelRects[i].left - base_offset : _candidateLabelRects[i].left;
-			// if not the first candidate of current row, and current_cand_width > _style.max_width
+			// if not the first candidate of current row, and current candidate's right > _style.max_width
 			if(_style.max_width > 0 && (base_left > real_margin_x + offsetX) && (_candidateCommentRects[i].right - offsetX + real_margin_x > _style.max_width))
 			{
+				// max_width_of_rows current row
 				max_width_of_rows = max(max_width_of_rows, _candidateCommentRects[i-1].right);
 				w = offsetX + real_margin_x + (i==id ? base_offset : 0);
 				int ofx = w - _candidateLabelRects[i].left;
 				int ofy = height_of_rows[row_cnt] + _style.candidate_spacing;
+				// offset rects to next row
 				_candidateLabelRects[i].OffsetRect(ofx, ofy);
 				_candidateTextRects[i].OffsetRect(ofx, ofy);
 				_candidateCommentRects[i].OffsetRect(ofx, ofy);
+				// max width of next row, if it's the last candidate, make sure max_width_of_rows calc right
 				max_width_of_rows = max(max_width_of_rows, _candidateCommentRects[i].right);
 				mintop_of_rows[row_cnt] = height;
 				height += ofy;
@@ -107,14 +111,16 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			}
 			else
 				max_width_of_rows = max(max_width_of_rows, w);
+			// calculate height of current row is the max of three rects
 			mintop_of_rows[row_cnt] = height;
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateLabelRects[i].Height());
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateTextRects[i].Height());
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateCommentRects[i].Height());
-
+			// set row info of current candidate
 			row_of_candidate[i] = row_cnt;
 		}	
 
+		// reposition for alignment, exp when rect height not equal to height_of_rows
 		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			int base_left = (i==id) ? _candidateLabelRects[i].left - base_offset : _candidateLabelRects[i].left;
@@ -136,6 +142,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			_candidateLabelRects[i].OffsetRect(0, ol);
 			_candidateTextRects[i].OffsetRect(0, ot);
 			_candidateCommentRects[i].OffsetRect(0, oc);
+			// make rightest candidate's rect right the same for better look
 			if(( i < candidates_count - 1 && row_of_candidate[i] < row_of_candidate[i+1] ) || (i == candidates_count - 1))
 				_candidateRects[i].right = max(width, max_width_of_rows);
 		}
@@ -163,6 +170,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
 	// prepare round info for single row status, only for single row situation
 	_PrepareRoundInfo(dc);
+	// readjust for multi rows
 	if(row_cnt)	// row_cnt > 0, at least 2 candidates
 	{
 		_roundInfo[0].IsBottomLeftNeedToRound = false;
