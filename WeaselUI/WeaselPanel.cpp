@@ -383,6 +383,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 	hiliteBackPath = NULL;
 }
 
+// draw preedit text, text only
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
@@ -457,6 +458,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 	return drawn;
 }
 
+// draw hilited back color, back only
 bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
@@ -492,6 +494,15 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 					rc_hi = CRect(rc.left, y, rc.right, y + hilitedSz.cy);
 				else
 					rc_hi = CRect(x, rc.top, x + hilitedSz.cx, rc.bottom);
+				// if preedit rect size smaller than icon, fill the gap to STATUS_ICON_SIZE
+				if(m_layout->ShouldDisplayStatusIcon())
+				{
+					if((m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL) && hilitedSz.cy < STATUS_ICON_SIZE)
+						rc_hi.InflateRect(0, (STATUS_ICON_SIZE - hilitedSz.cy) / 2);
+					if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && hilitedSz.cx < STATUS_ICON_SIZE)
+						rc_hi.InflateRect((STATUS_ICON_SIZE - hilitedSz.cx) / 2, 0);
+				}
+
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetTextRoundInfo();
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
@@ -500,15 +511,6 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 		drawn = true;
 	}
 	return drawn;
-}
-
-static inline BackType CalcBacktype(int index, int candsize)
-{
-	BackType bkType = BackType::FIRST_CAND;
-	if (candsize == 1) bkType = BackType::ONLY_CAND;
-	else if (index != 0 && index != candsize - 1) bkType = BackType::MID_CAND;
-	else if (index == candsize - 1) bkType = BackType::LAST_CAND;
-	return bkType;
 }
 
 bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
@@ -521,14 +523,13 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	IDWriteTextFormat1* txtFormat = pDWR->pTextFormat;
 	IDWriteTextFormat1* labeltxtFormat = pDWR->pLabelTextFormat;
 	IDWriteTextFormat1* commenttxtFormat = pDWR->pCommentTextFormat;
-	BackType bkType = BackType::FIRST_CAND;
+	BackType bkType = BackType::CAND;
 	CRect rect;	
 	if (back) {
 		// if candidate_shadow_color not transparent, draw candidate shadow first
 		if (COLORNOTTRANSPARENT(m_style.candidate_shadow_color)) {
 			for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 				if (i == m_ctx.cinfo.highlighted) continue;	// draw non hilited candidates only 
-				bkType = CalcBacktype(i, m_candidateCount);
 				rect = m_layout->GetCandidateRect((int)i);
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
@@ -545,7 +546,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 		{
 			for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 				if (i == m_ctx.cinfo.highlighted) continue;
-				bkType = CalcBacktype(i, m_candidateCount);
 				rect = m_layout->GetCandidateRect((int)i);
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
@@ -559,7 +559,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 		}
 		// draw highlighted back ground and shadow
 		{
-			bkType = CalcBacktype(m_ctx.cinfo.highlighted, m_candidateCount);
 			rect = m_layout->GetHighlightRect();
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);

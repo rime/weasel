@@ -122,6 +122,7 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	return size;
 }
 
+// check if a candidate back path over _bgRect path
 bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect& rc, CDCHandle& dc)
 {
 	GraphicsRoundRectPath bgPath(_bgRect, _style.round_corner_ex);
@@ -141,6 +142,7 @@ bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect& rc, CDCHandl
 	return res;
 }
 
+// prepare Hemispherical rounding info
 void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 {
 	const int tmp[5]= { UIStyle::LAYOUT_VERTICAL, UIStyle::LAYOUT_HORIZONTAL, UIStyle::LAYOUT_VERTICAL_TEXT, UIStyle::LAYOUT_VERTICAL, UIStyle::LAYOUT_HORIZONTAL };
