@@ -420,11 +420,6 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 			if (_UpdateUICallback) _UpdateUICallback();
 		});
 	}
-#if 0
-	else {
-		if (_UpdateUICallback) _UpdateUICallback();
-	}
-#endif
 
 	m_message_type.clear();
 	m_message_value.clear();
@@ -968,6 +963,25 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 		{
 			style.shadow_color = 0x00000000;
 		}
+
+#ifdef USE_BLUR_UNDER_WINDOWS10
+		// allow set blur with color scheme, more portable
+		Bool blur_window = false;
+		if (RimeConfigGetBool(config, (prefix + "/blur_window").c_str(), &blur_window))
+		{
+			style.blur_window = !!blur_window;
+			style.blur_window = style.blur_window && IsWindows10OrGreaterEx();
+		}
+		if(style.blur_window)
+		{
+			// if set blur, make shadow color transparent
+			style.shadow_color &= 0x00ffffff;
+			// if set blur, make sure alpha of back color between 01~7f, to ensure blur work
+			if((style.back_color & 0xff000000) > 0x7f000000 || (style.back_color & 0xff000000) == 0)
+				style.back_color = (style.back_color & 0x00ffffff) | 0x7f000000;
+		}
+#endif
+
 		style.shadow_color &= 0xffffffff;
 		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color, fmt);
 		style.text_color &= 0xffffffff;

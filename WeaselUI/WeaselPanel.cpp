@@ -46,6 +46,8 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 #ifdef USE_BLUR_UNDER_WINDOWS10
 	if(hUser && m_isBlurAvailable)
 		setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
+	// if setWindowCompositionAttribute null, not available
+	m_isBlurAvailable = m_isBlurAvailable && (setWindowCompositionAttribute != NULL);
 #endif
 
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
@@ -632,16 +634,10 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 #ifdef USE_BLUR_UNDER_WINDOWS10
 void WeaselPanel::_BlurBacktround(CRect& rc)
 {
-	if (setWindowCompositionAttribute != NULL 
-		&& (m_style.back_color >> 24) < 0x80
-		&& (m_style.back_color >> 24) > 0
-		&& m_isBlurAvailable)
-	{
-		int radiusx2 = (m_candidateCount == 0 && m_layout->ShouldDisplayStatusIcon() && m_ctx.aux.empty()) ? 0 : m_style.round_corner_ex*2 + m_style.border/2 - !(m_style.border % 2);
-		rc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
-		SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right+2, rc.bottom+2, radiusx2, radiusx2), true);
-		setWindowCompositionAttribute(m_hWnd, &data);
-	}
+	int radiusx2 = (m_candidateCount == 0 && m_layout->ShouldDisplayStatusIcon() && m_ctx.aux.empty()) ? 0 : m_style.round_corner_ex*2 + m_style.border/2 - !(m_style.border % 2);
+	rc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
+	SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right+2, rc.bottom+2, radiusx2, radiusx2), true);
+	setWindowCompositionAttribute(m_hWnd, &data);
 }
 #endif
 
@@ -707,21 +703,24 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	_LayerUpdate(rcw, memDC);
 
 #ifdef USE_BLUR_UNDER_WINDOWS10
-	// blur_window swiching between enable and disable
-	if (m_style.blur_window && (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0)) {
-		accent.AccentState = ACCENT_ENABLE_BLURBEHIND;
-		// if only ascii mode icon should be display, make sure the rect is suitable
-		CRect rcicon(rcw.left, rcw.top, rcw.left + STATUS_ICON_SIZE + m_layout->offsetX * 2, rcw.top + STATUS_ICON_SIZE + m_layout->offsetY * 2);
-		if(rcw.Width() >= rcicon.Width())
-			_BlurBacktround(rcw);
-		else
-			_BlurBacktround(rcicon);
-	}
-	else
+	if(m_isBlurAvailable)
 	{
-		accent.AccentState = ACCENT_DISABLED;
-		SetWindowRgn(CreateRectRgn(rcw.left, rcw.top, rcw.right, rcw.bottom), true);
-		setWindowCompositionAttribute(m_hWnd, &data);
+		// blur_window swiching between enable and disable
+		if (m_style.blur_window && !(m_style.inline_preedit && (m_candidateCount ==0))) { 
+			accent.AccentState = ACCENT_ENABLE_BLURBEHIND;
+			// if only ascii mode icon should be display, make sure the rect is suitable
+			CRect rcicon(rcw.left, rcw.top, rcw.left + STATUS_ICON_SIZE + m_layout->offsetX * 2, rcw.top + STATUS_ICON_SIZE + m_layout->offsetY * 2);
+			if(rcw.Width() >= rcicon.Width())
+				_BlurBacktround(rcw);
+			else
+				_BlurBacktround(rcicon);
+		}
+		else
+		{
+			accent.AccentState = ACCENT_DISABLED;
+			SetWindowRgn(CreateRectRgn(rcw.left, rcw.top, rcw.right, rcw.bottom), true);
+			setWindowCompositionAttribute(m_hWnd, &data);
+		}
 	}
 #endif 
 	::DeleteDC(memDC);
@@ -752,14 +751,6 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	Refresh();
-#if 0
-	if (pDWR == NULL)
-		pDWR = new DirectWriteResources(m_style);
-	// if style changed, re-initialize font resources
-	else //if (m_ostyle != m_style)
-		pDWR->InitResources(m_style);
-	Refresh();
-#endif
 	return LRESULT();
 }
 
@@ -797,12 +788,14 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	int y = m_inputPos.bottom;
 	if (m_style.shadow_radius > 0) {
 		x -= (m_style.shadow_offset_x >= 0) ? m_layout->offsetX : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_x - m_style.hilite_padding));
+		// avoid flickering in MoveTo
 		if(adj)
 		{
 			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
 			y -= m_style.shadow_radius / 2;
 		}
 	}
+	// for vertical text layout, flow right to left, make window left side
 	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
 	{
 		x -= width;
