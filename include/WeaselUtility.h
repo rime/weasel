@@ -9,19 +9,22 @@ inline const char* wcstoutf8(const WCHAR* wstr)
 	static char* buffer;
 	if(buffer)
 		delete []buffer;
-	buffer = new char[buffer_len];
-	memset(buffer, 0, buffer_len);
-	WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buffer, buffer_len - 1, NULL, NULL);
+	buffer = new char[buffer_len+1];
+	memset(buffer, 0, buffer_len+1);
+	WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buffer, buffer_len, NULL, NULL);
 	return buffer;
 }
 
 inline const WCHAR* utf8towcs(const char* utf8_str)
 {
-	const int buffer_len = 4096;
-	static WCHAR buffer[buffer_len];
-	memset(buffer, 0, sizeof(buffer));
-	MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, buffer, buffer_len - 1);
-	return buffer;
+	int nLen = MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, NULL, 0);
+	static WCHAR* wbuffer;
+	if(wbuffer)
+		delete []wbuffer;
+	wbuffer = new WCHAR[nLen + 1];
+	memset(wbuffer, 0, sizeof(WCHAR)*(nLen + 1));
+	MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, wbuffer, nLen);
+	return wbuffer;
 }
 
 inline int utf8towcslen(const char* utf8_str, int utf8_len)
