@@ -337,7 +337,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 		}
 		// round shadow, draw multilines as base round line
 		else {
-			int step = alpha /  m_style.shadow_radius;
+			int step = alpha /  m_style.shadow_radius / 2;
 			Gdiplus::Pen pen_shadow(shadow_color, (Gdiplus::REAL)1);
 			for (int i = 0; i < m_style.shadow_radius; i++) {
 				GraphicsRoundRectPath round_path(rect, radius + 1 + i);

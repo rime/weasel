@@ -673,13 +673,36 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 		std::string tmp = std::regex_replace(color_str, TRIMHEAD_REGEX, "");
 		// limit first 8 code
 		tmp = tmp.substr(0, 8);
-		if(tmp.length() <= 6)	/* color code without alpha */
+		if(tmp.length() == 6) // color code without alpha, xxyyzz add alpha ff
 		{
 			*value = std::stoi(tmp, 0, 16);
 			if(fmt != COLOR_RGBA) *value |= 0xff000000;
 			else *value = (*value << 8) | 0x000000ff;
 		}
-		else	/* color code with alpha */
+		else if(tmp.length() == 3) // color hex code xyz => xxyyzz and alpha ff
+		{
+			tmp = tmp.substr(0, 1) + tmp.substr(0, 1)
+				+ tmp.substr(1, 1) + tmp.substr(1, 1)
+				+ tmp.substr(2, 1) + tmp.substr(2, 1);
+			
+			*value = std::stoi(tmp, 0, 16);
+			if(fmt != COLOR_RGBA) *value |= 0xff000000;
+			else *value = (*value << 8) | 0x000000ff;
+		}
+		else if(tmp.length() == 4)	// color hex code vxyz => vvxxyyzz
+		{
+			tmp = tmp.substr(0, 1) + tmp.substr(0, 1)
+				+ tmp.substr(1, 1) + tmp.substr(1, 1)
+				+ tmp.substr(2, 1) + tmp.substr(2, 1)
+				+ tmp.substr(3, 1) + tmp.substr(3, 1);
+			
+			std::string tmp1 = tmp.substr(0, 6);
+			int value1 = std::stoi(tmp1, 0, 16);
+			tmp1 = tmp.substr(6);
+			int value2 = std::stoi(tmp1, 0, 16);
+			*value = (value1 << (tmp1.length() * 4)) | value2;
+		}
+		else if(tmp.length() > 6)	/* color code with alpha */
 		{
 			// stoi limitation, split to handle
 			std::string tmp1 = tmp.substr(0, 6);
@@ -688,6 +711,8 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 			int value2 = std::stoi(tmp1, 0, 16);
 			*value = (value1 << (tmp1.length() * 4)) | value2;
 		}
+		else	// reject other code, length less then 3 or length == 5
+			return False;
 		*value = ConvertColorToAbgr(*value, fmt);
 		*value = (*value & 0xffffffff);
 		return True;
@@ -696,18 +721,22 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 	else
 	{
 		int tmp = 0;
-		if (!RimeConfigGetInt(config, key, &tmp))
-			return False;
+		if (!RimeConfigGetInt(config, key, &tmp)) return False;
+
+		if(fmt != COLOR_RGBA)
+			*value = (tmp | 0xff000000) & 0xffffffff;
 		else
-		{
-			if(fmt != COLOR_RGBA)
-				*value = (tmp | 0xff000000) & 0xffffffff;
-			else
-				*value = ((tmp << 8) | 0x000000ff) & 0xffffffff;
-			*value = ConvertColorToAbgr(*value, fmt);
-		}	
+			*value = ((tmp << 8) | 0x000000ff) & 0xffffffff;
+		*value = ConvertColorToAbgr(*value, fmt);
 		return True;
 	}
+}
+
+static inline void _RemoveSpaceAroundSep(std::wstring& str)
+{
+	str = std::regex_replace(str, std::wregex(L"\\s*,\\s*"), L",");
+	str = std::regex_replace(str, std::wregex(L"\\s*:\\s*"), L":");
+	str = std::regex_replace(str, std::wregex(L"^\\s*|\\s*$"), L"");
 }
 
 static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
@@ -722,33 +751,24 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetString(config, "style/font_face", buffer, BUF_SIZE))
 	{
 		std::wstring tmp = utf8towcs(buffer);
-		// remove spaces around : , 
-		// remoove space to the line end
-		tmp = std::regex_replace(tmp, std::wregex(L"\\s*,\\s*"), L",");
-		tmp = std::regex_replace(tmp, std::wregex(L"\\s*:\\s*"), L":");
-		tmp = std::regex_replace(tmp, std::wregex(L"^\\s*|\\s*$"), L"");
+		// remove spaces around seperators  : , 
+		_RemoveSpaceAroundSep(tmp);
 		style.font_face = tmp;
 	}
 	memset(buffer, '\0', sizeof(buffer));
 	if (RimeConfigGetString(config, "style/label_font_face", buffer, BUF_SIZE))
 	{
 		std::wstring tmp = utf8towcs(buffer);
-		// remove spaces around : , 
-		// remoove space to the line end
-		tmp = std::regex_replace(tmp, std::wregex(L"\\s*,\\s*"), L",");
-		tmp = std::regex_replace(tmp, std::wregex(L"\\s*:\\s*"), L":");
-		tmp = std::regex_replace(tmp, std::wregex(L"^\\s*|\\s*$"), L"");
+		// remove spaces around seperators  : , 
+		_RemoveSpaceAroundSep(tmp);
 		style.label_font_face = tmp;
 	}
 	memset(buffer, '\0', sizeof(buffer));
 	if (RimeConfigGetString(config, "style/comment_font_face", buffer, BUF_SIZE))
 	{
 		std::wstring tmp = utf8towcs(buffer);
-		// remove spaces around : , 
-		// remoove space to the line end
-		tmp = std::regex_replace(tmp, std::wregex(L"\\s*,\\s*"), L",");
-		tmp = std::regex_replace(tmp, std::wregex(L"\\s*:\\s*"), L":");
-		tmp = std::regex_replace(tmp, std::wregex(L"^\\s*|\\s*$"), L"");
+		// remove spaces around seperators  : , 
+		_RemoveSpaceAroundSep(tmp);
 		style.comment_font_face = tmp;
 	}
 	RimeConfigGetInt(config, "style/font_point", &style.font_point);
