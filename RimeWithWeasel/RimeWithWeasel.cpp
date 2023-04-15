@@ -339,6 +339,7 @@ void RimeWithWeaselHandler::_GetCandidateInfo(weasel::CandidateInfo & cinfo, Rim
 	}
 	cinfo.highlighted = ctx.menu.highlighted_candidate_index;
 	cinfo.currentPage = ctx.menu.page_no;
+	cinfo.is_last_page = ctx.menu.is_last_page;
 }
 
 void RimeWithWeaselHandler::StartMaintenance()
@@ -807,12 +808,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		else if (!std::strcmp(preedit_type, "preview_all"))
 			style.preedit_type = weasel::UIStyle::PREVIEW_ALL;
 	}
-#ifdef USE_CAPTURE_BY_CLICK
-	Bool capture_by_click = false;
-	if (RimeConfigGetBool(config, "style/capture_by_click", &capture_by_click) || initialize)
-	{
-		style.capture_by_click = !!capture_by_click;
-	}
+#ifdef USE_MOUSE_EVENTS
+	Bool enable_mouse = false;
+	if (RimeConfigGetBool(config, "style/enable_mouse", &enable_mouse) || initialize)
+		style.enable_mouse = !!enable_mouse;
 #endif
 
 	char align_type[20] = { 0 };

@@ -12,7 +12,7 @@
 #define USE_BLUR_UNDER_WINDOWS10
 #define USE_HILITE_MARK
 #define USE_CANDIDATE_BORDER
-#define USE_CAPTURE_BY_CLICK
+#define USE_MOUSE_EVENTS
 //#define USE_SHARP_COLOR_CODE
 
 //#define _DEBUG_
@@ -104,12 +104,14 @@ namespace weasel
 			currentPage = 0;
 			totalPages = 0;
 			highlighted = 0;
+			is_last_page = false;
 		}
 		void clear()
 		{
 			currentPage = 0;
 			totalPages = 0;
 			highlighted = 0;
+			is_last_page = false;
 			candies.clear();
 			labels.clear();
 		}
@@ -122,6 +124,7 @@ namespace weasel
 			if (currentPage != ci.currentPage
 				|| totalPages != ci.totalPages
 				|| highlighted != ci.highlighted
+				|| is_last_page != ci.is_last_page
 				|| notequal(candies, ci.candies)
 				|| notequal(comments, ci.comments)
 				|| notequal(labels, ci.labels)
@@ -134,6 +137,7 @@ namespace weasel
 			if (currentPage != ci.currentPage
 				|| totalPages != ci.totalPages
 				|| highlighted != ci.highlighted
+				|| is_last_page != ci.is_last_page
 				|| notequal(candies, ci.candies)
 				|| notequal(comments, ci.comments)
 				|| notequal(labels, ci.labels)
@@ -152,6 +156,7 @@ namespace weasel
 			return false;
 		}
 		int currentPage;
+		bool is_last_page;
 		int totalPages;
 		int highlighted;
 		std::vector<Text> candies;
@@ -277,8 +282,8 @@ namespace weasel
 #endif
 		bool display_tray_icon;
 		std::wstring current_icon;
-#ifdef USE_CAPTURE_BY_CLICK
-		bool capture_by_click;
+#ifdef USE_MOUSE_EVENTS
+		bool enable_mouse;
 #endif
 		std::wstring label_text_format;
 #ifdef USE_HILITE_MARK
@@ -345,8 +350,8 @@ namespace weasel
 #endif
 			display_tray_icon(false),
 			current_icon(),
-#ifdef USE_CAPTURE_BY_CLICK
-			capture_by_click(false),
+#ifdef USE_MOUSE_EVENTS
+			enable_mouse(false),
 #endif
 			label_text_format(L"%s."),
 #ifdef USE_HILITE_MARK
@@ -422,8 +427,8 @@ namespace weasel
 #endif
 					|| display_tray_icon != st.display_tray_icon
 					|| current_icon != st.current_icon
-#ifdef USE_CAPTURE_BY_CLICK
-					|| capture_by_click != st.capture_by_click
+#ifdef USE_MOUSE_EVENTS
+					|| enable_mouse != st.enable_mouse
 #endif
 					|| label_text_format != st.label_text_format
 					|| min_width != st.min_width
@@ -492,8 +497,8 @@ namespace boost {
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
 			ar & s.current_icon;
-#ifdef USE_CAPTURE_BY_CLICK
-			ar & s.capture_by_click;
+#ifdef USE_MOUSE_EVENTS
+			ar & s.enable_mouse;
 #endif
 			ar & s.label_text_format;
 			// layout
@@ -553,6 +558,7 @@ namespace boost {
 			ar & s.currentPage;
 			ar & s.totalPages;
 			ar & s.highlighted;
+			ar & s.is_last_page;
 			ar & s.candies;
 			ar & s.comments;
 			ar & s.labels;

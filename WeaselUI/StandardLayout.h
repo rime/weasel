@@ -34,6 +34,8 @@ namespace weasel
 		virtual IsToRoundStruct GetRoundInfo(int id) { return _roundInfo[id]; }
 		virtual IsToRoundStruct GetTextRoundInfo() { return _textRoundInfo; }
 		virtual CRect GetContentRect() { return _contentRect; }
+		virtual CRect GetPrepageRect() { return _prePageRect; }
+		virtual CRect GetNextpageRect() { return _nextPageRect; }
 
 		void GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR, LPSIZE lpSize) const;
 
@@ -56,5 +58,10 @@ namespace weasel
 		CRect _contentRect;
 		IsToRoundStruct _roundInfo[MAX_CANDIDATES_COUNT];
 		IsToRoundStruct _textRoundInfo;
+
+		CRect _prePageRect;
+		CRect _nextPageRect;
+		const std::wstring pre = L"<";
+		const std::wstring next = L">";
 	};
 };

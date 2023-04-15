@@ -99,13 +99,12 @@ bool UI::Create(HWND parent)
 	if (pimpl_)
 	{
 		// re create panel cause destroied before
-#ifdef USE_CAPTURE_BY_CLICK
-		if(style_.capture_by_click)
+#ifdef USE_MOUSE_EVENTS
+		if(style_.enable_mouse)
 			pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE  | WS_EX_LAYERED, 0U, 0);
 		else
 #endif
-			pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT | WS_EX_LAYERED, 0U, 0);
-
+			pimpl_->panel.Create(parent, 0, 0, WS_POPUP|WS_DISABLED, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_LAYERED | WS_EX_TRANSPARENT, 0U, 0);
 		return true;
 	}
 
@@ -113,12 +112,12 @@ bool UI::Create(HWND parent)
 	if (!pimpl_)
 		return false;
 
-#ifdef USE_CAPTURE_BY_CLICK
-	if(style_.capture_by_click)
+#ifdef USE_MOUSE_EVENTS
+	if(style_.enable_mouse)
 		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE  | WS_EX_LAYERED, 0U, 0);
 	else
 #endif
-		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT | WS_EX_LAYERED, 0U, 0);
+		pimpl_->panel.Create(parent, 0, 0, WS_POPUP|WS_DISABLED, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_LAYERED | WS_EX_TRANSPARENT, 0U, 0);
 	return true;
 }
 
