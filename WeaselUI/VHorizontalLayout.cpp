@@ -30,15 +30,24 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	int base_offset =  0;
 #endif
 
+	// calc page indicator 
+	CSize pgszl, pgszr;
+	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
+	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+	int pgh = pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2;
+	int pgw = max(pgszl.cx, pgszr.cx);
+
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
+		size_t szx = max(size.cx, pgw),	szy = pgh;
 		// icon size wider then preedit text
-		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
+		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
 		width += size.cx + xoffset * 2 + _style.spacing - 1;
-		height = max(height, offsetY + real_margin_y + size.cy);
+		height = max(height, offsetY + real_margin_y + size.cy + szy);
+		if(ShouldDisplayStatusIcon()) height += STATUS_ICON_SIZE;
 	}
 
 	/* Auxiliary */
@@ -179,6 +188,21 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + offsetX, height + offsetY);
 
+	// calc page indicator 
+	if(candidates_count && !_style.inline_preedit)
+	{
+		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
+		int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
+		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
+		_nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing, 
+				_prex + pgszr.cx, _prePageRect.bottom + _style.hilite_spacing + pgszr.cy);
+		if (ShouldDisplayStatusIcon())
+		{
+			_prePageRect.OffsetRect(0, -STATUS_ICON_SIZE);
+			_nextPageRect.OffsetRect(0, -STATUS_ICON_SIZE);
+		}
+	}
+
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 	// background rect prepare for Hemispherical calculation
 	CopyRect(_bgRect, _contentRect);
@@ -214,15 +238,24 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	int base_offset =  0;
 #endif
 
+	// calc page indicator 
+	CSize pgszl, pgszr;
+	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
+	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+	int pgh = pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2;
+	int pgw = max(pgszl.cx, pgszr.cx);
+
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
+		size_t szx = max(size.cx, pgw), szy = pgh;
 		// icon size wider then preedit text
-		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
+		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
 		width += size.cx + xoffset * 2 + _style.spacing - 1;
-		height = max(height, offsetY + real_margin_y + size.cy);
+		height = max(height, offsetY + real_margin_y + size.cy + szy);
+		if(ShouldDisplayStatusIcon()) height += STATUS_ICON_SIZE;
 	}
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
@@ -399,8 +432,23 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	}
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + 2 * offsetX, height + offsetY);
-
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
+
+	// calc page indicator 
+	if(candidates_count && !_style.inline_preedit)
+	{
+	int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
+	int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
+	_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
+	_nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing, 
+			_prex + pgszr.cx, _prePageRect.bottom + _style.hilite_spacing + pgszr.cy);
+	if (ShouldDisplayStatusIcon())
+	{
+		_prePageRect.OffsetRect(0, -STATUS_ICON_SIZE);
+		_nextPageRect.OffsetRect(0, -STATUS_ICON_SIZE);
+	}
+	}
+
 	// prepare temp rect _bgRect for roundinfo calculation
 	CopyRect(_bgRect, _contentRect);
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);

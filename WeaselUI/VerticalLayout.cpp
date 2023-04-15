@@ -22,17 +22,26 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	int base_offset = 0;
 #endif
 
+	// calc page indicator 
+	CSize pgszl, pgszr;
+	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
+	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+	int pgw = pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding * 2;
+	int pgh = max(pgszl.cy, pgszr.cy);
+
 	/*  preedit and auxiliary rectangle calc start */
 	CSize size;
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
+		int szx = pgw, szy = max(size.cy, pgh);
 		// icon size higher then preedit text
-		int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cy) / 2 : 0;
+		int yoffset = (STATUS_ICON_SIZE >= szy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szy) / 2 : 0;
 		_preeditRect.SetRect(real_margin_x, height + yoffset, real_margin_x + size.cx, height + yoffset + size.cy);
-		height += size.cy + 2 * yoffset + _style.spacing - 1;
-		width = max(width, real_margin_x * 2 + size.cx);
+		height += szy + 2 * yoffset + _style.spacing - 1;
+		width = max(width, real_margin_x * 2 + size.cx + szx);
+		if(ShouldDisplayStatusIcon()) width += STATUS_ICON_SIZE;
 		_preeditRect.OffsetRect(offsetX, offsetY);
 	}
 
@@ -173,7 +182,20 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	/* Highlighted Candidate */
 
 	_highlightRect = _candidateRects[id];
-
+	// calc page indicator 
+	if(candidates_count && !_style.inline_preedit)
+	{
+		int _prex = _contentSize.cx - offsetX - real_margin_x + _style.hilite_padding - pgw;
+		int _prey = (_preeditRect.top + _preeditRect.bottom) / 2 - pgszl.cy / 2;
+		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
+		_nextPageRect.SetRect(_prePageRect.right + _style.hilite_spacing, 
+				_prey, _prePageRect.right + _style.hilite_spacing + pgszr.cx, _prey + pgszr.cy);
+		if (ShouldDisplayStatusIcon())
+		{
+			_prePageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
+			_nextPageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
+		}
+	}
 	// calc roundings start
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 	// background rect prepare for Hemispherical calculation

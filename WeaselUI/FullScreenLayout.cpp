@@ -49,6 +49,12 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	_auxiliaryRect.OffsetRect(offsetx, offsety);
 	_highlightRect = m_layout->GetHighlightRect();
 	_highlightRect.OffsetRect(offsetx, offsety);
+
+	_prePageRect = m_layout->GetPrepageRect();
+	_prePageRect.OffsetRect(offsetx, offsety);
+	_nextPageRect = m_layout->GetNextpageRect();
+	_nextPageRect.OffsetRect(offsetx, offsety);
+
 	for (auto i = 0, n = (int)_context.cinfo.candies.size(); i < n && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		_candidateLabelRects[i] = m_layout->GetCandidateLabelRect(i);

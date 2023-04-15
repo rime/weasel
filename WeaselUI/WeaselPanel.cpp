@@ -173,7 +173,7 @@ void WeaselPanel::CleanUp()
 	pBrush = NULL;
 }
 
-#ifdef USE_CAPTURE_BY_CLICK
+#ifdef USE_MOUSE_EVENTS
 static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
 {
 	if (!hDC || !lpRect || IsRectEmpty(lpRect)) return NULL;
@@ -218,7 +218,7 @@ void WeaselPanel::_CaptureRect(CRect& rect)
 	ReleaseDC(ScreenDC);
 }
 
-LRESULT WeaselPanel::OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT WeaselPanel::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	bHandled = true;
 	return MA_NOACTIVATE;
@@ -234,9 +234,18 @@ static void SendInputKey(WORD key)
 	::SendInput(sizeof(inputs) / sizeof(INPUT), inputs, sizeof(INPUT));
 }
 
+LRESULT WeaselPanel::OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+	if(delta > 0) SendInputKey(33);
+	else	   SendInputKey(34);
+	bHandled = true;
+	return 0;
+}
+
 LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if(!m_style.capture_by_click || hide_candidates)
+	if(!m_style.enable_mouse || hide_candidates)
 	{
 		bHandled = true;
 		return 0;
@@ -244,27 +253,56 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	CPoint point;
 	point.x = GET_X_LPARAM(lParam);
 	point.y = GET_Y_LPARAM(lParam);
-	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
-	CRect recth = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
-	recth.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-	// capture widow
-	if (recth.PtInRect(point)) _CaptureRect(recth);
-	else _CaptureRect(rcw);
-	// select by click
-	for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-		CRect rect = m_layout->GetCandidateRect((int)i);
-		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-		if (rect.PtInRect(point))
-		{
-			// if not select by number, to be test
-			if(i < MAX_CANDIDATES_COUNT - 1) SendInputKey(0x31 + i);
-			else	SendInputKey(0x30);
-			break;
+
+	// capture
+	{
+		CRect recth = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
+		recth.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+		// capture widow
+		if (recth.PtInRect(point)) _CaptureRect(recth);
+		else _CaptureRect(rcw);
+	}
+	// button response
+	{
+		if(!m_style.inline_preedit && m_candidateCount != 0) {
+			// click prepage
+			if(m_ctx.cinfo.currentPage != 0 ) {
+				CRect prc = m_layout->GetPrepageRect();
+				if(prc.PtInRect(point)) {
+					// to do send pgup
+					SendInputKey(33);
+					bHandled = true;
+					return 0;
+				}
+			}
+			// click nextpage
+			if(!m_ctx.cinfo.is_last_page) {
+				CRect prc = m_layout->GetNextpageRect();
+				if(prc.PtInRect(point)) {
+					// to do send pgdn
+					SendInputKey(34);
+					bHandled = true;
+					return 0;
+				}
+			}
+		}
+		// select by click
+		for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+			CRect rect = m_layout->GetCandidateRect((int)i);
+			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+			if (rect.PtInRect(point))
+			{
+				// if not select by number, to be test
+				if(i < MAX_CANDIDATES_COUNT - 1) SendInputKey(0x31 + i);
+				else	SendInputKey(0x30);
+				break;
+			}
 		}
 	}
 	bHandled = true;
 	return 0;
 }
+
 LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	CPoint point;
@@ -454,6 +492,18 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		else {
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
 			_TextOut(rcText, t.c_str(), t.length(), m_style.text_color, txtFormat);
+		}
+		if(m_candidateCount && !m_style.inline_preedit)
+		{
+			const std::wstring pre = L"<";
+			const std::wstring next = L">";
+			CRect prc = m_layout->GetPrepageRect();
+			int color = m_ctx.cinfo.currentPage ? m_style.hilited_text_color : m_style.text_color;
+			_TextOut(prc, pre.c_str(), pre.length(), color, txtFormat);
+
+			CRect nrc = m_layout->GetNextpageRect();
+			color = m_ctx.cinfo.is_last_page ? m_style.text_color : m_style.hilited_text_color;
+			_TextOut(nrc, next.c_str(), next.length(), color, txtFormat);
 		}
 		drawn = true;
 	}
