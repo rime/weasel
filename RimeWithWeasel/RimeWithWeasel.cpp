@@ -139,6 +139,7 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 		 << ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
 	Bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
+	_UpdateStatus(session_id);
 	_Respond(session_id, eat);
 	_UpdateUI(session_id);
 	m_active_session = session_id;
@@ -450,12 +451,14 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		is_composing = !!status.is_composing;
 		actions.insert("status");
 		if (m_is_global_ascii_mode) {
-			Bool ascii_mode = Bool(status.is_ascii_mode);
+			Bool ascii_mode = Bool(m_status.ascii_mode);
 			std::for_each(m_session_ids.begin(), m_session_ids.end(), [ascii_mode](auto session_id) {
 				RimeSetOption(session_id, "ascii_mode", ascii_mode);
 			});
+			messages.push_back(std::string("status.ascii_mode=") + std::to_string(m_status.ascii_mode) + '\n');
+		} else {
+			messages.push_back(std::string("status.ascii_mode=") + std::to_string(status.is_ascii_mode) + '\n');
 		}
-		messages.push_back(std::string("status.ascii_mode=") + std::to_string(status.is_ascii_mode) + '\n');
 		messages.push_back(std::string("status.composing=") + std::to_string(status.is_composing) + '\n');
 		messages.push_back(std::string("status.disabled=") + std::to_string(status.is_disabled) + '\n');
 		RimeFreeStatus(&status);
@@ -756,4 +759,12 @@ bool RimeWithWeaselHandler::_IsSessionTSF(UINT session_id)
 	static char client_type[20] = { 0 };
 	RimeGetProperty(session_id, "client_type", client_type, sizeof(client_type) - 1);
 	return std::string(client_type) == "tsf";
+}
+
+void RimeWithWeaselHandler::_UpdateStatus(UINT session_id) {
+	RIME_STRUCT(RimeStatus, status);
+	if (RimeGetStatus(session_id, &status)) {
+		m_status.ascii_mode = status.is_ascii_mode;
+		RimeFreeStatus(&status);
+	}
 }

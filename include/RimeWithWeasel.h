@@ -47,6 +47,7 @@ private:
 	bool _IsSessionTSF(UINT session_id);
 
 	void _LoadGlobalOptions(RimeConfig* config);
+	void _UpdateStatus(UINT session_id);
 
 	AppOptionsByAppName m_app_options;
 	weasel::UI* m_ui;  // reference
@@ -57,6 +58,7 @@ private:
 	weasel::UIStyle m_base_style;
 	bool m_is_global_ascii_mode;
 	std::vector<UINT> m_session_ids;
+	weasel::Status m_status;
 
 	std::function<void()> _UpdateUICallback;
 
