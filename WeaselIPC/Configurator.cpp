@@ -27,4 +27,7 @@ void Configurator::Store(Deserializer::KeyType const& key, std::wstring const& v
 	{
 		m_pTarget->p_config->inline_preedit = bool_value;
 	}
+	else if (key[1] == L"global_ascii_mode") {
+		m_pTarget->p_config->global_ascii_mode = bool_value;
+	}
 }

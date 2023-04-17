@@ -20,6 +20,7 @@ public:
 
 	// function
 	HRESULT _Advise(_In_ com_ptr<IUnknown> punk, _In_ REFGUID guidCompartment);
+	HRESULT _GlobalAdvise(_In_ com_ptr<ITfThreadMgr> pThreadMgr, _In_ REFGUID guidCompartment);
 	HRESULT _Unadvise();
 
 private:

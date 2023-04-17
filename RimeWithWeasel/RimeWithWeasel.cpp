@@ -71,6 +71,7 @@ void RimeWithWeaselHandler::Initialize()
 			m_base_style = m_ui->style();
 		}
 		_LoadAppOptions(&config, m_app_options);
+		_LoadGlobalOptions(&config);
 		RimeConfigClose(&config);
 	}
 	m_last_schema_id.clear();
@@ -101,6 +102,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 		if (m_disabled) return 0;
 	}
 	UINT session_id = RimeCreateSession();
+	m_session_ids.push_back(session_id);
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 	// show session's welcome message :-) if any
@@ -447,6 +449,12 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	{
 		is_composing = !!status.is_composing;
 		actions.insert("status");
+		if (m_is_global_ascii_mode) {
+			Bool ascii_mode = Bool(status.is_ascii_mode);
+			std::for_each(m_session_ids.begin(), m_session_ids.end(), [ascii_mode](auto session_id) {
+				RimeSetOption(session_id, "ascii_mode", ascii_mode);
+			});
+		}
 		messages.push_back(std::string("status.ascii_mode=") + std::to_string(status.is_ascii_mode) + '\n');
 		messages.push_back(std::string("status.composing=") + std::to_string(status.is_composing) + '\n');
 		messages.push_back(std::string("status.disabled=") + std::to_string(status.is_disabled) + '\n');
@@ -500,6 +508,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	// configuration information
 	actions.insert("config");
 	messages.push_back(std::string("config.inline_preedit=") + std::to_string((int)m_ui->style().inline_preedit) + '\n');
+	if (m_is_global_ascii_mode) {
+		messages.push_back(std::string("config.global_ascii_mode=") + std::to_string(m_is_global_ascii_mode) + '\n');
+	}
 
 	// style
 	bool has_synced = RimeGetOption(session_id, "__synced");
@@ -531,6 +542,12 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	{
 		return eat(std::wstring(utf8towcs(msg.c_str())));
 	});
+}
+
+void RimeWithWeaselHandler::_LoadGlobalOptions(RimeConfig* config) {
+	Bool value = False;
+	RimeConfigGetBool(config, "global/ascii_mode", &value);
+	m_is_global_ascii_mode = !!value;
 }
 
 static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)

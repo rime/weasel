@@ -122,12 +122,14 @@ namespace weasel
 	// 用於向前端告知設置信息
 	struct Config
 	{
-		Config() : inline_preedit(false) {}
+		Config() : inline_preedit(false), global_ascii_mode(false) {}
 		void reset()
 		{
 			inline_preedit = false;
+			global_ascii_mode = false;
 		}
 		bool inline_preedit;
+		bool global_ascii_mode;
 	};
 
 	struct UIStyle

@@ -21,16 +21,9 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 		*pfEaten = (BOOL) m_client.ProcessKeyEvent(ke);
     }
 }
-
+// ITfKeyEventSink::OnSetFocus 只会在同一应用程序中切换输入焦点时触发
 STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 {
-	if (fForeground)
-		m_client.FocusIn();
-	else {
-		m_client.FocusOut();
-		_AbortComposition();
-	}
-
 	return S_OK;
 }
 

@@ -95,6 +95,32 @@ HRESULT CCompartmentEventSink::_Unadvise()
 	return hr;
 }
 
+HRESULT CCompartmentEventSink::_GlobalAdvise(_In_ com_ptr<ITfThreadMgr> pThreadMgr,
+                                       _In_ REFGUID guidCompartment) {
+
+	HRESULT hr = S_OK;
+	ITfCompartmentMgr* pCompartmentMgr = nullptr;
+	ITfSource* pSource = nullptr;
+
+	hr = pThreadMgr->GetGlobalCompartment(&pCompartmentMgr);
+	if (FAILED(hr)) {
+		return hr;
+	}
+
+	hr = pCompartmentMgr->GetCompartment(guidCompartment, &_compartment);
+	if (SUCCEEDED(hr)) {
+		hr = _compartment->QueryInterface(IID_ITfSource, (void **)&pSource);
+		if (SUCCEEDED(hr)) {
+			hr = pSource->AdviseSink(IID_ITfCompartmentEventSink, this, &_cookie);
+			pSource->Release();
+		}
+	}
+
+	pCompartmentMgr->Release();
+
+	return hr;
+}
+
 
 BOOL WeaselTSF::_IsKeyboardDisabled()
 {
@@ -195,6 +221,41 @@ HRESULT WeaselTSF::_SetKeyboardOpen(BOOL fOpen)
 	return hr;
 }
 
+bool WeaselTSF::_GetAsciiMode() {
+	com_ptr<ITfCompartmentMgr> pCompMgr;
+	bool is_ascii_mode = false;
+
+	if (_pThreadMgr->GetGlobalCompartment(&pCompMgr) == S_OK) {
+		com_ptr<ITfCompartment> pCompartment;
+		if (pCompMgr->GetCompartment(c_guidStatus, &pCompartment) == S_OK) {
+			VARIANT var;
+			if (pCompartment->GetValue(&var) == S_OK) {
+				if (var.vt == VT_I4) // Even VT_EMPTY, GetValue() can succeed
+					is_ascii_mode = (bool)var.intVal;
+			}
+		}
+	}
+	return is_ascii_mode;
+}
+
+HRESULT WeaselTSF::_SyncAsciiMode(bool is_ascii_mode) {
+	HRESULT hr = E_FAIL;
+	com_ptr<ITfCompartmentMgr> pCompMgr;
+
+	if (_pThreadMgr->GetGlobalCompartment(&pCompMgr) == S_OK) {
+		ITfCompartment *pCompartment;
+		if (pCompMgr->GetCompartment(c_guidStatus, &pCompartment) == S_OK) {
+			VARIANT var;
+			VariantInit(&var);
+			var.vt = VT_I4;
+			var.intVal = (int)is_ascii_mode;
+			hr = pCompartment->SetValue(_tfClientId, &var);
+		}
+	}
+
+	return hr;
+}
+
 BOOL WeaselTSF::_InitCompartment()
 {
 	using namespace std::placeholders;
@@ -207,6 +268,19 @@ BOOL WeaselTSF::_InitCompartment()
 		(IUnknown *)_pThreadMgr,
 		GUID_COMPARTMENT_KEYBOARD_OPENCLOSE
 	);
+
+	if (FAILED(hr)) {
+		return SUCCEEDED(hr);
+	}
+
+	_pStatusCompartmentSink = new CCompartmentEventSink(callback);
+	if (!_pStatusCompartmentSink)
+		return FALSE;
+	hr = _pStatusCompartmentSink->_GlobalAdvise(
+		_pThreadMgr,
+		c_guidStatus
+	);
+
 	return SUCCEEDED(hr);
 }
 
@@ -216,18 +290,25 @@ void WeaselTSF::_UninitCompartment()
 		_pKeyboardCompartmentSink->_Unadvise();
 		_pKeyboardCompartmentSink = NULL;
 	}
+	if (_pStatusCompartmentSink) {
+		_pStatusCompartmentSink->_Unadvise();
+		_pStatusCompartmentSink = NULL;
+	}
 
 }
 
 HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 {
-	if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_OPENCLOSE))
-	{
+	if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_OPENCLOSE)) {
 		BOOL isOpen = _IsKeyboardOpen();
 		if (isOpen) {
 			m_client.TrayCommand(ID_WEASELTRAY_DISABLE_ASCII);
 		}
 		_EnableLanguageBar(isOpen);
+	} else if (IsEqualGUID(guidCompartment, c_guidStatus)) {
+		weasel::Status stat = {};
+		stat.ascii_mode = _GetAsciiMode();
+		_UpdateLanguageBar(stat);
 	}
 	return S_OK;
 }

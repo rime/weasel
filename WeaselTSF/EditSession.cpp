@@ -13,10 +13,15 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
 
-	_UpdateLanguageBar(_status);
 
 	if (ok)
 	{
+		if (config.global_ascii_mode) {
+			_SyncAsciiMode(_status.ascii_mode);
+		} else {
+			_UpdateLanguageBar(_status);
+		}
+
 		if (!commit.empty())
 		{
 			// For auto-selecting, commit and preedit can both exist.

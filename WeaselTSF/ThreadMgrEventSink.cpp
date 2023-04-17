@@ -13,6 +13,13 @@ STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr *pDocMgr)
 
 STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocMgrPrevFocus)
 {
+	if (pDocMgrFocus) {
+		m_client.FocusIn();
+	} else {
+		m_client.FocusOut();
+		_AbortComposition();
+	}
+
 	_InitTextEditSink(pDocMgrFocus);
 
 	com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;

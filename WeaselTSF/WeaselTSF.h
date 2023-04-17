@@ -76,6 +76,8 @@ public:
     BOOL _IsKeyboardDisabled();
     BOOL _IsKeyboardOpen();
     HRESULT _SetKeyboardOpen(BOOL fOpen);
+	bool _GetAsciiMode();
+	HRESULT _SyncAsciiMode(bool is_ascii_mode);
 
 	/* Composition */
 	void _StartComposition(com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled);
@@ -152,6 +154,7 @@ private:
 	std::wstring _editSessionText;
 
 	com_ptr<CCompartmentEventSink> _pKeyboardCompartmentSink;
+	com_ptr<CCompartmentEventSink> _pStatusCompartmentSink;
 
 	com_ptr<ITfComposition> _pComposition;
 
