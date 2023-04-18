@@ -773,6 +773,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		}
 	}
 #endif 
+	if(m_style.enable_mouse)
+		::SetWindowLong(m_hWnd, GWL_EXSTYLE, ::GetWindowLong(m_hWnd, GWL_EXSTYLE) & (~WS_EX_TRANSPARENT));
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 }
