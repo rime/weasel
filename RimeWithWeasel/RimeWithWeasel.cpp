@@ -808,11 +808,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		else if (!std::strcmp(preedit_type, "preview_all"))
 			style.preedit_type = weasel::UIStyle::PREVIEW_ALL;
 	}
-#ifdef USE_MOUSE_EVENTS
-	Bool enable_mouse = false;
-	if (RimeConfigGetBool(config, "style/enable_mouse", &enable_mouse) || initialize)
-		style.enable_mouse = !!enable_mouse;
-#endif
 
 	char align_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/layout/align_type", align_type, sizeof(align_type) - 1))
@@ -1001,6 +996,12 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 		}
 #endif
 
+#ifdef USE_PAGER_MARK
+		style.prevpage_color = 0;
+		style.nextpage_color = 0;
+		RimeConfigGetColor32b(config, (prefix + "/prevpage_color").c_str(), &style.prevpage_color, fmt);
+		RimeConfigGetColor32b(config, (prefix + "/nextpage_color").c_str(), &style.nextpage_color, fmt);
+#endif /* USE_PAGER_MARK */
 		style.shadow_color &= 0xffffffff;
 		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color, fmt);
 		style.text_color &= 0xffffffff;

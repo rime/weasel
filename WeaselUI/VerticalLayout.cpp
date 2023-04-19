@@ -22,12 +22,14 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	int base_offset = 0;
 #endif
 
+#ifdef USE_PAGER_MARK
 	// calc page indicator 
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	int pgw = pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding * 2;
 	int pgh = max(pgszl.cy, pgszr.cy);
+#endif /* USE_PAGER_MARK */
 
 	/*  preedit and auxiliary rectangle calc start */
 	CSize size;
@@ -35,7 +37,11 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
+#ifdef USE_PAGER_MARK
 		int szx = pgw, szy = max(size.cy, pgh);
+#else
+		int szx = 0, szy = size.cy;
+#endif /*  USE_PAGER_MARK */
 		// icon size higher then preedit text
 		int yoffset = (STATUS_ICON_SIZE >= szy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szy) / 2 : 0;
 		_preeditRect.SetRect(real_margin_x, height + yoffset, real_margin_x + size.cx, height + yoffset + size.cy);
@@ -182,6 +188,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	/* Highlighted Candidate */
 
 	_highlightRect = _candidateRects[id];
+#ifdef USE_PAGER_MARK
 	// calc page indicator 
 	if(candidates_count && !_style.inline_preedit)
 	{
@@ -196,6 +203,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 			_nextPageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
 		}
 	}
+#endif /*  USE_PAGER_MARK */
 	// calc roundings start
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 	// background rect prepare for Hemispherical calculation
