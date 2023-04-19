@@ -14,7 +14,6 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
-	//pDWR->pTextLayout = NULL;
 
 	if (pTextFormat == NULL)
 	{
@@ -23,11 +22,12 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 		return;
 	}
 	// 创建文本布局 
-	if (pTextFormat != NULL)
+	if (pTextFormat != NULL){
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, _style.max_height, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
 		else
 			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+	}
 
 	if (SUCCEEDED(hr))
 	{

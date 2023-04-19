@@ -994,7 +994,7 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 			if((style.back_color & 0xff000000) > 0x7f000000 || (style.back_color & 0xff000000) == 0)
 				style.back_color = (style.back_color & 0x00ffffff) | 0x7f000000;
 		}
-#endif
+#endif	/* USE_BLUR_UNDER_WINDOWS10 */
 
 #ifdef USE_PAGER_MARK
 		style.prevpage_color = 0;
@@ -1067,7 +1067,7 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 			style.hilited_candidate_border_color = 0x00000000;
 		}
 		style.hilited_candidate_border_color &= 0xffffffff;
-#endif
+#endif	/* USE_CANDIDATE_BORDER */
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color, fmt))
 		{
 			style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);
@@ -1094,7 +1094,7 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 			style.hilited_mark_color = style.hilited_candidate_back_color & 0x00ffffff;
 		}
 		style.hilited_mark_color &= 0xffffffff;
-#endif
+#endif	/* USE_HILITE_MARK */
 		return true;
 	}
 	return false;
