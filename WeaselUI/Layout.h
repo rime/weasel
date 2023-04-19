@@ -81,7 +81,7 @@ namespace weasel
 		int MARK_WIDTH = 4;
 		int MARK_GAP = 8;
 		int MARK_HEIGHT = 0;
-#endif
+#endif	/* USE_HILITE_MARK */
 
 	protected:
 		const UIStyle &_style;

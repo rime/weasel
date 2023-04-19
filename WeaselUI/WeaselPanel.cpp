@@ -34,7 +34,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	setWindowCompositionAttribute(NULL), accent({ ACCENT_ENABLE_BLURBEHIND, 0xff, (DWORD)((long long)m_style.back_color), 0 }), data({ WCA_ACCENT_POLICY, &accent, sizeof(accent) }),
 	m_isBlurAvailable(IsBlurAvailable()),
 	hUser(ui.module()),
-#endif
+#endif	/* USE_BLUR_UNDER_WINDOWS10 */
 	pBrush(NULL),
 	_m_gdiplusToken(0)
 {
@@ -48,10 +48,11 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 		setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
 	// if setWindowCompositionAttribute null, not available
 	m_isBlurAvailable = m_isBlurAvailable && (setWindowCompositionAttribute != NULL);
-#endif
-
+#endif	/* USE_BLUR_UNDER_WINDOWS10 */
+	// for gdi+ drawings, initialization
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
-	InitFontRes();
+
+	_InitFontRes();
 	m_ostyle = m_style;
 }
 
@@ -123,7 +124,7 @@ void WeaselPanel::Refresh()
 	// only RedrawWindow if no need to hide candidates window
 	if(!hide_candidates)
 	{ 
-		InitFontRes();
+		_InitFontRes();
 		_CreateLayout();
 
 		CDCHandle dc = GetDC();
@@ -135,7 +136,7 @@ void WeaselPanel::Refresh()
 	}
 }
 
-void WeaselPanel::InitFontRes(void)
+void WeaselPanel::_InitFontRes(void)
 {
 	HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
 	UINT dpiX = 0, dpiY = 0;
@@ -224,6 +225,7 @@ LRESULT WeaselPanel::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 	return MA_NOACTIVATE;
 }
 
+// simulating a key down and up
 static void SendInputKey(WORD key)
 {
 	INPUT inputs[2];
@@ -343,13 +345,15 @@ LRESULT WeaselPanel::OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	Refresh();
 	return 0;
 }
-#endif
+#endif /* USE_MOUSE_EVENTS */
 
 void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, IsToRoundStruct rd = IsToRoundStruct(), COLORREF bordercolor=TRANS_COLOR)
 {
+	// Graphics obj with SmoothingMode
 	Gdiplus::Graphics g_back(dc);
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 
+	// blur buffer
 	int blurMarginX = m_layout->offsetX * 3;
 	int blurMarginY = m_layout->offsetY * 3;
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
@@ -388,11 +392,13 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 			}
 		}
 		m_blurer->DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
+		// clip area under back colors
 		GraphicsRoundRectPath clip_path(rc, radius);
 		Gdiplus::Region clipRegin(&clip_path);
 		g_back.SetClip(&clipRegin, Gdiplus::CombineMode::CombineModeExclude);
 		g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX, rc.top - blurMarginY);
 		g_back.ResetClip();
+		// free memory
 		delete pBitmapDropShadow;
 		pBitmapDropShadow = NULL;
 	}
@@ -414,13 +420,15 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 	{
 		Gdiplus::Color border_color = GDPCOLOR_FROM_COLORREF(bordercolor);
 		Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
+		// candidate window border
 		if (type == BackType::BACKGROUND) {
 			GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
 			g_back.DrawPath(&gPenBorder, &bgPath);
 		}
-		else if (type != BackType::TEXT)
+		else if (type != BackType::TEXT)	// hilited_candidate_border / candidate_border
 			g_back.DrawPath(&gPenBorder, hiliteBackPath);
 	}
+	// free memory
 	delete hiliteBackPath;
 	hiliteBackPath = NULL;
 }
@@ -501,10 +509,12 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			const std::wstring pre = L"<";
 			const std::wstring next = L">";
 			CRect prc = m_layout->GetPrepageRect();
+			// clickable color / disabled color
 			int color = m_ctx.cinfo.currentPage ? m_style.prevpage_color : m_style.text_color;
 			_TextOut(prc, pre.c_str(), pre.length(), color, txtFormat);
 
 			CRect nrc = m_layout->GetNextpageRect();
+			// clickable color / disabled color
 			color = m_ctx.cinfo.is_last_page ? m_style.text_color : m_style.nextpage_color;
 			_TextOut(nrc, next.c_str(), next.length(), color, txtFormat);
 		}
@@ -581,6 +591,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	IDWriteTextFormat1* commenttxtFormat = pDWR->pCommentTextFormat;
 	BackType bkType = BackType::CAND;
 	CRect rect;	
+	// draw back color and shadow color, with gdi+
 	if (back) {
 		// if candidate_shadow_color not transparent, draw candidate shadow first
 		if (COLORNOTTRANSPARENT(m_style.candidate_shadow_color)) {
@@ -626,6 +637,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			drawn = true;
 		}
 	}
+	// draw text with direct write
 	else
 	{
 		// begin draw candidate texts
@@ -688,6 +700,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 #ifdef USE_BLUR_UNDER_WINDOWS10
 void WeaselPanel::_BlurBacktround(CRect& rc)
 {
+	// radius for icon only is different from other situation
 	int radiusx2 = (m_candidateCount == 0 && m_layout->ShouldDisplayStatusIcon() && m_ctx.aux.empty()) ? 0 : m_style.round_corner_ex*2 + m_style.border/2 - !(m_style.border % 2);
 	rc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
 	SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right+2, rc.bottom+2, radiusx2, radiusx2), true);
@@ -778,8 +791,10 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	}
 #endif 
 #ifdef USE_MOUSE_EVENTS
+	// turn off WS_EX_TRANSPARENT after drawings, for better resp performance
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, ::GetWindowLong(m_hWnd, GWL_EXSTYLE) & (~WS_EX_TRANSPARENT));
 #endif
+	// clean objs
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 }
@@ -811,7 +826,6 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	return LRESULT();
 }
 
-
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 	m_inputPos = rc;
@@ -824,7 +838,6 @@ void WeaselPanel::MoveTo(RECT const& rc)
 void WeaselPanel::_RepositionWindow(bool adj)
 {
 	RECT rcWorkArea;
-	//SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
 	memset(&rcWorkArea, 0, sizeof(rcWorkArea));
 	HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
 	if (hMonitor) {
@@ -846,15 +859,13 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	if (m_style.shadow_radius > 0) {
 		x -= (m_style.shadow_offset_x >= 0) ? m_layout->offsetX : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_x - m_style.hilite_padding));
 		// avoid flickering in MoveTo
-		if(adj)
-		{
+		if(adj) {
 			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
 			y -= m_style.shadow_radius / 2;
 		}
 	}
 	// for vertical text layout, flow right to left, make window left side
-	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
-	{
+	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right) {
 		x -= width;
 		x += m_layout->offsetX;
 	}
@@ -884,8 +895,7 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 
 	if (NULL != pBrush && NULL != pTextFormat) {
 		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
-		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-		{
+		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
 			DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
 			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
 			pDWR->pTextLayout->SetFlowDirection(flow);
@@ -894,6 +904,7 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 		// offsetx for font glyph over left
 		float offsetx = rc.left;
 		float offsety = rc.top;
+		// prepare for space when first character overhanged
 		DWRITE_OVERHANG_METRICS omt;
 		pDWR->pTextLayout->GetOverhangMetrics(&omt);
 		if (m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT && omt.left > 0)
@@ -901,8 +912,7 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && omt.top > 0)
 			offsety += omt.top;
 
-		if (pDWR->pTextLayout != NULL)
-		{
+		if (pDWR->pTextLayout != NULL) {
 			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 #if 0
 			D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());

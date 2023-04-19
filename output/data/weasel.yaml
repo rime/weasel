@@ -17,7 +17,6 @@ style:
   font_point: 14
   label_font_point: 14
   comment_font_point: 14
-  capture_by_click: false
   horizontal: false
   fullscreen: false
   inline_preedit: false

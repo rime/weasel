@@ -22,7 +22,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 #else
 	int base_offset = 0;
-#endif
+#endif	/* USE_HILITE_MARK */
 
 #ifdef USE_PAGER_MARK
 	// calc page indicator 

@@ -1,15 +1,15 @@
 #pragma once
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
-#include <Usp10.h>
 #include "Layout.h"
 #include "GdiplusBlur.h"
 
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
-
 using namespace weasel;
+
+#ifdef USE_BLUR_UNDER_WINDOWS10
 typedef enum _WINDOWCOMPOSITIONATTRIB
 {
 	WCA_UNDEFINED = 0,
@@ -71,6 +71,7 @@ typedef struct _ACCENT_POLICY
 } ACCENT_POLICY;
 typedef BOOL (WINAPI *pfnGetWindowCompositionAttribute)(HWND, WINDOWCOMPOSITIONATTRIBDATA*);
 typedef BOOL (WINAPI *pfnSetWindowCompositionAttribute)(HWND, WINDOWCOMPOSITIONATTRIBDATA*);
+#endif /* USE_BLUR_UNDER_WINDOWS10 */
 
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE  | WS_EX_LAYERED> CWeaselPanelTraits;
 
@@ -97,7 +98,7 @@ public:
 		MESSAGE_HANDLER(WM_MOUSEHOVER, OnMouseHover)
 		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
 		MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
-#endif
+#endif /* USE_MOUSE_EVENTS */
 		CHAIN_MSG_MAP(CDoubleBufferImpl<WeaselPanel>)
 	END_MSG_MAP()
 
@@ -111,22 +112,22 @@ public:
 	LRESULT OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-#endif
+#endif	/* USE_MOUSE_EVENTS */
 
 	WeaselPanel(weasel::UI &ui);
 	~WeaselPanel();
 
 	void MoveTo(RECT const& rc);
 	void Refresh();
-	void InitFontRes(void);
 	void DoPaint(CDCHandle dc);
 	void CleanUp();
 
 private:
+	void _InitFontRes(void);
 #ifdef USE_MOUSE_EVENTS
 	void _CaptureRect(CRect& rect);
 	bool m_mouse_entry = false;
-#endif
+#endif	/* USE_MOUSE_EVENTS */
 	void _CreateLayout();
 	void _ResizeWindow();
 	void _RepositionWindow(bool adj = false);
@@ -140,7 +141,7 @@ private:
 
 #ifdef USE_BLUR_UNDER_WINDOWS10
 	void _BlurBacktround(CRect& rc);
-#endif
+#endif	/* USE_BLUR_UNDER_WINDOWS10 */
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
@@ -178,6 +179,6 @@ private:
 	ACCENT_POLICY accent;
 	WINDOWCOMPOSITIONATTRIBDATA data;
 	bool m_isBlurAvailable;
-#endif
+#endif /* USE_BLUR_UNDER_WINDOWS10 */
 };
 
