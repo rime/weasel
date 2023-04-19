@@ -301,9 +301,6 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 {
 	if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_OPENCLOSE)) {
 		BOOL isOpen = _IsKeyboardOpen();
-		if (isOpen) {
-			m_client.TrayCommand(ID_WEASELTRAY_DISABLE_ASCII);
-		}
 		_EnableLanguageBar(isOpen);
 	} else if (IsEqualGUID(guidCompartment, c_guidStatus)) {
 		weasel::Status stat = {};
