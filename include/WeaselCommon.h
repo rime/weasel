@@ -14,6 +14,7 @@
 #define USE_CANDIDATE_BORDER
 #define USE_MOUSE_EVENTS
 //#define USE_SHARP_COLOR_CODE
+#define USE_PAGER_MARK
 
 //#define _DEBUG_
 namespace weasel
@@ -282,9 +283,7 @@ namespace weasel
 #endif
 		bool display_tray_icon;
 		std::wstring current_icon;
-#ifdef USE_MOUSE_EVENTS
-		bool enable_mouse;
-#endif
+
 		std::wstring label_text_format;
 #ifdef USE_HILITE_MARK
 		std::wstring mark_text;
@@ -333,6 +332,10 @@ namespace weasel
 #ifdef USE_HILITE_MARK
 		int hilited_mark_color;
 #endif
+#ifdef USE_PAGER_MARK
+		int prevpage_color;
+		int nextpage_color;
+#endif /*  USE_PAGER_MARK */
 		// per client
 		int client_caps;
 
@@ -350,9 +353,7 @@ namespace weasel
 #endif
 			display_tray_icon(false),
 			current_icon(),
-#ifdef USE_MOUSE_EVENTS
-			enable_mouse(false),
-#endif
+
 			label_text_format(L"%s."),
 #ifdef USE_HILITE_MARK
 			mark_text(),
@@ -402,6 +403,10 @@ namespace weasel
 #ifdef USE_HILITE_MARK
 			hilited_mark_color(0),
 #endif
+#ifdef USE_PAGER_MARK
+			prevpage_color(0),
+			nextpage_color(0),
+#endif
 			client_caps(0) {}
 		bool operator!=(const UIStyle& st)
 		{
@@ -427,9 +432,6 @@ namespace weasel
 #endif
 					|| display_tray_icon != st.display_tray_icon
 					|| current_icon != st.current_icon
-#ifdef USE_MOUSE_EVENTS
-					|| enable_mouse != st.enable_mouse
-#endif
 					|| label_text_format != st.label_text_format
 					|| min_width != st.min_width
 					|| max_width != st.max_width
@@ -471,6 +473,10 @@ namespace weasel
 #ifdef USE_HILITE_MARK
 					|| hilited_mark_color != st.hilited_mark_color
 #endif
+#ifdef USE_PAGER_MARK
+					|| prevpage_color != st.prevpage_color
+					|| nextpage_color != st.nextpage_color
+#endif /* USE_PAGER_MARK */
 					);
 		}
 	};
@@ -497,9 +503,6 @@ namespace boost {
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
 			ar & s.current_icon;
-#ifdef USE_MOUSE_EVENTS
-			ar & s.enable_mouse;
-#endif
 			ar & s.label_text_format;
 			// layout
 			ar & s.layout_type;
@@ -547,6 +550,10 @@ namespace boost {
 			ar & s.hilited_comment_text_color;
 #ifdef USE_HILITE_MARK
 			ar & s.hilited_mark_color;
+#endif
+#ifdef USE_PAGER_MARK
+			ar & s.prevpage_color;
+			ar & s.nextpage_color;
 #endif
 			// per client
 			ar & s.client_caps;
