@@ -121,6 +121,7 @@ UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 	DLOG(INFO) << "Remove session: session_id = " << session_id;
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
+	m_session_ids.erase(std::remove(m_session_ids.begin(), m_session_ids.end(), session_id), m_session_ids.end());
 	m_active_session = 0;
 	return 0;
 }
