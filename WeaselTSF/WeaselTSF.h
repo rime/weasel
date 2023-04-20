@@ -173,4 +173,6 @@ private:
 
 	/* IME status */
 	weasel::Status _status;
+
+	weasel::Config _config;
 };

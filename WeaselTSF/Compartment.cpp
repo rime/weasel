@@ -239,6 +239,12 @@ bool WeaselTSF::_GetAsciiMode() {
 }
 
 HRESULT WeaselTSF::_SyncAsciiMode(bool is_ascii_mode) {
+	if (!_config.global_ascii_mode) {
+		weasel::Status stat = {};
+		stat.ascii_mode = is_ascii_mode;
+		_UpdateLanguageBar(stat);
+		return S_OK;
+	}
 	HRESULT hr = E_FAIL;
 	com_ptr<ITfCompartmentMgr> pCompMgr;
 

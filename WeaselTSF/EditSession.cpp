@@ -7,41 +7,36 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec)
 {
 	// get commit string from server
 	std::wstring commit;
-	weasel::Config config;
 	auto context = std::make_shared<weasel::Context>();
-	weasel::ResponseParser parser(&commit, context.get(), &_status, &config, &_cand->style());
+	weasel::ResponseParser parser(&commit, context.get(), &_status, &_config, &_cand->style());
 
 	bool ok = m_client.GetResponseData(std::ref(parser));
 
 
 	if (ok)
 	{
-		if (config.global_ascii_mode) {
-			_SyncAsciiMode(_status.ascii_mode);
-		} else {
-			_UpdateLanguageBar(_status);
-		}
+		_SyncAsciiMode(_status.ascii_mode);
 
 		if (!commit.empty())
 		{
 			// For auto-selecting, commit and preedit can both exist.
 			// Commit and close the original composition first.
 			if (!_IsComposing()) {
-				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+				_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !_config.inline_preedit);
 			}
 			_InsertText(_pEditSessionContext, commit);
 			_EndComposition(_pEditSessionContext, false);
 		}
 		if (_status.composing && !_IsComposing())
 		{
-			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !config.inline_preedit);
+			_StartComposition(_pEditSessionContext, _fCUASWorkaroundEnabled && !_config.inline_preedit);
 		}
 		else if (!_status.composing && _IsComposing())
 		{
 			_EndComposition(_pEditSessionContext, true);
 		}
 		_UpdateCompositionWindow(_pEditSessionContext);
-		if (_IsComposing() && config.inline_preedit)
+		if (_IsComposing() && _config.inline_preedit)
 		{
 			_ShowInlinePreedit(_pEditSessionContext, context);
 		}

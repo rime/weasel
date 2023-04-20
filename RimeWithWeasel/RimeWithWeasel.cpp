@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include <logging.h>
 #include <RimeWithWeasel.h>
 #include <StringAlgorithm.hpp>
@@ -305,6 +305,16 @@ void RimeWithWeaselHandler::EndMaintenance()
 
 void RimeWithWeaselHandler::SetOption(UINT session_id, const std::string & opt, bool val)
 {
+	if (opt == "ascii_mode") {
+		m_status.ascii_mode = val;
+		if (m_is_global_ascii_mode) {
+			Bool ascii_mode = (int)val;
+			std::for_each(m_session_ids.begin(), m_session_ids.end(), [ascii_mode](auto session_id) {
+				RimeSetOption(session_id, "ascii_mode", ascii_mode);
+			});
+			return;
+	}
+}
 	RimeSetOption(session_id, opt.c_str(), val);
 }
 
@@ -512,7 +522,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	actions.insert("config");
 	messages.push_back(std::string("config.inline_preedit=") + std::to_string((int)m_ui->style().inline_preedit) + '\n');
 	if (m_is_global_ascii_mode) {
-		messages.push_back(std::string("config.global_ascii_mode=") + std::to_string(m_is_global_ascii_mode) + '\n');
+		messages.push_back(std::string("config.global_ascii_mode=") + std::to_string(true) + '\n');
 	}
 
 	// style

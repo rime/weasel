@@ -195,10 +195,10 @@ void WeaselTSF::_EnsureServerConnected()
 		m_client.Disconnect();
 		m_client.Connect(NULL);
 		m_client.StartSession();
-		weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
+		weasel::ResponseParser parser(NULL, NULL, &_status, &_config, &_cand->style());
 		bool ok = m_client.GetResponseData(std::ref(parser));
 		if (ok) {
-			_UpdateLanguageBar(_status);
+			_SyncAsciiMode(_status.ascii_mode);
 		}
 	}
 }

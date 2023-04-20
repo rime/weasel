@@ -115,10 +115,7 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click, POINT pt, const RECT *prcAr
 	if (click == TF_LBI_CLK_LEFT)
 	{
 		_pTextService->_HandleLangBarMenuSelect(ascii_mode ? ID_WEASELTRAY_DISABLE_ASCII : ID_WEASELTRAY_ENABLE_ASCII);
-		ascii_mode = !ascii_mode;
-		if (_pLangBarItemSink) {
-			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
-		}
+		_pTextService->_SyncAsciiMode(!ascii_mode);
 	}
 	else if (click == TF_LBI_CLK_RIGHT)
 	{
