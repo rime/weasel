@@ -28,7 +28,7 @@ void Configurator::Store(Deserializer::KeyType const& key, std::wstring const& v
         }
     } else if (key[1] == L"global_ascii_mode") {
         m_pTarget->p_config->global_ascii_mode = bool_value;
-    } else if (key[1] == L"hook_capslock") {
-        m_pTarget->p_config->hook_capslock = bool_value;
+    } else if (key[1] == L"macos_capslock") {
+        m_pTarget->p_config->macos_capslock = bool_value;
     }
 }

@@ -122,7 +122,7 @@ namespace weasel
 	// 用於向前端告知設置信息
 	struct Config
 	{
-		Config() : inline_preedit(false), global_ascii_mode(false) {}
+		Config() : inline_preedit(false), global_ascii_mode(false), macos_capslock(false) {}
 		void reset()
 		{
 			inline_preedit = false;
@@ -130,6 +130,7 @@ namespace weasel
 		}
 		bool inline_preedit;
 		bool global_ascii_mode;
+		bool macos_capslock;
 	};
 
 	struct UIStyle

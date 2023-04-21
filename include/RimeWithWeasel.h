@@ -3,11 +3,14 @@
 #include <WeaselUI.h>
 #include <map>
 #include <string>
+#include <KeyboardManager.h>
 
 #include <rime_api.h>
 
 typedef std::map<std::string, bool> AppOptions;
 typedef std::map<std::string, AppOptions> AppOptionsByAppName;
+
+class KeyboardManager;
 
 class RimeWithWeaselHandler :
 	public weasel::RequestHandler
@@ -31,6 +34,8 @@ public:
 	virtual void SetOption(UINT session_id, const std::string &opt, bool val);
 
 	void OnUpdateUI(std::function<void()> const &cb);
+
+	bool ToggleAllAsciiMode(int ascii_mode = -1);
 
 private:
 	void _Setup();
@@ -59,6 +64,9 @@ private:
 	bool m_is_global_ascii_mode;
 	std::vector<UINT> m_session_ids;
 	weasel::Status m_status;
+	bool m_macos_capslock;
+	KeyboardManager *m_kbm;
+	bool m_hide_tip_icon;
 
 	std::function<void()> _UpdateUICallback;
 

@@ -230,8 +230,10 @@ bool WeaselTSF::_GetAsciiMode() {
 		if (pCompMgr->GetCompartment(c_guidStatus, &pCompartment) == S_OK) {
 			VARIANT var;
 			if (pCompartment->GetValue(&var) == S_OK) {
-				if (var.vt == VT_I4) // Even VT_EMPTY, GetValue() can succeed
+				if (var.vt == VT_I4) {
 					is_ascii_mode = (bool)var.intVal;
+					VariantClear(&var);
+				}
 			}
 		}
 	}
@@ -249,13 +251,14 @@ HRESULT WeaselTSF::_SyncAsciiMode(bool is_ascii_mode) {
 	com_ptr<ITfCompartmentMgr> pCompMgr;
 
 	if (_pThreadMgr->GetGlobalCompartment(&pCompMgr) == S_OK) {
-		ITfCompartment *pCompartment;
+		com_ptr<ITfCompartment> pCompartment;
 		if (pCompMgr->GetCompartment(c_guidStatus, &pCompartment) == S_OK) {
 			VARIANT var;
 			VariantInit(&var);
 			var.vt = VT_I4;
 			var.intVal = (int)is_ascii_mode;
 			hr = pCompartment->SetValue(_tfClientId, &var);
+			VariantClear(&var);
 		}
 	}
 

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <logging.h>
 #include <RimeWithWeasel.h>
 #include <StringAlgorithm.hpp>
@@ -7,6 +7,8 @@
 #include <VersionHelpers.hpp>
 
 #include <rime_api.h>
+
+static bool notify_pass = false;
 
 int expand_ibus_modifier(int m)
 {
@@ -20,11 +22,14 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
 	, _UpdateUICallback(NULL)
 	, m_vista_greater(IsWindowsVistaOrGreater())
 {
+	m_kbm = new KeyboardManager(this);
 	_Setup();
 }
 
 RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
+	m_kbm->StopHook();
+	delete m_kbm;
 }
 
 void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
@@ -75,6 +80,9 @@ void RimeWithWeaselHandler::Initialize()
 		RimeConfigClose(&config);
 	}
 	m_last_schema_id.clear();
+	if (m_macos_capslock) {
+		m_kbm->StartHook();
+	}
 }
 
 void RimeWithWeaselHandler::Finalize()
@@ -103,6 +111,8 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	}
 	UINT session_id = RimeCreateSession();
 	m_session_ids.push_back(session_id);
+	// Only first new session show tip icon
+	notify_pass = m_session_ids.size() > 1;
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 	// show session's welcome message :-) if any
@@ -111,6 +121,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	}
 	_UpdateUI(session_id);
 	m_active_session = session_id;
+	notify_pass = false;
 	return session_id;
 }
 
@@ -201,11 +212,13 @@ void RimeWithWeaselHandler::OnNotify(void* context_object,
                                      const char* message_type,
                                      const char* message_value)
 {
-	// may be running in a thread when deploying rime
-	RimeWithWeaselHandler* self = reinterpret_cast<RimeWithWeaselHandler*>(context_object);
-	if (!self || !message_type || !message_value) return;
-	m_message_type = message_type;
-	m_message_value = message_value;
+        // may be running in a thread when deploying rime
+        RimeWithWeaselHandler* self = reinterpret_cast<RimeWithWeaselHandler*>(context_object);
+        if (!self || !message_type || !message_value ||
+            (self->m_is_global_ascii_mode && (self->m_active_session != session_id || notify_pass)))
+                return;
+        m_message_type = message_type;
+        m_message_value = message_value;
 }
 
 void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
@@ -258,6 +271,12 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 	RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
 	// show soft cursor on weasel panel but not inline
 	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
+
+	// new session use prev status
+	if (m_is_global_ascii_mode) {
+		Bool ascii_mode = Bool(m_status.ascii_mode);
+		RimeSetOption(session_id, "ascii_mode", ascii_mode);
+	}
 }
 
 void RimeWithWeaselHandler::_GetCandidateInfo(weasel::CandidateInfo & cinfo, RimeContext & ctx)
@@ -309,13 +328,10 @@ void RimeWithWeaselHandler::SetOption(UINT session_id, const std::string & opt, 
 	if (opt == "ascii_mode") {
 		m_status.ascii_mode = val;
 		if (m_is_global_ascii_mode) {
-			Bool ascii_mode = (int)val;
-			std::for_each(m_session_ids.begin(), m_session_ids.end(), [ascii_mode](auto session_id) {
-				RimeSetOption(session_id, "ascii_mode", ascii_mode);
-			});
+			ToggleAllAsciiMode(val);
 			return;
+		}
 	}
-}
 	RimeSetOption(session_id, opt.c_str(), val);
 }
 
@@ -432,7 +448,7 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 		else if (m_message_value == "simplification")
 			tips = L"汉字";
 	}
-	if (tips.empty() && !show_icon)
+	if (m_hide_tip_icon || (tips.empty() && !show_icon))
 		return m_ui->IsCountingDown();
 
 	m_ui->Update(ctx, status);
@@ -463,8 +479,10 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		actions.insert("status");
 		if (m_is_global_ascii_mode) {
 			Bool ascii_mode = Bool(m_status.ascii_mode);
-			std::for_each(m_session_ids.begin(), m_session_ids.end(), [ascii_mode](auto session_id) {
-				RimeSetOption(session_id, "ascii_mode", ascii_mode);
+			// Only set other sessions to avoid OnNotify trigger
+			std::for_each(m_session_ids.begin(), m_session_ids.end(), [ascii_mode, session_id](auto sid) {
+				if (session_id != sid)
+					RimeSetOption(sid, "ascii_mode", ascii_mode);
 			});
 			messages.push_back(std::string("status.ascii_mode=") + std::to_string(m_status.ascii_mode) + '\n');
 		} else {
@@ -525,6 +543,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	if (m_is_global_ascii_mode) {
 		messages.push_back(std::string("config.global_ascii_mode=") + std::to_string(true) + '\n');
 	}
+	if (m_macos_capslock) {
+		messages.push_back(std::string("config.macos_capslock=") + std::to_string(true) + '\n');
+	}
 
 	// style
 	bool has_synced = RimeGetOption(session_id, "__synced");
@@ -559,9 +580,14 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 }
 
 void RimeWithWeaselHandler::_LoadGlobalOptions(RimeConfig* config) {
-	Bool value = False;
-	RimeConfigGetBool(config, "global/ascii_mode", &value);
-	m_is_global_ascii_mode = !!value;
+	Bool ascii_mode = False, macos_capslock = False, hide_tip_icon = False;
+	RimeConfigGetBool(config, "global/ascii_mode", &ascii_mode);
+	RimeConfigGetBool(config, "global/macos_capslock", &macos_capslock);
+	RimeConfigGetBool(config, "global/hide_tip_icon", &hide_tip_icon);
+
+	m_is_global_ascii_mode = !!ascii_mode;
+	m_macos_capslock = !!macos_capslock;
+	m_hide_tip_icon = !!hide_tip_icon;
 }
 
 static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
@@ -778,4 +804,16 @@ void RimeWithWeaselHandler::_UpdateStatus(UINT session_id) {
 		m_status.ascii_mode = status.is_ascii_mode;
 		RimeFreeStatus(&status);
 	}
+}
+
+bool RimeWithWeaselHandler::ToggleAllAsciiMode(int ascii) {
+	Bool ascii_mode = (int)ascii;
+	if (ascii == -1) {
+		ascii_mode = (int)!m_status.ascii_mode;
+	}
+     m_status.ascii_mode = (bool)ascii_mode;
+	std::for_each(m_session_ids.begin(), m_session_ids.end(), [ascii_mode](auto session_id) {
+		RimeSetOption(session_id, "ascii_mode", ascii_mode);
+	});
+	return m_status.ascii_mode;
 }

@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include <WeaselCommon.h>
+#include <Consts.hpp>
 
 #ifdef WEASEL_HANT
 #define TEXTSERVICE_LANGID	MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
