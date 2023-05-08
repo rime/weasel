@@ -33,6 +33,13 @@ static inline BOOL IsWinVersionGreaterThan(DWORD dwMajorVersion, DWORD dwMinorVe
 		return false;
 }
 
-#define IsBlurAvailable()	IsWinVersionGreaterThan(10, 0)
+static inline BOOL IsBlurAvailable()
+{
+	OSVERSIONINFOEXW ovi = { sizeof ovi };
+	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
+	return (ovi.dwMajorVersion >= 10 && ovi.dwBuildNumber <= 22000);
+}
+
+//#define IsBlurAvailable()	IsWinVersionGreaterThan(10, 0)
 #define IsWindows8Point10OrGreaterEx() IsWinVersionGreaterThan(6, 3)
 #define IsWindows10OrGreaterEx() IsWinVersionGreaterThan(10, 0)

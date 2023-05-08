@@ -307,6 +307,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	return 0;
 }
 
+#ifdef USE_MOUSE_HOVER
 LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	CPoint point;
@@ -345,6 +346,7 @@ LRESULT WeaselPanel::OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	Refresh();
 	return 0;
 }
+#endif /*  USE_MOUSE_HOVER */
 #endif /* USE_MOUSE_EVENTS */
 
 void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, IsToRoundStruct rd = IsToRoundStruct(), COLORREF bordercolor=TRANS_COLOR)

@@ -980,12 +980,12 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 
 #ifdef USE_BLUR_UNDER_WINDOWS10
 		// allow set blur with color scheme, more portable
-		Bool blur_window = false;
-		if (RimeConfigGetBool(config, (prefix + "/blur_window").c_str(), &blur_window))
-		{
-			style.blur_window = !!blur_window;
-			style.blur_window = style.blur_window && IsWindows10OrGreaterEx();
-		}
+		//Bool blur_window = false;
+		//if (RimeConfigGetBool(config, (prefix + "/blur_window").c_str(), &blur_window))
+		//{
+		//	style.blur_window = !!blur_window;
+		//	style.blur_window = style.blur_window && IsWindows10OrGreaterEx();
+		//}
 		if(style.blur_window)
 		{
 			// if set blur, make shadow color transparent
