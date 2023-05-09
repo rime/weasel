@@ -358,6 +358,13 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 	// blur buffer
 	int blurMarginX = m_layout->offsetX * 3;
 	int blurMarginY = m_layout->offsetY * 3;
+
+	GraphicsRoundRectPath* hiliteBackPath;
+	if (rd.Hemispherical && type!= BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style)) 
+		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - m_style.border/2 + (m_style.border % 2), rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
+	else // background or current candidate background not out of window background
+		hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
+
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
 	if ( m_style.shadow_radius && COLORNOTTRANSPARENT(shadowColor) && NOT_FULLSCREENLAYOUT(m_style) ) {
 		CRect rect(
@@ -394,22 +401,21 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 			}
 		}
 		m_blurer->DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
+#ifdef CLIP_SHADOW_UNDER_BACK_COLOR
 		// clip area under back colors
-		GraphicsRoundRectPath clip_path(rc, radius);
-		Gdiplus::Region clipRegin(&clip_path);
+		Gdiplus::Region clipRegin(&hiliteBackPath);
 		g_back.SetClip(&clipRegin, Gdiplus::CombineMode::CombineModeExclude);
+#endif /*  CLIP_SHADOW_UNDER_BACK_COLOR */
+
 		g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX, rc.top - blurMarginY);
+
+#ifdef CLIP_SHADOW_UNDER_BACK_COLOR
 		g_back.ResetClip();
+#endif /*  CLIP_SHADOW_UNDER_BACK_COLOR */
 		// free memory
 		delete pBitmapDropShadow;
 		pBitmapDropShadow = NULL;
 	}
-
-	GraphicsRoundRectPath* hiliteBackPath;
-	if (rd.Hemispherical && type!= BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style)) 
-		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - m_style.border/2 + (m_style.border % 2), rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
-	else // background or current candidate background not out of window background
-		hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 
 	// 必须back_color非完全透明才绘制
 	if (COLORNOTTRANSPARENT(color))	{
