@@ -109,9 +109,9 @@ void RimeWithWeaselHandler::Initialize()
 	{
 		if (m_ui)
 		{
-			bool is_light = IsThemeLight();
 			_UpdateUIStyle(&config, m_ui, true);
 			m_base_style = m_ui->style();
+			bool is_light = IsThemeLight();
 			m_base_style_dark = m_base_style;
 			_UpdateUIStyleColor(&config, m_base_style, true);	// light theme
 			if (!_UpdateUIStyleColor(&config, m_base_style_dark, false))	// dark theme
@@ -153,11 +153,13 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	_ReadClientInfo(session_id, buffer);
 
 	if (m_ui)
+		m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
+	RIME_STRUCT(RimeStatus, status);
+	if (RimeGetStatus(session_id, &status))
 	{
-		if (IsThemeLight())
-			m_ui->style() = m_base_style;
-		else
-			m_ui->style() = m_base_style_dark;
+		std::string schema_id = status.schema_id;
+		m_last_schema_id = schema_id;
+		_LoadSchemaSpecificSettings(schema_id);
 	}
 	// show session's welcome message :-) if any
 	if (eat) {
@@ -432,7 +434,7 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config))
 		return;
-	m_ui->style() = m_base_style;
+	m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
 	_UpdateUIStyle(&config, m_ui, false);
 	// load schema icon start
 	{
@@ -1070,7 +1072,7 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 #endif	/* USE_CANDIDATE_BORDER */
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color, fmt))
 		{
-			style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);
+			style.label_text_color = blend_colors(style.candidate_text_color, style.candidate_back_color);
 		}
 		style.label_text_color &= 0xffffffff;
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_label_color").c_str(), &style.hilited_label_text_color, fmt))
