@@ -26,6 +26,7 @@ typedef enum
 	#define TRIMHEAD_REGEX	std::regex("0x", std::regex::icase)
 #endif
 
+#ifdef USE_THEME_DARK
 static inline BOOL IsThemeLight()
 {
 	// only for windows 10 or greater, return false when lower version.
@@ -49,7 +50,7 @@ static inline BOOL IsThemeLight()
 	MessageBox(0, L"open reg failed, return false", L"", 0);
 	return FALSE;
 }
-
+#endif /* USE_THEME_DARK */
 int expand_ibus_modifier(int m)
 {
 	return (m & 0xff) | ((m & 0xff00) << 16);
@@ -111,12 +112,14 @@ void RimeWithWeaselHandler::Initialize()
 		{
 			_UpdateUIStyle(&config, m_ui, true);
 			m_base_style = m_ui->style();
+#ifdef USE_THEME_DARK
 			bool is_light = IsThemeLight();
 			m_base_style_dark = m_base_style;
 			_UpdateUIStyleColor(&config, m_base_style, true);	// light theme
 			if (!_UpdateUIStyleColor(&config, m_base_style_dark, false))	// dark theme
 				m_base_style_dark = m_base_style;
 			m_ui->style() = is_light ? m_base_style : m_base_style_dark;
+#endif /*  USE_THEME_DARK */
 		}
 		_LoadAppOptions(&config, m_app_options);
 		RimeConfigClose(&config);
@@ -152,8 +155,10 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 
+#ifdef USE_THEME_DARK
 	if (m_ui)
 		m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
+#endif /* USE_THEME_DARK */
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
@@ -434,7 +439,11 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config))
 		return;
+#ifdef USE_THEME_DARK
 	m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
+#else
+	m_ui->style() = m_base_style;
+#endif /* USE_THEME_DARK */
 	_UpdateUIStyle(&config, m_ui, false);
 	// load schema icon start
 	{
@@ -935,6 +944,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	else if (style.hilite_padding > -style.margin_y && style.margin_y < 0)
 		style.margin_y = -(style.hilite_padding);
 	// color scheme
+#ifdef USE_THEME_DARK
 	bool is_light = IsThemeLight();
 	std::string color_pre = is_light ? "style/color_scheme" : "style/color_scheme_dark";
 	bool sta = RimeConfigGetString(config, color_pre.c_str(), buffer, BUF_SIZE);
@@ -942,6 +952,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (!sta) sta = RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE);
 	if (initialize && sta)
 		_UpdateUIStyleColor(config, style, is_light);
+#else
+	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
+		_UpdateUIStyleColor(config, style, true);
+#endif /* USE_THEME_DARK */
 }
 
 static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light)
