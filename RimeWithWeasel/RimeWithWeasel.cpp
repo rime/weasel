@@ -165,6 +165,14 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 		std::string schema_id = status.schema_id;
 		m_last_schema_id = schema_id;
 		_LoadSchemaSpecificSettings(schema_id);
+		{
+			// set inline_preedit option
+			bool inline_preedit = m_ui->style().inline_preedit && _IsSessionTSF(session_id);	
+			RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
+			// show soft cursor on weasel panel but not inline
+			RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
+			// set inline_preedit option end
+		}
 	}
 	// show session's welcome message :-) if any
 	if (eat) {
@@ -1147,6 +1155,14 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 			m_last_schema_id = schema_id;
 			RimeSetOption(session_id, "__synced", false); // Sync new schema options with front end
 			_LoadSchemaSpecificSettings(schema_id);
+			{
+				// set inline_preedit option
+				bool inline_preedit = m_ui->style().inline_preedit && _IsSessionTSF(session_id);	
+				RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
+				// show soft cursor on weasel panel but not inline
+				RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
+				// set inline_preedit option end
+			}
 		}
 		stat.schema_name = utf8towcs(status.schema_name);
 		stat.ascii_mode = !!status.is_ascii_mode;
