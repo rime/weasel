@@ -156,8 +156,6 @@ private:
 	weasel::UIStyle &m_ostyle;
 
 	CRect m_inputPos;
-	CRect m_oinputPos;
-	CSize m_osize;
 
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;

@@ -66,11 +66,7 @@ void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
 	CSize size = m_layout->GetContentSize();
-	// SetWindowPos with size info only if size changed
-	if(size != m_osize) {
-		SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
-		m_osize = size;
-	}
+	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
 
@@ -885,10 +881,6 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
-	// reposition window only if the position changed
-	if (m_oinputPos.left == x && m_oinputPos.bottom == y) return;
-	m_oinputPos.left = x;
-	m_oinputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
