@@ -136,7 +136,7 @@ private:
 #endif	/* USE_MOUSE_EVENTS */
 	void _CreateLayout();
 	void _ResizeWindow();
-	void _RepositionWindow(bool adj = false);
+	void _RepositionWindow();
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawPreeditBack(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle &dc, bool back = false);

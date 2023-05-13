@@ -833,13 +833,14 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 	m_inputPos = rc;
-	if (m_style.shadow_offset_y >= 0)	m_inputPos.OffsetRect(0, 10);
-	// with parameter to avoid vertical flicker
-	_RepositionWindow(true);
+	int y = (m_style.shadow_offset_y >= 0) ? m_layout->offsetY - 6: (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
+	y += m_style.shadow_radius / 2;
+	m_inputPos.OffsetRect(0, -y);
+	_RepositionWindow();
 	RedrawWindow();
 }
 
-void WeaselPanel::_RepositionWindow(bool adj)
+void WeaselPanel::_RepositionWindow()
 {
 	RECT rcWorkArea;
 	memset(&rcWorkArea, 0, sizeof(rcWorkArea));
@@ -860,14 +861,8 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	rcWorkArea.bottom -= height;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
-	if (m_style.shadow_radius > 0) {
+	if (m_style.shadow_radius > 0)
 		x -= (m_style.shadow_offset_x >= 0) ? m_layout->offsetX : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_x - m_style.hilite_padding));
-		// avoid flickering in MoveTo
-		if(adj) {
-			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
-			y -= m_style.shadow_radius / 2;
-		}
-	}
 	// for vertical text layout, flow right to left, make window left side
 	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right) {
 		x -= width;
