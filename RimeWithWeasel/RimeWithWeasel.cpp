@@ -435,6 +435,8 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 			::Sleep(100);
 			if (_UpdateUICallback) _UpdateUICallback();
 		});
+	} else {
+		if (_UpdateUICallback) _UpdateUICallback();
 	}
 
 	m_message_type.clear();

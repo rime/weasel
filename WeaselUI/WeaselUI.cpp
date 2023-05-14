@@ -116,14 +116,10 @@ void UI::Destroy()
 {
 	if (pimpl_)
 	{
-		if (style().layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || style().layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
-		{
-			ctx_.clear();
-			Refresh();
-		}
 		// destroy panel not delete it, avoiding re initialization font resources
 		if (pimpl_->panel.IsWindow())
 		{
+			pimpl_->panel.ResetSzPos();
 			pimpl_->panel.DestroyWindow();
 		}
 	}

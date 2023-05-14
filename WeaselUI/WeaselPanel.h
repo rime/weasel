@@ -125,6 +125,7 @@ public:
 	void Refresh();
 	void DoPaint(CDCHandle dc);
 	void CleanUp();
+	void ResetSzPos(){ m_osize = CSize(0,0); m_oinputPos = CRect(0,0,0,0); }
 
 private:
 	void _InitFontRes(void);
