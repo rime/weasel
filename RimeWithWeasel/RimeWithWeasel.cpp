@@ -533,7 +533,7 @@ inline std::string _GetLabelText(const std::vector<weasel::Text> &labels, int id
 {
 	wchar_t buffer[128];
 	swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
-	return to_byte_string(std::wstring(buffer));
+	return wstring_to_string(std::wstring(buffer), CP_UTF8);
 }
 
 bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
@@ -598,9 +598,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				for (auto i = 0; i < ctx.menu.num_candidates; i++)
 				{
 					std::string label = m_ui->style().label_font_point > 0 ? _GetLabelText(cinfo.labels, i, m_ui->style().label_text_format.c_str()) : "";
-					std::string comment = m_ui->style().comment_font_point > 0 ? to_byte_string(cinfo.comments.at(i).str) : "";
+					std::string comment = m_ui->style().comment_font_point > 0 ? wstring_to_string(cinfo.comments.at(i).str, CP_UTF8) : "";
 #ifdef USE_HILITE_MARK
-					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : to_byte_string(m_ui->style().mark_text);
+					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : wstring_to_string(m_ui->style().mark_text, CP_UTF8);
 					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
 #else
 					std::string prefix = "";
