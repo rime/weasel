@@ -158,6 +158,7 @@ private:
 
 	CRect m_inputPos;
 	CRect m_oinputPos;
+	CRect m_ocursurPos;
 	CSize m_osize;
 
 	CIcon m_iconDisabled;
