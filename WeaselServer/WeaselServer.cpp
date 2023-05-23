@@ -89,11 +89,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	try
 	{
 		WeaselServerApp app;
-		//if (IsWindowsVistaOrGreater())
-		{
-			PRAR RegisterApplicationRestart = (PRAR)::GetProcAddress(::GetModuleHandle(_T("kernel32.dll")), "RegisterApplicationRestart");
-			RegisterApplicationRestart(NULL, 0);
-		}
+		RegisterApplicationRestart(NULL, 0);
 		nRet = app.Run();
 	}
 	catch (...)
