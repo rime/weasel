@@ -20,7 +20,7 @@ public:
 
 	static bool explore(const std::wstring &path)
 	{
-		return (int)ShellExecuteW(NULL, L"explore", path.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32;
+		return (int)ShellExecuteW(NULL, L"open", L"explorer",  (L"\"" + path + L"\"").c_str(), NULL, SW_SHOWNORMAL) > 32;
 	}
 
 	static bool open(const std::wstring &path)
