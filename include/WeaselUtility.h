@@ -61,9 +61,10 @@ inline std::wstring string_to_wstring(const std::string& str, int code_page = CP
 {
 	// support CP_ACP and CP_UTF8 only
 	if (code_page != 0 && code_page != CP_UTF8)	return L"";
-	std::wstring res;
 	// calc len
 	int len = MultiByteToWideChar(code_page, 0, str.c_str(), str.size(), NULL, 0);
+    if(len <= 0)    return L"";
+	std::wstring res;
 	TCHAR* buffer = new TCHAR[len + 1];
 	MultiByteToWideChar(code_page, 0, str.c_str(), str.size(), buffer, len);
 	buffer[len] = '\0';
@@ -76,10 +77,11 @@ inline std::string wstring_to_string(const std::wstring& wstr, int code_page = C
 {
 	// support CP_ACP and CP_UTF8 only
 	if (code_page != 0 && code_page != CP_UTF8)	return "";
+	int len = WideCharToMultiByte(code_page, 0, wstr.c_str(), wstr.size(), NULL, 0, NULL, NULL);
+    if(len <= 0)    return "";
 	std::string res;
-	int len = WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), wstr.size(), NULL, 0, NULL, NULL);
 	char* buffer = new char[len + 1];
-	WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), wstr.size(), buffer, len, NULL, NULL);
+	WideCharToMultiByte(code_page, 0, wstr.c_str(), wstr.size(), buffer, len, NULL, NULL);
 	buffer[len] = '\0';
 	res.append(buffer);
 	delete[] buffer;
