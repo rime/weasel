@@ -26,6 +26,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_style(ui.style()),
 	m_ostyle(ui.ostyle()),
 	m_candidateCount(0),
+	m_current_zhung_icon(),
 	dpi(96),
 	hide_candidates(false),
 	pDWR(NULL),
@@ -837,11 +838,12 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// status icon (I guess Metro IME stole my idea :)
 		if (m_layout->ShouldDisplayStatusIcon()) {
 			// decide if custom schema zhung icon to show
-			if (m_iconEnabled.IsNull()) {
-				if (!m_style.current_icon.empty())
-					m_iconEnabled = (HICON)LoadImage(NULL, m_style.current_icon.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
-				else
-					m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+			if(m_current_zhung_icon != m_style.current_icon && !m_style.current_icon.empty()) {
+				m_current_zhung_icon = m_style.current_icon;
+				m_iconEnabled = (HICON)LoadImage(NULL, m_style.current_icon.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
+			} else if(!m_current_zhung_icon.empty() && m_style.current_icon.empty()) {
+				m_current_zhung_icon.clear();
+				m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 			}
 			CRect iconRect(m_layout->GetStatusIconRect());
 			if (!m_ctx.aux.str.empty())

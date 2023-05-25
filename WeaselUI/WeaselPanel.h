@@ -171,6 +171,7 @@ private:
 	CIcon m_iconAlpha;
 	CIcon m_iconFull;
 	CIcon m_iconHalf;
+	std::wstring m_current_zhung_icon;
 	// for gdiplus drawings
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
