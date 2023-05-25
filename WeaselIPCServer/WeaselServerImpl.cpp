@@ -43,13 +43,17 @@ void ServerImpl::_Finailize()
 {
 	if (pipeThread != nullptr) {
 		pipeThread->interrupt();
+		pipeThread = nullptr;
 	}
+	else {
+		// avoid finalize again
+		return;
+	}
+
 	if (IsWindow())
 	{
 		DestroyWindow();
 	}
-
-	m_pRequestHandler->Finalize();
 }
 
 LRESULT ServerImpl::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -81,6 +85,7 @@ LRESULT ServerImpl::OnEndSystemSession(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 	if (m_pRequestHandler)
 	{
 		m_pRequestHandler->Finalize();
+		m_pRequestHandler = nullptr;
 	}
 	return 0;
 }
@@ -134,9 +139,9 @@ int ServerImpl::Start()
 
 int ServerImpl::Stop()
 {
-	_Finailize();
-	// quit the server
-	::ExitProcess(0);
+	// DO NOT exit process or finalize here
+	// Let WeaselServer handle this
+	PostMessage(WM_QUIT);
 	return 0;
 }
 

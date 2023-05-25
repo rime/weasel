@@ -6,6 +6,9 @@
 
 Unicode true
 
+;--------------------------------
+; General
+
 !ifndef WEASEL_VERSION
 !define WEASEL_VERSION 1.0.0
 !endif
@@ -15,6 +18,7 @@ Unicode true
 !endif
 
 !define WEASEL_ROOT $INSTDIR\weasel-${WEASEL_VERSION}
+!define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel"
 
 ; The name of the installer
 Name "小狼毫 ${WEASEL_VERSION}"
@@ -176,15 +180,19 @@ program_files:
 
   ExecWait '"$INSTDIR\WeaselSetup.exe" $R2'
 
+  ; Write the uninstall keys for Windows
+  WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayName" "小狼毫輸入法"
+  WriteRegStr HKLM "${REG_UNINST_KEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'
+  WriteRegStr HKLM "${REG_UNINST_KEY}"  "DisplayVersion" "${WEASEL_VERSION}.${WEASEL_BUILD}"
+  WriteRegStr HKLM "${REG_UNINST_KEY}"  "Publisher" "式恕堂"
+  WriteRegStr HKLM "${REG_UNINST_KEY}"  "URLInfoAbout" "https://rime.im/"
+  WriteRegStr HKLM "${REG_UNINST_KEY}"  "HelpLink" "https://rime.im/docs/"
+  WriteRegDWORD HKLM "${REG_UNINST_KEY}" "NoModify" 1
+  WriteRegDWORD HKLM "${REG_UNINST_KEY}" "NoRepair" 1
+  WriteUninstaller "$INSTDIR\uninstall.exe"
+
   ; run as user...
   ExecWait "$INSTDIR\WeaselDeployer.exe /install"
-
-  ; Write the uninstall keys for Windows
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "DisplayName" "小狼毫輸入法"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "NoModify" 1
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" "NoRepair" 1
-  WriteUninstaller "$INSTDIR\uninstall.exe"
 
   ; Write autorun key
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer" "$INSTDIR\WeaselServer.exe"

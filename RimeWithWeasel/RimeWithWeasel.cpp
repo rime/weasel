@@ -464,11 +464,11 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 		if (RimeConfigGetString(&config, "schema/icon", buffer, BUF_SIZE))
 		{
 			std::wstring tmp = utf8towcs(buffer);
-			std::wstring user_dir = utf8towcs(weasel_user_data_dir());
+			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
 			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
 			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 			{
-				std::wstring share_dir = utf8towcs(weasel_shared_data_dir());
+				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
 				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
 				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 					m_ui->style().current_icon = L"";

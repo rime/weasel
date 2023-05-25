@@ -48,6 +48,4 @@
 
 #include <VersionHelpers.hpp>
 
-typedef HRESULT (WINAPI *PRAR)(PCWSTR, DWORD);
-
 extern CAppModule _Module;

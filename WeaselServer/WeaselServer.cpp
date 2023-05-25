@@ -19,7 +19,7 @@ CAppModule _Module;
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
-	if( !IsWindows8Point10OrGreaterEx() )
+	if( !IsWindowsBlueOrLaterEx() )
 	{
 		::MessageBox(NULL, L"僅支持Windows 8.1或更高版本系統", L"系統版本過低", MB_ICONERROR);
 		return 0;
@@ -89,11 +89,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	try
 	{
 		WeaselServerApp app;
-		//if (IsWindowsVistaOrGreater())
-		{
-			PRAR RegisterApplicationRestart = (PRAR)::GetProcAddress(::GetModuleHandle(_T("kernel32.dll")), "RegisterApplicationRestart");
-			RegisterApplicationRestart(NULL, 0);
-		}
+		RegisterApplicationRestart(NULL, 0);
 		nRet = app.Run();
 	}
 	catch (...)

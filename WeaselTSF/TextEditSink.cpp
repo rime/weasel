@@ -92,6 +92,7 @@ BOOL WeaselTSF::_InitTextEditSink(com_ptr<ITfDocumentMgr> pDocMgr)
 		return TRUE;
 
 	fRet = FALSE;
+	pSource = nullptr;
 	if (_pTextEditSinkContext->QueryInterface(IID_ITfSource, (void **) &pSource) == S_OK)
 	{
 		if (pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink *) this, &_dwTextEditSinkCookie) == S_OK)
