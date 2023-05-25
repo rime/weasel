@@ -13,9 +13,23 @@
 #include <rime_api.h>
 #include <rime_levers_api.h>
 #pragma warning(default: 4005)
+#include <fstream>
 
+static void CreateFileIfNotExist(std::string filename)
+{
+	std::string user_data_dir = weasel_user_data_dir();
+	std::wstring filepathw = string_to_wstring(user_data_dir) + L"\\" + string_to_wstring(filename);
+	DWORD dwAttrib = GetFileAttributes(filepathw.c_str());
+	if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+	{
+		std::wofstream o(filepathw, std::ios::app);
+		o.close();
+	}
+}
 Configurator::Configurator()
 {
+	CreateFileIfNotExist("default.custom.yaml");
+	CreateFileIfNotExist("weasel.custom.yaml");
 }
 
 void Configurator::Initialize()
@@ -23,6 +37,7 @@ void Configurator::Initialize()
 	RIME_STRUCT(RimeTraits, weasel_traits);
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
+	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
 	const int len = 20;
 	char utf8_str[len];
 	memset(utf8_str, 0, sizeof(utf8_str));

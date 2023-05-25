@@ -2,6 +2,7 @@
 #include "UIStyleSettingsDialog.h"
 #include "UIStyleSettings.h"
 #include "Configurator.h"
+#include <WeaselUtility.h>
 
 
 UIStyleSettingsDialog::UIStyleSettingsDialog(UIStyleSettings* settings)
@@ -71,7 +72,8 @@ void UIStyleSettingsDialog::Preview(int index) {
 	const std::string file_path(settings_->GetColorSchemePreview(preset_[index].color_scheme_id));
 	if (file_path.empty()) return;
 	image_.Destroy();
-	image_.Load(utf8towcs(file_path.c_str()));
+	// it is from ansi coding, not utf8
+	image_.Load(string_to_wstring(file_path).c_str());
 	if (!image_.IsNull()) {
 		preview_.SetBitmap(image_);
 	}

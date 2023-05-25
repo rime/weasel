@@ -78,6 +78,7 @@ void RimeWithWeaselHandler::_Setup()
 	RIME_STRUCT(RimeTraits, weasel_traits);
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
+	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
 	const int len = 20;
 	char utf8_str[len];
 	memset(utf8_str, 0, sizeof(utf8_str));
@@ -435,6 +436,8 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 			::Sleep(100);
 			if (_UpdateUICallback) _UpdateUICallback();
 		});
+	} else {
+		if (_UpdateUICallback) _UpdateUICallback();
 	}
 
 	m_message_type.clear();
@@ -461,11 +464,11 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 		if (RimeConfigGetString(&config, "schema/icon", buffer, BUF_SIZE))
 		{
 			std::wstring tmp = utf8towcs(buffer);
-			std::wstring user_dir = utf8towcs(weasel_user_data_dir());
+			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
 			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
 			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 			{
-				std::wstring share_dir = utf8towcs(weasel_shared_data_dir());
+				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
 				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
 				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 					m_ui->style().current_icon = L"";
@@ -530,7 +533,7 @@ inline std::string _GetLabelText(const std::vector<weasel::Text> &labels, int id
 {
 	wchar_t buffer[128];
 	swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
-	return to_byte_string(std::wstring(buffer));
+	return wstring_to_string(std::wstring(buffer), CP_UTF8);
 }
 
 bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
@@ -595,9 +598,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				for (auto i = 0; i < ctx.menu.num_candidates; i++)
 				{
 					std::string label = m_ui->style().label_font_point > 0 ? _GetLabelText(cinfo.labels, i, m_ui->style().label_text_format.c_str()) : "";
-					std::string comment = m_ui->style().comment_font_point > 0 ? to_byte_string(cinfo.comments.at(i).str) : "";
+					std::string comment = m_ui->style().comment_font_point > 0 ? wstring_to_string(cinfo.comments.at(i).str, CP_UTF8) : "";
 #ifdef USE_HILITE_MARK
-					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : to_byte_string(m_ui->style().mark_text);
+					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : wstring_to_string(m_ui->style().mark_text, CP_UTF8);
 					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
 #else
 					std::string prefix = "";
