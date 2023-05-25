@@ -36,10 +36,11 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 	pD2d1Factory(NULL),
 	pDWFactory(NULL),
 	pRenderTarget(NULL),
-	pTextFormat(NULL),
 	pPreeditTextFormat(NULL),
+	pTextFormat(NULL),
 	pLabelTextFormat(NULL),
-	pCommentTextFormat(NULL)
+	pCommentTextFormat(NULL),
+	pTextLayout(NULL)
 {
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;

@@ -78,7 +78,6 @@ void WeaselService::Start(DWORD dwArgc = 0, PWSTR * pszArgv = NULL)
 		// Perform service-specific initialization.
 		// if (IsWindowsVistaOrGreater())
 		{
-			PRAR RegisterApplicationRestart = (PRAR)::GetProcAddress(::GetModuleHandle(_T("kernel32.dll")), "RegisterApplicationRestart");
 			RegisterApplicationRestart(NULL, 0);
 		}
 		boost::thread{ [this] {

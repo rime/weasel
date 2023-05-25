@@ -40,6 +40,6 @@ static inline BOOL IsBlurAvailable()
 	return (ovi.dwMajorVersion >= 10 && ovi.dwBuildNumber <= 22000);
 }
 
-//#define IsBlurAvailable()	IsWinVersionGreaterThan(10, 0)
-#define IsWindows8Point10OrGreaterEx() IsWinVersionGreaterThan(6, 3)
+// Use WinBlue for Windows 8.1
+#define IsWindowsBlueOrLaterEx() IsWinVersionGreaterThan(6, 3)
 #define IsWindows10OrGreaterEx() IsWinVersionGreaterThan(10, 0)
