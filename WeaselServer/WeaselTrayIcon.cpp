@@ -50,8 +50,11 @@ void WeaselTrayIcon::Refresh()
 	if (mode != m_mode)
 	{
 		m_mode = mode;
+		if(mode != ZHUNG || (mode == ZHUNG && m_style.current_icon.empty()))
+			SetIcon(mode_icon[mode]);
+		else
+			SetIcon(m_style.current_icon.c_str());
 		ShowIcon();
-		SetIcon(mode_icon[mode]);
 		if (mode_label[mode])
 		{
 			ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
