@@ -1,7 +1,6 @@
 #pragma once
 #include <msctf.h>
 #include <WeaselUI.h>
-#include "CandidateList.h"
 
 class CLangBarItemButton : public ITfLangBarItemButton, public ITfSource
 {

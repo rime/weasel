@@ -2,6 +2,7 @@
 #include <resource.h>
 #include "WeaselTSF.h"
 #include "LanguageBar.h"
+#include "CandidateList.h"
 
 static const DWORD LANGBARITEMSINK_COOKIE = 0x42424242;
 
@@ -33,7 +34,7 @@ static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
 }
 
 CLangBarItemButton::CLangBarItemButton(com_ptr<WeaselTSF> pTextService, REFGUID guid, weasel::UIStyle& style)
-	: _status(0), _style(style)
+	: _status(0), _style(style), _current_schema_icon()
 {
 	DllAddRef();
 

@@ -73,6 +73,17 @@ void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light);
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
+inline void RefreshTrayIcon(const UINT session_id, const std::function<void()> _UpdateUICallback)
+{
+	// Dangerous, don't touch
+	static char app_name[50];
+	RimeGetProperty(session_id, "client_app", app_name, sizeof(app_name) - 1);
+	if (utf8towcs(app_name) == std::wstring(L"explorer.exe")) 
+		boost::thread th([=]() { ::Sleep(100); if (_UpdateUICallback) _UpdateUICallback(); });
+	else 
+		if (_UpdateUICallback) _UpdateUICallback();
+}
+
 void RimeWithWeaselHandler::_Setup()
 {
 	RIME_STRUCT(RimeTraits, weasel_traits);
@@ -174,6 +185,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 			RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
 			// set inline_preedit option end
 		}
+		RefreshTrayIcon(session_id, _UpdateUICallback);
 	}
 	// show session's welcome message :-) if any
 	if (eat) {
@@ -411,11 +423,11 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	}
 
 	if (!m_ui) return;
+
 	if (RimeGetOption(session_id, "inline_preedit"))
 		m_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
 	else
 		m_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
-
 
 	if (weasel_status.composing)
 	{
@@ -428,17 +440,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		m_ui->Update(weasel_context, weasel_status);
 	}
 	
-	// Dangerous, don't touch
-	static char app_name[50];
-	RimeGetProperty(session_id, "client_app", app_name, sizeof(app_name) - 1);
-	if (utf8towcs(app_name) == std::wstring(L"explorer.exe")) {
-		boost::thread th([=]() {
-			::Sleep(100);
-			if (_UpdateUICallback) _UpdateUICallback();
-		});
-	} else {
-		if (_UpdateUICallback) _UpdateUICallback();
-	}
+	RefreshTrayIcon(session_id, _UpdateUICallback);
 
 	m_message_type.clear();
 	m_message_value.clear();
@@ -1166,6 +1168,8 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 				RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
 				// set inline_preedit option end
 			}
+			// refresh icon after schema changed
+			RefreshTrayIcon(session_id, _UpdateUICallback);
 		}
 		stat.schema_name = utf8towcs(status.schema_name);
 		stat.ascii_mode = !!status.is_ascii_mode;
