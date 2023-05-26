@@ -14,8 +14,6 @@
 #define COLORNOTTRANSPARENT(color)	((color & 0xff000000) != 0)
 #define TRANS_COLOR		0x00000000
 #define GDPCOLOR_FROM_COLORREF(color)	Gdiplus::Color::MakeARGB(((color >> 24) & 0xff), GetRValue(color), GetGValue(color), GetBValue(color))
-#define IS_FULLSCREENLAYOUT(style)	(style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
-#define NOT_FULLSCREENLAYOUT(style)	(style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN && style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 
 #pragma comment(lib, "Shcore.lib")
 
@@ -838,17 +836,17 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// status icon (I guess Metro IME stole my idea :)
 		if (m_layout->ShouldDisplayStatusIcon()) {
 			// decide if custom schema zhung icon to show
-			if(m_current_zhung_icon != m_style.current_icon && !m_style.current_icon.empty()) {
-				m_current_zhung_icon = m_style.current_icon;
-				m_iconEnabled = (HICON)LoadImage(NULL, m_style.current_icon.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
-			} else if(!m_current_zhung_icon.empty() && m_style.current_icon.empty()) {
-				m_current_zhung_icon.clear();
-				m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
-			}
+			if(m_current_zhung_icon != m_style.current_zhung_icon) {
+				m_current_zhung_icon = m_style.current_zhung_icon;
+				if (m_style.current_zhung_icon.empty())
+					m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+				else
+					m_iconEnabled = (HICON)LoadImage(NULL, m_style.current_zhung_icon.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
+			} 
 			CRect iconRect(m_layout->GetStatusIconRect());
-			if (!m_ctx.aux.str.empty())
+			if (m_istorepos && !m_ctx.aux.str.empty())
 				iconRect.OffsetRect(0, m_offsety_aux);
-			else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+			else if (m_istorepos && !m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
 				iconRect.OffsetRect(0, m_offsety_preedit);
 
 			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha :

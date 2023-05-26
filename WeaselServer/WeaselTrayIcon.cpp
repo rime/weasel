@@ -50,18 +50,18 @@ void WeaselTrayIcon::Refresh()
 	/* change icon, when 
 		1,mode changed
 		2,icon changed
-		3,both m_schema_icon and m_style.current_icon empty(for initialize)
+		3,both m_schema_icon and m_style.current_zhung_icon empty(for initialize)
 	*/
 	if (mode != m_mode 
-			|| m_schema_icon != m_style.current_icon 
-			|| (m_schema_icon.empty() && m_style.current_icon.empty()))
+			|| m_schema_icon != m_style.current_zhung_icon 
+			|| (m_schema_icon.empty() && m_style.current_zhung_icon.empty()))
 	{
 		m_mode = mode;
-		m_schema_icon = m_style.current_icon;
-		if(mode != ZHUNG || m_style.current_icon.empty())
+		m_schema_icon = m_style.current_zhung_icon;
+		if(mode != ZHUNG || m_style.current_zhung_icon.empty())
 			SetIcon(mode_icon[mode]);
 		else
-			SetIcon(m_style.current_icon.c_str());
+			SetIcon(m_style.current_zhung_icon.c_str());
 		ShowIcon();
 		if (mode_label[mode])
 		{
