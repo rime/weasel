@@ -24,6 +24,7 @@ style:
   display_tray_icon: false
   label_format: "%s."
   mark_text: ""
+  vertical_auto_reverse: false
   vertical_text: false
   vertical_text_left_to_right: false
   vertical_text_with_wrap: false
