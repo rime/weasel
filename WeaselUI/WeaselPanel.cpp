@@ -743,6 +743,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		bool over_bottom = false;
 		CRect auxrc = m_layout->GetAuxiliaryRect();
 		CRect preeditrc = m_layout->GetPreeditRect();
+		if(m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL)
 		{
 			RECT rcWorkArea;
 			memset(&rcWorkArea, 0, sizeof(rcWorkArea));
@@ -801,7 +802,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			CRect backrc = m_layout->GetContentRect();
 			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, IsToRoundStruct(),  m_style.border_color);
 		}
-		m_istorepos = over_bottom && (m_style.layout_type == UIStyle::LAYOUT_VERTICAL);
+		m_istorepos = over_bottom;
 		if (!m_ctx.aux.str.empty())
 		{
 			if(m_istorepos)

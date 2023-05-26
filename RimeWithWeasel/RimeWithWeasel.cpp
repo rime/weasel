@@ -805,6 +805,11 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.inline_preedit = !!inline_preedit;
 	}
+	Bool vertical_auto_reverse = False;
+	if (RimeConfigGetBool(config, "style/vertical_auto_reverse", &vertical_auto_reverse) || initialize)
+	{
+		style.vertical_auto_reverse = !!vertical_auto_reverse;
+	}
 
 #ifdef USE_BLUR_UNDER_WINDOWS10
 	Bool blur_window = false;
