@@ -26,31 +26,6 @@ typedef enum
 	#define TRIMHEAD_REGEX	std::regex("0x", std::regex::icase)
 #endif
 
-#ifdef USE_THEME_DARK
-static inline BOOL IsThemeLight()
-{
-	// only for windows 10 or greater, return false when lower version.
-	OSVERSIONINFOEXW ovi = { sizeof ovi };
-	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
-	if (ovi.dwMajorVersion < 10) return false;
-	HKEY hKL;
-	LPCWSTR addr = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
-	//LPCWSTR key = L"SystemUsesLightTheme"; 
-	LPCWSTR key = L"AppsUseLightTheme";
-	DWORD dwType;
-	BYTE values[16];
-	DWORD dataLen;
-	LSTATUS ret = RegOpenKeyEx(HKEY_CURRENT_USER, addr, 0, KEY_READ, &hKL);
-	if (ret == ERROR_SUCCESS)
-	{
-		ret = RegQueryValueExW(hKL, key, 0, &dwType, values, &dataLen);
-		RegCloseKey(hKL);
-		return (values[0] != 0);
-	}
-	MessageBox(0, L"open reg failed, return false", L"", 0);
-	return FALSE;
-}
-#endif /* USE_THEME_DARK */
 int expand_ibus_modifier(int m)
 {
 	return (m & 0xff) | ((m & 0xff00) << 16);
@@ -70,7 +45,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 }
 
 void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
-bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light);
+bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style);
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _UpdateUICallback)
@@ -124,14 +99,6 @@ void RimeWithWeaselHandler::Initialize()
 		{
 			_UpdateUIStyle(&config, m_ui, true);
 			m_base_style = m_ui->style();
-#ifdef USE_THEME_DARK
-			bool is_light = IsThemeLight();
-			m_base_style_dark = m_base_style;
-			_UpdateUIStyleColor(&config, m_base_style, true);	// light theme
-			if (!_UpdateUIStyleColor(&config, m_base_style_dark, false))	// dark theme
-				m_base_style_dark = m_base_style;
-			m_ui->style() = is_light ? m_base_style : m_base_style_dark;
-#endif /*  USE_THEME_DARK */
 		}
 		_LoadAppOptions(&config, m_app_options);
 		RimeConfigClose(&config);
@@ -167,10 +134,6 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 
-#ifdef USE_THEME_DARK
-	if (m_ui)
-		m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
-#endif /* USE_THEME_DARK */
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
@@ -445,11 +408,7 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config))
 		return;
-#ifdef USE_THEME_DARK
-	m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
-#else
 	m_ui->style() = m_base_style;
-#endif /* USE_THEME_DARK */
 	_UpdateUIStyle(&config, m_ui, false);
 	// load schema icon start
 	{
@@ -594,12 +553,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				{
 					std::string label = m_ui->style().label_font_point > 0 ? _GetLabelText(cinfo.labels, i, m_ui->style().label_text_format.c_str()) : "";
 					std::string comment = m_ui->style().comment_font_point > 0 ? wstring_to_string(cinfo.comments.at(i).str, CP_UTF8) : "";
-#ifdef USE_HILITE_MARK
 					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : wstring_to_string(m_ui->style().mark_text, CP_UTF8);
 					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
-#else
-					std::string prefix = "";
-#endif
 					topush += " " + prefix + label + std::string(ctx.menu.candidates[i].text) + " " + comment;
 				}
 				messages.push_back(topush + " ]\n");
@@ -811,15 +766,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.vertical_auto_reverse = !!vertical_auto_reverse;
 	}
 
-#ifdef USE_BLUR_UNDER_WINDOWS10
-	Bool blur_window = false;
-	if (RimeConfigGetBool(config, "style/blur_window", &blur_window) || initialize)
-	{
-		style.blur_window = !!blur_window;
-		style.blur_window = style.blur_window && IsWindows10OrGreaterEx();
-	}
-#endif
-
 	char preedit_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
 	{
@@ -881,13 +827,12 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.label_text_format = utf8towcs(label_text_format);
 	}
-#ifdef USE_HILITE_MARK
 	char mark_text[128] = { 0 };
 	if (RimeConfigGetString(config, "style/mark_text", mark_text, sizeof(mark_text) - 1))
 	{
 		style.mark_text = utf8towcs(mark_text);
 	}
-#endif
+
 	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
 	RimeConfigGetInt(config, "style/layout/max_width", &style.max_width);
 	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
@@ -955,28 +900,16 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	else if (style.hilite_padding > -style.margin_y && style.margin_y < 0)
 		style.margin_y = -(style.hilite_padding);
 	// color scheme
-#ifdef USE_THEME_DARK
-	bool is_light = IsThemeLight();
-	std::string color_pre = is_light ? "style/color_scheme" : "style/color_scheme_dark";
-	bool sta = RimeConfigGetString(config, color_pre.c_str(), buffer, BUF_SIZE);
-	// fallback if color_scheme_dark not set
-	if (!sta) sta = RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE);
-	if (initialize && sta)
-		_UpdateUIStyleColor(config, style, is_light);
-#else
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
-		_UpdateUIStyleColor(config, style, true);
-#endif /* USE_THEME_DARK */
+		_UpdateUIStyleColor(config, style);
 }
 
-static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light)
+static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style)
 {
 	const int BUF_SIZE = 2047;
 	char buffer[BUF_SIZE + 1];
 	memset(buffer, '\0', sizeof(buffer));
 	std::string color_mark = "style/color_scheme";
-	if (!is_light)
-		color_mark += "_dark";
 	// color scheme
 	if(RimeConfigGetString(config, color_mark.c_str(), buffer, BUF_SIZE))
 	{
@@ -1005,30 +938,10 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 			style.shadow_color = 0x00000000;
 		}
 
-#ifdef USE_BLUR_UNDER_WINDOWS10
-		// allow set blur with color scheme, more portable
-		//Bool blur_window = false;
-		//if (RimeConfigGetBool(config, (prefix + "/blur_window").c_str(), &blur_window))
-		//{
-		//	style.blur_window = !!blur_window;
-		//	style.blur_window = style.blur_window && IsWindows10OrGreaterEx();
-		//}
-		if(style.blur_window)
-		{
-			// if set blur, make shadow color transparent
-			style.shadow_color &= 0x00ffffff;
-			// if set blur, make sure alpha of back color between 01~7f, to ensure blur work
-			if((style.back_color & 0xff000000) > 0x7f000000 || (style.back_color & 0xff000000) == 0)
-				style.back_color = (style.back_color & 0x00ffffff) | 0x7f000000;
-		}
-#endif	/* USE_BLUR_UNDER_WINDOWS10 */
-
-#ifdef USE_PAGER_MARK
 		style.prevpage_color = 0;
 		style.nextpage_color = 0;
 		RimeConfigGetColor32b(config, (prefix + "/prevpage_color").c_str(), &style.prevpage_color, fmt);
 		RimeConfigGetColor32b(config, (prefix + "/nextpage_color").c_str(), &style.nextpage_color, fmt);
-#endif /* USE_PAGER_MARK */
 		style.shadow_color &= 0xffffffff;
 		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color, fmt);
 		style.text_color &= 0xffffffff;
@@ -1083,7 +996,6 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 			style.candidate_shadow_color = style.shadow_color & 0x00ffffff;
 		}
 		style.candidate_shadow_color &= 0xffffffff;
-#ifdef USE_CANDIDATE_BORDER
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_border_color").c_str(), &style.candidate_border_color, fmt))
 		{
 			style.candidate_border_color = 0x00000000;
@@ -1094,7 +1006,6 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 			style.hilited_candidate_border_color = 0x00000000;
 		}
 		style.hilited_candidate_border_color &= 0xffffffff;
-#endif	/* USE_CANDIDATE_BORDER */
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color, fmt))
 		{
 			style.label_text_color = blend_colors(style.candidate_text_color, style.candidate_back_color);
@@ -1114,14 +1025,12 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 		style.comment_text_color &= 0xffffffff;
 		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color, fmt);
 		style.hilited_comment_text_color &= 0xffffffff;
-#ifdef USE_HILITE_MARK
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_mark_color").c_str(), &style.hilited_mark_color, fmt))
 		{
 			// default transparent hilited_candidate_back_color
 			style.hilited_mark_color = style.hilited_candidate_back_color & 0x00ffffff;
 		}
 		style.hilited_mark_color &= 0xffffffff;
-#endif	/* USE_HILITE_MARK */
 		return true;
 	}
 	return false;

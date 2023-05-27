@@ -28,7 +28,6 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	int step = 32;
 	do {
 		m_layout->DoLayout(dc, pDWR);
-#ifdef USE_HILITE_MARK
 		if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 		{
 			CSize sg;
@@ -37,7 +36,6 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 			MARK_HEIGHT = sg.cy;
 			MARK_GAP = MARK_WIDTH + 4;
 		}
-#endif
 	}
 	while (AdjustFontPoint(dc, workArea, step, pDWR));
 
@@ -50,12 +48,10 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	_highlightRect = m_layout->GetHighlightRect();
 	_highlightRect.OffsetRect(offsetx, offsety);
 
-#ifdef USE_PAGER_MARK
 	_prePageRect = m_layout->GetPrepageRect();
 	_prePageRect.OffsetRect(offsetx, offsety);
 	_nextPageRect = m_layout->GetNextpageRect();
 	_nextPageRect.OffsetRect(offsetx, offsety);
-#endif /* USE_PAGER_MARK */
 
 	for (auto i = 0, n = (int)_context.cinfo.candies.size(); i < n && i < MAX_CANDIDATES_COUNT; ++i)
 	{

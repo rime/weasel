@@ -16,7 +16,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	int height = offsetY, width = offsetX + real_margin_x;
 	int h = offsetY + real_margin_y;
 
-#ifdef USE_HILITE_MARK
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
@@ -26,28 +25,19 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		MARK_GAP = MARK_HEIGHT + 4;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
-#else
-	int base_offset =  0;
-#endif	/* USE_HILITE_MARK */
 
-#ifdef USE_PAGER_MARK
 	// calc page indicator 
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	int pgh = pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2;
 	int pgw = max(pgszl.cx, pgszr.cx);
-#endif	/* USE_PAGER_MARK */
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
-#ifdef USE_PAGER_MARK
-		size_t szx = max(size.cx, pgw),	szy = pgh;
-#else
-		size_t szx = size.cx, szy = 0;
-#endif	/* USE_PAGER_MARK */
+		int szx = max(size.cx, pgw),	szy = pgh;
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
@@ -194,7 +184,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + offsetX, height + offsetY);
 
-#ifdef USE_PAGER_MARK
 	// calc page indicator 
 	if(candidates_count && !_style.inline_preedit)
 	{
@@ -209,7 +198,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			_nextPageRect.OffsetRect(0, -STATUS_ICON_SIZE);
 		}
 	}
-#endif /* USE_PAGER_MARK */
 
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 	// background rect prepare for Hemispherical calculation
@@ -232,7 +220,6 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	int height = offsetY, width = offsetX + real_margin_x;
 	int h = offsetY + real_margin_y;
 
-#ifdef USE_HILITE_MARK
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
@@ -242,28 +229,19 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 		MARK_GAP = MARK_HEIGHT + 4;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
-#else
-	int base_offset =  0;
-#endif
 
-#ifdef USE_PAGER_MARK
 	// calc page indicator 
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	int pgh = pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2;
 	int pgw = max(pgszl.cx, pgszr.cx);
-#endif
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
-#ifdef USE_PAGER_MARK
 		size_t szx = max(size.cx, pgw), szy = pgh;
-#else
-		size_t szx = size.cx, szy = 0;
-#endif	/* USE_PAGER_MARK */ 
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
@@ -448,7 +426,6 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	_contentSize.SetSize(width + 2 * offsetX, height + offsetY);
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 
-#ifdef USE_PAGER_MARK
 	// calc page indicator 
 	if(candidates_count && !_style.inline_preedit)
 	{
@@ -463,7 +440,6 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 			_nextPageRect.OffsetRect(0, -STATUS_ICON_SIZE);
 		}
 	}
-#endif /* USE_PAGER_MARK */
 
 	// prepare temp rect _bgRect for roundinfo calculation
 	CopyRect(_bgRect, _contentRect);

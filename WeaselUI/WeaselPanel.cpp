@@ -29,11 +29,6 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	hide_candidates(false),
 	pDWR(NULL),
 	m_blurer(new GdiplusBlur()),
-#ifdef USE_BLUR_UNDER_WINDOWS10
-	setWindowCompositionAttribute(NULL), accent({ ACCENT_ENABLE_BLURBEHIND, 0xff, (DWORD)((long long)m_style.back_color), 0 }), data({ WCA_ACCENT_POLICY, &accent, sizeof(accent) }),
-	m_isBlurAvailable(IsBlurAvailable()),
-	hUser(ui.module()),
-#endif	/* USE_BLUR_UNDER_WINDOWS10 */
 	pBrush(NULL),
 	_m_gdiplusToken(0)
 {
@@ -42,12 +37,6 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_iconAlpha.LoadIconW(IDI_EN, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconFull.LoadIconW(IDI_FULL_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconHalf.LoadIconW(IDI_HALF_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
-#ifdef USE_BLUR_UNDER_WINDOWS10
-	if(hUser && m_isBlurAvailable)
-		setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
-	// if setWindowCompositionAttribute null, not available
-	m_isBlurAvailable = m_isBlurAvailable && (setWindowCompositionAttribute != NULL);
-#endif	/* USE_BLUR_UNDER_WINDOWS10 */
 	// for gdi+ drawings, initialization
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 
@@ -266,7 +255,6 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	}
 	// button response
 	{
-#ifdef USE_PAGER_MARK
 		if(!m_style.inline_preedit && m_candidateCount != 0 && COLORNOTTRANSPARENT(m_style.prevpage_color) && COLORNOTTRANSPARENT(m_style.nextpage_color)) {
 			// click prepage
 			if(m_ctx.cinfo.currentPage != 0 ) {
@@ -291,7 +279,6 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 				}
 			}
 		}
-#endif /* USE_PAGER_MARK */
 		// select by click
 		for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 			CRect rect = m_layout->GetCandidateRect((int)i);
@@ -404,17 +391,9 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 			}
 		}
 		m_blurer->DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
-#ifdef CLIP_SHADOW_UNDER_BACK_COLOR
-		// clip area under back colors
-		Gdiplus::Region clipRegin(&hiliteBackPath);
-		g_back.SetClip(&clipRegin, Gdiplus::CombineMode::CombineModeExclude);
-#endif /*  CLIP_SHADOW_UNDER_BACK_COLOR */
 
 		g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX, rc.top - blurMarginY);
 
-#ifdef CLIP_SHADOW_UNDER_BACK_COLOR
-		g_back.ResetClip();
-#endif /*  CLIP_SHADOW_UNDER_BACK_COLOR */
 		// free memory
 		delete pBitmapDropShadow;
 		pBitmapDropShadow = NULL;
@@ -514,7 +493,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
 			_TextOut(rcText, t.c_str(), t.length(), m_style.text_color, txtFormat);
 		}
-#ifdef USE_PAGER_MARK
+		// draw pager mark if not inline_preedit if necessary
 		if(m_candidateCount && !m_style.inline_preedit && COLORNOTTRANSPARENT(m_style.prevpage_color) && COLORNOTTRANSPARENT(m_style.nextpage_color))
 		{
 			const std::wstring pre = L"<";
@@ -529,7 +508,6 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			color = m_ctx.cinfo.is_last_page ? m_style.text_color : m_style.nextpage_color;
 			_TextOut(nrc, next.c_str(), next.length(), color, txtFormat);
 		}
-#endif /*  USE_PAGER_MARK */
 		drawn = true;
 	}
 	return drawn;
@@ -619,10 +597,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			}
 		}
 		// draw non highlighted candidates, without shadow
-		if (COLORNOTTRANSPARENT(m_style.candidate_back_color) 
-#ifdef USE_CANDIDATE_BORDER
-				|| COLORNOTTRANSPARENT(m_style.candidate_border_color)
-#endif
+		if (COLORNOTTRANSPARENT(m_style.candidate_back_color) || COLORNOTTRANSPARENT(m_style.candidate_border_color)
 				)	// if transparent not to draw
 		{
 			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
@@ -631,11 +606,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
-#ifdef USE_CANDIDATE_BORDER
 				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd, m_style.candidate_border_color);
-#else
-				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd);
-#endif
 				drawn = true;
 			}
 		}
@@ -645,11 +616,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			if(m_istorepos) rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
-#ifdef USE_CANDIDATE_BORDER
 			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_style.hilited_candidate_border_color);
-#else
-			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd);
-#endif
 			drawn = true;
 		}
 	}
@@ -671,7 +638,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				candidate_text_color = m_style.candidate_text_color;
 				comment_text_color = m_style.comment_text_color;
 			}
-#ifdef USE_HILITE_MARK
 			// draw highlight mark
 			if (!m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
 			{
@@ -689,7 +655,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 					rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
 				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, pDWR->pTextFormat);
 			}
-#endif
 			// Draw label
 			std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
 			if (!label.empty()) {
@@ -716,17 +681,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	}
 	return drawn;
 }
-
-#ifdef USE_BLUR_UNDER_WINDOWS10
-void WeaselPanel::_BlurBacktround(CRect& rc)
-{
-	// radius for icon only is different from other situation
-	int radiusx2 = (m_candidateCount == 0 && m_layout->ShouldDisplayStatusIcon() && m_ctx.aux.empty()) ? 0 : m_style.round_corner_ex*2 + m_style.border/2 - !(m_style.border % 2);
-	rc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
-	SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right+2, rc.bottom+2, radiusx2, radiusx2), true);
-	setWindowCompositionAttribute(m_hWnd, &data);
-}
-#endif
 
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
@@ -861,27 +815,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	}
 	_LayerUpdate(rcw, memDC);
 
-#ifdef USE_BLUR_UNDER_WINDOWS10
-	if(m_isBlurAvailable)
-	{
-		// blur_window swiching between enable and disable
-		if (m_style.blur_window && !(m_style.inline_preedit && (m_candidateCount ==0))) { 
-			accent.AccentState = ACCENT_ENABLE_BLURBEHIND;
-			// if only ascii mode icon should be display, make sure the rect is suitable
-			CRect rcicon(rcw.left, rcw.top, rcw.left + STATUS_ICON_SIZE + m_layout->offsetX * 2, rcw.top + STATUS_ICON_SIZE + m_layout->offsetY * 2);
-			if(rcw.Width() >= rcicon.Width())
-				_BlurBacktround(rcw);
-			else
-				_BlurBacktround(rcicon);
-		}
-		else
-		{
-			accent.AccentState = ACCENT_DISABLED;
-			SetWindowRgn(CreateRectRgn(rcw.left, rcw.top, rcw.right, rcw.bottom), true);
-			setWindowCompositionAttribute(m_hWnd, &data);
-		}
-	}
-#endif 
 #ifdef USE_MOUSE_EVENTS
 	// turn off WS_EX_TRANSPARENT after drawings, for better resp performance
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, ::GetWindowLong(m_hWnd, GWL_EXSTYLE) & (~WS_EX_TRANSPARENT));
