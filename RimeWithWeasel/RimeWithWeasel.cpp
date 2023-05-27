@@ -415,7 +415,8 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 		const int BUF_SIZE = 2047;
 		char buffer[BUF_SIZE + 1];
 		memset(buffer, '\0', sizeof(buffer));
-		if (RimeConfigGetString(&config, "schema/icon", buffer, BUF_SIZE))
+		if (RimeConfigGetString(&config, "schema/icon", buffer, BUF_SIZE)
+				|| RimeConfigGetString(&config, "schema/zhung_icon", buffer, BUF_SIZE))
 		{
 			std::wstring tmp = utf8towcs(buffer);
 			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
@@ -434,6 +435,27 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 		}
 		else
 			m_ui->style().current_zhung_icon = L"";
+
+		memset(buffer, '\0', sizeof(buffer));
+		if (RimeConfigGetString(&config, "schema/ascii_icon", buffer, BUF_SIZE))
+		{
+			std::wstring tmp = utf8towcs(buffer);
+			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
+			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
+			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+			{
+				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
+				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
+				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+					m_ui->style().current_ascii_icon = L"";
+				else
+					m_ui->style().current_ascii_icon = (share_dir + L"\\" + tmp);
+			}
+			else
+				m_ui->style().current_ascii_icon = user_dir + L"\\" + tmp;
+		}
+		else
+			m_ui->style().current_ascii_icon = L"";
 	}
 	// load schema icon end
 	RimeConfigClose(&config);

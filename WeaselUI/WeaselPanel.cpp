@@ -17,6 +17,14 @@
 
 #pragma comment(lib, "Shcore.lib")
 
+template <class t0, class t1, class t2>
+inline void LoadIconNecessary(t0& a, t1& b, t2& c, int d) {
+	if(a == b) return;
+	a = b;
+	if (b.empty())	c.LoadIconW(d, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	else			c = (HICON)LoadImage(NULL, b.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
+}
+
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
@@ -791,13 +799,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// status icon (I guess Metro IME stole my idea :)
 		if (m_layout->ShouldDisplayStatusIcon()) {
 			// decide if custom schema zhung icon to show
-			if(m_current_zhung_icon != m_style.current_zhung_icon) {
-				m_current_zhung_icon = m_style.current_zhung_icon;
-				if (m_style.current_zhung_icon.empty())
-					m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
-				else
-					m_iconEnabled = (HICON)LoadImage(NULL, m_style.current_zhung_icon.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
-			} 
+			LoadIconNecessary(m_current_zhung_icon, m_style.current_zhung_icon, m_iconEnabled, IDI_ZH);
+			LoadIconNecessary(m_current_ascii_icon, m_style.current_ascii_icon, m_iconAlpha, IDI_EN);
 			CRect iconRect(m_layout->GetStatusIconRect());
 			if (m_istorepos && !m_ctx.aux.str.empty())
 				iconRect.OffsetRect(0, m_offsety_aux);
