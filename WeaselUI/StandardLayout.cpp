@@ -94,7 +94,7 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	GetTextSizeDW(before_str, before_str.length(), pTextFormat, pDWR, &beforesz);
 	GetTextSizeDW(hilited_str, hilited_str.length(), pTextFormat, pDWR, &hilitedsz);
 	GetTextSizeDW(after_str, after_str.length(), pTextFormat, pDWR, &aftersz);
-	size_t width_max = 0, height_max = 0;
+	auto width_max = 0, height_max = 0;
 	if(_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 	{
 		width_max = max(width_max, beforesz.cx);
