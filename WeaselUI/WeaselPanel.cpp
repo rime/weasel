@@ -393,17 +393,9 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 			}
 		}
 		m_blurer->DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
-#ifdef CLIP_SHADOW_UNDER_BACK_COLOR
-		// clip area under back colors
-		Gdiplus::Region clipRegin(&hiliteBackPath);
-		g_back.SetClip(&clipRegin, Gdiplus::CombineMode::CombineModeExclude);
-#endif /*  CLIP_SHADOW_UNDER_BACK_COLOR */
 
 		g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX, rc.top - blurMarginY);
 
-#ifdef CLIP_SHADOW_UNDER_BACK_COLOR
-		g_back.ResetClip();
-#endif /*  CLIP_SHADOW_UNDER_BACK_COLOR */
 		// free memory
 		delete pBitmapDropShadow;
 		pBitmapDropShadow = NULL;
