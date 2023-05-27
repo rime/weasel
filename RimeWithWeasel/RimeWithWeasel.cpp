@@ -811,15 +811,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.vertical_auto_reverse = !!vertical_auto_reverse;
 	}
 
-#ifdef USE_BLUR_UNDER_WINDOWS10
-	Bool blur_window = false;
-	if (RimeConfigGetBool(config, "style/blur_window", &blur_window) || initialize)
-	{
-		style.blur_window = !!blur_window;
-		style.blur_window = style.blur_window && IsWindows10OrGreaterEx();
-	}
-#endif
-
 	char preedit_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
 	{
@@ -1004,24 +995,6 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 		{
 			style.shadow_color = 0x00000000;
 		}
-
-#ifdef USE_BLUR_UNDER_WINDOWS10
-		// allow set blur with color scheme, more portable
-		//Bool blur_window = false;
-		//if (RimeConfigGetBool(config, (prefix + "/blur_window").c_str(), &blur_window))
-		//{
-		//	style.blur_window = !!blur_window;
-		//	style.blur_window = style.blur_window && IsWindows10OrGreaterEx();
-		//}
-		if(style.blur_window)
-		{
-			// if set blur, make shadow color transparent
-			style.shadow_color &= 0x00ffffff;
-			// if set blur, make sure alpha of back color between 01~7f, to ensure blur work
-			if((style.back_color & 0xff000000) > 0x7f000000 || (style.back_color & 0xff000000) == 0)
-				style.back_color = (style.back_color & 0x00ffffff) | 0x7f000000;
-		}
-#endif	/* USE_BLUR_UNDER_WINDOWS10 */
 
 #ifdef USE_PAGER_MARK
 		style.prevpage_color = 0;

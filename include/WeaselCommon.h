@@ -9,7 +9,6 @@
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
 
-#define USE_BLUR_UNDER_WINDOWS10
 #define USE_HILITE_MARK
 #define USE_CANDIDATE_BORDER
 #define USE_MOUSE_EVENTS
@@ -281,9 +280,6 @@ namespace weasel
 		int label_font_point;
 		int comment_font_point;
 		bool inline_preedit;
-#ifdef USE_BLUR_UNDER_WINDOWS10
-		bool blur_window;
-#endif
 		bool display_tray_icon;
 		std::wstring current_zhung_icon;
 
@@ -352,9 +348,6 @@ namespace weasel
 			inline_preedit(false),
 			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
-#ifdef USE_BLUR_UNDER_WINDOWS10
-			blur_window(false),
-#endif
 			display_tray_icon(false),
 			current_zhung_icon(),
 
@@ -429,9 +422,6 @@ namespace weasel
 					|| label_font_point != st.label_font_point
 					|| comment_font_point != st.comment_font_point
 					|| inline_preedit != st.inline_preedit
-#ifdef USE_BLUR_UNDER_WINDOWS10
-					|| blur_window != st.blur_window
-#endif
 #ifdef USE_HILITE_MARK
 					|| mark_text != st.mark_text
 #endif
@@ -500,9 +490,6 @@ namespace boost {
 			ar & s.comment_font_point;
 			ar & s.inline_preedit;
 			ar & s.align_type;
-#ifdef USE_BLUR_UNDER_WINDOWS10
-			ar & s.blur_window;
-#endif
 #ifdef USE_HILITE_MARK
 			ar & s.mark_text;
 #endif

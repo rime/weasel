@@ -29,11 +29,6 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	hide_candidates(false),
 	pDWR(NULL),
 	m_blurer(new GdiplusBlur()),
-#ifdef USE_BLUR_UNDER_WINDOWS10
-	setWindowCompositionAttribute(NULL), accent({ ACCENT_ENABLE_BLURBEHIND, 0xff, (DWORD)((long long)m_style.back_color), 0 }), data({ WCA_ACCENT_POLICY, &accent, sizeof(accent) }),
-	m_isBlurAvailable(IsBlurAvailable()),
-	hUser(ui.module()),
-#endif	/* USE_BLUR_UNDER_WINDOWS10 */
 	pBrush(NULL),
 	_m_gdiplusToken(0)
 {
@@ -42,12 +37,6 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_iconAlpha.LoadIconW(IDI_EN, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconFull.LoadIconW(IDI_FULL_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconHalf.LoadIconW(IDI_HALF_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
-#ifdef USE_BLUR_UNDER_WINDOWS10
-	if(hUser && m_isBlurAvailable)
-		setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
-	// if setWindowCompositionAttribute null, not available
-	m_isBlurAvailable = m_isBlurAvailable && (setWindowCompositionAttribute != NULL);
-#endif	/* USE_BLUR_UNDER_WINDOWS10 */
 	// for gdi+ drawings, initialization
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 
@@ -717,17 +706,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	return drawn;
 }
 
-#ifdef USE_BLUR_UNDER_WINDOWS10
-void WeaselPanel::_BlurBacktround(CRect& rc)
-{
-	// radius for icon only is different from other situation
-	int radiusx2 = (m_candidateCount == 0 && m_layout->ShouldDisplayStatusIcon() && m_ctx.aux.empty()) ? 0 : m_style.round_corner_ex*2 + m_style.border/2 - !(m_style.border % 2);
-	rc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
-	SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right+2, rc.bottom+2, radiusx2, radiusx2), true);
-	setWindowCompositionAttribute(m_hWnd, &data);
-}
-#endif
-
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
@@ -861,27 +839,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	}
 	_LayerUpdate(rcw, memDC);
 
-#ifdef USE_BLUR_UNDER_WINDOWS10
-	if(m_isBlurAvailable)
-	{
-		// blur_window swiching between enable and disable
-		if (m_style.blur_window && !(m_style.inline_preedit && (m_candidateCount ==0))) { 
-			accent.AccentState = ACCENT_ENABLE_BLURBEHIND;
-			// if only ascii mode icon should be display, make sure the rect is suitable
-			CRect rcicon(rcw.left, rcw.top, rcw.left + STATUS_ICON_SIZE + m_layout->offsetX * 2, rcw.top + STATUS_ICON_SIZE + m_layout->offsetY * 2);
-			if(rcw.Width() >= rcicon.Width())
-				_BlurBacktround(rcw);
-			else
-				_BlurBacktround(rcicon);
-		}
-		else
-		{
-			accent.AccentState = ACCENT_DISABLED;
-			SetWindowRgn(CreateRectRgn(rcw.left, rcw.top, rcw.right, rcw.bottom), true);
-			setWindowCompositionAttribute(m_hWnd, &data);
-		}
-	}
-#endif 
 #ifdef USE_MOUSE_EVENTS
 	// turn off WS_EX_TRANSPARENT after drawings, for better resp performance
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, ::GetWindowLong(m_hWnd, GWL_EXSTYLE) & (~WS_EX_TRANSPARENT));

@@ -19,9 +19,6 @@ namespace weasel
 	{
 	public:
 		UI() : pimpl_(0)
-#ifdef USE_BLUR_UNDER_WINDOWS10
-			   , m_hUser32Module(GetModuleHandle(TEXT("user32.dll")))
-#endif
 		{ }
 
 		virtual ~UI()
@@ -58,16 +55,10 @@ namespace weasel
 		Status& status() { return status_; } 
 		UIStyle& style() { return style_; }
 		UIStyle& ostyle() { return ostyle_; }
-#ifdef USE_BLUR_UNDER_WINDOWS10
-		HMODULE& module() { return m_hUser32Module; }
-#endif
 
 	private:
 		UIImpl* pimpl_;
 
-#ifdef USE_BLUR_UNDER_WINDOWS10
-		HMODULE m_hUser32Module;
-#endif
 		Context ctx_;
 		Status status_;
 		UIStyle style_;
