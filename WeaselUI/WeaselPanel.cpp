@@ -600,10 +600,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			}
 		}
 		// draw non highlighted candidates, without shadow
-		if (COLORNOTTRANSPARENT(m_style.candidate_back_color) 
-#ifdef USE_CANDIDATE_BORDER
-				|| COLORNOTTRANSPARENT(m_style.candidate_border_color)
-#endif
+		if (COLORNOTTRANSPARENT(m_style.candidate_back_color) || COLORNOTTRANSPARENT(m_style.candidate_border_color)
 				)	// if transparent not to draw
 		{
 			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
@@ -612,11 +609,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
-#ifdef USE_CANDIDATE_BORDER
 				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd, m_style.candidate_border_color);
-#else
-				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd);
-#endif
 				drawn = true;
 			}
 		}
@@ -626,11 +619,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			if(m_istorepos) rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
-#ifdef USE_CANDIDATE_BORDER
 			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_style.hilited_candidate_border_color);
-#else
-			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd);
-#endif
 			drawn = true;
 		}
 	}

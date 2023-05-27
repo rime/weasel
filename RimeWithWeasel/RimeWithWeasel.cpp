@@ -998,7 +998,6 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style)
 			style.candidate_shadow_color = style.shadow_color & 0x00ffffff;
 		}
 		style.candidate_shadow_color &= 0xffffffff;
-#ifdef USE_CANDIDATE_BORDER
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_border_color").c_str(), &style.candidate_border_color, fmt))
 		{
 			style.candidate_border_color = 0x00000000;
@@ -1009,7 +1008,6 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style)
 			style.hilited_candidate_border_color = 0x00000000;
 		}
 		style.hilited_candidate_border_color &= 0xffffffff;
-#endif	/* USE_CANDIDATE_BORDER */
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color, fmt))
 		{
 			style.label_text_color = blend_colors(style.candidate_text_color, style.candidate_back_color);

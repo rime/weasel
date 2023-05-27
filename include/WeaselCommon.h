@@ -9,7 +9,6 @@
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
 
-#define USE_CANDIDATE_BORDER
 #define USE_MOUSE_EVENTS
 //#define USE_MOUSE_HOVER
 //#define USE_SHARP_COLOR_CODE
@@ -305,9 +304,7 @@ namespace weasel
 		int candidate_text_color;
 		int candidate_back_color;
 		int candidate_shadow_color;
-#ifdef USE_CANDIDATE_BORDER
 		int candidate_border_color;
-#endif
 		int label_text_color;
 		int comment_text_color;
 		int back_color;
@@ -319,9 +316,7 @@ namespace weasel
 		int hilited_candidate_text_color;
 		int hilited_candidate_back_color;
 		int hilited_candidate_shadow_color;
-#ifdef USE_CANDIDATE_BORDER
 		int hilited_candidate_border_color;
-#endif
 		int hilited_label_text_color;
 		int hilited_comment_text_color;
 		int hilited_mark_color;
@@ -370,9 +365,7 @@ namespace weasel
 			candidate_text_color(0),
 			candidate_back_color(0),
 			candidate_shadow_color(0),
-#ifdef USE_CANDIDATE_BORDER
 			candidate_border_color(0),
-#endif
 			label_text_color(0),
 			comment_text_color(0),
 			back_color(0),
@@ -384,9 +377,7 @@ namespace weasel
 			hilited_candidate_text_color(0),
 			hilited_candidate_back_color(0),
 			hilited_candidate_shadow_color(0),
-#ifdef USE_CANDIDATE_BORDER
 			hilited_candidate_border_color(0),
-#endif
 			hilited_label_text_color(0),
 			hilited_comment_text_color(0),
 			hilited_mark_color(0),
@@ -436,10 +427,8 @@ namespace weasel
 					|| candidate_text_color != st.candidate_text_color
 					|| candidate_back_color != st.candidate_back_color
 					|| candidate_shadow_color != st.candidate_shadow_color
-#ifdef USE_CANDIDATE_BORDER
 					|| candidate_border_color != st.candidate_border_color
 					|| hilited_candidate_border_color != st.hilited_candidate_border_color
-#endif
 					|| label_text_color != st.label_text_color
 					|| comment_text_color != st.comment_text_color
 					|| back_color != st.back_color
@@ -506,9 +495,7 @@ namespace boost {
 			ar & s.candidate_text_color;
 			ar & s.candidate_back_color;
 			ar & s.candidate_shadow_color;
-#ifdef USE_CANDIDATE_BORDER
 			ar & s.candidate_border_color;
-#endif
 			ar & s.label_text_color;
 			ar & s.comment_text_color;
 			ar & s.back_color;
@@ -520,9 +507,7 @@ namespace boost {
 			ar & s.hilited_candidate_text_color;
 			ar & s.hilited_candidate_back_color;
 			ar & s.hilited_candidate_shadow_color;
-#ifdef USE_CANDIDATE_BORDER
 			ar & s.hilited_candidate_border_color;
-#endif
 			ar & s.hilited_label_text_color;
 			ar & s.hilited_comment_text_color;
 			ar & s.hilited_mark_color;
