@@ -67,10 +67,8 @@ namespace weasel
 		virtual IsToRoundStruct GetRoundInfo(int id) = 0;
 		virtual IsToRoundStruct GetTextRoundInfo() = 0;
 		virtual CRect GetContentRect() = 0;
-#ifdef USE_PAGER_MARK
 		virtual CRect GetPrepageRect() = 0;
 		virtual CRect GetNextpageRect() = 0;
-#endif /* USE_PAGER_MARK */
 
 		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const = 0;
 		virtual bool IsInlinePreedit() const = 0;

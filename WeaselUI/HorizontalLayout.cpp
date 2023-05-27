@@ -20,24 +20,18 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 
-#ifdef USE_PAGER_MARK
 	// calc page indicator 
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	int pgw = pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding * 2;
 	int pgh = max(pgszl.cy, pgszr.cy);
-#endif /*  USE_PAGER_MARK */
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
-#ifdef USE_PAGER_MARK
 		int szx = pgw, szy = max(size.cy, pgh);
-#else
-		int szx = 0, szy = size.cy;
-#endif /*  USE_PAGER_MARK */
 		// icon size higher then preedit text
 		int yoffset = (STATUS_ICON_SIZE >= szy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szy) / 2 : 0;
 		_preeditRect.SetRect(w, height + yoffset, w + size.cx, height + yoffset + size.cy);
@@ -176,7 +170,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	_contentSize.SetSize(width + offsetX, height + 2 * offsetY);
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 
-#ifdef USE_PAGER_MARK
 	// calc page indicator 
 	if(candidates_count && !_style.inline_preedit)
 	{
@@ -191,7 +184,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			_nextPageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
 		}
 	}
-#endif /* USE_PAGER_MARK */
 
 	// prepare temp rect _bgRect for roundinfo calculation
 	CopyRect(_bgRect, _contentRect);

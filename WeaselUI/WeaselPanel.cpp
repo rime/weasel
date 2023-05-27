@@ -255,7 +255,6 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	}
 	// button response
 	{
-#ifdef USE_PAGER_MARK
 		if(!m_style.inline_preedit && m_candidateCount != 0 && COLORNOTTRANSPARENT(m_style.prevpage_color) && COLORNOTTRANSPARENT(m_style.nextpage_color)) {
 			// click prepage
 			if(m_ctx.cinfo.currentPage != 0 ) {
@@ -280,7 +279,6 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 				}
 			}
 		}
-#endif /* USE_PAGER_MARK */
 		// select by click
 		for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 			CRect rect = m_layout->GetCandidateRect((int)i);
@@ -495,7 +493,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
 			_TextOut(rcText, t.c_str(), t.length(), m_style.text_color, txtFormat);
 		}
-#ifdef USE_PAGER_MARK
+		// draw pager mark if not inline_preedit if necessary
 		if(m_candidateCount && !m_style.inline_preedit && COLORNOTTRANSPARENT(m_style.prevpage_color) && COLORNOTTRANSPARENT(m_style.nextpage_color))
 		{
 			const std::wstring pre = L"<";
@@ -510,7 +508,6 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			color = m_ctx.cinfo.is_last_page ? m_style.text_color : m_style.nextpage_color;
 			_TextOut(nrc, next.c_str(), next.length(), color, txtFormat);
 		}
-#endif /*  USE_PAGER_MARK */
 		drawn = true;
 	}
 	return drawn;

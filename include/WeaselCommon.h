@@ -12,7 +12,6 @@
 #define USE_MOUSE_EVENTS
 //#define USE_MOUSE_HOVER
 //#define USE_SHARP_COLOR_CODE
-#define USE_PAGER_MARK
 
 //#define _DEBUG_
 namespace weasel
@@ -320,10 +319,8 @@ namespace weasel
 		int hilited_label_text_color;
 		int hilited_comment_text_color;
 		int hilited_mark_color;
-#ifdef USE_PAGER_MARK
 		int prevpage_color;
 		int nextpage_color;
-#endif /*  USE_PAGER_MARK */
 		// per client
 		int client_caps;
 
@@ -381,10 +378,8 @@ namespace weasel
 			hilited_label_text_color(0),
 			hilited_comment_text_color(0),
 			hilited_mark_color(0),
-#ifdef USE_PAGER_MARK
 			prevpage_color(0),
 			nextpage_color(0),
-#endif
 			client_caps(0) {}
 		bool operator!=(const UIStyle& st)
 		{
@@ -443,10 +438,8 @@ namespace weasel
 					|| hilited_label_text_color != st.hilited_label_text_color
 					|| hilited_comment_text_color != st.hilited_comment_text_color
 					|| hilited_mark_color != st.hilited_mark_color
-#ifdef USE_PAGER_MARK
 					|| prevpage_color != st.prevpage_color
 					|| nextpage_color != st.nextpage_color
-#endif /* USE_PAGER_MARK */
 					);
 		}
 	};
@@ -511,10 +504,8 @@ namespace boost {
 			ar & s.hilited_label_text_color;
 			ar & s.hilited_comment_text_color;
 			ar & s.hilited_mark_color;
-#ifdef USE_PAGER_MARK
 			ar & s.prevpage_color;
 			ar & s.nextpage_color;
-#endif
 			// per client
 			ar & s.client_caps;
 		}

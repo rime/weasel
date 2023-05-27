@@ -938,12 +938,10 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style)
 			style.shadow_color = 0x00000000;
 		}
 
-#ifdef USE_PAGER_MARK
 		style.prevpage_color = 0;
 		style.nextpage_color = 0;
 		RimeConfigGetColor32b(config, (prefix + "/prevpage_color").c_str(), &style.prevpage_color, fmt);
 		RimeConfigGetColor32b(config, (prefix + "/nextpage_color").c_str(), &style.nextpage_color, fmt);
-#endif /* USE_PAGER_MARK */
 		style.shadow_color &= 0xffffffff;
 		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color, fmt);
 		style.text_color &= 0xffffffff;
