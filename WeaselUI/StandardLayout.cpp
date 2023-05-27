@@ -374,6 +374,8 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 			}
 		}
 	}
+	if (IS_FULLSCREENLAYOUT(_style))
+		_statusIconRect.OffsetRect(-_style.border, -_style.border);
 }
 
 bool StandardLayout::IsInlinePreedit() const

@@ -44,6 +44,7 @@ private:
 	void _GetContext(weasel::Context &ctx, UINT session_id);
 
 	bool _IsSessionTSF(UINT session_id);
+	void _UpdateInlinePreeditStatus(UINT session_id);
 
 	AppOptionsByAppName m_app_options;
 	weasel::UI* m_ui;  // reference

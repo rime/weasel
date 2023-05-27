@@ -73,6 +73,17 @@ void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light);
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
+void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _UpdateUICallback)
+{
+	// Dangerous, don't touch
+	static char app_name[50];
+	RimeGetProperty(session_id, "client_app", app_name, sizeof(app_name) - 1);
+	if (utf8towcs(app_name) == std::wstring(L"explorer.exe")) 
+		boost::thread th([=]() { ::Sleep(100); if (_UpdateUICallback) _UpdateUICallback(); });
+	else 
+		if (_UpdateUICallback) _UpdateUICallback();
+}
+
 void RimeWithWeaselHandler::_Setup()
 {
 	RIME_STRUCT(RimeTraits, weasel_traits);
@@ -166,14 +177,8 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 		std::string schema_id = status.schema_id;
 		m_last_schema_id = schema_id;
 		_LoadSchemaSpecificSettings(schema_id);
-		{
-			// set inline_preedit option
-			bool inline_preedit = m_ui->style().inline_preedit && _IsSessionTSF(session_id);	
-			RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
-			// show soft cursor on weasel panel but not inline
-			RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
-			// set inline_preedit option end
-		}
+		_UpdateInlinePreeditStatus(session_id);
+		_RefreshTrayIcon(session_id, _UpdateUICallback);
 	}
 	// show session's welcome message :-) if any
 	if (eat) {
@@ -411,11 +416,11 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	}
 
 	if (!m_ui) return;
+
 	if (RimeGetOption(session_id, "inline_preedit"))
 		m_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
 	else
 		m_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
-
 
 	if (weasel_status.composing)
 	{
@@ -428,17 +433,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 		m_ui->Update(weasel_context, weasel_status);
 	}
 	
-	// Dangerous, don't touch
-	static char app_name[50];
-	RimeGetProperty(session_id, "client_app", app_name, sizeof(app_name) - 1);
-	if (utf8towcs(app_name) == std::wstring(L"explorer.exe")) {
-		boost::thread th([=]() {
-			::Sleep(100);
-			if (_UpdateUICallback) _UpdateUICallback();
-		});
-	} else {
-		if (_UpdateUICallback) _UpdateUICallback();
-	}
+	_RefreshTrayIcon(session_id, _UpdateUICallback);
 
 	m_message_type.clear();
 	m_message_value.clear();
@@ -471,15 +466,15 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
 				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
 				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
-					m_ui->style().current_icon = L"";
+					m_ui->style().current_zhung_icon = L"";
 				else
-					m_ui->style().current_icon = (share_dir + L"\\" + tmp);
+					m_ui->style().current_zhung_icon = (share_dir + L"\\" + tmp);
 			}
 			else
-				m_ui->style().current_icon = user_dir + L"\\" + tmp;
+				m_ui->style().current_zhung_icon = user_dir + L"\\" + tmp;
 		}
 		else
-			m_ui->style().current_icon = L"";
+			m_ui->style().current_zhung_icon = L"";
 	}
 	// load schema icon end
 	RimeConfigClose(&config);
@@ -809,6 +804,11 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit) || initialize)
 	{
 		style.inline_preedit = !!inline_preedit;
+	}
+	Bool vertical_auto_reverse = False;
+	if (RimeConfigGetBool(config, "style/vertical_auto_reverse", &vertical_auto_reverse) || initialize)
+	{
+		style.vertical_auto_reverse = !!vertical_auto_reverse;
 	}
 
 #ifdef USE_BLUR_UNDER_WINDOWS10
@@ -1152,20 +1152,16 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
-		std::string schema_id = status.schema_id;
+		std::string schema_id = "";
+		if(status.schema_id)
+			schema_id = status.schema_id;
 		if (schema_id != m_last_schema_id)
 		{
 			m_last_schema_id = schema_id;
 			RimeSetOption(session_id, "__synced", false); // Sync new schema options with front end
 			_LoadSchemaSpecificSettings(schema_id);
-			{
-				// set inline_preedit option
-				bool inline_preedit = m_ui->style().inline_preedit && _IsSessionTSF(session_id);	
-				RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
-				// show soft cursor on weasel panel but not inline
-				RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
-				// set inline_preedit option end
-			}
+			_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
+			_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
 		}
 		stat.schema_name = utf8towcs(status.schema_name);
 		stat.ascii_mode = !!status.is_ascii_mode;
@@ -1210,3 +1206,14 @@ bool RimeWithWeaselHandler::_IsSessionTSF(UINT session_id)
 	RimeGetProperty(session_id, "client_type", client_type, sizeof(client_type) - 1);
 	return std::string(client_type) == "tsf";
 }
+
+void RimeWithWeaselHandler::_UpdateInlinePreeditStatus(UINT session_id)
+{
+	if (!m_ui)	return;
+	// set inline_preedit option
+	bool inline_preedit = m_ui->style().inline_preedit && _IsSessionTSF(session_id);
+	RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
+	// show soft cursor on weasel panel but not inline
+	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
+}
+

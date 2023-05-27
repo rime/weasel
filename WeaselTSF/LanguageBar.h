@@ -1,10 +1,11 @@
 #pragma once
 #include <msctf.h>
+#include <WeaselUI.h>
 
 class CLangBarItemButton : public ITfLangBarItemButton, public ITfSource
 {
 public:
-	CLangBarItemButton(com_ptr<WeaselTSF> pTextService, REFGUID guid);
+	CLangBarItemButton(com_ptr<WeaselTSF> pTextService, REFGUID guid, weasel::UIStyle& style );
 	~CLangBarItemButton();
 
 	/* IUnknown */
@@ -39,5 +40,7 @@ private:
 	LONG _cRef; /* COM Reference count */
 	DWORD _status;
 	bool ascii_mode;
+	weasel::UIStyle& _style;
+	std::wstring _current_schema_icon;
 };
 

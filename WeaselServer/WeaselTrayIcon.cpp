@@ -8,7 +8,7 @@ static UINT mode_icon[] = { IDI_ZH, IDI_ZH, IDI_EN, IDI_RELOAD };
 static const WCHAR *mode_label[] = { NULL, /*L"中文"*/ NULL, /*L"西文"*/ NULL, L"維護中" };
 
 WeaselTrayIcon::WeaselTrayIcon(weasel::UI &ui)
-	: m_style(ui.style()), m_status(ui.status()), m_mode(INITIAL)
+	: m_style(ui.style()), m_status(ui.status()), m_mode(INITIAL), m_schema_icon()
 {
 }
 
@@ -47,11 +47,22 @@ void WeaselTrayIcon::Refresh()
 	}
 	WeaselTrayMode mode = m_status.disabled ? DISABLED : 
 		m_status.ascii_mode ? ASCII : ZHUNG;
-	if (mode != m_mode)
+	/* change icon, when 
+		1,mode changed
+		2,icon changed
+		3,both m_schema_icon and m_style.current_zhung_icon empty(for initialize)
+	*/
+	if (mode != m_mode 
+			|| m_schema_icon != m_style.current_zhung_icon 
+			|| (m_schema_icon.empty() && m_style.current_zhung_icon.empty()))
 	{
 		m_mode = mode;
+		m_schema_icon = m_style.current_zhung_icon;
+		if(mode != ZHUNG || m_style.current_zhung_icon.empty())
+			SetIcon(mode_icon[mode]);
+		else
+			SetIcon(m_style.current_zhung_icon.c_str());
 		ShowIcon();
-		SetIcon(mode_icon[mode]);
 		if (mode_label[mode])
 		{
 			ShowBalloon(mode_label[mode], WEASEL_IME_NAME);

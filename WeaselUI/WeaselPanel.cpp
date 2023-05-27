@@ -14,8 +14,6 @@
 #define COLORNOTTRANSPARENT(color)	((color & 0xff000000) != 0)
 #define TRANS_COLOR		0x00000000
 #define GDPCOLOR_FROM_COLORREF(color)	Gdiplus::Color::MakeARGB(((color >> 24) & 0xff), GetRValue(color), GetGValue(color), GetBValue(color))
-#define IS_FULLSCREENLAYOUT(style)	(style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
-#define NOT_FULLSCREENLAYOUT(style)	(style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN && style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 
 #pragma comment(lib, "Shcore.lib")
 
@@ -26,6 +24,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_style(ui.style()),
 	m_ostyle(ui.ostyle()),
 	m_candidateCount(0),
+	m_current_zhung_icon(),
 	dpi(96),
 	hide_candidates(false),
 	pDWR(NULL),
@@ -259,6 +258,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	// capture
 	{
 		CRect recth = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
+		if(m_istorepos)	recth.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
 		recth.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 		// capture widow
 		if (recth.PtInRect(point)) _CaptureRect(recth);
@@ -271,6 +271,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 			// click prepage
 			if(m_ctx.cinfo.currentPage != 0 ) {
 				CRect prc = m_layout->GetPrepageRect();
+				if(m_istorepos)	prc.OffsetRect(0, m_offsety_preedit);
 				if(prc.PtInRect(point)) {
 					// to do send pgup
 					SendInputKey(33);
@@ -281,6 +282,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 			// click nextpage
 			if(!m_ctx.cinfo.is_last_page) {
 				CRect prc = m_layout->GetNextpageRect();
+				if(m_istorepos)	prc.OffsetRect(0, m_offsety_preedit);
 				if(prc.PtInRect(point)) {
 					// to do send pgdn
 					SendInputKey(34);
@@ -291,8 +293,9 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 		}
 #endif /* USE_PAGER_MARK */
 		// select by click
-		for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+		for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 			CRect rect = m_layout->GetCandidateRect((int)i);
+			if(m_istorepos)	rect.OffsetRect(0, m_offsetys[i]);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			if (rect.PtInRect(point))
 			{
@@ -598,14 +601,17 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	IDWriteTextFormat1* labeltxtFormat = pDWR->pLabelTextFormat;
 	IDWriteTextFormat1* commenttxtFormat = pDWR->pCommentTextFormat;
 	BackType bkType = BackType::CAND;
+
+
 	CRect rect;	
 	// draw back color and shadow color, with gdi+
 	if (back) {
 		// if candidate_shadow_color not transparent, draw candidate shadow first
 		if (COLORNOTTRANSPARENT(m_style.candidate_shadow_color)) {
-			for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 				if (i == m_ctx.cinfo.highlighted) continue;	// draw non hilited candidates only 
 				rect = m_layout->GetCandidateRect((int)i);
+				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
 				_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType, rd);
@@ -619,9 +625,10 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 #endif
 				)	// if transparent not to draw
 		{
-			for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 				if (i == m_ctx.cinfo.highlighted) continue;
 				rect = m_layout->GetCandidateRect((int)i);
+				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
 #ifdef USE_CANDIDATE_BORDER
@@ -635,6 +642,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 		// draw highlighted back ground and shadow
 		{
 			rect = m_layout->GetHighlightRect();
+			if(m_istorepos) rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
 #ifdef USE_CANDIDATE_BORDER
@@ -650,7 +658,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	{
 		// begin draw candidate texts
 		int label_text_color, candidate_text_color, comment_text_color;
-		for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+		for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 			if (i == m_ctx.cinfo.highlighted)
 			{
 				label_text_color = m_style.hilited_label_text_color;
@@ -668,6 +676,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			if (!m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
 			{
 				CRect rc = m_layout->GetHighlightRect();
+				if(m_istorepos) rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
 				rc.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				int vgap = m_layout->MARK_HEIGHT ? (rc.Height() - m_layout->MARK_HEIGHT) / 2 : 0;
 				int hgap = m_layout->MARK_WIDTH ? (rc.Width() - m_layout->MARK_WIDTH) / 2 : 0;
@@ -685,18 +694,21 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
 			if (!label.empty()) {
 				rect = m_layout->GetCandidateLabelRect((int)i);
+				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				_TextOut(rect, label.c_str(), label.length(), label_text_color, labeltxtFormat);
 			}
 			// Draw text
 			std::wstring text = candidates.at(i).str;
 			if (!text.empty()) {
 				rect = m_layout->GetCandidateTextRect((int)i);
+				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				_TextOut(rect, text.c_str(), text.length(), candidate_text_color, txtFormat);
 			}
 			// Draw comment
 			std::wstring comment = comments.at(i).str;
 			if (!comment.empty()) {
 				rect = m_layout->GetCandidateCommentRect((int)i);
+				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				_TextOut(rect, comment.c_str(), comment.length(), comment_text_color, commenttxtFormat);
 			}
 			drawn = true;
@@ -728,15 +740,81 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	ReleaseDC(hdc);
 	bool drawn = false;
 	if(!hide_candidates){
+		bool over_bottom = false;
+		CRect auxrc = m_layout->GetAuxiliaryRect();
+		CRect preeditrc = m_layout->GetPreeditRect();
+		if(m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL)
+		{
+			RECT rcWorkArea;
+			memset(&rcWorkArea, 0, sizeof(rcWorkArea));
+			HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+			if (hMonitor) {
+				MONITORINFO info;
+				info.cbSize = sizeof(MONITORINFO);
+				if (GetMonitorInfo(hMonitor, &info)) {
+					rcWorkArea = info.rcWork;
+				}
+			}
+			CSize size = m_layout->GetContentSize();
+			rcWorkArea.right -= size.cx;
+			rcWorkArea.bottom -= size.cy;
+			int x = m_ocursurPos.left;
+			int y = m_ocursurPos.bottom;
+			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
+			y -= m_style.shadow_radius / 2;
+			over_bottom = (y > rcWorkArea.bottom);
+			if (over_bottom)
+			{
+				CRect* rects = new CRect[m_candidateCount];
+				int* btmys = new int[m_candidateCount];
+				for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+					rects[i] = m_layout->GetCandidateRect(i);
+					btmys[i] = rects[i].bottom;
+				}
+				if (m_candidateCount) {
+					if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+						m_offsety_preedit = rects[m_candidateCount - 1].bottom - preeditrc.bottom;
+					if (!m_ctx.aux.str.empty())
+						m_offsety_aux = rects[m_candidateCount - 1].bottom - auxrc.bottom;
+				} else {
+					m_offsety_preedit = 0;
+					m_offsety_aux = 0;
+				}
+				int base_gap = 0;
+				if (!m_ctx.aux.str.empty())
+					base_gap = auxrc.Height() + m_style.spacing;
+				else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+					base_gap = preeditrc.Height() + m_style.spacing;
+
+				for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+					if (i == 0)
+						m_offsetys[i] = btmys[m_candidateCount - i - 1] - base_gap - rects[i].bottom;
+					else
+						m_offsetys[i] = (rects[i - 1].top + m_offsetys[i - 1] - m_style.candidate_spacing) - rects[i].bottom;
+				}
+				delete[] rects;
+				delete[] btmys;
+			}
+		}
+
 		// background and candidates back, hilite back drawing start
 		if (!m_ctx.empty()) {
 			CRect backrc = m_layout->GetContentRect();
 			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, IsToRoundStruct(),  m_style.border_color);
 		}
-		if(!m_ctx.aux.str.empty())
-			drawn |= _DrawPreeditBack(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
+		m_istorepos = over_bottom;
+		if (!m_ctx.aux.str.empty())
+		{
+			if(m_istorepos)
+				auxrc.OffsetRect(0, m_offsety_aux);
+			drawn |= _DrawPreeditBack(m_ctx.aux, memDC, auxrc);
+		}
 		if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
-			drawn |= _DrawPreeditBack(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
+		{
+			if(m_istorepos)
+				preeditrc.OffsetRect(0, m_offsety_preedit);
+			drawn |= _DrawPreeditBack(m_ctx.preedit, memDC, preeditrc);
+		}
 		if (m_candidateCount)
 			drawn |= _DrawCandidates(memDC, true);
 		// background and candidates back, hilite back drawing end
@@ -745,11 +823,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		pDWR->pRenderTarget->BindDC(memDC, &rcw);
 		pDWR->pRenderTarget->BeginDraw();
 		// draw auxiliary string
-		if(!m_ctx.aux.str.empty())
-		drawn |= _DrawPreedit(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
+		if (!m_ctx.aux.str.empty())
+			drawn |= _DrawPreedit(m_ctx.aux, memDC, auxrc);
 		// draw preedit string
 		if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
-			drawn |= _DrawPreedit(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
+			drawn |= _DrawPreedit(m_ctx.preedit, memDC, preeditrc);
 		// draw candidates string
 		if(m_candidateCount)
 			drawn |= _DrawCandidates(memDC);
@@ -759,15 +837,19 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// status icon (I guess Metro IME stole my idea :)
 		if (m_layout->ShouldDisplayStatusIcon()) {
 			// decide if custom schema zhung icon to show
-			if (m_iconEnabled.IsNull()) {
-				if (!m_style.current_icon.empty())
-					m_iconEnabled = (HICON)LoadImage(NULL, m_style.current_icon.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
-				else
+			if(m_current_zhung_icon != m_style.current_zhung_icon) {
+				m_current_zhung_icon = m_style.current_zhung_icon;
+				if (m_style.current_zhung_icon.empty())
 					m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
-			}
+				else
+					m_iconEnabled = (HICON)LoadImage(NULL, m_style.current_zhung_icon.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
+			} 
 			CRect iconRect(m_layout->GetStatusIconRect());
-			if(IS_FULLSCREENLAYOUT(m_style))
-				iconRect.OffsetRect(-1, -1);
+			if (m_istorepos && !m_ctx.aux.str.empty())
+				iconRect.OffsetRect(0, m_offsety_aux);
+			else if (m_istorepos && !m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+				iconRect.OffsetRect(0, m_offsety_preedit);
+
 			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha :
 				((m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled : (m_status.full_shape ? m_iconFull : m_iconHalf)) );
 			memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
@@ -839,6 +921,7 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 	m_inputPos = rc;
+	m_ocursurPos = m_inputPos;
 	if (m_style.shadow_offset_y >= 0)	m_inputPos.OffsetRect(0, 10);
 	// with parameter to avoid vertical flicker
 	_RepositionWindow(true);

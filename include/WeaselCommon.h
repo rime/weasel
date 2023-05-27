@@ -285,7 +285,7 @@ namespace weasel
 		bool blur_window;
 #endif
 		bool display_tray_icon;
-		std::wstring current_icon;
+		std::wstring current_zhung_icon;
 
 		std::wstring label_text_format;
 #ifdef USE_HILITE_MARK
@@ -308,6 +308,7 @@ namespace weasel
 		int shadow_radius;
 		int shadow_offset_x;
 		int shadow_offset_y;
+		bool vertical_auto_reverse;
 		// color scheme
 		int text_color;
 		int candidate_text_color;
@@ -355,7 +356,7 @@ namespace weasel
 			blur_window(false),
 #endif
 			display_tray_icon(false),
-			current_icon(),
+			current_zhung_icon(),
 
 			label_text_format(L"%s."),
 #ifdef USE_HILITE_MARK
@@ -380,6 +381,7 @@ namespace weasel
 			shadow_radius(0),
 			shadow_offset_x(0),
 			shadow_offset_y(0),
+			vertical_auto_reverse(false),
 			text_color(0),
 			candidate_text_color(0),
 			candidate_back_color(0),
@@ -434,7 +436,7 @@ namespace weasel
 					|| mark_text != st.mark_text
 #endif
 					|| display_tray_icon != st.display_tray_icon
-					|| current_icon != st.current_icon
+					|| current_zhung_icon != st.current_zhung_icon
 					|| label_text_format != st.label_text_format
 					|| min_width != st.min_width
 					|| max_width != st.max_width
@@ -452,6 +454,7 @@ namespace weasel
 					|| shadow_radius != st.shadow_radius
 					|| shadow_offset_x != st.shadow_offset_x
 					|| shadow_offset_y != st.shadow_offset_y
+					|| vertical_auto_reverse != st.vertical_auto_reverse
 					|| text_color != st.text_color
 					|| candidate_text_color != st.candidate_text_color
 					|| candidate_back_color != st.candidate_back_color
@@ -505,7 +508,7 @@ namespace boost {
 #endif
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
-			ar & s.current_icon;
+			ar & s.current_zhung_icon;
 			ar & s.label_text_format;
 			// layout
 			ar & s.layout_type;
@@ -527,6 +530,7 @@ namespace boost {
 			ar & s.shadow_radius;
 			ar & s.shadow_offset_x;
 			ar & s.shadow_offset_y;
+			ar & s.vertical_auto_reverse;
 			// color scheme
 			ar & s.text_color;
 			ar & s.candidate_text_color;

@@ -1,6 +1,7 @@
 #pragma once
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
+#include "StandardLayout.h"
 #include "Layout.h"
 #include "GdiplusBlur.h"
 
@@ -158,6 +159,11 @@ private:
 
 	CRect m_inputPos;
 	CRect m_oinputPos;
+	CRect m_ocursurPos;
+	int  m_offsetys[MAX_CANDIDATES_COUNT];	// offset y for candidates when vertical layout over bottom
+	int  m_offsety_preedit;
+	int  m_offsety_aux;
+	bool m_istorepos;
 	CSize m_osize;
 
 	CIcon m_iconDisabled;
@@ -165,6 +171,7 @@ private:
 	CIcon m_iconAlpha;
 	CIcon m_iconFull;
 	CIcon m_iconHalf;
+	std::wstring m_current_zhung_icon;
 	// for gdiplus drawings
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
