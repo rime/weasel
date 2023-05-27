@@ -26,31 +26,6 @@ typedef enum
 	#define TRIMHEAD_REGEX	std::regex("0x", std::regex::icase)
 #endif
 
-#ifdef USE_THEME_DARK
-static inline BOOL IsThemeLight()
-{
-	// only for windows 10 or greater, return false when lower version.
-	OSVERSIONINFOEXW ovi = { sizeof ovi };
-	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
-	if (ovi.dwMajorVersion < 10) return false;
-	HKEY hKL;
-	LPCWSTR addr = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
-	//LPCWSTR key = L"SystemUsesLightTheme"; 
-	LPCWSTR key = L"AppsUseLightTheme";
-	DWORD dwType;
-	BYTE values[16];
-	DWORD dataLen;
-	LSTATUS ret = RegOpenKeyEx(HKEY_CURRENT_USER, addr, 0, KEY_READ, &hKL);
-	if (ret == ERROR_SUCCESS)
-	{
-		ret = RegQueryValueExW(hKL, key, 0, &dwType, values, &dataLen);
-		RegCloseKey(hKL);
-		return (values[0] != 0);
-	}
-	MessageBox(0, L"open reg failed, return false", L"", 0);
-	return FALSE;
-}
-#endif /* USE_THEME_DARK */
 int expand_ibus_modifier(int m)
 {
 	return (m & 0xff) | ((m & 0xff00) << 16);
@@ -70,7 +45,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 }
 
 void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
-bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light);
+bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style);
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _UpdateUICallback)
@@ -124,14 +99,6 @@ void RimeWithWeaselHandler::Initialize()
 		{
 			_UpdateUIStyle(&config, m_ui, true);
 			m_base_style = m_ui->style();
-#ifdef USE_THEME_DARK
-			bool is_light = IsThemeLight();
-			m_base_style_dark = m_base_style;
-			_UpdateUIStyleColor(&config, m_base_style, true);	// light theme
-			if (!_UpdateUIStyleColor(&config, m_base_style_dark, false))	// dark theme
-				m_base_style_dark = m_base_style;
-			m_ui->style() = is_light ? m_base_style : m_base_style_dark;
-#endif /*  USE_THEME_DARK */
 		}
 		_LoadAppOptions(&config, m_app_options);
 		RimeConfigClose(&config);
@@ -167,10 +134,6 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 
-#ifdef USE_THEME_DARK
-	if (m_ui)
-		m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
-#endif /* USE_THEME_DARK */
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
 	{
@@ -445,11 +408,7 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config))
 		return;
-#ifdef USE_THEME_DARK
-	m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
-#else
 	m_ui->style() = m_base_style;
-#endif /* USE_THEME_DARK */
 	_UpdateUIStyle(&config, m_ui, false);
 	// load schema icon start
 	{
@@ -946,28 +905,16 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	else if (style.hilite_padding > -style.margin_y && style.margin_y < 0)
 		style.margin_y = -(style.hilite_padding);
 	// color scheme
-#ifdef USE_THEME_DARK
-	bool is_light = IsThemeLight();
-	std::string color_pre = is_light ? "style/color_scheme" : "style/color_scheme_dark";
-	bool sta = RimeConfigGetString(config, color_pre.c_str(), buffer, BUF_SIZE);
-	// fallback if color_scheme_dark not set
-	if (!sta) sta = RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE);
-	if (initialize && sta)
-		_UpdateUIStyleColor(config, style, is_light);
-#else
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
-		_UpdateUIStyleColor(config, style, true);
-#endif /* USE_THEME_DARK */
+		_UpdateUIStyleColor(config, style);
 }
 
-static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light)
+static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style)
 {
 	const int BUF_SIZE = 2047;
 	char buffer[BUF_SIZE + 1];
 	memset(buffer, '\0', sizeof(buffer));
 	std::string color_mark = "style/color_scheme";
-	if (!is_light)
-		color_mark += "_dark";
 	// color scheme
 	if(RimeConfigGetString(config, color_mark.c_str(), buffer, BUF_SIZE))
 	{
