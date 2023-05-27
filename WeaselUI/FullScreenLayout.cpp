@@ -28,7 +28,6 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	int step = 32;
 	do {
 		m_layout->DoLayout(dc, pDWR);
-#ifdef USE_HILITE_MARK
 		if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 		{
 			CSize sg;
@@ -37,7 +36,6 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 			MARK_HEIGHT = sg.cy;
 			MARK_GAP = MARK_WIDTH + 4;
 		}
-#endif
 	}
 	while (AdjustFontPoint(dc, workArea, step, pDWR));
 

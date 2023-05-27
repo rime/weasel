@@ -79,11 +79,9 @@ namespace weasel
 		
 		int offsetX = 0;
 		int offsetY = 0;
-#ifdef USE_HILITE_MARK
 		int MARK_WIDTH = 4;
 		int MARK_GAP = 8;
 		int MARK_HEIGHT = 0;
-#endif	/* USE_HILITE_MARK */
 
 	protected:
 		const UIStyle &_style;

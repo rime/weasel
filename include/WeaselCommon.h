@@ -9,7 +9,6 @@
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
 
-#define USE_HILITE_MARK
 #define USE_CANDIDATE_BORDER
 #define USE_MOUSE_EVENTS
 //#define USE_MOUSE_HOVER
@@ -282,9 +281,7 @@ namespace weasel
 		std::wstring current_zhung_icon;
 
 		std::wstring label_text_format;
-#ifdef USE_HILITE_MARK
 		std::wstring mark_text;
-#endif
 		// layout
 		int min_width;
 		int max_width;
@@ -327,9 +324,7 @@ namespace weasel
 #endif
 		int hilited_label_text_color;
 		int hilited_comment_text_color;
-#ifdef USE_HILITE_MARK
 		int hilited_mark_color;
-#endif
 #ifdef USE_PAGER_MARK
 		int prevpage_color;
 		int nextpage_color;
@@ -350,9 +345,7 @@ namespace weasel
 			current_zhung_icon(),
 
 			label_text_format(L"%s."),
-#ifdef USE_HILITE_MARK
 			mark_text(),
-#endif
 			layout_type(LAYOUT_VERTICAL),
 			vertical_text_left_to_right(false),
 			vertical_text_with_wrap(false),
@@ -396,9 +389,7 @@ namespace weasel
 #endif
 			hilited_label_text_color(0),
 			hilited_comment_text_color(0),
-#ifdef USE_HILITE_MARK
 			hilited_mark_color(0),
-#endif
 #ifdef USE_PAGER_MARK
 			prevpage_color(0),
 			nextpage_color(0),
@@ -420,9 +411,7 @@ namespace weasel
 					|| label_font_point != st.label_font_point
 					|| comment_font_point != st.comment_font_point
 					|| inline_preedit != st.inline_preedit
-#ifdef USE_HILITE_MARK
 					|| mark_text != st.mark_text
-#endif
 					|| display_tray_icon != st.display_tray_icon
 					|| current_zhung_icon != st.current_zhung_icon
 					|| label_text_format != st.label_text_format
@@ -464,9 +453,7 @@ namespace weasel
 					|| hilited_candidate_shadow_color != st.hilited_candidate_shadow_color
 					|| hilited_label_text_color != st.hilited_label_text_color
 					|| hilited_comment_text_color != st.hilited_comment_text_color
-#ifdef USE_HILITE_MARK
 					|| hilited_mark_color != st.hilited_mark_color
-#endif
 #ifdef USE_PAGER_MARK
 					|| prevpage_color != st.prevpage_color
 					|| nextpage_color != st.nextpage_color
@@ -488,9 +475,7 @@ namespace boost {
 			ar & s.comment_font_point;
 			ar & s.inline_preedit;
 			ar & s.align_type;
-#ifdef USE_HILITE_MARK
 			ar & s.mark_text;
-#endif
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
 			ar & s.current_zhung_icon;
@@ -540,9 +525,7 @@ namespace boost {
 #endif
 			ar & s.hilited_label_text_color;
 			ar & s.hilited_comment_text_color;
-#ifdef USE_HILITE_MARK
 			ar & s.hilited_mark_color;
-#endif
 #ifdef USE_PAGER_MARK
 			ar & s.prevpage_color;
 			ar & s.nextpage_color;

@@ -16,7 +16,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	int height = offsetY, width = offsetX + real_margin_x;
 	int h = offsetY + real_margin_y;
 
-#ifdef USE_HILITE_MARK
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
@@ -26,9 +25,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		MARK_GAP = MARK_HEIGHT + 4;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
-#else
-	int base_offset =  0;
-#endif	/* USE_HILITE_MARK */
 
 #ifdef USE_PAGER_MARK
 	// calc page indicator 
@@ -232,7 +228,6 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	int height = offsetY, width = offsetX + real_margin_x;
 	int h = offsetY + real_margin_y;
 
-#ifdef USE_HILITE_MARK
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
@@ -242,9 +237,6 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 		MARK_GAP = MARK_HEIGHT + 4;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
-#else
-	int base_offset =  0;
-#endif
 
 #ifdef USE_PAGER_MARK
 	// calc page indicator 

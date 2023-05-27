@@ -9,7 +9,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	int width = offsetX + real_margin_x, height = offsetY + real_margin_y;
 	int w = offsetX + real_margin_x;
 
-#ifdef USE_HILITE_MARK
 	/* calc mark_text sizes */
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
@@ -20,9 +19,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		MARK_GAP = MARK_WIDTH + 4;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
-#else
-	int base_offset = 0;
-#endif	/* USE_HILITE_MARK */
 
 #ifdef USE_PAGER_MARK
 	// calc page indicator 

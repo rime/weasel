@@ -553,12 +553,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				{
 					std::string label = m_ui->style().label_font_point > 0 ? _GetLabelText(cinfo.labels, i, m_ui->style().label_text_format.c_str()) : "";
 					std::string comment = m_ui->style().comment_font_point > 0 ? wstring_to_string(cinfo.comments.at(i).str, CP_UTF8) : "";
-#ifdef USE_HILITE_MARK
 					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : wstring_to_string(m_ui->style().mark_text, CP_UTF8);
 					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
-#else
-					std::string prefix = "";
-#endif
 					topush += " " + prefix + label + std::string(ctx.menu.candidates[i].text) + " " + comment;
 				}
 				messages.push_back(topush + " ]\n");
@@ -831,13 +827,12 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.label_text_format = utf8towcs(label_text_format);
 	}
-#ifdef USE_HILITE_MARK
 	char mark_text[128] = { 0 };
 	if (RimeConfigGetString(config, "style/mark_text", mark_text, sizeof(mark_text) - 1))
 	{
 		style.mark_text = utf8towcs(mark_text);
 	}
-#endif
+
 	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
 	RimeConfigGetInt(config, "style/layout/max_width", &style.max_width);
 	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
@@ -1034,14 +1029,12 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style)
 		style.comment_text_color &= 0xffffffff;
 		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color, fmt);
 		style.hilited_comment_text_color &= 0xffffffff;
-#ifdef USE_HILITE_MARK
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_mark_color").c_str(), &style.hilited_mark_color, fmt))
 		{
 			// default transparent hilited_candidate_back_color
 			style.hilited_mark_color = style.hilited_candidate_back_color & 0x00ffffff;
 		}
 		style.hilited_mark_color &= 0xffffffff;
-#endif	/* USE_HILITE_MARK */
 		return true;
 	}
 	return false;
