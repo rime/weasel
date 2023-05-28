@@ -41,23 +41,8 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		_pTextService->_SetComposition(pComposition);
 		
 		/* set selection */
-		/* WORKAROUND:
-		 *   CUAS does not provide a correct GetTextExt() position unless the composition is filled with characters.
-		 *   So we insert a dummy space character here.
-		 *   This is the same workaround used by Microsoft Pinyin IME (New Experience).
-		 */
-		//if (_fCUASWorkaroundEnabled)
-		//{
-		//	pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
-		//	pRangeComposition->Collapse(ec, TF_ANCHOR_START);
-		//}
-
-		// NOTE: Seems that `OnCompositionTerminated` will be triggered even when
-		//       normally end a composition if not put any string in it.
-		//       So just insert a blank here.
-		pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
-		pRangeComposition->Collapse(ec, TF_ANCHOR_START);
 		TF_SELECTION tfSelection;
+		pRangeComposition->Collapse(ec, TF_ANCHOR_END);
 		tfSelection.range = pRangeComposition;
 		tfSelection.style.ase = TF_AE_NONE;
 		tfSelection.style.fInterimChar = FALSE;
@@ -228,18 +213,15 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 	int sel_start = 0, sel_end = 0; /* TODO: Check the availability and correctness of these values */
 	for (size_t i = 0; i < _context->preedit.attributes.size(); i++)
 		if (_context->preedit.attributes.at(i).type == weasel::HIGHLIGHTED)
-		{
+	{
 			sel_start = _context->preedit.attributes.at(i).range.start;
 			sel_end = _context->preedit.attributes.at(i).range.end;
 			break;
-		}
+	}
 
 	/* Set caret */
-	LONG cch;
 	TF_SELECTION tfSelection;
-	pRangeComposition->Collapse(ec, TF_ANCHOR_START);
-	pRangeComposition->ShiftEnd(ec, sel_end, &cch, NULL);
-	pRangeComposition->ShiftStart(ec, sel_start, &cch, NULL);
+	pRangeComposition->Collapse(ec, TF_ANCHOR_END);
 	tfSelection.range = pRangeComposition;
 	tfSelection.style.ase = TF_AE_NONE;
 	tfSelection.style.fInterimChar = FALSE;
