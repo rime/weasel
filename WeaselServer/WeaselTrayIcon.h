@@ -24,6 +24,7 @@ protected:
 	weasel::UIStyle &m_style;
 	weasel::Status &m_status;
 	WeaselTrayMode m_mode;
-	std::wstring m_schema_icon;
+	std::wstring m_schema_zhung_icon;
+	std::wstring m_schema_ascii_icon;
 };
 

@@ -41,6 +41,7 @@ private:
 	DWORD _status;
 	bool ascii_mode;
 	weasel::UIStyle& _style;
-	std::wstring _current_schema_icon;
+	std::wstring _current_schema_zhung_icon;
+	std::wstring _current_schema_ascii_icon;
 };
 

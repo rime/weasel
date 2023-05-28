@@ -34,7 +34,7 @@ static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
 }
 
 CLangBarItemButton::CLangBarItemButton(com_ptr<WeaselTSF> pTextService, REFGUID guid, weasel::UIStyle& style)
-	: _status(0), _style(style), _current_schema_icon()
+	: _status(0), _style(style), _current_schema_zhung_icon(), _current_schema_ascii_icon()
 {
 	DllAddRef();
 
@@ -154,23 +154,43 @@ STDAPI CLangBarItemButton::OnMenuSelect(UINT wID)
 
 STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 {
-	if (ascii_mode || _style.current_zhung_icon.empty())
-		*phIcon = (HICON)LoadImageW(
-			g_hInst,
-			MAKEINTRESOURCEW(ascii_mode ? IDI_EN : IDI_ZH),
-			IMAGE_ICON,
-			GetSystemMetrics(SM_CXSMICON),
-			GetSystemMetrics(SM_CYSMICON),
-			LR_SHARED);
+	if (ascii_mode)
+	{
+		if(_style.current_ascii_icon.empty())
+			*phIcon = (HICON)LoadImageW(
+					g_hInst,
+					MAKEINTRESOURCEW(IDI_EN),
+					IMAGE_ICON,
+					GetSystemMetrics(SM_CXSMICON),
+					GetSystemMetrics(SM_CYSMICON),
+					LR_SHARED);
+		else
+			*phIcon = (HICON)LoadImageW(
+					NULL,
+					_style.current_ascii_icon.c_str(),
+					IMAGE_ICON,
+					GetSystemMetrics(SM_CXSMICON),
+					GetSystemMetrics(SM_CYSMICON),
+					LR_LOADFROMFILE);
+	}
 	else
-	{ 
-		*phIcon = (HICON)LoadImageW(
-			NULL,
-			_style.current_zhung_icon.c_str(),
-			IMAGE_ICON,
-			GetSystemMetrics(SM_CXSMICON),
-			GetSystemMetrics(SM_CYSMICON),
-			LR_LOADFROMFILE);
+	{
+		if( _style.current_zhung_icon.empty()) 
+			*phIcon = (HICON)LoadImageW(
+					g_hInst,
+					MAKEINTRESOURCEW(IDI_ZH),
+					IMAGE_ICON,
+					GetSystemMetrics(SM_CXSMICON),
+					GetSystemMetrics(SM_CYSMICON),
+					LR_SHARED);
+		else
+			*phIcon = (HICON)LoadImageW(
+					NULL,
+					_style.current_zhung_icon.c_str(),
+					IMAGE_ICON,
+					GetSystemMetrics(SM_CXSMICON),
+					GetSystemMetrics(SM_CYSMICON),
+					LR_LOADFROMFILE);
 	}
 	return (*phIcon == NULL)? E_FAIL: S_OK;
 }
@@ -213,8 +233,14 @@ void CLangBarItemButton::UpdateWeaselStatus(weasel::Status stat)
 			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
 		}
 	}
-	if (_current_schema_icon != _style.current_zhung_icon) {
-		_current_schema_icon = _style.current_zhung_icon;
+	if (_current_schema_zhung_icon != _style.current_zhung_icon) {
+		_current_schema_zhung_icon = _style.current_zhung_icon;
+		if (_pLangBarItemSink) {
+			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
+		}
+	}
+	if (_current_schema_ascii_icon != _style.current_ascii_icon) {
+		_current_schema_ascii_icon = _style.current_ascii_icon;
 		if (_pLangBarItemSink) {
 			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
 		}
