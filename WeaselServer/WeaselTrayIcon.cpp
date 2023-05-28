@@ -64,12 +64,16 @@ void WeaselTrayIcon::Refresh()
 		m_schema_zhung_icon = m_style.current_zhung_icon;
 		m_schema_ascii_icon = m_style.current_ascii_icon;
 		if(mode == ASCII) {
-			if(m_schema_ascii_icon.empty()) SetIcon(mode_icon[mode]);
-			else							SetIcon(m_schema_ascii_icon.c_str());
+			if(m_schema_ascii_icon.empty())
+				SetIcon(mode_icon[mode]);
+			else
+				SetIcon(m_schema_ascii_icon.c_str());
 		}
 		else if(mode == ZHUNG) {
-			if(m_schema_zhung_icon.empty()) SetIcon(mode_icon[mode]);
-			else							SetIcon(m_schema_zhung_icon.c_str());
+			if(m_schema_zhung_icon.empty()) 
+				SetIcon(mode_icon[mode]);
+			else
+				SetIcon(m_schema_zhung_icon.c_str());
 		}
 		else
 			SetIcon(mode_icon[mode]);
