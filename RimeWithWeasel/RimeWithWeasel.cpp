@@ -1089,10 +1089,12 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 		if (schema_id != m_last_schema_id)
 		{
 			m_last_schema_id = schema_id;
-			RimeSetOption(session_id, "__synced", false); // Sync new schema options with front end
-			_LoadSchemaSpecificSettings(schema_id);
-			_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
-			_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
+			if(schema_id != ".default") {						// don't load for schema select menu
+				RimeSetOption(session_id, "__synced", false); // Sync new schema options with front end
+				_LoadSchemaSpecificSettings(schema_id);
+				_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
+				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
+			}
 		}
 		stat.schema_name = utf8towcs(status.schema_name);
 		stat.ascii_mode = !!status.is_ascii_mode;
