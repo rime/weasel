@@ -49,23 +49,25 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void **ppvObject)
 	*ppvObject = NULL;
 
 	if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfTextInputProcessor))
-		*ppvObject = (ITfTextInputProcessor *)this;
+		*ppvObject = (ITfTextInputProcessor*)this;
 	else if (IsEqualIID(riid, IID_ITfTextInputProcessorEx))
-		*ppvObject = (ITfTextInputProcessorEx *)this;
+		*ppvObject = (ITfTextInputProcessorEx*)this;
 	else if (IsEqualIID(riid, IID_ITfThreadMgrEventSink))
-		*ppvObject = (ITfThreadMgrEventSink *)this;
+		*ppvObject = (ITfThreadMgrEventSink*)this;
 	else if (IsEqualIID(riid, IID_ITfTextEditSink))
-		*ppvObject = (ITfTextEditSink *)this;
+		*ppvObject = (ITfTextEditSink*)this;
 	else if (IsEqualIID(riid, IID_ITfTextLayoutSink))
-		*ppvObject = (ITfTextLayoutSink *)this;
+		*ppvObject = (ITfTextLayoutSink*)this;
 	else if (IsEqualIID(riid, IID_ITfKeyEventSink))
-		*ppvObject = (ITfKeyEventSink *)this;
+		*ppvObject = (ITfKeyEventSink*)this;
 	else if (IsEqualIID(riid, IID_ITfCompositionSink))
-		*ppvObject = (ITfCompositionSink *)this;
+		*ppvObject = (ITfCompositionSink*)this;
 	else if (IsEqualIID(riid, IID_ITfEditSession))
-		*ppvObject = (ITfEditSession *)this;
+		*ppvObject = (ITfEditSession*)this;
 	else if (IsEqualIID(riid, IID_ITfThreadFocusSink))
-		*ppvObject = (ITfThreadFocusSink *)this;
+		*ppvObject = (ITfThreadFocusSink*)this;
+	else if (IsEqualIID(riid, IID_ITfDisplayAttributeProvider))
+		*ppvObject = (ITfDisplayAttributeProvider*)this;
 
 	if (*ppvObject)
 	{
@@ -138,6 +140,9 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	}
 
 	if (!_InitKeyEventSink())
+		goto ExitError;
+
+	if (!_InitDisplayAttributeGuidAtom())
 		goto ExitError;
 
 	if (!_InitPreservedKey())

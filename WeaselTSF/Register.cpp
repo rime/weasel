@@ -110,13 +110,15 @@ BOOL RegisterCategories()
 	if (hr != S_OK)
 		goto Exit;
 
-	{
-		hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
-		if (hr != S_OK)
-			goto Exit;
+	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER, c_clsidTextService);
+	if (hr != S_OK)
+		goto Exit;
 
-		hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
-	}
+	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
+	if (hr != S_OK)
+		goto Exit;
+
+	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
 
 Exit:
 	pCategoryMgr->Release();
@@ -144,13 +146,15 @@ void UnregisterCategories()
 	if (hr != S_OK)
 		goto UnregisterExit;
 
-	{
-		hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
-		if (hr != S_OK)
-			goto UnregisterExit;
+	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER, c_clsidTextService);
+	if (hr != S_OK)
+		goto UnregisterExit;
 
-		hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
-	}
+	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
+	if (hr != S_OK)
+		goto UnregisterExit;
+
+	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
 
 UnregisterExit:
 	pCategoryMgr->Release();
