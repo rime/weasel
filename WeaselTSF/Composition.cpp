@@ -165,7 +165,8 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 			hwnd = GetForegroundWindow();
 			::GetWindowRect(hwnd, &rcForegroundWindow);
 
-			if(rc.left < rcForegroundWindow.left || rc.top < rcForegroundWindow.top)
+			if(rc.left < rcForegroundWindow.left || rc.left > rcForegroundWindow.right
+					|| rc.top < rcForegroundWindow.top || rc.top > rcForegroundWindow.bottom)
 			{
 				POINT pt;
 				bool hasCaret = ::GetCaretPos(&pt);
