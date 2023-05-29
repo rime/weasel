@@ -155,8 +155,30 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 		return E_FAIL;
 	if (FAILED(_pContext->GetSelection(ec, TF_DEFAULT_SELECTION, 1, &selection, &nSelection)))
 		return E_FAIL;
+
 	if ((_pContextView->GetTextExt(ec, selection.range, &rc, &fClipped)) == S_OK && (rc.left != 0 || rc.top != 0))
+	{
+		// get the foreground window pos and check if rc from GetTextExt is out of window
+		{
+			HWND hwnd;
+			RECT rcForegroundWindow;
+			hwnd = GetForegroundWindow();
+			::GetWindowRect(hwnd, &rcForegroundWindow);
+
+			if(rc.left < rcForegroundWindow.left || rc.top < rcForegroundWindow.top)
+			{
+				POINT pt;
+				bool hasCaret = ::GetCaretPos(&pt);
+				int offsetx = rcForegroundWindow.left - rc.left + (hasCaret? pt.x : 0);
+				int offsety = rcForegroundWindow.top - rc.top + (hasCaret? pt.y : 0);
+				rc.left += offsetx;
+				rc.right += offsetx;
+				rc.top += offsety;
+				rc.bottom += offsety;
+			}
+		}
 		_pTextService->_SetCompositionPosition(rc);
+	}
 	return S_OK;
 }
 
