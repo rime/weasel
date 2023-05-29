@@ -215,11 +215,13 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 
 	int sel_start = 0, sel_end = 0; /* TODO: Check the availability and correctness of these values */
 	for (size_t i = 0; i < _context->preedit.attributes.size(); i++)
-		if (_context->preedit.attributes.at(i).type == weasel::HIGHLIGHTED)
 	{
+		if (_context->preedit.attributes.at(i).type == weasel::HIGHLIGHTED)
+		{
 			sel_start = _context->preedit.attributes.at(i).range.start;
 			sel_end = _context->preedit.attributes.at(i).range.end;
 			break;
+		}
 	}
 
 	_pTextService->_SetCompositionDisplayAttributes(ec, _pContext, pRangeComposition);
