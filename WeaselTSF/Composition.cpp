@@ -8,8 +8,8 @@
 class CStartCompositionEditSession: public CEditSession
 {
 public:
-	CStartCompositionEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled)
-		: CEditSession(pTextService, pContext)
+	CStartCompositionEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled, BOOL inlinePreeditEnabled)
+		: CEditSession(pTextService, pContext), _inlinePreeditEnabled(inlinePreeditEnabled)
 	{
 		_fCUASWorkaroundEnabled = fCUASWorkaroundEnabled;
 	}
@@ -19,6 +19,7 @@ public:
 
 private:
 	BOOL _fCUASWorkaroundEnabled;
+	BOOL _inlinePreeditEnabled;
 };
 
 STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
@@ -39,7 +40,18 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		&& (pComposition != NULL))
 	{
 		_pTextService->_SetComposition(pComposition);
-		
+
+		/* WORKAROUND:
+		 *   CUAS does not provide a correct GetTextExt() position unless the composition is filled with characters.
+		 *   So we insert a zero width space here.
+		 *   The workaround is only needed when inline preedit is not enabled.
+		 *   See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
+		*/
+		if (!_inlinePreeditEnabled)
+		{
+			pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"\u200b", 1);
+		}
+
 		/* set selection */
 		TF_SELECTION tfSelection;
 		pRangeComposition->Collapse(ec, TF_ANCHOR_END);
@@ -55,7 +67,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 void WeaselTSF::_StartComposition(com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled)
 {
 	com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
-	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled));
+	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled, _cand->style().inline_preedit));
 	_cand->StartUI();
 	if (pStartCompositionEditSession != nullptr)
 	{
