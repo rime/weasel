@@ -852,7 +852,9 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
-	if(CRect(rc) != m_oinputPos)
+	if(CRect(rc) != m_oinputPos		// pos changed
+		|| !m_ctx.aux.str.empty()	// aux not empty, msg 
+		|| (m_ctx.aux.empty() && (m_layout) && m_layout->ShouldDisplayStatusIcon()))	// ascii icon
 	{
 		m_oinputPos = rc;
 		m_inputPos = rc;
