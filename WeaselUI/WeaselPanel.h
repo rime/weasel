@@ -62,7 +62,6 @@ public:
 	void Refresh();
 	void DoPaint(CDCHandle dc);
 	void CleanUp();
-	void ResetSzPos(){ m_osize = CSize(0,0); m_oinputPos = CRect(0,0,0,0); }
 
 private:
 	void _InitFontRes(void);
@@ -91,7 +90,6 @@ private:
 
 	CRect m_inputPos;
 	CRect m_oinputPos;
-	CRect m_ocursurPos;
 	int  m_offsetys[MAX_CANDIDATES_COUNT];	// offset y for candidates when vertical layout over bottom
 	int  m_offsety_preedit;
 	int  m_offsety_aux;
