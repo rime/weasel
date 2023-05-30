@@ -278,6 +278,7 @@ namespace weasel
 		bool display_tray_icon;
 		std::wstring current_zhung_icon;
 		std::wstring current_ascii_icon;
+		bool enhanced_position;
 
 		std::wstring label_text_format;
 		std::wstring mark_text;
@@ -337,6 +338,7 @@ namespace weasel
 			display_tray_icon(false),
 			current_zhung_icon(),
 			current_ascii_icon(),
+			enhanced_position(false),
 
 			label_text_format(L"%s."),
 			mark_text(),
@@ -403,6 +405,7 @@ namespace weasel
 					|| display_tray_icon != st.display_tray_icon
 					|| current_zhung_icon != st.current_zhung_icon
 					|| current_ascii_icon != st.current_ascii_icon
+					|| enhanced_position != st.enhanced_position
 					|| label_text_format != st.label_text_format
 					|| min_width != st.min_width
 					|| max_width != st.max_width
@@ -465,6 +468,7 @@ namespace boost {
 			ar & s.display_tray_icon;
 			ar & s.current_zhung_icon;
 			ar & s.current_ascii_icon;
+			ar& s.enhanced_position;
 			ar & s.label_text_format;
 			// layout
 			ar & s.layout_type;

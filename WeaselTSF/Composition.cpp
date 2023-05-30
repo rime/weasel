@@ -128,11 +128,12 @@ void WeaselTSF::_EndComposition(com_ptr<ITfContext> pContext, BOOL clear)
 class CGetTextExtentEditSession: public CEditSession
 {
 public:
-	CGetTextExtentEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, com_ptr<ITfContextView> pContextView, com_ptr<ITfComposition> pComposition)
+	CGetTextExtentEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, com_ptr<ITfContextView> pContextView, com_ptr<ITfComposition> pComposition, bool enhancedPosition)
 		: CEditSession(pTextService, pContext)
 	{
 		_pContextView = pContextView;
 		_pComposition = pComposition;
+		_enhancedPosition = enhancedPosition;
 	}
 
 	/* ITfEditSession */
@@ -141,6 +142,7 @@ public:
 private:
 	com_ptr<ITfContextView> _pContextView;
 	com_ptr<ITfComposition> _pComposition;
+	bool _enhancedPosition;
 };
 
 STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
@@ -155,8 +157,32 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 		return E_FAIL;
 	if (FAILED(_pContext->GetSelection(ec, TF_DEFAULT_SELECTION, 1, &selection, &nSelection)))
 		return E_FAIL;
+
 	if ((_pContextView->GetTextExt(ec, selection.range, &rc, &fClipped)) == S_OK && (rc.left != 0 || rc.top != 0))
+	{
+		// get the foreground window pos and check if rc from GetTextExt is out of window
+		if (_enhancedPosition)
+		{
+			HWND hwnd;
+			RECT rcForegroundWindow;
+			hwnd = GetForegroundWindow();
+			::GetWindowRect(hwnd, &rcForegroundWindow);
+
+			if(rc.left < rcForegroundWindow.left || rc.left > rcForegroundWindow.right
+					|| rc.top < rcForegroundWindow.top || rc.top > rcForegroundWindow.bottom)
+			{
+				POINT pt;
+				bool hasCaret = ::GetCaretPos(&pt);
+				int offsetx = rcForegroundWindow.left - rc.left + (hasCaret? pt.x : 0);
+				int offsety = rcForegroundWindow.top - rc.top + (hasCaret? pt.y : 0);
+				rc.left += offsetx;
+				rc.right += offsetx;
+				rc.top += offsety;
+				rc.bottom += offsety;
+			}
+		}
 		_pTextService->_SetCompositionPosition(rc);
+	}
 	return S_OK;
 }
 
@@ -167,7 +193,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(com_ptr<ITfContext> pContext)
 	if (pContext->GetActiveView(&pContextView) != S_OK)
 		return FALSE;
 	com_ptr<CGetTextExtentEditSession> pEditSession;
-	pEditSession.Attach(new CGetTextExtentEditSession(this, pContext, pContextView, _pComposition));
+	pEditSession.Attach(new CGetTextExtentEditSession(this, pContext, pContextView, _pComposition, _cand->style().enhanced_position));
 	if (pEditSession == NULL)
 	{
 		return FALSE;
