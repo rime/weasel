@@ -177,14 +177,6 @@ program_files:
   ${If} ${RunningX64}
     File "weaseltx64.dll"
   ${EndIf}
-  File "weasel.ime"
-  ${If} ${RunningX64}
-    File "weaselx64.ime"
-  ${EndIf}
-  File "weaselt.ime"
-  ${If} ${RunningX64}
-    File "weaseltx64.ime"
-  ${EndIf}
   File "WeaselDeployer.exe"
   File "WeaselServer.exe"
   File "WeaselSetup.exe"

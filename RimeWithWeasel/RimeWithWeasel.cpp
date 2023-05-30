@@ -290,7 +290,7 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 	// ime | tsf
 	RimeSetProperty(session_id, "client_type", client_type.c_str());
 	// inline preedit
-	bool inline_preedit = m_ui->style().inline_preedit && (client_type == "tsf");	
+	bool inline_preedit = m_ui->style().inline_preedit;	
 	RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
 	// show soft cursor on weasel panel but not inline
 	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));

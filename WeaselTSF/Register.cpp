@@ -9,35 +9,6 @@ static const char c_szTipKeyPrefix[] = "Software\\Microsft\\CTF\\TIP\\";
 static const char c_szInProcSvr32[] = "InprocServer32";
 static const char c_szModelName[] = "ThreadingModel";
 
-HKL FindIME()
-{
-	HKL hKL = NULL;
-	WCHAR key[9];
-	HKEY hKey;
-	LSTATUS ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts", 0, KEY_READ, &hKey);
-	if (ret == ERROR_SUCCESS)
-	{
-		for (DWORD id = (0xE0200000 | TEXTSERVICE_LANGID); hKL == NULL && id <= (0xE0FF0000 | TEXTSERVICE_LANGID); id += 0x10000)
-		{
-			StringCchPrintfW(key, _countof(key), L"%08X", id);
-			HKEY hSubKey;
-			ret = RegOpenKeyExW(hKey, key, 0, KEY_READ, &hSubKey);
-			if (ret == ERROR_SUCCESS)
-			{
-				WCHAR data[32];
-				DWORD type;
-				DWORD size = sizeof data;
-				ret = RegQueryValueExW(hSubKey, L"Ime File", NULL, &type, (LPBYTE)data, &size);
-				if (ret == ERROR_SUCCESS && type == REG_SZ && _wcsicmp(data, L"weasel.ime") == 0)
-					hKL = (HKL)id;
-			}
-			RegCloseKey(hSubKey);
-		}
-	}
-	RegCloseKey(hKey);
-	return hKL;
-}
-
 BOOL RegisterProfiles()
 {
 	WCHAR achIconFile[MAX_PATH];
@@ -59,7 +30,7 @@ BOOL RegisterProfiles()
 			achIconFile,
 			cchIconFile,
 			TEXTSERVICE_ICON_INDEX,
-			FindIME(),
+			NULL,
 			0,
 			TRUE,
 			0);
