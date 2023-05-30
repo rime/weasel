@@ -8,8 +8,8 @@
 class CStartCompositionEditSession: public CEditSession
 {
 public:
-	CStartCompositionEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled)
-		: CEditSession(pTextService, pContext)
+	CStartCompositionEditSession(com_ptr<WeaselTSF> pTextService, com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled, BOOL inlinePreeditEnabled)
+		: CEditSession(pTextService, pContext), _inlinePreeditEnabled(inlinePreeditEnabled)
 	{
 		_fCUASWorkaroundEnabled = fCUASWorkaroundEnabled;
 	}
@@ -19,6 +19,7 @@ public:
 
 private:
 	BOOL _fCUASWorkaroundEnabled;
+	BOOL _inlinePreeditEnabled;
 };
 
 STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
@@ -39,25 +40,21 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		&& (pComposition != NULL))
 	{
 		_pTextService->_SetComposition(pComposition);
-		
-		/* set selection */
+
 		/* WORKAROUND:
 		 *   CUAS does not provide a correct GetTextExt() position unless the composition is filled with characters.
-		 *   So we insert a dummy space character here.
-		 *   This is the same workaround used by Microsoft Pinyin IME (New Experience).
-		 */
-		//if (_fCUASWorkaroundEnabled)
-		//{
-		//	pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
-		//	pRangeComposition->Collapse(ec, TF_ANCHOR_START);
-		//}
+		 *   So we insert a zero width space here.
+		 *   The workaround is only needed when inline preedit is not enabled.
+		 *   See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
+		*/
+		if (!_inlinePreeditEnabled)
+		{
+			pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"\u200b", 1);
+		}
 
-		// NOTE: Seems that `OnCompositionTerminated` will be triggered even when
-		//       normally end a composition if not put any string in it.
-		//       So just insert a blank here.
-		pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
-		pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+		/* set selection */
 		TF_SELECTION tfSelection;
+		pRangeComposition->Collapse(ec, TF_ANCHOR_END);
 		tfSelection.range = pRangeComposition;
 		tfSelection.style.ase = TF_AE_NONE;
 		tfSelection.style.fInterimChar = FALSE;
@@ -70,7 +67,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 void WeaselTSF::_StartComposition(com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled)
 {
 	com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
-	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled));
+	pStartCompositionEditSession.Attach(new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled, _cand->style().inline_preedit));
 	_cand->StartUI();
 	if (pStartCompositionEditSession != nullptr)
 	{
@@ -101,6 +98,9 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec)
 {
 	/* Clear the dummy text we set before, if any. */
 	if (_pComposition == nullptr) return S_OK;
+
+	_pTextService->_ClearCompositionDisplayAttributes(ec, _pContext);
+
 	ITfRange *pCompositionRange;
 	if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
 		pCompositionRange->SetText(ec, 0, L"", 0);
@@ -227,19 +227,20 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 
 	int sel_start = 0, sel_end = 0; /* TODO: Check the availability and correctness of these values */
 	for (size_t i = 0; i < _context->preedit.attributes.size(); i++)
+	{
 		if (_context->preedit.attributes.at(i).type == weasel::HIGHLIGHTED)
 		{
 			sel_start = _context->preedit.attributes.at(i).range.start;
 			sel_end = _context->preedit.attributes.at(i).range.end;
 			break;
 		}
+	}
+
+	_pTextService->_SetCompositionDisplayAttributes(ec, _pContext, pRangeComposition);
 
 	/* Set caret */
-	LONG cch;
 	TF_SELECTION tfSelection;
-	pRangeComposition->Collapse(ec, TF_ANCHOR_START);
-	pRangeComposition->ShiftEnd(ec, sel_end, &cch, NULL);
-	pRangeComposition->ShiftStart(ec, sel_start, &cch, NULL);
+	pRangeComposition->Collapse(ec, TF_ANCHOR_END);
 	tfSelection.range = pRangeComposition;
 	tfSelection.style.ase = TF_AE_NONE;
 	tfSelection.style.fInterimChar = FALSE;

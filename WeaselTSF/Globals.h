@@ -31,6 +31,8 @@ extern const GUID c_guidProfile;
 
 extern const GUID c_guidLangBarItemButton;
 
+extern const GUID c_guidDisplayAttributeInput;
+
 #ifndef TF_IPP_CAPS_IMMERSIVESUPPORT
 
 #define WEASEL_USING_OLDER_TSF_SDK

@@ -390,6 +390,9 @@
     <ClCompile Include="CandidateList.cpp" />
     <ClCompile Include="Compartment.cpp" />
     <ClCompile Include="Composition.cpp" />
+    <ClCompile Include="DisplayAttribute.cpp" />
+    <ClCompile Include="DisplayAttributeInfo.cpp" />
+    <ClCompile Include="DisplayAttributeProvider.cpp" />
     <ClCompile Include="dllmain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </PrecompiledHeader>
@@ -417,6 +420,7 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
     <ClCompile Include="EditSession.cpp" />
+    <ClCompile Include="EnumDisplayAttributeInfo.cpp" />
     <ClCompile Include="Globals.cpp" />
     <ClCompile Include="KeyEvent.cpp" />
     <ClCompile Include="KeyEventSink.cpp" />
@@ -441,7 +445,9 @@
     <ClInclude Include="CandidateList.h" />
     <ClInclude Include="Compartment.h" />
     <ClInclude Include="ctffunc.h" />
+    <ClInclude Include="DisplayAttributeInfo.h" />
     <ClInclude Include="EditSession.h" />
+    <ClInclude Include="EnumDisplayAttributeInfo.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="KeyEvent.h" />
     <ClInclude Include="LanguageBar.h" />

@@ -17,7 +17,8 @@ class WeaselTSF:
 	public ITfCompositionSink,
 	public ITfThreadFocusSink,
 	public ITfActiveLanguageProfileNotifySink,
-	public ITfEditSession
+	public ITfEditSession,
+	public ITfDisplayAttributeProvider
 {
 public:
 	WeaselTSF();
@@ -69,6 +70,10 @@ public:
 	/* ITfActiveLanguageProfileNotifySink */
 	STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile, BOOL isActivated);
 
+	// ITfDisplayAttributeProvider
+	STDMETHODIMP EnumDisplayAttributeInfo(__RPC__deref_out_opt IEnumTfDisplayAttributeInfo** ppEnum);
+	STDMETHODIMP GetDisplayAttributeInfo(__RPC__in REFGUID guidInfo, __RPC__deref_out_opt ITfDisplayAttributeInfo** ppInfo);
+
 	///* ITfCompartmentEventSink */
 	//STDMETHODIMP OnChange(_In_ REFGUID guid);
 	
@@ -103,6 +108,11 @@ public:
 	void _ShowUI();
 	void _HideUI();
 	com_ptr<ITfContext> _GetUIContextDocument();
+
+	/* Display Attribute */
+	void _ClearCompositionDisplayAttributes(TfEditCookie ec, _In_ ITfContext* pContext);
+	BOOL _SetCompositionDisplayAttributes(TfEditCookie ec, _In_ ITfContext* pContext, ITfRange* pRangeComposition);
+	BOOL _InitDisplayAttributeGuidAtom();
 
 
 	com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
@@ -170,4 +180,7 @@ private:
 
 	/* IME status */
 	weasel::Status _status;
+
+	// guidatom for the display attibute.
+	TfGuidAtom _gaDisplayAttributeInput;
 };
