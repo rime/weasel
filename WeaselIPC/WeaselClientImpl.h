@@ -40,7 +40,6 @@ namespace weasel
 	private:
 		UINT session_id;
 		std::wstring app_name;
-		bool is_ime;
 
 		PipeChannel<PipeMessage> channel;
 	};
