@@ -921,6 +921,11 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.margin_y = style.hilite_padding;
 	else if (style.hilite_padding > -style.margin_y && style.margin_y < 0)
 		style.margin_y = -(style.hilite_padding);
+	Bool enhanced_postion = False;
+	if (RimeConfigGetBool(config, "style/enhanced_position", &enhanced_postion) || initialize)
+	{
+		style.enhanced_position = !!enhanced_postion;
+	}
 	// color scheme
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
 		_UpdateUIStyleColor(config, style);
