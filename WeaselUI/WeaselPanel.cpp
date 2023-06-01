@@ -62,11 +62,7 @@ void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
 	CSize size = m_layout->GetContentSize();
-	// SetWindowPos with size info only if size changed
-	if(size != m_osize) {
-		SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
-		m_osize = size;
-	}
+	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW);
 	ReleaseDC(dc);
 }
 
@@ -720,8 +716,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			CSize size = m_layout->GetContentSize();
 			rcWorkArea.right -= size.cx;
 			rcWorkArea.bottom -= size.cy;
-			int x = m_ocursurPos.left;
-			int y = m_ocursurPos.bottom;
+			int x = m_oinputPos.left;
+			int y = m_oinputPos.bottom;
 			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
 			y -= m_style.shadow_radius / 2;
 			over_bottom = (y > rcWorkArea.bottom);
@@ -856,12 +852,20 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
-	m_inputPos = rc;
-	m_ocursurPos = m_inputPos;
-	if (m_style.shadow_offset_y >= 0)	m_inputPos.OffsetRect(0, 10);
-	// with parameter to avoid vertical flicker
-	_RepositionWindow(true);
-	RedrawWindow();
+	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow 
+	if(CRect(rc) != m_oinputPos		// pos changed
+		|| (m_style.inline_preedit && m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))	// after disabled by ctrl+space, inline_preedit
+		|| (!m_style.inline_preedit && CRect(rc) == m_oinputPos && m_ctx.preedit.str.length() == 2)	// for not inline_preedit, first input
+		|| !m_ctx.aux.str.empty()	// aux not empty, msg 
+		|| (m_ctx.aux.empty() && (m_layout) && m_layout->ShouldDisplayStatusIcon()))	// ascii icon
+	{
+		m_oinputPos = rc;
+		m_inputPos = rc;
+		if (m_style.shadow_offset_y >= 0)	m_inputPos.OffsetRect(0, 10);
+		// with parameter to avoid vertical flicker
+		_RepositionWindow(true);
+		RedrawWindow();
+	}
 }
 
 void WeaselPanel::_RepositionWindow(bool adj)
@@ -906,11 +910,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
-	// reposition window only if the position changed
-	if (m_oinputPos.left == x && m_oinputPos.bottom == y) return;
-	m_oinputPos.left = x;
-	m_oinputPos.bottom = y;
-	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREDRAW);
 }
 
 void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int inColor, IDWriteTextFormat* pTextFormat)
