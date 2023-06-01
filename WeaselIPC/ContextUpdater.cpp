@@ -57,6 +57,7 @@ void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, std::wstr
 	}
 	if(k.size() == 3)
 	{
+		// ctx.preedit.cursor
 		if (k[2] == L"cursor")
 		{
 			std::vector<std::wstring> vec;
@@ -68,6 +69,11 @@ void ContextUpdater::_StoreText(Text& target, Deserializer::KeyType k, std::wstr
 			attr.type = HIGHLIGHTED;
 			attr.range.start = _wtoi(vec[0].c_str());
 			attr.range.end = _wtoi(vec[1].c_str());
+			attr.range.cursor = _wtoi(vec[2].c_str());
+			if (attr.range.cursor < attr.range.start || attr.range.cursor > attr.range.end)
+			{
+				attr.range.cursor = attr.range.end;
+			}
 			
 			target.attributes.push_back(attr);
 			return;

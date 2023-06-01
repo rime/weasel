@@ -554,7 +554,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 					messages.push_back(std::string("ctx.preedit=") + first + '\n');
 					messages.push_back(std::string("ctx.preedit.cursor=") +
 						std::to_string(utf8towcslen(first.c_str(), 0)) + ',' +
-						std::to_string(utf8towcslen(first.c_str(), first.size())) + '\n');
+						std::to_string(utf8towcslen(first.c_str(), first.size())) + ',' +
+						std::to_string(utf8towcslen(first.c_str(), ctx.composition.cursor_pos)) + '\n');
 					break;
 				}
 				// no preview, fall back to composition
@@ -564,7 +565,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				{
 					messages.push_back(std::string("ctx.preedit.cursor=") +
 						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start)) + ',' +
-						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + '\n');
+						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + ',' +
+						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.cursor_pos)) + '\n');
 				}
 				break;
 			case weasel::UIStyle::PREVIEW_ALL:
@@ -585,7 +587,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				{
 					messages.push_back(std::string("ctx.preedit.cursor=") +
 						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start)) + ',' +
-						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + '\n');
+						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + ',' +
+						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.cursor_pos)) + '\n');
 				}
 				break;
 			}
