@@ -239,8 +239,11 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 	_pTextService->_SetCompositionDisplayAttributes(ec, _pContext, pRangeComposition);
 
 	/* Set caret */
+	LONG cch;
 	TF_SELECTION tfSelection;
-	pRangeComposition->Collapse(ec, TF_ANCHOR_END);
+	pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+	pRangeComposition->ShiftStart(ec, sel_end, &cch, NULL);
+	// pRangeComposition->ShiftEnd(ec, sel_end, &cch, NULL);
 	tfSelection.range = pRangeComposition;
 	tfSelection.style.ase = TF_AE_NONE;
 	tfSelection.style.fInterimChar = FALSE;
