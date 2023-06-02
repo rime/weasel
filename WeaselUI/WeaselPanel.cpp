@@ -698,69 +698,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	ReleaseDC(hdc);
 	bool drawn = false;
 	if(!hide_candidates){
-		bool over_bottom = false;
 		CRect auxrc = m_layout->GetAuxiliaryRect();
 		CRect preeditrc = m_layout->GetPreeditRect();
-		if(m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL)
-		{
-			RECT rcWorkArea;
-			memset(&rcWorkArea, 0, sizeof(rcWorkArea));
-			HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
-			if (hMonitor) {
-				MONITORINFO info;
-				info.cbSize = sizeof(MONITORINFO);
-				if (GetMonitorInfo(hMonitor, &info)) {
-					rcWorkArea = info.rcWork;
-				}
-			}
-			CSize size = m_layout->GetContentSize();
-			rcWorkArea.right -= size.cx;
-			rcWorkArea.bottom -= size.cy;
-			int x = m_oinputPos.left;
-			int y = m_oinputPos.bottom;
-			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
-			y -= m_style.shadow_radius / 2;
-			over_bottom = (y > rcWorkArea.bottom);
-			if (over_bottom)
-			{
-				CRect* rects = new CRect[m_candidateCount];
-				int* btmys = new int[m_candidateCount];
-				for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-					rects[i] = m_layout->GetCandidateRect(i);
-					btmys[i] = rects[i].bottom;
-				}
-				if (m_candidateCount) {
-					if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
-						m_offsety_preedit = rects[m_candidateCount - 1].bottom - preeditrc.bottom;
-					if (!m_ctx.aux.str.empty())
-						m_offsety_aux = rects[m_candidateCount - 1].bottom - auxrc.bottom;
-				} else {
-					m_offsety_preedit = 0;
-					m_offsety_aux = 0;
-				}
-				int base_gap = 0;
-				if (!m_ctx.aux.str.empty())
-					base_gap = auxrc.Height() + m_style.spacing;
-				else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
-					base_gap = preeditrc.Height() + m_style.spacing;
-
-				for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-					if (i == 0)
-						m_offsetys[i] = btmys[m_candidateCount - i - 1] - base_gap - rects[i].bottom;
-					else
-						m_offsetys[i] = (rects[i - 1].top + m_offsetys[i - 1] - m_style.candidate_spacing) - rects[i].bottom;
-				}
-				delete[] rects;
-				delete[] btmys;
-			}
-		}
-
 		// background and candidates back, hilite back drawing start
 		if (!m_ctx.empty()) {
 			CRect backrc = m_layout->GetContentRect();
 			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, IsToRoundStruct(),  m_style.border_color);
 		}
-		m_istorepos = over_bottom;
 		if (!m_ctx.aux.str.empty())
 		{
 			if(m_istorepos)
@@ -902,11 +846,50 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		x -= width;
 		x += m_layout->offsetX;
 	}
+	if(adj) m_istorepos = false;
 	if (x > rcWorkArea.right) x = rcWorkArea.right;		// over workarea right
 	if (x < rcWorkArea.left) x = rcWorkArea.left;		// over workarea left
 	// show panel above the input focus if we're around the bottom
-	if (y > rcWorkArea.bottom) y = m_inputPos.top - height; // over workarea bottom
-	//if (y > rcWorkArea.bottom) y = rcWorkArea.bottom;
+	if (y > rcWorkArea.bottom)
+	{
+		y = m_inputPos.top - height; // over workarea bottom
+		if (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL)
+		{
+			m_istorepos = true;
+			CRect auxrc = m_layout->GetAuxiliaryRect();
+			CRect preeditrc = m_layout->GetPreeditRect();
+			CRect* rects = new CRect[m_candidateCount];
+			int* btmys = new int[m_candidateCount];
+			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+				rects[i] = m_layout->GetCandidateRect(i);
+				btmys[i] = rects[i].bottom;
+			}
+			if (m_candidateCount) {
+				if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+					m_offsety_preedit = rects[m_candidateCount - 1].bottom - preeditrc.bottom;
+				if (!m_ctx.aux.str.empty())
+					m_offsety_aux = rects[m_candidateCount - 1].bottom - auxrc.bottom;
+			}
+			else {
+				m_offsety_preedit = 0;
+				m_offsety_aux = 0;
+			}
+			int base_gap = 0;
+			if (!m_ctx.aux.str.empty())
+				base_gap = auxrc.Height() + m_style.spacing;
+			else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+				base_gap = preeditrc.Height() + m_style.spacing;
+
+			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+				if (i == 0)
+					m_offsetys[i] = btmys[m_candidateCount - i - 1] - base_gap - rects[i].bottom;
+				else
+					m_offsetys[i] = (rects[i - 1].top + m_offsetys[i - 1] - m_style.candidate_spacing) - rects[i].bottom;
+			}
+			delete[] rects;
+			delete[] btmys;
+		}
+	}
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
