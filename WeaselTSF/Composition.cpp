@@ -49,7 +49,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		*/
 		if (!_inlinePreeditEnabled)
 		{
-			pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"\u200b", 1);
+			pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
 		}
 
 		/* set selection */
@@ -251,13 +251,13 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 	if ((pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length())) != S_OK)
 		return E_FAIL;
 
-	int sel_start = 0, sel_end = 0; /* TODO: Check the availability and correctness of these values */
+	/* TODO: Check the availability and correctness of these values */
+	int sel_cursor = -1;
 	for (size_t i = 0; i < _context->preedit.attributes.size(); i++)
 	{
 		if (_context->preedit.attributes.at(i).type == weasel::HIGHLIGHTED)
 		{
-			sel_start = _context->preedit.attributes.at(i).range.start;
-			sel_end = _context->preedit.attributes.at(i).range.end;
+			sel_cursor = _context->preedit.attributes.at(i).range.cursor;
 			break;
 		}
 	}
@@ -265,8 +265,17 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec)
 	_pTextService->_SetCompositionDisplayAttributes(ec, _pContext, pRangeComposition);
 
 	/* Set caret */
+	LONG cch;
 	TF_SELECTION tfSelection;
-	pRangeComposition->Collapse(ec, TF_ANCHOR_END);
+	if (sel_cursor < 0)
+	{
+		pRangeComposition->Collapse(ec, TF_ANCHOR_END);
+	}
+	else
+	{
+		pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+		pRangeComposition->ShiftStart(ec, sel_cursor, &cch, NULL);
+	}
 	tfSelection.range = pRangeComposition;
 	tfSelection.style.ase = TF_AE_NONE;
 	tfSelection.style.fInterimChar = FALSE;

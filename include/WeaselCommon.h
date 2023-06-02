@@ -26,24 +26,25 @@ namespace weasel
 
 	struct TextRange
 	{
-		TextRange() : start(0), end(0) {}
-		TextRange(int _start, int _end) : start(_start), end(_end) {}
+		TextRange() : start(0), end(0), cursor(-1) {}
+		TextRange(int _start, int _end, int _cursor) : start(_start), end(_end), cursor(_cursor) {}
 		bool operator==(const TextRange& tr)
 		{
-			return (start == tr.start && end == tr.end);
+			return (start == tr.start && end == tr.end && cursor == tr.cursor);
 		}
 		bool operator!=(const TextRange& tr)
 		{
-			return (start != tr.start || end != tr.end);
+			return (start != tr.start || end != tr.end || cursor != tr.cursor);
 		}
 		int start;
 		int end;
+		int cursor;
 	};
 
 	struct TextAttribute
 	{
 		TextAttribute() : type(NONE) {}
-		TextAttribute(int _start, int _end, TextAttributeType _type) : range(_start, _end), type(_type) {}
+		TextAttribute(int _start, int _end, TextAttributeType _type) : range(_start, _end, -1), type(_type) {}
 		bool operator==(const TextAttribute& ta)
 		{
 			return (range == ta.range && type == ta.type);
@@ -546,6 +547,7 @@ namespace boost {
 		{
 			ar & s.start;
 			ar & s.end;
+			ar & s.cursor;
 		}
 	} // namespace serialization
 } // namespace boost
