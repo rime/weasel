@@ -49,7 +49,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 		*/
 		if (!_inlinePreeditEnabled)
 		{
-			pRangeComposition->SetText(ec, TF_ST_CORRECTION, L"\u200b", 1);
+			pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
 		}
 
 		/* set selection */
