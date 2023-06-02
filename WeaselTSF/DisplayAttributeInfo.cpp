@@ -8,7 +8,7 @@ const WCHAR _daiDescription[] = L"Weasel Display Attribute Input";
 
 const TF_DISPLAYATTRIBUTE _daiDisplayAttribute =
 {
-    { TF_CT_COLORREF, RGB(0, 0, 0) },   // text color
+    { TF_CT_COLORREF, RGB(255, 0, 0) },   // text color
     { TF_CT_NONE, 0 },                  // background color (TF_CT_NONE => app default)
     TF_LS_DOT,                          // underline style
     FALSE,                              // underline boldness
