@@ -45,7 +45,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 }
 
 void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
-bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style);
+bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, std::string color = "");
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _UpdateUICallback)
@@ -405,15 +405,26 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schema_id)
 {
 	if (!m_ui) return;
+	const int BUF_SIZE = 255;
+	char buffer[BUF_SIZE + 1];
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config))
 		return;
 	m_ui->style() = m_base_style;
 	_UpdateUIStyle(&config, m_ui, false);
+
+	memset(buffer, '\0', sizeof(buffer));
+	if (RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
+	{
+		RimeConfig weaselconfig;
+		if (RimeConfigOpen("weasel", &weaselconfig))
+		{
+			_UpdateUIStyleColor(&weaselconfig, m_ui->style(), std::string(buffer));
+			RimeConfigClose(&weaselconfig);
+		}
+	}
 	// load schema icon start
 	{
-		const int BUF_SIZE = 2047;
-		char buffer[BUF_SIZE + 1];
 		memset(buffer, '\0', sizeof(buffer));
 		if (RimeConfigGetString(&config, "schema/icon", buffer, BUF_SIZE)
 				|| RimeConfigGetString(&config, "schema/zhung_icon", buffer, BUF_SIZE))
@@ -934,17 +945,20 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		_UpdateUIStyleColor(config, style);
 }
 
-static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style)
+static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, std::string color)
 {
-	const int BUF_SIZE = 2047;
+	const int BUF_SIZE = 255;
 	char buffer[BUF_SIZE + 1];
 	memset(buffer, '\0', sizeof(buffer));
 	std::string color_mark = "style/color_scheme";
 	// color scheme
-	if(RimeConfigGetString(config, color_mark.c_str(), buffer, BUF_SIZE))
+	if(RimeConfigGetString(config, color_mark.c_str(), buffer, BUF_SIZE) || !color.empty())
 	{
 		std::string prefix("preset_color_schemes/");
-		prefix += buffer;
+		if (color.empty())
+			prefix += buffer;
+		else
+			prefix += color;
 
 		// define color format, default abgr if not set
 		ColorFormat fmt = COLOR_ABGR;
