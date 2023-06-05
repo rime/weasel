@@ -28,6 +28,7 @@ inline void LoadIconNecessary(t0& a, t1& b, t2& c, int d) {
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
+	m_octx(ui.octx()),
 	m_status(ui.status()),
 	m_style(ui.style()),
 	m_ostyle(ui.ostyle()),
@@ -798,11 +799,13 @@ void WeaselPanel::MoveTo(RECT const& rc)
 {
 	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow 
 	if(CRect(rc) != m_oinputPos		// pos changed
+		|| m_octx != m_ctx
 		|| (m_style.inline_preedit && m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))	// after disabled by ctrl+space, inline_preedit
 		|| (!m_style.inline_preedit && CRect(rc) == m_oinputPos && m_ctx.preedit.str.length() == 2)	// for not inline_preedit, first input
 		|| !m_ctx.aux.str.empty()	// aux not empty, msg 
 		|| (m_ctx.aux.empty() && (m_layout) && m_layout->ShouldDisplayStatusIcon()))	// ascii icon
 	{
+		m_octx = m_ctx;
 		m_oinputPos = rc;
 		m_inputPos = rc;
 		if (m_style.shadow_offset_y >= 0)	m_inputPos.OffsetRect(0, 10);
