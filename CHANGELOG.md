@@ -12,48 +12,48 @@
 * 升級核心算法庫至 [librime 1.8.5](https://github.com/rime/librime/blob/master/CHANGELOG.md#185-2023-02-05)
 * DPI 根據顯示器自動調整
 * 支持候選窗口等圓角顯示
-  * style/layout/round_corner: int
+  * `style/layout/round_corner: int`
 * 支持主題顏色中含有透明通道代碼
 * 支持編碼/高亮候選/普通候選/輸入窗口/候選邊框的陰影顏色繪製
-  * style/layout/shadow_radius: int
-  * style/layout/shadow_offset_x: int
-  * style/layout/shadow_offset_y: int
-  * preset_color_schemes/color_scheme/shadow_color: color
-  * preset_color_schemes/color_scheme/nextpage_color: color
-  * preset_color_schemes/color_scheme/prevpage_color: color
-  * preset_color_schemes/color_scheme/candidate_text_color: color
-  * preset_color_schemes/color_scheme/candidate_back_color: color
-  * preset_color_schemes/color_scheme/border_color: color
-  * preset_color_schemes/color_scheme/hilited_candidate_shadow_color: color
-  * preset_color_schemes/color_scheme/hilited_shadow_color: color
-  * preset_color_schemes/color_scheme/candidate_shadow_color: color
-  * preset_color_schemes/color_scheme/candidate_border_color: color
-  * preset_color_schemes/color_scheme/hilited_candidate_border_color: color
-  * preset_color_schemes/color_scheme/hilited_mark_color: color
+  * `style/layout/shadow_radius: int`
+  * `style/layout/shadow_offset_x: int`
+  * `style/layout/shadow_offset_y: int`
+  * `preset_color_schemes/color_scheme/shadow_color: color`
+  * `preset_color_schemes/color_scheme/nextpage_color: color`
+  * `preset_color_schemes/color_scheme/prevpage_color: color`
+  * `preset_color_schemes/color_scheme/candidate_text_color: color`
+  * `preset_color_schemes/color_scheme/candidate_back_color: color`
+  * `preset_color_schemes/color_scheme/border_color: color`
+  * `preset_color_schemes/color_scheme/hilited_candidate_shadow_color: color`
+  * `preset_color_schemes/color_scheme/hilited_shadow_color: color`
+  * `preset_color_schemes/color_scheme/candidate_shadow_color: color`
+  * `preset_color_schemes/color_scheme/candidate_border_color: color`
+  * `preset_color_schemes/color_scheme/hilited_candidate_border_color: color`
+  * `preset_color_schemes/color_scheme/hilited_mark_color: color`
 * 支持自定義標籤、註解字體及字號
-  * style/label_font_face: string
-  * style/comment_font_face: string
-  * style/label_font_point: int
-  * style/comment_font_point: int
+  * `style/label_font_face: string`
+  * `style/comment_font_face: string`
+  * `style/label_font_point: int`
+  * `style/comment_font_point: int`
 * 彩色字體支持
   * Windows 10 周年版前：需要使用 COLR 格式彩色字體
   * Windows 11 ：可以使用 SVG 字體
 * 新增豎直文字佈局
-  * style/vertical_text: bool
-  * style/vertical_text_left_to_right: bool
-  * style/vertical_text_with_wrap: bool
-  * style/vertical_auto_reverse
+  * `style/vertical_text: bool`
+  * `style/vertical_text_left_to_right: bool`
+  * `style/vertical_text_with_wrap: bool`
+  * `style/vertical_auto_reverse`
 * 新增「天圓地方」佈局：由 margin 與 hilite_padding 確定
 * margin_x 或 margin_y 設置爲負值時，隱藏輸入窗口，不影響方案選單顯示
 * 新增 preedit_type: preview_all ，在輸入時將候選項顯示於 composition 中
-  * style/preedit_type: "composition" | "preview" | "preview_all"
+  * `style/preedit_type: "composition" | "preview" | "preview_all"`
 * 新增輸入法高亮提示標記
-  * style/mark_text: string
+  * `style/mark_text: string`
 * 新增輸入方案圖標顯示
-  * schema/icon: string
-  * schema/ascii_icon: string
+  * `schema/icon: string`
+  * `schema/ascii_icon: string`
 * 新增選項，允許在光標位置獲取失敗時於窗口左上角繪製候選框（而不是桌面左上角）
-  * style/layout/enhanced_position: bool
+  * `style/layout/enhanced_position: bool`
 * 繪製性能提升
 * composition 模式下新增下劃線顯示
 * 隨二進制文件提供調試符號
