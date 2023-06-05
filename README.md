@@ -6,7 +6,7 @@
 式恕堂 版權所無
 
 [![Download](https://img.shields.io/github/v/release/rime/weasel)](https://github.com/rime/weasel/releases/latest)
-[![Build status](https://ci.appveyor.com/api/projects/status/github/rime/weasel?svg=true)](https://ci.appveyor.com/project/rime/weasel)
+[![Build status](https://github.com/rime/weasel/actions/workflows/commit-ci.yml/badge.svg)](https://github.com/rime/weasel/actions/workflows/commit-ci.yml)
 [![GitHub Tag](https://img.shields.io/github/tag/rime/weasel.svg)](https://github.com/rime/weasel)
 
 授權條款：GPLv3
@@ -21,7 +21,7 @@
 安裝輸入法
 ----------
 
-本品適用於 Windows XP SP3, Windows 7 ~ Windows 10
+本品適用於 Windows 8.1 ~ Windows 10
 
 初次安裝時，安裝程序將顯示「安裝選項」對話框。
 
@@ -72,6 +72,8 @@
   * [Xiangyan Sun](https://github.com/wishstudio)
   * [Prcuvu](https://github.com/Prcuvu)
   * [nameoverflow](https://github.com/nameoverflow)
+  * [fxliang](https://github.com/fxliang)
+  * [Azuk 443](https://github.com/determ1ne)
 
   查看更多 [代碼貢獻者](https://github.com/rime/weasel/graphs/contributors)
 
