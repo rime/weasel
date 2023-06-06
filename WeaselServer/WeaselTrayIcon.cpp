@@ -60,6 +60,7 @@ void WeaselTrayIcon::Refresh()
 		|| (m_schema_ascii_icon.empty() && m_style.current_ascii_icon.empty())
 	)
 	{
+		ShowIcon();
 		m_mode = mode;
 		m_schema_zhung_icon = m_style.current_zhung_icon;
 		m_schema_ascii_icon = m_style.current_ascii_icon;
@@ -78,7 +79,6 @@ void WeaselTrayIcon::Refresh()
 		else
 			SetIcon(mode_icon[mode]);
 
-		ShowIcon();
 		if (mode_label[mode])
 		{
 			ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
