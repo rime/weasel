@@ -37,7 +37,10 @@
   * `style/label_font_point: int`
   * `style/comment_font_point: int`
   * `style/layout/align_type: "top" | "center" | "bottom"`
+* 支持指定字符 Unicode 區間字體設定
 * 支持字重，字形風格設定
+  * `style/font_face: font_name[:start_code_point:end_code_point][:weight_set][:style_set][,font2...]`
+    * example: `"Segoe UI Emoji:20:39:bold:italic, Segoe UI Emoji:1f51f:1f51f, Noto Color Emoji SVG:80, Arial:600:6ff, Segoe UI Emoji:80, LXGW Wenkai Narrow"`
 * 支持自定义字体回退範圍、順序定义
 * 彩色字體支持
   * Windows 10 周年版前：需要使用 COLR 格式彩色字體
