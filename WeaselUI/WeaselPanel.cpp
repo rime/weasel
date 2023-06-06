@@ -1,4 +1,5 @@
 ﻿#include "stdafx.h"
+#include <utility>
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
 #include <ShellScalingApi.h>
@@ -25,23 +26,15 @@ inline void LoadIconNecessary(t0& a, t1& b, t2& c, int d) {
 	else			c = (HICON)LoadImage(NULL, b.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
 }
 
-template <class t0>
-inline void Swap(t0& a, t0& b)
-{
-	auto tmp = a;
-	a = b;
-	b = tmp;
-}
-
 static inline void ReconfigRoundInfo(IsToRoundStruct& rd, const int& i, const int& m_candidateCount)
 {
 	if(i == 0 && m_candidateCount > 1) {
-		Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
-		Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
+		std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
+		std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
 	}
 	if(i == m_candidateCount - 1) {
-		Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
-		Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
+		std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
+		std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
 	}
 }
 
@@ -586,8 +579,8 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetTextRoundInfo();
 				if(m_istorepos) {
-					Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
-					Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
+					std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
+					std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
 				}
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
 			}
