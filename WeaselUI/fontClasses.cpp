@@ -2,6 +2,8 @@
 #include <string>
 #include "fontClasses.h"
 
+#define STYLEORWEIGHT	(L":[^:]*[^a-f0-9:]+[^:]*")	
+
 std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim) 
 {
 	std::wregex re{ delim };
@@ -112,7 +114,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
 	// setup font weight and font style by the first unit of font_face setting string
 	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
-	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(L":[a-zA-Z_]+", std::wregex::icase), L"");
+	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
@@ -135,7 +137,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 
 	fontFaceStrVector = ws_split(font_face, L",");
 	//_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
-	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(L":[a-zA-Z_]+", std::wregex::icase), L"");
+	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pPreeditTextFormat));
@@ -159,7 +161,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	fontFaceStrVector = ws_split(label_font_face, L",");
 	// setup weight and style of label_font_face
 	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
-	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(L":[a-zA-Z_]+", std::wregex::icase), L"");
+	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
@@ -183,7 +185,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	fontFaceStrVector = ws_split(comment_font_face, L",");
 	// setup weight and style of label_font_face
 	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
-	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(L":[a-zA-Z_]+", std::wregex::icase), L"");
+	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
