@@ -63,6 +63,8 @@
 * 新增選項，支持越長自動折行/換列顯示
   * `style/layout/max_width: int`
   * `style/layout/max_height: int`
+* 支持方案內設定配色
+  * `style/color_scheme: string`
 * 支持多行内容顯示，\r, \n, \r\n均支持
 * 支持方案內設定配色
 * 繪製性能提升
@@ -89,6 +91,7 @@
 
 * 部分應用仍存在輸入法無法輸入文字的問題
 * WeaselServer 仍可能發生崩潰
+* 部分防病毒軟件可能誤報病毒
 
 <a name="0.14.3"></a>
 ## 0.14.3 (2019-06-22)
