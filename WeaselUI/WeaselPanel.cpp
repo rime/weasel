@@ -33,6 +33,18 @@ inline void Swap(t0& a, t0& b)
 	b = tmp;
 }
 
+static inline void ReconfigRoundInfo(IsToRoundStruct& rd, const int& i, const int& m_candidateCount)
+{
+	if(i == 0 && m_candidateCount > 1) {
+		Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
+		Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
+	}
+	if(i == m_candidateCount - 1) {
+		Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
+		Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
+	}
+}
+
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
@@ -609,14 +621,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
 				if(m_istorepos) {
 					rect.OffsetRect(0, m_offsetys[i]);
-					if(i == 0) {
-						Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
-						Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
-					}
-					if(i == m_candidateCount - 1) {
-						Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
-						Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
-					}
+					ReconfigRoundInfo(rd, i, m_candidateCount);
 				}
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType, rd);
@@ -633,14 +638,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
 				if(m_istorepos) {
 					rect.OffsetRect(0, m_offsetys[i]);
-					if(i == 0) {
-						Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
-						Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
-					}
-					if(i == m_candidateCount - 1) {
-						Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
-						Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
-					}
+					ReconfigRoundInfo(rd, i, m_candidateCount);
 				}
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd, m_style.candidate_border_color);
@@ -653,14 +651,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
 			if(m_istorepos) {
 				rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-				if(m_ctx.cinfo.highlighted == 0) {
-					Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
-					Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
-				}
-				if(m_ctx.cinfo.highlighted == m_candidateCount - 1) {
-					Swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
-					Swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
-				}
+				ReconfigRoundInfo(rd, m_ctx.cinfo.highlighted, m_candidateCount);
 			}
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_style.hilited_candidate_border_color);
