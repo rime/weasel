@@ -923,8 +923,10 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		if (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL)
 		{
 			m_istorepos = true;
-			if(adj) 
+			if(m_style.shadow_radius > 0 && adj) {
 				y += (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
+				y += m_style.shadow_radius / 2;
+			}
 		}
 	}
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
