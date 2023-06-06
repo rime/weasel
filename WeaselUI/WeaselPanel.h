@@ -84,6 +84,7 @@ private:
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
+	weasel::Context &m_octx;
 	weasel::Status &m_status;
 	weasel::UIStyle &m_style;
 	weasel::UIStyle &m_ostyle;

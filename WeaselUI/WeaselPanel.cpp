@@ -1,4 +1,5 @@
 ﻿#include "stdafx.h"
+#include <utility>
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
 #include <ShellScalingApi.h>
@@ -25,9 +26,22 @@ inline void LoadIconNecessary(t0& a, t1& b, t2& c, int d) {
 	else			c = (HICON)LoadImage(NULL, b.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
 }
 
+static inline void ReconfigRoundInfo(IsToRoundStruct& rd, const int& i, const int& m_candidateCount)
+{
+	if(i == 0 && m_candidateCount > 1) {
+		std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
+		std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
+	}
+	if(i == m_candidateCount - 1) {
+		std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
+		std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
+	}
+}
+
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
+	m_octx(ui.octx()),
 	m_status(ui.status()),
 	m_style(ui.style()),
 	m_ostyle(ui.ostyle()),
@@ -564,6 +578,10 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetTextRoundInfo();
+				if(m_istorepos) {
+					std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
+					std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
+				}
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
 			}
 		}
@@ -593,9 +611,12 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 				if (i == m_ctx.cinfo.highlighted) continue;	// draw non hilited candidates only 
 				rect = m_layout->GetCandidateRect((int)i);
-				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
-				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
+				if(m_istorepos) {
+					rect.OffsetRect(0, m_offsetys[i]);
+					ReconfigRoundInfo(rd, i, m_candidateCount);
+				}
+				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType, rd);
 				drawn = true;
 			}
@@ -607,9 +628,12 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 				if (i == m_ctx.cinfo.highlighted) continue;
 				rect = m_layout->GetCandidateRect((int)i);
-				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
-				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
+				if(m_istorepos) {
+					rect.OffsetRect(0, m_offsetys[i]);
+					ReconfigRoundInfo(rd, i, m_candidateCount);
+				}
+				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd, m_style.candidate_border_color);
 				drawn = true;
 			}
@@ -617,9 +641,12 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 		// draw highlighted back ground and shadow
 		{
 			rect = m_layout->GetHighlightRect();
-			if(m_istorepos) rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
+			if(m_istorepos) {
+				rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
+				ReconfigRoundInfo(rd, m_ctx.cinfo.highlighted, m_candidateCount);
+			}
+			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_style.hilited_candidate_border_color);
 			drawn = true;
 		}
@@ -700,6 +727,39 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	if(!hide_candidates){
 		CRect auxrc = m_layout->GetAuxiliaryRect();
 		CRect preeditrc = m_layout->GetPreeditRect();
+		if(m_istorepos)
+		{
+			CRect* rects = new CRect[m_candidateCount];
+			int* btmys = new int[m_candidateCount];
+			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+				rects[i] = m_layout->GetCandidateRect(i);
+				btmys[i] = rects[i].bottom;
+			}
+			if (m_candidateCount) {
+				if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+					m_offsety_preedit = rects[m_candidateCount - 1].bottom - preeditrc.bottom;
+				if (!m_ctx.aux.str.empty())
+					m_offsety_aux = rects[m_candidateCount - 1].bottom - auxrc.bottom;
+			}
+			else {
+				m_offsety_preedit = 0;
+				m_offsety_aux = 0;
+			}
+			int base_gap = 0;
+			if (!m_ctx.aux.str.empty())
+				base_gap = auxrc.Height() + m_style.spacing;
+			else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+				base_gap = preeditrc.Height() + m_style.spacing;
+
+			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+				if (i == 0)
+					m_offsetys[i] = btmys[m_candidateCount - i - 1] - base_gap - rects[i].bottom;
+				else
+					m_offsetys[i] = (rects[i - 1].top + m_offsetys[i - 1] - m_style.candidate_spacing) - rects[i].bottom;
+			}
+			delete[] rects;
+			delete[] btmys;
+		}
 		// background and candidates back, hilite back drawing start
 		if (!m_ctx.empty()) {
 			CRect backrc = m_layout->GetContentRect();
@@ -798,14 +858,14 @@ void WeaselPanel::MoveTo(RECT const& rc)
 {
 	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow 
 	if(CRect(rc) != m_oinputPos		// pos changed
+		|| m_octx != m_ctx
 		|| (m_style.inline_preedit && m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))	// after disabled by ctrl+space, inline_preedit
-		|| (!m_style.inline_preedit && CRect(rc) == m_oinputPos && m_ctx.preedit.str.length() == 2)	// for not inline_preedit, first input
 		|| !m_ctx.aux.str.empty()	// aux not empty, msg 
 		|| (m_ctx.aux.empty() && (m_layout) && m_layout->ShouldDisplayStatusIcon()))	// ascii icon
 	{
+		m_octx = m_ctx;
 		m_oinputPos = rc;
 		m_inputPos = rc;
-		if (m_style.shadow_offset_y >= 0)	m_inputPos.OffsetRect(0, 10);
 		// with parameter to avoid vertical flicker
 		_RepositionWindow(true);
 		RedrawWindow();
@@ -856,38 +916,10 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		if (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL)
 		{
 			m_istorepos = true;
-			CRect auxrc = m_layout->GetAuxiliaryRect();
-			CRect preeditrc = m_layout->GetPreeditRect();
-			CRect* rects = new CRect[m_candidateCount];
-			int* btmys = new int[m_candidateCount];
-			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-				rects[i] = m_layout->GetCandidateRect(i);
-				btmys[i] = rects[i].bottom;
+			if(m_style.shadow_radius > 0 && adj) {
+				y += (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : (COLORNOTTRANSPARENT(m_style.shadow_color)? 0 : (m_style.margin_y - m_style.hilite_padding));
+				y += m_style.shadow_radius / 2;
 			}
-			if (m_candidateCount) {
-				if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
-					m_offsety_preedit = rects[m_candidateCount - 1].bottom - preeditrc.bottom;
-				if (!m_ctx.aux.str.empty())
-					m_offsety_aux = rects[m_candidateCount - 1].bottom - auxrc.bottom;
-			}
-			else {
-				m_offsety_preedit = 0;
-				m_offsety_aux = 0;
-			}
-			int base_gap = 0;
-			if (!m_ctx.aux.str.empty())
-				base_gap = auxrc.Height() + m_style.spacing;
-			else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
-				base_gap = preeditrc.Height() + m_style.spacing;
-
-			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-				if (i == 0)
-					m_offsetys[i] = btmys[m_candidateCount - i - 1] - base_gap - rects[i].bottom;
-				else
-					m_offsetys[i] = (rects[i - 1].top + m_offsetys[i - 1] - m_style.candidate_spacing) - rects[i].bottom;
-			}
-			delete[] rects;
-			delete[] btmys;
 		}
 	}
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
