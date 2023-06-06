@@ -7,6 +7,8 @@ on:
 
 jobs:
   build-and-release:
+    permissions:
+      contents: write
     runs-on: windows-2019
     env:
       boost_version: 1.78.0
