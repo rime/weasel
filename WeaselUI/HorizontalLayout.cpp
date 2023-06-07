@@ -147,13 +147,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			_candidateLabelRects[i].OffsetRect(0, ol);
 			_candidateTextRects[i].OffsetRect(0, ot);
 			_candidateCommentRects[i].OffsetRect(0, oc);
-			// make rightest candidate's rect right the same for better look
-			if(( i < candidates_count - 1 && row_of_candidate[i] < row_of_candidate[i+1] ) || (i == candidates_count - 1))
-				_candidateRects[i].right = max(width, max_width_of_rows);
 		}
 		height = mintop_of_rows[row_cnt] + height_of_rows[row_cnt] - offsetY;
 		width = max(width, max_width_of_rows);
-		_highlightRect = _candidateRects[id];
 	}
 	else
 		height -= _style.spacing + offsetY;
@@ -161,11 +157,21 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	width += real_margin_x;
 	height += real_margin_y;
 
-	if (!_context.preedit.str.empty() && !candidates_count)
+	if (!_context.preedit.str.empty() && candidates_count)
 	{
 		width = max(width, _style.min_width);
 		height = max(height, _style.min_height);
 	}
+	if(candidates_count)
+	{
+		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+		{
+			// make rightest candidate's rect right the same for better look
+			if(( i < candidates_count - 1 && row_of_candidate[i] < row_of_candidate[i+1] ) || (i == candidates_count - 1))
+				_candidateRects[i].right = width - real_margin_x;
+		}
+	}
+	_highlightRect = _candidateRects[id];
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + offsetX, height + 2 * offsetY);
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
