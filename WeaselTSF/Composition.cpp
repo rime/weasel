@@ -149,16 +149,30 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec)
 {
 	com_ptr<ITfInsertAtSelection> pInsertAtSelection;
 	com_ptr<ITfRange> pRangeComposition;
+	ITfRange* pRange;
 	RECT rc;
 	BOOL fClipped;
 	TF_SELECTION selection;
 	ULONG nSelection;
+	LONG cch;
+
 	if (FAILED(_pContext->QueryInterface(IID_ITfInsertAtSelection, (LPVOID *) &pInsertAtSelection)))
 		return E_FAIL;
 	if (FAILED(_pContext->GetSelection(ec, TF_DEFAULT_SELECTION, 1, &selection, &nSelection)))
 		return E_FAIL;
 
-	if ((_pContextView->GetTextExt(ec, selection.range, &rc, &fClipped)) == S_OK && (rc.left != 0 || rc.top != 0))
+	if (_pComposition != nullptr && _pComposition->GetRange(&pRange) == S_OK)
+	{
+		pRange->Collapse(ec, TF_ANCHOR_START);
+	}
+	else
+	{
+		// composition end
+		// note: selection.range is always an empty range
+		pRange = selection.range;
+	}
+
+	if ((_pContextView->GetTextExt(ec, pRange, &rc, &fClipped)) == S_OK && (rc.left != 0 || rc.top != 0))
 	{
 		// get the foreground window pos and check if rc from GetTextExt is out of window
 		if (_enhancedPosition)
