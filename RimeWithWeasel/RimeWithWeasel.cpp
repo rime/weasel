@@ -812,6 +812,20 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		else if (!std::strcmp(preedit_type, "preview_all"))
 			style.preedit_type = weasel::UIStyle::PREVIEW_ALL;
 	}
+	char antialias_mode[20] = { 0 };
+	if (RimeConfigGetString(config, "style/antialias_mode", antialias_mode, sizeof(antialias_mode) - 1))
+	{
+		if (!std::strcmp(antialias_mode, "force_dword"))
+			style.antialias_mode = weasel::UIStyle::FORCE_DWORD;
+		else if (!std::strcmp(antialias_mode, "cleartype"))
+			style.antialias_mode = weasel::UIStyle::CLEARTYPE;
+		else if (!std::strcmp(antialias_mode, "grayscale"))
+			style.antialias_mode = weasel::UIStyle::GRAYSCALE;
+		else if (!std::strcmp(antialias_mode, "aliased"))
+			style.antialias_mode = weasel::UIStyle::ALIASED;
+		else
+			style.antialias_mode = weasel::UIStyle::DEFAULT;
+	}
 
 	char align_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/layout/align_type", align_type, sizeof(align_type) - 1))

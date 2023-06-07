@@ -240,6 +240,15 @@ namespace weasel
 
 	struct UIStyle
 	{
+		enum AntiAliasMode
+		{
+			DEFAULT = 0,
+			CLEARTYPE = 1,
+			GRAYSCALE = 2,
+			ALIASED = 3,
+			FORCE_DWORD = 0xffffffff
+		};
+
 		enum PreeditType
 		{
 			COMPOSITION,
@@ -264,6 +273,7 @@ namespace weasel
 			ALIGN_TOP
 		};
 
+		AntiAliasMode antialias_mode;
 		LayoutAlignType align_type;
 		PreeditType preedit_type;
 		LayoutType layout_type;
@@ -334,6 +344,7 @@ namespace weasel
 			label_font_point(0),
 			comment_font_point(0),
 			inline_preedit(false),
+			antialias_mode(DEFAULT),
 			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
 			display_tray_icon(false),
@@ -391,6 +402,7 @@ namespace weasel
 			return
 				(
 					align_type != st.align_type
+					|| antialias_mode != st.antialias_mode
 					|| preedit_type != st.preedit_type
 					|| layout_type != st.layout_type
 					|| vertical_text_left_to_right != st.vertical_text_left_to_right
@@ -464,6 +476,7 @@ namespace boost {
 			ar & s.comment_font_point;
 			ar & s.inline_preedit;
 			ar & s.align_type;
+			ar & s.antialias_mode;
 			ar & s.mark_text;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
