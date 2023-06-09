@@ -153,7 +153,11 @@ void WeaselPanel::_InitFontRes(void)
 		pDWR = new DirectWriteResources(m_style, dpiX);
 	// if style changed, re-initialize font resources
 	else if (m_ostyle != m_style)
+	{
 		pDWR->InitResources(m_style, dpiX);
+		pDWR->pRenderTarget->SetTextAntialiasMode((D2D1_TEXT_ANTIALIAS_MODE)m_style.antialias_mode);
+
+	}
 	else if( dpiX != dpi)
 	{
 		pDWR->InitResources(m_style, dpiX);
