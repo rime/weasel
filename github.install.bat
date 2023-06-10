@@ -11,8 +11,8 @@ set download_archive_deps=rime-deps-08dd95f-Windows.7z
 curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive%
 curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive_deps%
 
-7z x %download_archive% * -olibrime\ | find "ing archive"
-7z x %download_archive_deps% * -olibrime\ | find "ing archive"
+7z x %download_archive% * -olibrime\ -y
+7z x %download_archive_deps% * -olibrime\ -y
 
 copy /Y librime\dist\include\rime_*.h include\
 copy /Y librime\dist\lib\rime.lib lib\

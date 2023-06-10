@@ -23,7 +23,7 @@ jobs:
       - name: Checkout last commit
         uses: actions/checkout@v3
         with:
-          submodules: recursive
+          submodules: true
 
       - name: Configure build environment
         run: |
@@ -43,24 +43,8 @@ jobs:
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: .\install_boost.bat
 
-      - name: Check submodules
-        run: git submodule > submodule-status
-
-      - name: Cache dependencies
-        id: cache-deps
-        uses: actions/cache@v3
-        with:
-          path: |
-            librime
-            plum
-          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
-
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1.3
-
-      - name: Build dependencies
-        if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: .\build.bat opencc
 
       - name: Copy Rime files
         run: .\github.install.bat
