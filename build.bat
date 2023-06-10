@@ -112,8 +112,8 @@ if %build_rime% == 1 (
   if not exist env.bat (
     copy %WEASEL_ROOT%\env.bat env.bat
   )
-  if not exist thirdparty\lib\opencc.lib (
-    call build.bat thirdparty %rime_build_variant%
+  if not exist lib\opencc.lib (
+    call build.bat deps %rime_build_variant%
     if errorlevel 1 goto error
   )
   call build.bat %rime_build_variant%
