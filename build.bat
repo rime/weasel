@@ -195,10 +195,13 @@ set BJAM_OPTIONS_COMMON=toolset=%BJAM_TOOLSET%^
  cxxflags="/Zc:threadSafeInit- "
 
 set BJAM_OPTIONS_X86=%BJAM_OPTIONS_COMMON%^
- define=BOOST_USE_WINAPI_VERSION=0x0501
+ define=BOOST_USE_WINAPI_VERSION=0x0501^
+ architecture=x86^
+ address-model=32
 
 set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
  define=BOOST_USE_WINAPI_VERSION=0x0502^
+ architecture=x86^
  address-model=64^
  --stagedir=stage_x64
 
