@@ -202,8 +202,7 @@ set BJAM_OPTIONS_X86=%BJAM_OPTIONS_COMMON%^
 set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
  define=BOOST_USE_WINAPI_VERSION=0x0502^
  architecture=x86^
- address-model=64^
- --stagedir=stage_x64
+ address-model=64
 
 cd /d %BOOST_ROOT%
 if not exist b2.exe call bootstrap.bat
