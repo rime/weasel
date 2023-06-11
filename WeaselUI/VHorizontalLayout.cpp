@@ -30,8 +30,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-	int pgh = pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2;
-	int pgw = max(pgszl.cx, pgszr.cx);
+	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
+	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2 : 0;
+	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
@@ -185,7 +186,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	_contentSize.SetSize(width + offsetX, height + offsetY);
 
 	// calc page indicator 
-	if(candidates_count && !_style.inline_preedit)
+	if(page_en && candidates_count && !_style.inline_preedit)
 	{
 		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
 		int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
@@ -234,8 +235,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-	int pgh = pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2;
-	int pgw = max(pgszl.cx, pgszr.cx);
+	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
+	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2 : 0;
+	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
@@ -427,7 +429,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 
 	// calc page indicator 
-	if(candidates_count && !_style.inline_preedit)
+	if(page_en && candidates_count && !_style.inline_preedit)
 	{
 		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
 		int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;

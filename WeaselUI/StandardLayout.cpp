@@ -83,42 +83,46 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	const std::wstring& preedit = text.str;
 	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
 	CSize size(0, 0);
-	weasel::TextRange range;
-	for (size_t j = 0; j < attrs.size(); ++j)
-		if (attrs[j].type == weasel::HIGHLIGHTED)
-			range = attrs[j].range;
-	std::wstring before_str = preedit.substr(0, range.start);
-	std::wstring hilited_str = preedit.substr(range.start, range.end);
-	std::wstring after_str = preedit.substr(range.end);
-	CSize beforesz(0,0), hilitedsz(0,0), aftersz(0,0);
-	GetTextSizeDW(before_str, before_str.length(), pTextFormat, pDWR, &beforesz);
-	GetTextSizeDW(hilited_str, hilited_str.length(), pTextFormat, pDWR, &hilitedsz);
-	GetTextSizeDW(after_str, after_str.length(), pTextFormat, pDWR, &aftersz);
-	auto width_max = 0, height_max = 0;
-	if(_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+	if(!preedit.empty())
 	{
-		width_max = max(width_max, beforesz.cx);
-		width_max = max(width_max, hilitedsz.cx);
-		width_max = max(width_max, aftersz.cx);
-		height_max += beforesz.cy + (beforesz.cy > 0) * _style.hilite_spacing;
-		height_max += hilitedsz.cy + (hilitedsz.cy > 0) * _style.hilite_spacing;
-		height_max += aftersz.cy + (aftersz.cy > 0) * _style.hilite_spacing;
+		weasel::TextRange range;
+		for (size_t j = 0; j < attrs.size(); ++j)
+			if (attrs[j].type == weasel::HIGHLIGHTED)
+				range = attrs[j].range;
 		if(range.start < range.end)
-			height_max += 2 * _style.hilite_padding;
+		{
+			std::wstring before_str = preedit.substr(0, range.start);
+			std::wstring hilited_str = preedit.substr(range.start, range.end);
+			std::wstring after_str = preedit.substr(range.end);
+			CSize beforesz(0,0), hilitedsz(0,0), aftersz(0,0);
+			GetTextSizeDW(before_str, before_str.length(), pTextFormat, pDWR, &beforesz);
+			GetTextSizeDW(hilited_str, hilited_str.length(), pTextFormat, pDWR, &hilitedsz);
+			GetTextSizeDW(after_str, after_str.length(), pTextFormat, pDWR, &aftersz);
+			auto width_max = 0, height_max = 0;
+			if(_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+			{
+				width_max = max(width_max, beforesz.cx);
+				width_max = max(width_max, hilitedsz.cx);
+				width_max = max(width_max, aftersz.cx);
+				height_max += beforesz.cy + (beforesz.cy > 0) * _style.hilite_spacing;
+				height_max += hilitedsz.cy + (hilitedsz.cy > 0) * _style.hilite_spacing;
+				height_max += aftersz.cy; // + (aftersz.cy > 0) * _style.hilite_spacing;
+			}
+			else
+			{
+				height_max = max(height_max, beforesz.cy);
+				height_max = max(height_max, hilitedsz.cy);
+				height_max = max(height_max, aftersz.cy);
+				width_max += beforesz.cx + (beforesz.cx > 0) * _style.hilite_spacing;
+				width_max += hilitedsz.cx + (hilitedsz.cx > 0) * _style.hilite_spacing;
+				width_max += aftersz.cx ;// + (aftersz.cx > 0) * _style.hilite_spacing;
+			}
+			size.cx = width_max;
+			size.cy = height_max;
+		}
+		else
+			GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWR, &size);
 	}
-	else
-	{
-		height_max = max(height_max, beforesz.cy);
-		height_max = max(height_max, hilitedsz.cy);
-		height_max = max(height_max, aftersz.cy);
-		width_max += beforesz.cx + (beforesz.cx > 0) * _style.hilite_spacing;
-		width_max += hilitedsz.cx + (hilitedsz.cx > 0) * _style.hilite_spacing;
-		width_max += aftersz.cx + (aftersz.cx > 0) * _style.hilite_spacing;
-		if(range.start < range.end)
-			width_max += 2 * _style.hilite_padding;
-	}
-	size.cx = width_max;
-	size.cy = height_max;
 	return size;
 }
 
