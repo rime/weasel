@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: windows-2022
     env:
       boost_version: 1.78.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
@@ -27,7 +27,7 @@ jobs:
 
       - name: Configure build environment
         run: |
-          copy env.vs2019.bat env.bat
+          copy env.vs2022.bat env.bat
           $git_ref_name = git describe --always
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
 
