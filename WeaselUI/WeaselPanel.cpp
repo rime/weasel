@@ -523,11 +523,13 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			CRect prc = m_layout->GetPrepageRect();
 			// clickable color / disabled color
 			int color = m_ctx.cinfo.currentPage ? m_style.prevpage_color : m_style.text_color;
+			if(m_istorepos)	prc.OffsetRect(0, m_offsety_preedit);
 			_TextOut(prc, pre.c_str(), pre.length(), color, txtFormat);
 
 			CRect nrc = m_layout->GetNextpageRect();
 			// clickable color / disabled color
 			color = m_ctx.cinfo.is_last_page ? m_style.text_color : m_style.nextpage_color;
+			if(m_istorepos)	nrc.OffsetRect(0, m_offsety_preedit);
 			_TextOut(nrc, next.c_str(), next.length(), color, txtFormat);
 		}
 		drawn = true;
