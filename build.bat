@@ -179,28 +179,19 @@ goto end
 
 :build_boost
 
-set BOOST_COMPILED_LIBS=--with-date_time^
- --with-filesystem^
- --with-locale^
- --with-regex^
- --with-system^
- --with-thread^
- --with-serialization
-
-set BJAM_OPTIONS_COMMON=toolset=%BJAM_TOOLSET%^
- variant=%boost_build_variant%^
+set BJAM_OPTIONS_COMMON=-j%NUMBER_OF_PROCESSORS%^
+ --without-mpi^
+ define=BOOST_USE_WINAPI_VERSION=0x0603^
+ toolset=%BJAM_TOOLSET%^
  link=static^
- threading=multi^
  runtime-link=static^
- cxxflags="/Zc:threadSafeInit- "
+ --build-type=complete
 
 set BJAM_OPTIONS_X86=%BJAM_OPTIONS_COMMON%^
- define=BOOST_USE_WINAPI_VERSION=0x0501^
  architecture=x86^
  address-model=32
 
 set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
- define=BOOST_USE_WINAPI_VERSION=0x0502^
  architecture=x86^
  address-model=64
 
