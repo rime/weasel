@@ -39,3 +39,4 @@ Thumbs.db
 release-notes.html
 *.7z
 RELEASE_CHANGELOG.md
+deps/
