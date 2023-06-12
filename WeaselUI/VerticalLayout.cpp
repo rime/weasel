@@ -65,7 +65,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 			height += _style.candidate_spacing;
 
 		int w = real_margin_x + base_offset, max_height_curren_candidate = 0;
-		int candidate_width = 0, comment_width = 0;
+		int candidate_width = base_offset, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
