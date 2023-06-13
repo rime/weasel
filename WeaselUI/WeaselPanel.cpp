@@ -863,7 +863,7 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow 
-	if(CRect(rc) != m_oinputPos		// pos changed
+	if((rc.left != m_oinputPos.left && rc.bottom != m_oinputPos.bottom)		// pos changed
 		|| m_octx != m_ctx
 		|| (m_style.inline_preedit && m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))	// after disabled by ctrl+space, inline_preedit
 		|| !m_ctx.aux.str.empty()	// aux not empty, msg 
