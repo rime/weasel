@@ -22,8 +22,9 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-	int pgw = pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding * 2;
-	int pgh = max(pgszl.cy, pgszr.cy);
+	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
+	int pgw = page_en ? pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding * 2 : 0;
+	int pgh = page_en ? max(pgszl.cy, pgszr.cy) : 0;
 
 	/*  preedit and auxiliary rectangle calc start */
 	CSize size;
@@ -64,7 +65,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 			height += _style.candidate_spacing;
 
 		int w = real_margin_x + base_offset, max_height_curren_candidate = 0;
-		int candidate_width = w, comment_width = 0;
+		int candidate_width = base_offset, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
@@ -163,7 +164,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 	height += real_margin_y;
 
-	if (!_context.preedit.str.empty() && !candidates.empty())
+	if (!_context.preedit.str.empty() && candidates_count)
 	{
 		width = max(width, _style.min_width);
 		height = max(height, _style.min_height);
@@ -179,7 +180,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 	_highlightRect = _candidateRects[id];
 	// calc page indicator 
-	if(candidates_count && !_style.inline_preedit)
+	if(page_en && candidates_count && !_style.inline_preedit)
 	{
 		int _prex = _contentSize.cx - offsetX - real_margin_x + _style.hilite_padding - pgw;
 		int _prey = (_preeditRect.top + _preeditRect.bottom) / 2 - pgszl.cy / 2;
