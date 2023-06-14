@@ -171,6 +171,7 @@ if %build_installer% == 1 (
   "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe ^
   /DWEASEL_VERSION=%WEASEL_VERSION% ^
   /DWEASEL_BUILD=%WEASEL_BUILD% ^
+  /V4 ^
   output\install.nsi
   if errorlevel 1 goto error
 )
