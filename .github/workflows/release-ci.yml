@@ -38,6 +38,9 @@ jobs:
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: .\install_boost.bat
 
+      - name: Install NSIS
+        run: .\install_nsis.bat
+
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1.3
 
