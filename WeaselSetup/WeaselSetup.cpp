@@ -1,4 +1,4 @@
-// WeaselSetup.cpp : main source file for WeaselSetup.exe
+﻿// WeaselSetup.cpp : main source file for WeaselSetup.exe
 //
 
 #include "stdafx.h"

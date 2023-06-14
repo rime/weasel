@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <string>
 #include <vector>
 #include <StringAlgorithm.hpp>
@@ -83,10 +83,10 @@ int install_ime_file(std::wstring& srcPath, const std::wstring& ext, bool hant, 
 	std::wstring destPath = std::wstring(path) + L"\\weasel" + ext;
 
 	int retval = 0;
-	// ¸´ÖÆ .dll/.ime µ½ÏµÍ³Ä¿Â¼
+	// å¤åˆ¶ .dll/.ime åˆ°ç³»ç»Ÿç›®å½•
 	if (!copy_file(srcPath, destPath))
 	{
-		if (!silent) MessageBoxW(NULL, destPath.c_str(), L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBoxW(NULL, destPath.c_str(), L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 	retval += func(destPath, true, false, hant, silent);
@@ -98,18 +98,18 @@ int install_ime_file(std::wstring& srcPath, const std::wstring& ext, bool hant, 
 		// PW64RW64FR fnWow64RevertWow64FsRedirection = (PW64RW64FR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "Wow64RevertWow64FsRedirection");
 		if (Wow64DisableWow64FsRedirection(&OldValue) == FALSE)
 		{
-			if (!silent) MessageBoxW(NULL, L"Ÿo·¨È¡ÏûÎÄ¼şÏµ½yÖØ¶¨Ïò", L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, L"ç„¡æ³•å–æ¶ˆæ–‡ä»¶ç³»çµ±é‡å®šå‘", L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 		if (!copy_file(srcPath, destPath))
 		{
-			if (!silent) MessageBoxW(NULL, destPath.c_str(), L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, destPath.c_str(), L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 		retval += func(destPath, true, true, hant, silent);
 		if (Wow64RevertWow64FsRedirection(OldValue) == FALSE)
 		{
-			if (!silent) MessageBoxW(NULL, L"Ÿo·¨»ÖÍÎÄ¼şÏµ½yÖØ¶¨Ïò", L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, L"ç„¡æ³•æ¢å¾©æ–‡ä»¶ç³»çµ±é‡å®šå‘", L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 	}
@@ -126,7 +126,7 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 	retval += func(imePath, false, false, false, silent);
 	if (!delete_file(imePath))
 	{
-		if (!silent) MessageBox(NULL, imePath.c_str(), L"Ğ¶İdÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, imePath.c_str(), L"å¸è¼‰å¤±æ•—", MB_ICONERROR | MB_OK);
 		retval += 1;
 	}
 	if (is_wow64())
@@ -137,24 +137,24 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 		// PW64RW64FR fnWow64RevertWow64FsRedirection = (PW64RW64FR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "Wow64RevertWow64FsRedirection");
 		if (Wow64DisableWow64FsRedirection(&OldValue) == FALSE)
 		{
-			if (!silent) MessageBoxW(NULL, L"Ÿo·¨È¡ÏûÎÄ¼şÏµ½yÖØ¶¨Ïò", L"Ğ¶İdÊ§”¡", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, L"ç„¡æ³•å–æ¶ˆæ–‡ä»¶ç³»çµ±é‡å®šå‘", L"å¸è¼‰å¤±æ•—", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 		if (!delete_file(imePath))
 		{
-			if (!silent) MessageBoxW(NULL, imePath.c_str(), L"Ğ¶İdÊ§”¡", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, imePath.c_str(), L"å¸è¼‰å¤±æ•—", MB_ICONERROR | MB_OK);
 			retval += 1;
 		}
 		if (Wow64RevertWow64FsRedirection(OldValue) == FALSE)
 		{
-			if (!silent) MessageBoxW(NULL, L"Ÿo·¨»ÖÍÎÄ¼şÏµ½yÖØ¶¨Ïò", L"Ğ¶İdÊ§”¡", MB_ICONERROR | MB_OK);
+			if (!silent) MessageBoxW(NULL, L"ç„¡æ³•æ¢å¾©æ–‡ä»¶ç³»çµ±é‡å®šå‘", L"å¸è¼‰å¤±æ•—", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 	}
 	return retval;
 }
 
-// ×¢²áIMEÊäÈë·¨
+// æ³¨å†ŒIMEè¾“å…¥æ³•
 int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	if (is_wow64)
@@ -245,8 +245,8 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 		{
 			DWORD dwErr = GetLastError();
 			WCHAR msg[100];
-			StringCchPrintfW(msg, _countof(msg), L"Ô]ƒÔİ”Èë·¨åeÕ` ImmInstallIME: HKL=%x Err=%x", hKL, dwErr);
-			if (!silent) MessageBox(NULL, msg, L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+			StringCchPrintfW(msg, _countof(msg), L"è¨»å†Šè¼¸å…¥æ³•éŒ¯èª¤ ImmInstallIME: HKL=%x Err=%x", hKL, dwErr);
+			if (!silent) MessageBox(NULL, msg, L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 			return 1;
 		}
 		return 0;
@@ -258,7 +258,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 	LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
 	if (ret != ERROR_SUCCESS)
 	{
-		if (!silent) MessageBox(NULL, KEYBOARD_LAYOUTS_KEY, L"Ğ¶İdÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, KEYBOARD_LAYOUTS_KEY, L"å¸è¼‰å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -269,7 +269,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 		if (ret != ERROR_SUCCESS)
 			break;
 
-		// ÖĞÎÄ¼üÅÌ²¼¾Ö?
+		// ä¸­æ–‡é”®ç›˜å¸ƒå±€?
 		if (wcscmp(subKey + 4, L"0804") == 0 || wcscmp(subKey + 4, L"0404") == 0)
 		{
 			HKEY hSubKey;
@@ -285,7 +285,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 			if (ret != ERROR_SUCCESS)
 				continue;
 
-			// Ğ¡ÀÇºÁ?
+			// å°ç‹¼æ¯«?
 			if (_wcsicmp(imeFile, L"weasel.ime") == 0)
 			{
 				DWORD value;
@@ -294,7 +294,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 
 				RegDeleteKey(hKey, subKey);
 
-				// ÒÆ³ıpreload
+				// ç§»é™¤preload
 				HKEY hPreloadKey;
 				ret = RegOpenKey(HKEY_CURRENT_USER, PRELOAD_KEY, &hPreloadKey);
 				if (ret != ERROR_SUCCESS)
@@ -312,7 +312,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 					{
 						if (i > preloads.size())
 						{
-							// É¾³ı×î´óÒ»ºÅ×¢²á±íÖµ
+							// åˆ é™¤æœ€å¤§ä¸€å·æ³¨å†Œè¡¨å€¼
 							number = std::to_wstring(i - 1);
 							RegDeleteValue(hPreloadKey, number.c_str());
 						}
@@ -323,7 +323,7 @@ int register_ime(const std::wstring& ime_path, bool register_ime, bool is_wow64,
 						preloads.push_back(value);
 					}
 				}
-				// ÖØĞ´preloads
+				// é‡å†™preloads
 				for (size_t i = 0; i < preloads.size(); ++i)
 				{
 					number = std::to_wstring(i + 1);
@@ -365,7 +365,7 @@ void enable_profile(BOOL fEnable, bool hant) {
 	}
 }
 
-// ×¢²áTSFÊäÈë·¨
+// æ³¨å†ŒTSFè¾“å…¥æ³•
 int register_text_service(const std::wstring& tsf_path, bool register_ime, bool is_wow64, bool hant, bool silent)
 {
 	using RegisterServerFunction = HRESULT(STDAPICALLTYPE*)();
@@ -400,8 +400,8 @@ int register_text_service(const std::wstring& tsf_path, bool register_ime, bool 
 	else
 	{
 		WCHAR msg[100];
-		StringCchPrintfW(msg, _countof(msg), L"Ô]ƒÔİ”Èë·¨åeÕ` regsvr32.exe %s", params.c_str());
-		if (!silent) MessageBoxW(NULL, msg, L"°²×°/Ğ¶İdÊ§°Ü", MB_ICONERROR | MB_OK);
+		StringCchPrintfW(msg, _countof(msg), L"è¨»å†Šè¼¸å…¥æ³•éŒ¯èª¤ regsvr32.exe %s", params.c_str());
+		if (!silent) MessageBoxW(NULL, msg, L"å®‰è£…/å¸è¼‰å¤±è´¥", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -418,13 +418,13 @@ int install(bool hant, bool silent)
 	retval += install_ime_file(ime_src_path, L".ime", hant, silent, &register_ime);
 	retval += install_ime_file(ime_src_path, L".dll", hant, silent, &register_text_service);
 
-	// Ğ´×¢²á±í
+	// å†™æ³¨å†Œè¡¨
 	HKEY hKey;
 	LSTATUS ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY,
 		0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		if (!silent) MessageBox(NULL, WEASEL_REG_KEY, L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, WEASEL_REG_KEY, L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -438,7 +438,7 @@ int install(bool hant, bool silent)
 		(rootDir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		if (!silent) MessageBox(NULL, L"Ÿo·¨Œ‘Èë WeaselRoot", L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, L"ç„¡æ³•å¯«å…¥ WeaselRoot", L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -448,7 +448,7 @@ int install(bool hant, bool silent)
 		(executable.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		if (!silent) MessageBox(NULL, L"Ÿo·¨Œ‘ÈëÔ]ƒÔ±íæIÖµ ServerExecutable", L"°²ÑbÊ§”¡", MB_ICONERROR | MB_OK);
+		if (!silent) MessageBox(NULL, L"ç„¡æ³•å¯«å…¥è¨»å†Šè¡¨éµå€¼ ServerExecutable", L"å®‰è£å¤±æ•—", MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -457,25 +457,25 @@ int install(bool hant, bool silent)
 	if (retval)
 		return 1;
 
-	if (!silent) MessageBox(NULL, L"¿ÉÒÔÊ¹¡¾Ğ¡ÀÇºÁ¡¿Œ‘×ÖÁË :)", L"°²ÑbÍê³É", MB_ICONINFORMATION | MB_OK);
+	if (!silent) MessageBox(NULL, L"å¯ä»¥ä½¿ã€å°ç‹¼æ¯«ã€‘å¯«å­—äº† :)", L"å®‰è£å®Œæˆ", MB_ICONINFORMATION | MB_OK);
 	return 0;
 }
 
 int uninstall(bool silent)
 {
-	// ×¢ÏúÊäÈë·¨
+	// æ³¨é”€è¾“å…¥æ³•
 	int retval = 0;
 	retval += uninstall_ime_file(L".ime", silent, &register_ime);
 	retval += uninstall_ime_file(L".dll", silent, &register_text_service);
 
-	// Çå³ı×¢²áĞÅÏ¢
+	// æ¸…é™¤æ³¨å†Œä¿¡æ¯
 	RegDeleteKey(HKEY_LOCAL_MACHINE, WEASEL_REG_KEY);
 	RegDeleteKey(HKEY_LOCAL_MACHINE, RIME_REG_KEY);
 
 	if (retval)
 		return 1;
 
-	if (!silent) MessageBox(NULL, L"Ğ¡ÀÇºÁ :)", L"Ğ¶İdÍê³É", MB_ICONINFORMATION | MB_OK);
+	if (!silent) MessageBox(NULL, L"å°ç‹¼æ¯« :)", L"å¸è¼‰å®Œæˆ", MB_ICONINFORMATION | MB_OK);
 	return 0;
 }
 
