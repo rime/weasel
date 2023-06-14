@@ -1,3 +1,1 @@
-#pragma once
-
-#include "resource.h"
+// WeaselSetup.h
