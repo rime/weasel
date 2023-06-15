@@ -124,11 +124,7 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 	std::wstring imePath(path);
 	imePath += L"\\weasel" + ext;
 	retval += func(imePath, false, false, false, silent);
-	if (!delete_file(imePath))
-	{
-		if (!silent) MessageBox(NULL, imePath.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
-		retval += 1;
-	}
+	delete_file(imePath);
 	if (is_wow64())
 	{
 		retval += func(imePath, false, true, false, silent);
@@ -140,11 +136,7 @@ int uninstall_ime_file(const std::wstring& ext, bool silent, ime_register_func f
 			if (!silent) MessageBoxW(NULL, L"無法取消文件系統重定向", L"卸載失敗", MB_ICONERROR | MB_OK);
 			return 1;
 		}
-		if (!delete_file(imePath))
-		{
-			if (!silent) MessageBoxW(NULL, imePath.c_str(), L"卸載失敗", MB_ICONERROR | MB_OK);
-			retval += 1;
-		}
+		delete_file(imePath);
 		if (Wow64RevertWow64FsRedirection(OldValue) == FALSE)
 		{
 			if (!silent) MessageBoxW(NULL, L"無法恢復文件系統重定向", L"卸載失敗", MB_ICONERROR | MB_OK);
@@ -411,11 +403,14 @@ int register_text_service(const std::wstring& tsf_path, bool register_ime, bool 
 	return 0;
 }
 
-int install(bool hant, bool silent)
+int install(bool hant, bool silent, bool old_ime_support)
 {
 	std::wstring ime_src_path;
 	int retval = 0;
-	retval += install_ime_file(ime_src_path, L".ime", hant, silent, &register_ime);
+	if (old_ime_support)
+	{
+		retval += install_ime_file(ime_src_path, L".ime", hant, silent, &register_ime);
+	}
 	retval += install_ime_file(ime_src_path, L".dll", hant, silent, &register_text_service);
 
 	// 写注册表
@@ -465,7 +460,7 @@ int uninstall(bool silent)
 {
 	// 注销输入法
 	int retval = 0;
-	retval += uninstall_ime_file(L".ime", silent, &register_ime);
+	uninstall_ime_file(L".ime", silent, &register_ime);
 	retval += uninstall_ime_file(L".dll", silent, &register_text_service);
 
 	// 清除注册信息
@@ -483,6 +478,6 @@ bool has_installed() {
 	WCHAR path[MAX_PATH];
 	GetSystemDirectory(path, _countof(path));
 	std::wstring sysPath(path);
-	DWORD attr = GetFileAttributesW((sysPath + L"\\weasel.ime").c_str());
+	DWORD attr = GetFileAttributesW((sysPath + L"\\weasel.dll").c_str());
 	return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }

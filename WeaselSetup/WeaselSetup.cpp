@@ -30,7 +30,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	return nRet;
 }
-int install(bool hant, bool silent);
+int install(bool hant, bool silent, bool old_ime_support);
 int uninstall(bool silent);
 bool has_installed();
 
@@ -38,6 +38,7 @@ static int CustomInstall(bool installing)
 {
 	bool hant = false;
 	bool silent = false;
+	bool old_ime_support = false;
 	std::wstring user_dir;
 
 	const WCHAR KEY[] = L"Software\\Rime\\Weasel";
@@ -78,9 +79,10 @@ static int CustomInstall(bool installing)
 		else {
 			hant = dlg.hant;
 			user_dir = dlg.user_dir;
+			old_ime_support = dlg.old_ime_support;
 		}
 	}
-	if (0 != install(hant, silent))
+	if (0 != install(hant, silent, old_ime_support))
 		return 1;
 
 	ret = RegCreateKeyEx(HKEY_CURRENT_USER, KEY,
@@ -113,16 +115,18 @@ static int CustomInstall(bool installing)
 
 static int Run(LPTSTR lpCmdLine)
 {
-	const bool silent = true;
+	constexpr bool silent = true;
+	constexpr bool old_ime_support = false;
 	bool uninstalling = !wcscmp(L"/u", lpCmdLine);
 	if (uninstalling)
 		return uninstall(silent);
+
 	bool hans = !wcscmp(L"/s", lpCmdLine);
 	if (hans)
-		return install(false, silent);
+		return install(false, silent, old_ime_support);
 	bool hant = !wcscmp(L"/t", lpCmdLine);
 	if (hant)
-		return install(true, silent);
+		return install(true, silent, old_ime_support);
 	bool installing = !wcscmp(L"/i", lpCmdLine);
 	return CustomInstall(installing);
 }

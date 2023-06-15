@@ -47,7 +47,6 @@ set build_rime=0
 set rime_build_variant=release
 set build_weasel=0
 set build_installer=0
-set build_x64=1
 
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
@@ -79,7 +78,6 @@ if "%1" == "all" (
   set build_weasel=1
   set build_installer=1
 )
-if "%1" == "nox64" set build_x64=0
 shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
@@ -152,18 +150,14 @@ if not exist weasel.props (
 del msbuild*.log
 
 if %build_hant% == 1 (
-  if %build_x64% == 1 (
-    msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
-    if errorlevel 1 goto error
-  )
+  msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
+  if errorlevel 1 goto error
   msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="Win32" /fl3
   if errorlevel 1 goto error
 )
 
-if %build_x64% == 1 (
-  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
-  if errorlevel 1 goto error
-)
+msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
+if errorlevel 1 goto error
 msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1
 if errorlevel 1 goto error
 
@@ -180,7 +174,13 @@ goto end
 :build_boost
 
 set BJAM_OPTIONS_COMMON=-j%NUMBER_OF_PROCESSORS%^
- --without-mpi^
+ --with-filesystem^
+ --with-json^
+ --with-locale^
+ --with-regex^
+ --with-serialization^
+ --with-system^
+ --with-thread^
  define=BOOST_USE_WINAPI_VERSION=0x0603^
  toolset=%BJAM_TOOLSET%^
  link=static^
@@ -200,10 +200,8 @@ if not exist b2.exe call bootstrap.bat
 if errorlevel 1 goto error
 b2 %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
 if errorlevel 1 goto error
-if %build_x64% == 1 (
-  b2 %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
-  if errorlevel 1 goto error
-)
+b2 %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
+if errorlevel 1 goto error
 exit /b
 
 :build_data
