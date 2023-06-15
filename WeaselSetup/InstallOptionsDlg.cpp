@@ -43,6 +43,7 @@ LRESULT InstallOptionsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 
 LRESULT InstallOptionsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
 	hant = (IsDlgButtonChecked(IDC_RADIO_TW) == BST_CHECKED);
+	old_ime_support = (IsDlgButtonChecked(IDC_CHECK_INSTIME) == BST_CHECKED);
 	if (IsDlgButtonChecked(IDC_RADIO_CUSTOM_DIR) == BST_CHECKED) {
 		CStringW text;
 		dir_.GetWindowTextW(text);

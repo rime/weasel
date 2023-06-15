@@ -12,6 +12,7 @@ public:
 
 	bool installed;
 	bool hant;
+	bool old_ime_support;
 	std::wstring user_dir;
 
 protected:
