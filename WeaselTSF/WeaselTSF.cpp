@@ -144,7 +144,7 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 
 	//if (!_InitDisplayAttributeGuidAtom())
 	//	goto ExitError;
-	//	some app might init failed because it not provide DisplayAttributeInfo, like  some opengl stuff
+	//	some app might init failed because it not provide DisplayAttributeInfo, like some opengl stuff
 	_InitDisplayAttributeGuidAtom();
 
 	if (!_InitPreservedKey())
