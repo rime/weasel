@@ -874,7 +874,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		_RepositionWindow(true);
 		RedrawWindow();
 	} else 
-	if((rc.left != m_oinputPos.left && abs(rc.bottom - m_oinputPos.bottom) > 2)		// pos changed
+	if((rc.left != m_oinputPos.left && rc.bottom != m_oinputPos.bottom)		// pos changed
 		|| m_size != m_osize
 		|| m_octx != m_ctx
 		|| (m_style.inline_preedit && m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))	// after disabled by ctrl+space, inline_preedit
