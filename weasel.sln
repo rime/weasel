@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.32413.511
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{53F79A24-5390-4640-84B5-19984EB3353B}"
 	ProjectSection(SolutionItems) = preProject
@@ -45,7 +45,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RimeWithWeasel", "RimeWithW
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselDeployer", "WeaselDeployer\WeaselDeployer.vcxproj", "{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselSetup", "WeaselSetup\WeaselSetup.vcxproj", "{04B795DB-A22B-4657-9350-29F04B8FB8F6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselSetup", "WeaselSetup\WeaselSetup.vcxproj", "{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -165,15 +165,15 @@ Global
 		{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}.Release|x64.ActiveCfg = Release|Win32
 		{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}.ReleaseHant|Win32.ActiveCfg = Release|Win32
 		{F53F3E9C-CC4D-4D1D-9C2E-719FE60A7E6B}.ReleaseHant|x64.ActiveCfg = Release|Win32
-		{04B795DB-A22B-4657-9350-29F04B8FB8F6}.Debug|Win32.ActiveCfg = Debug|Win32
-		{04B795DB-A22B-4657-9350-29F04B8FB8F6}.Debug|Win32.Build.0 = Debug|Win32
-		{04B795DB-A22B-4657-9350-29F04B8FB8F6}.Debug|x64.ActiveCfg = Debug|Win32
-		{04B795DB-A22B-4657-9350-29F04B8FB8F6}.Release|Win32.ActiveCfg = Release|Win32
-		{04B795DB-A22B-4657-9350-29F04B8FB8F6}.Release|Win32.Build.0 = Release|Win32
-		{04B795DB-A22B-4657-9350-29F04B8FB8F6}.Release|x64.ActiveCfg = Release|Win32
-		{04B795DB-A22B-4657-9350-29F04B8FB8F6}.ReleaseHant|Win32.ActiveCfg = Release|Win32
-		{04B795DB-A22B-4657-9350-29F04B8FB8F6}.ReleaseHant|Win32.Build.0 = Release|Win32
-		{04B795DB-A22B-4657-9350-29F04B8FB8F6}.ReleaseHant|x64.ActiveCfg = Release|Win32
+		{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}.Debug|Win32.ActiveCfg = Debug|Win32
+		{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}.Debug|Win32.Build.0 = Debug|Win32
+		{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}.Debug|x64.ActiveCfg = Debug|Win32
+		{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}.Release|Win32.ActiveCfg = Release|Win32
+		{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}.Release|Win32.Build.0 = Release|Win32
+		{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}.Release|x64.ActiveCfg = Release|Win32
+		{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}.ReleaseHant|Win32.ActiveCfg = Release|Win32
+		{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}.ReleaseHant|Win32.Build.0 = Release|Win32
+		{39F6E3F5-8F0B-4023-BC40-A66AE6C37095}.ReleaseHant|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

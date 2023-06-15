@@ -1,43 +1,33 @@
-﻿// WeaselSetup.cpp : Defines the entry point for the application.
+﻿// WeaselSetup.cpp : main source file for WeaselSetup.exe
 //
 
 #include "stdafx.h"
-#include "WeaselSetup.h"
-#include "InstallOptionsDialog.h"
+
+#include "resource.h"
+
+#include "InstallOptionsDlg.h"
 
 CAppModule _Module;
 
 static int Run(LPTSTR lpCmdLine);
 
-int APIENTRY _tWinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow)
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int /*nCmdShow*/)
 {
-	UNREFERENCED_PARAMETER(hPrevInstance);
-
 	HRESULT hRes = ::CoInitialize(NULL);
-	// If you are running on NT 4.0 or higher you can use the following call instead to
-	// make the EXE free threaded. This means that calls come in on a random RPC thread.
-	//HRESULT hRes = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	ATLASSERT(SUCCEEDED(hRes));
-
-	// this resolves ATL window thunking problem when Microsoft Layer for Unicode (MSLU) is used
-	::DefWindowProc(NULL, 0, 0, 0L);
 
 	AtlInitCommonControls(ICC_BAR_CLASSES);	// add flags to support other controls
 
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
 
-	int ret = Run(lpCmdLine);
+	int nRet = Run(lpstrCmdLine);
 
 	_Module.Term();
 	::CoUninitialize();
 
-	return ret;
+	return nRet;
 }
-
 int install(bool hant, bool silent);
 int uninstall(bool silent);
 bool has_installed();
@@ -92,7 +82,7 @@ static int CustomInstall(bool installing)
 		return 1;
 
 	ret = RegCreateKeyEx(HKEY_CURRENT_USER, KEY,
-		                 0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
+		0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
 		MessageBox(NULL, KEY, L"安裝失敗", MB_ICONERROR | MB_OK);
@@ -100,8 +90,8 @@ static int CustomInstall(bool installing)
 	}
 
 	ret = RegSetValueEx(hKey, L"RimeUserDir", 0, REG_SZ,
-		                (const BYTE*)user_dir.c_str(),
-						(user_dir.length() + 1) * sizeof(WCHAR));
+		(const BYTE*)user_dir.c_str(),
+		(user_dir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
 		MessageBox(NULL, L"無法寫入 RimeUserDir", L"安裝失敗", MB_ICONERROR | MB_OK);
@@ -134,3 +124,4 @@ static int Run(LPTSTR lpCmdLine)
 	bool installing = !wcscmp(L"/i", lpCmdLine);
 	return CustomInstall(installing);
 }
+
