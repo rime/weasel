@@ -287,6 +287,7 @@ namespace weasel
 		int comment_font_point;
 		bool inline_preedit;
 		bool display_tray_icon;
+		bool ascii_tip_follow_cursor;
 		std::wstring current_zhung_icon;
 		std::wstring current_ascii_icon;
 		bool enhanced_position;
@@ -348,6 +349,7 @@ namespace weasel
 			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
 			display_tray_icon(false),
+			ascii_tip_follow_cursor(false),
 			current_zhung_icon(),
 			current_ascii_icon(),
 			enhanced_position(false),
@@ -416,6 +418,7 @@ namespace weasel
 					|| inline_preedit != st.inline_preedit
 					|| mark_text != st.mark_text
 					|| display_tray_icon != st.display_tray_icon
+					|| ascii_tip_follow_cursor != st.ascii_tip_follow_cursor
 					|| current_zhung_icon != st.current_zhung_icon
 					|| current_ascii_icon != st.current_ascii_icon
 					|| enhanced_position != st.enhanced_position
@@ -480,6 +483,7 @@ namespace boost {
 			ar & s.mark_text;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
+			ar & s.ascii_tip_follow_cursor;
 			ar & s.current_zhung_icon;
 			ar & s.current_ascii_icon;
 			ar& s.enhanced_position;

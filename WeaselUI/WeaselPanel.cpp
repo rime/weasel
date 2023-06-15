@@ -863,6 +863,17 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow 
+	// if ascii_tip_follow_cursor set, move tip icon to mouse cursor
+	if(m_style.ascii_tip_follow_cursor && m_ctx.aux.empty() && (m_layout) && m_layout->ShouldDisplayStatusIcon())	// ascii icon
+	{
+		POINT p;
+		::GetCursorPos(&p);
+		RECT irc{p.x-STATUS_ICON_SIZE, p.y-STATUS_ICON_SIZE, p.x, p.y};
+		m_inputPos = irc;
+		m_oinputPos = irc;
+		_RepositionWindow(true);
+		RedrawWindow();
+	} else 
 	if((rc.left != m_oinputPos.left && rc.bottom != m_oinputPos.bottom)		// pos changed
 		|| m_octx != m_ctx
 		|| (m_style.inline_preedit && m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))	// after disabled by ctrl+space, inline_preedit
