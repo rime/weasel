@@ -842,6 +842,13 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.display_tray_icon = !!display_tray_icon;
 	}
+
+	Bool ascii_tip_follow_cursor = False;
+	if (RimeConfigGetBool(config, "style/ascii_tip_follow_cursor", &ascii_tip_follow_cursor) || initialize)
+	{
+		style.ascii_tip_follow_cursor = !!ascii_tip_follow_cursor;
+	}
+
 	Bool horizontal = False;
 	if (RimeConfigGetBool(config, "style/horizontal", &horizontal) || initialize)
 	{

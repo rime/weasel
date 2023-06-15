@@ -7,6 +7,8 @@
 
 #include "InstallOptionsDlg.h"
 
+#include <ShellScalingApi.h>
+#pragma comment(lib, "Shcore.lib")
 CAppModule _Module;
 
 static int Run(LPTSTR lpCmdLine);
