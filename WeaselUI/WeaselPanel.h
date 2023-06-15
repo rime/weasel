@@ -95,6 +95,7 @@ private:
 	int  m_offsety_preedit;
 	int  m_offsety_aux;
 	bool m_istorepos;
+	CSize m_size;
 	CSize m_osize;
 
 	CIcon m_iconDisabled;
