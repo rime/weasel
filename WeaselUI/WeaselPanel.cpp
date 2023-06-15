@@ -75,8 +75,8 @@ WeaselPanel::~WeaselPanel()
 void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
-	CSize size = m_layout->GetContentSize();
-	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW);
+	m_size = m_layout->GetContentSize();
+	SetWindowPos(NULL, 0, 0, m_size.cx, m_size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW);
 	ReleaseDC(dc);
 }
 
@@ -875,12 +875,14 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		RedrawWindow();
 	} else 
 	if((rc.left != m_oinputPos.left && rc.bottom != m_oinputPos.bottom)		// pos changed
+		|| m_size != m_osize
 		|| m_octx != m_ctx
 		|| (m_style.inline_preedit && m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))	// after disabled by ctrl+space, inline_preedit
 		|| !m_ctx.aux.str.empty()	// aux not empty, msg 
 		|| (m_ctx.aux.empty() && (m_layout) && m_layout->ShouldDisplayStatusIcon()))	// ascii icon
 	{
 		m_octx = m_ctx;
+		m_osize = m_size;
 		m_inputPos = rc;
 		m_inputPos.OffsetRect(0, 6);
 		m_oinputPos = m_inputPos;
