@@ -89,74 +89,61 @@ void UnregisterProfiles()
 
 }
 
+const GUID SupportCategories0[] =
+{
+	 GUID_TFCAT_CATEGORY_OF_TIP,
+	 GUID_TFCAT_TIP_KEYBOARD,
+	 // GUID_TFCAT_TIP_SPEECH,
+	 // GUID_TFCAT_TIP_HANDWRITING,
+	 GUID_TFCAT_TIPCAP_SECUREMODE,
+	 GUID_TFCAT_TIPCAP_UIELEMENTENABLED,
+	 GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT,
+	 GUID_TFCAT_TIPCAP_COMLESS,
+	 GUID_TFCAT_TIPCAP_WOW16,
+	 GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT,
+	 GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT,
+	 GUID_TFCAT_PROP_AUDIODATA,
+	 GUID_TFCAT_PROP_INKDATA,
+	 GUID_TFCAT_PROPSTYLE_CUSTOM,
+	 GUID_TFCAT_PROPSTYLE_STATIC,
+	 GUID_TFCAT_PROPSTYLE_STATICCOMPACT,
+	 GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER,
+	 GUID_TFCAT_DISPLAYATTRIBUTEPROPERTY
+};
+
 BOOL RegisterCategories()
 {
-	ITfCategoryMgr *pCategoryMgr;
+	ITfCategoryMgr* pCategoryMgr;
 	HRESULT hr;
 
-	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void **)&pCategoryMgr);
+	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void**)&pCategoryMgr);
 	if (hr != S_OK)
 		return FALSE;
 
-	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIP_KEYBOARD, c_clsidTextService);
-	if (hr != S_OK)
-		goto Exit;
+	BOOL flag = TRUE;
+	for (const auto& guid : SupportCategories0)
+	{
+		hr = pCategoryMgr->RegisterCategory(c_clsidTextService, guid, c_clsidTextService);
+		if (hr != S_OK)
+			flag = FALSE;
+	}
 
-	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_UIELEMENTENABLED, c_clsidTextService);
-	if (hr != S_OK)
-		goto Exit;
-
-	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT, c_clsidTextService);
-	if (hr != S_OK)
-		goto Exit;
-
-	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER, c_clsidTextService);
-	if (hr != S_OK)
-		goto Exit;
-
-	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
-	if (hr != S_OK)
-		goto Exit;
-
-	hr = pCategoryMgr->RegisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
-
-Exit:
 	pCategoryMgr->Release();
-	return (hr == S_OK);
+	return flag;
 }
 
 void UnregisterCategories()
 {
-	ITfCategoryMgr *pCategoryMgr;
+	ITfCategoryMgr* pCategoryMgr;
 	HRESULT hr;
 
-	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void **)&pCategoryMgr);
+	hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr, (void**)&pCategoryMgr);
 	if (FAILED(hr))
 		return;
 
-	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIP_KEYBOARD, c_clsidTextService);
-	if (hr != S_OK)
-		goto UnregisterExit;
+	for (const auto& guid : SupportCategories0)
+		pCategoryMgr->UnregisterCategory(c_clsidTextService, guid, c_clsidTextService);
 
-	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_UIELEMENTENABLED, c_clsidTextService);
-	if (hr != S_OK)
-		goto UnregisterExit;
-
-	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT, c_clsidTextService);
-	if (hr != S_OK)
-		goto UnregisterExit;
-
-	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER, c_clsidTextService);
-	if (hr != S_OK)
-		goto UnregisterExit;
-
-	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT, c_clsidTextService);
-	if (hr != S_OK)
-		goto UnregisterExit;
-
-	hr = pCategoryMgr->UnregisterCategory(c_clsidTextService, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, c_clsidTextService);
-
-UnregisterExit:
 	pCategoryMgr->Release();
 }
 

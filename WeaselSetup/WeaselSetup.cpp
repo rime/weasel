@@ -5,6 +5,8 @@
 #include "WeaselSetup.h"
 #include "InstallOptionsDialog.h"
 
+#include <ShellScalingApi.h>
+#pragma comment(lib, "Shcore.lib")
 CAppModule _Module;
 
 static int Run(LPTSTR lpCmdLine);
@@ -16,6 +18,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 
+	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 	HRESULT hRes = ::CoInitialize(NULL);
 	// If you are running on NT 4.0 or higher you can use the following call instead to
 	// make the EXE free threaded. This means that calls come in on a random RPC thread.
