@@ -877,7 +877,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 	if((rc.left != m_oinputPos.left && rc.bottom != m_oinputPos.bottom)		// pos changed
 		|| m_size != m_osize
 		|| m_octx != m_ctx
-		|| (m_style.inline_preedit && m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))	// after disabled by ctrl+space, inline_preedit
+		|| (m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))		// first click old pos
 		|| !m_ctx.aux.str.empty()	// aux not empty, msg 
 		|| (m_ctx.aux.empty() && (m_layout) && m_layout->ShouldDisplayStatusIcon()))	// ascii icon
 	{
