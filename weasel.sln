@@ -33,11 +33,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselServer", "WeaselServe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestWeaselIPC", "test\TestWeaselIPC\TestWeaselIPC.vcxproj", "{9C1CC4BA-18FF-4890-908E-E545881C5586}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestPyWeasel", "test\TestPyWeasel\TestPyWeasel.vcxproj", "{F75130DA-B785-42A7-B90B-571EAD9EDBE0}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WeaselIPCServer", "WeaselIPCServer\WeaselIPCServer.vcxproj", "{26930622-CFA2-43DF-A9F3-4AA4A313B2A4}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PyWeasel", "PyWeasel\PyWeasel.vcxproj", "{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestResponseParser", "test\TestResponseParser\TestResponseParser.vcxproj", "{CC642427-64D7-44D9-8543-8CBBF981FAE7}"
 EndProject
@@ -121,12 +117,6 @@ Global
 		{9C1CC4BA-18FF-4890-908E-E545881C5586}.Release|x64.ActiveCfg = Release|x64
 		{9C1CC4BA-18FF-4890-908E-E545881C5586}.ReleaseHant|Win32.ActiveCfg = ReleaseHant|Win32
 		{9C1CC4BA-18FF-4890-908E-E545881C5586}.ReleaseHant|x64.ActiveCfg = ReleaseHant|x64
-		{F75130DA-B785-42A7-B90B-571EAD9EDBE0}.Debug|Win32.ActiveCfg = Debug|Win32
-		{F75130DA-B785-42A7-B90B-571EAD9EDBE0}.Debug|x64.ActiveCfg = Debug|x64
-		{F75130DA-B785-42A7-B90B-571EAD9EDBE0}.Release|Win32.ActiveCfg = Release|Win32
-		{F75130DA-B785-42A7-B90B-571EAD9EDBE0}.Release|x64.ActiveCfg = Release|x64
-		{F75130DA-B785-42A7-B90B-571EAD9EDBE0}.ReleaseHant|Win32.ActiveCfg = ReleaseHant|Win32
-		{F75130DA-B785-42A7-B90B-571EAD9EDBE0}.ReleaseHant|x64.ActiveCfg = ReleaseHant|x64
 		{26930622-CFA2-43DF-A9F3-4AA4A313B2A4}.Debug|Win32.ActiveCfg = Debug|Win32
 		{26930622-CFA2-43DF-A9F3-4AA4A313B2A4}.Debug|Win32.Build.0 = Debug|Win32
 		{26930622-CFA2-43DF-A9F3-4AA4A313B2A4}.Debug|x64.ActiveCfg = Debug|x64
@@ -135,12 +125,6 @@ Global
 		{26930622-CFA2-43DF-A9F3-4AA4A313B2A4}.Release|x64.ActiveCfg = Release|x64
 		{26930622-CFA2-43DF-A9F3-4AA4A313B2A4}.ReleaseHant|Win32.ActiveCfg = ReleaseHant|Win32
 		{26930622-CFA2-43DF-A9F3-4AA4A313B2A4}.ReleaseHant|x64.ActiveCfg = ReleaseHant|x64
-		{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}.Debug|Win32.ActiveCfg = Debug|Win32
-		{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}.Debug|x64.ActiveCfg = Debug|x64
-		{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}.Release|Win32.ActiveCfg = Release|Win32
-		{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}.Release|x64.ActiveCfg = Release|x64
-		{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}.ReleaseHant|Win32.ActiveCfg = ReleaseHant|Win32
-		{8C75C43E-E9AD-4D2D-81F2-5608F36CE77B}.ReleaseHant|x64.ActiveCfg = ReleaseHant|x64
 		{CC642427-64D7-44D9-8543-8CBBF981FAE7}.Debug|Win32.ActiveCfg = Debug|Win32
 		{CC642427-64D7-44D9-8543-8CBBF981FAE7}.Debug|Win32.Build.0 = Debug|Win32
 		{CC642427-64D7-44D9-8543-8CBBF981FAE7}.Debug|x64.ActiveCfg = Debug|x64
