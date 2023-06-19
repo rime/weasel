@@ -25,6 +25,8 @@ typedef enum
 	#define HEX_REGEX		std::regex("^0x[0-9a-f]+$", std::regex::icase)
 	#define TRIMHEAD_REGEX	std::regex("0x", std::regex::icase)
 #endif
+#define COLORTRANSPARENT(color)		((color & 0xff000000) == 0)
+#define CANDIDATE_COLOR_ABNORMAL(c1, c2, c3)	(COLORTRANSPARENT(c1) && COLORTRANSPARENT(c2) && COLORTRANSPARENT(c3))
 
 int expand_ibus_modifier(int m)
 {
@@ -385,6 +387,18 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	else
 		m_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
 
+	// ensure text color not transparent if server recovers from crashed.
+	weasel::UIStyle& style(m_ui->style());
+	if(CANDIDATE_COLOR_ABNORMAL(style.text_color, style.hilited_candidate_text_color, style.candidate_text_color))
+	{
+		RimeConfig weaselconfig;
+		if (RimeConfigOpen("weasel", &weaselconfig))
+		{
+			_UpdateUIStyleColor(&weaselconfig, style);
+			m_base_style = style;
+			RimeConfigClose(&weaselconfig);
+		}
+	}
 	if (weasel_status.composing)
 	{
 		m_ui->Update(weasel_context, weasel_status);

@@ -66,14 +66,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	// command line option /q stops the running server
 	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);
 	// restart if already running
+	if(quit)
 	{
 		weasel::Client client;
 		if (client.Connect())  // try to connect to running server
 		{
 			client.ShutdownServer();
 		}
-		if (quit)
-			return 0;
+		return 0;
 	}
 
 	bool check_updates = !wcscmp(L"/update", lpstrCmdLine);
@@ -85,7 +85,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
 
 	int nRet = 0;
-
+	// named mutex to ensure only one instance running
+    HANDLE hMutex = CreateMutex(NULL, FALSE, L"WeaselServerNamedMutex");
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        CloseHandle(hMutex);
+		::MessageBox(NULL, L"已有算法服务實例正在運行", L"已有算法服务實例正在運行", MB_ICONINFORMATION);
+		return 0;
+	}
 	try
 	{
 		WeaselServerApp app;
@@ -101,5 +107,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	_Module.Term();
 	::CoUninitialize();
 
+	CloseHandle(hMutex);
 	return nRet;
 }
