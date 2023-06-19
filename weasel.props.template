@@ -3,7 +3,6 @@
   <PropertyGroup Label="UserMacros">
     <BOOST_ROOT>$BOOST_ROOT</BOOST_ROOT>
     <PLATFORM_TOOLSET>$PLATFORM_TOOLSET</PLATFORM_TOOLSET>
-    <PYTHON_HOME>C:\Python27</PYTHON_HOME>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
@@ -16,10 +15,6 @@
     </BuildMacro>
     <BuildMacro Include="PLATFORM_TOOLSET">
       <Value>$(PLATFORM_TOOLSET)</Value>
-      <EnvironmentVariable>true</EnvironmentVariable>
-    </BuildMacro>
-    <BuildMacro Include="PYTHON_HOME">
-      <Value>$(PYTHON_HOME)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
   </ItemGroup>
