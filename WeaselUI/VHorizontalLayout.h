@@ -9,8 +9,8 @@ namespace weasel
 	public:
 		VHorizontalLayout(const UIStyle &style, const Context &context, const Status &status)
 			: StandardLayout(style, context, status){}
-		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL);
+		virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL);
 	private:
-		void DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDWR = NULL);
+		void DoLayoutWithWrap(CDCHandle dc, PDWR pDWR = NULL);
 	};
 };

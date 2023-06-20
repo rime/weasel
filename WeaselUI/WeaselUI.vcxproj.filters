@@ -89,9 +89,6 @@
     <ClInclude Include="GdiplusBlur.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="fontClasses.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VHorizontalLayout.h">
       <Filter>Header Files</Filter>
     </ClInclude>

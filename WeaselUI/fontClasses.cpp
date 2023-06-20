@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include <string>
-#include "fontClasses.h"
+#include <WeaselUI.h>
+//#include "fontClasses.h"
 
+using namespace weasel;
 #define STYLEORWEIGHT	(L":[^:]*[^a-f0-9:]+[^:]*")	
 
 std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim) 

@@ -3,7 +3,7 @@
 
 using namespace weasel;
 
-void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
+void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 {
 	const int space = _style.hilite_spacing;
 	int width = 0, height = real_margin_y;

@@ -4,7 +4,7 @@
 
 using namespace weasel;
 
-void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
+void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 {
 	if(_style.vertical_text_with_wrap)
 	{
@@ -215,7 +215,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 }
 
-void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDWR)
+void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 {
 	CSize size;
 	int height = offsetY, width = offsetX + real_margin_x;

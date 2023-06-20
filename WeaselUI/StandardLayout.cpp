@@ -10,7 +10,7 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	return std::wstring(buffer);
 }
 
-void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR,  LPSIZE lpSize) const
+void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
@@ -78,7 +78,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 	SafeRelease(&pDWR->pTextLayout);
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR) const
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat, PDWR pDWR) const
 {
 	const std::wstring& preedit = text.str;
 	const std::vector<weasel::TextAttribute> &attrs = text.attributes;

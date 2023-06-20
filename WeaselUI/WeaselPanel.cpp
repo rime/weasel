@@ -49,7 +49,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_current_zhung_icon(),
 	dpi(96),
 	hide_candidates(false),
-	pDWR(NULL),
+	pDWR(ui.pdwr()),
 	m_blurer(new GdiplusBlur()),
 	pBrush(NULL),
 	_m_gdiplusToken(0)
@@ -150,7 +150,9 @@ void WeaselPanel::_InitFontRes(void)
 		GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
 	// prepare d2d1 resources
 	if (pDWR == NULL)
-		pDWR = new DirectWriteResources(m_style, dpiX);
+		pDWR.reset(new DirectWriteResources(m_style, dpiX));
+		//pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
+		//pDWR = std::make_unique<DirectWriteResources>(m_style, dpiX);
 	// if style changed, re-initialize font resources
 	else if (m_ostyle != m_style)
 	{
@@ -174,8 +176,6 @@ void WeaselPanel::CleanUp()
 	delete m_layout;
 	m_layout = NULL;
 
-	delete pDWR;
-	pDWR = NULL;
 
 	delete m_blurer;
 	m_blurer = NULL;

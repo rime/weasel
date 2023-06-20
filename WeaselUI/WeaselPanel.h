@@ -117,7 +117,7 @@ private:
 	bool hide_candidates;
 	// for multi font_face & font_point
 	GdiplusBlur* m_blurer;
-	DirectWriteResources* pDWR;
+	PDWR pDWR;
 	ID2D1SolidColorBrush* pBrush;
 };
 

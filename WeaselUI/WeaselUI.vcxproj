@@ -264,7 +264,6 @@
     <ClCompile Include="WeaselUI.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="fontClasses.h" />
     <ClInclude Include="FullScreenLayout.h" />
     <ClInclude Include="GdiplusBlur.h" />
     <ClInclude Include="HorizontalLayout.h" />
