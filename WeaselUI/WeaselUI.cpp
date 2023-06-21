@@ -109,7 +109,7 @@ bool UI::Create(HWND parent)
 	return true;
 }
 
-void UI::Destroy()
+void UI::Destroy(bool full)
 {
 	if (pimpl_)
 	{
@@ -118,8 +118,11 @@ void UI::Destroy()
 		{
 			pimpl_->panel.DestroyWindow();
 		}
-		delete pimpl_;
-		pimpl_ = 0;
+		if(full)
+		{
+			delete pimpl_;
+			pimpl_ = 0;
+		}
 	}
 }
 

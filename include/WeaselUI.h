@@ -43,7 +43,7 @@ namespace weasel
 		virtual ~UI()
 		{
 			if (pimpl_)
-				Destroy();
+				Destroy(true);
 			if (pDWR)
 				pDWR.reset();
 		}
@@ -52,7 +52,7 @@ namespace weasel
 		bool Create(HWND parent);
 
 		// 销毁界面
-		void Destroy();
+		void Destroy(bool full = false);
 		
 		// 界面显隐
 		void Show();
