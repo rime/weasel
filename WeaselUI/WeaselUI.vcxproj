@@ -242,7 +242,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="fontClasses.cpp" />
+    <ClCompile Include="DirectWriteResources.cpp" />
     <ClCompile Include="FullScreenLayout.cpp" />
     <ClCompile Include="GdiplusBlur.cpp" />
     <ClCompile Include="HorizontalLayout.cpp" />
