@@ -1,5 +1,30 @@
+<a name="0.15.1"></a>
+## [0.15.1](https://github.com/rime/weasel/compare/0.15.0...0.15.1) (2023-06-06)
+
+#### 安裝須知
+
+**⚠️安裝小狼毫前請保存好文件資料，於安裝後重啓 Windows ，否則正在使用小狼毫的應用將會崩潰。**
+
+#### 主要更新
+
+* 支持手動調整抗鋸齒選項
+  * `style/antialias_mode: "default" | "cleartype" | "grayscale" | "aliased" | "force_dword"`
+* Composing 狀態下候選框不再隨光標移動
+* 病毒誤報問題改進
+* 不再默認安裝舊版 IME 輸入框架
+
+#### Bug 修復
+
+* 修復若干 UI 佈局問題
+* 修復部分程序中無法鍵入文本的問題 (#937)
+* 修復 WeaselServer 自啓動問題
+
+#### 已知問題
+
+* 部分應用仍存在輸入法無法輸入文字的問題
+
 <a name="0.15.0"></a>
-## [0.15.0](https://github.com/rime/weasel/compare/0.15.0...0.14.3) (2023-06-06)
+## [0.15.0](https://github.com/rime/weasel/compare/0.14.3...0.15.0) (2023-06-06)
 
 
 #### 安裝須知
