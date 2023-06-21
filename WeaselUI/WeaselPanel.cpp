@@ -50,8 +50,6 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	dpi(96),
 	hide_candidates(false),
 	pDWR(ui.pdwr()),
-	m_blurer(new GdiplusBlur()),
-	pBrush(NULL),
 	_m_gdiplusToken(0)
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -69,7 +67,8 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 WeaselPanel::~WeaselPanel()
 {
 	Gdiplus::GdiplusShutdown(_m_gdiplusToken);
-	CleanUp();
+	delete m_layout;
+	m_layout = NULL;
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -152,7 +151,6 @@ void WeaselPanel::_InitFontRes(void)
 	if (pDWR == NULL)
 		pDWR.reset(new DirectWriteResources(m_style, dpiX));
 		//pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
-		//pDWR = std::make_unique<DirectWriteResources>(m_style, dpiX);
 	// if style changed, re-initialize font resources
 	else if (m_ostyle != m_style)
 	{
@@ -164,24 +162,8 @@ void WeaselPanel::_InitFontRes(void)
 	{
 		pDWR->InitResources(m_style, dpiX);
 	}
-	// create color brush if null
-	if (pBrush == NULL)
-		pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
 	m_ostyle = m_style;
 	dpi = dpiX;
-}
-
-void WeaselPanel::CleanUp()
-{
-	delete m_layout;
-	m_layout = NULL;
-
-
-	delete m_blurer;
-	m_blurer = NULL;
-
-	SafeRelease(&pBrush);
-	pBrush = NULL;
 }
 
 #ifdef USE_MOUSE_EVENTS
@@ -412,7 +394,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 				rect.InflateRect(1, 1);
 			}
 		}
-		m_blurer->DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
+		DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
 
 		g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX, rc.top - blurMarginY);
 
@@ -854,6 +836,14 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return TRUE;
 }
 
+LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) 
+{ 
+	m_osize = {0,0};
+	delete m_layout;
+	m_layout = NULL;
+	return 0; 
+}
+
 LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	Refresh();
@@ -945,9 +935,9 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 	float g = (float)(GetGValue(inColor))/255.0f;
 	float b = (float)(GetBValue(inColor))/255.0f;
 	float alpha = (float)((inColor >> 24) & 255) / 255.0f;
-	pBrush->SetColor(D2D1::ColorF(r, g, b, alpha));
+	pDWR->pBrush->SetColor(D2D1::ColorF(r, g, b, alpha));
 
-	if (NULL != pBrush && NULL != pTextFormat) {
+	if (NULL != pDWR->pBrush && NULL != pTextFormat) {
 		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
 			DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
@@ -967,10 +957,10 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 			offsety += omt.top;
 
 		if (pDWR->pTextLayout != NULL) {
-			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout, pDWR->pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 #if 0
 			D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
-			pDWR->pRenderTarget->DrawRectangle(&rectf, pBrush);
+			pDWR->pRenderTarget->DrawRectangle(&rectf, pDWR->pBrush);
 #endif
 		}
 		SafeRelease(&pDWR->pTextLayout);

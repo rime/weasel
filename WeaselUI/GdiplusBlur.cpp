@@ -1,10 +1,11 @@
 #include "stdafx.h"
 #include "GdiplusBlur.h"
 
+namespace weasel{
 /* start image gauss blur functions from https://github.com/kenjinote/DropShadow/  */
 #define myround(x) (int)((x)+0.5)
 
-void GdiplusBlur::boxesForGauss(double sigma, int* sizes, int n)
+void boxesForGauss(double sigma, int* sizes, int n)
 {
 	double wIdeal = sqrt((12 * sigma * sigma / n) + 1);
 	int wl = (int)floor(wIdeal);
@@ -19,7 +20,7 @@ void GdiplusBlur::boxesForGauss(double sigma, int* sizes, int n)
 		sizes[i] = int(i < m ? wl : wu);
 }
 
-void GdiplusBlur::boxBlurH_4(BYTE* scl, BYTE* tcl, int w, int h, int r, int bpp, int stride)
+void boxBlurH_4(BYTE* scl, BYTE* tcl, int w, int h, int r, int bpp, int stride)
 {
 	float iarr = (float)(1. / ((LONGLONG)r + r + 1));
 	for (int i = 0; i < h; ++i) {
@@ -133,7 +134,7 @@ void GdiplusBlur::boxBlurH_4(BYTE* scl, BYTE* tcl, int w, int h, int r, int bpp,
 	}
 }
 
-void GdiplusBlur::boxBlurT_4(BYTE* scl, BYTE* tcl, int w, int h, int r, int bpp, int stride)
+void boxBlurT_4(BYTE* scl, BYTE* tcl, int w, int h, int r, int bpp, int stride)
 {
 	float iarr = (float)(1.0f / (r + r + 1.0f));
 	for (int i = 0; i < w; ++i) {
@@ -247,14 +248,14 @@ void GdiplusBlur::boxBlurT_4(BYTE* scl, BYTE* tcl, int w, int h, int r, int bpp,
 	}
 }
 
-void GdiplusBlur::boxBlur_4(BYTE* scl, BYTE* tcl, int w, int h, int rx, int ry, int bpp, int stride)
+void boxBlur_4(BYTE* scl, BYTE* tcl, int w, int h, int rx, int ry, int bpp, int stride)
 {
 	memcpy(tcl, scl, stride * h);
 	boxBlurH_4(tcl, scl, w, h, rx, bpp, stride);
 	boxBlurT_4(scl, tcl, w, h, ry, bpp, stride);
 }
 
-void GdiplusBlur::gaussBlur_4(BYTE* scl, BYTE* tcl, int w, int h, float rx, float ry, int bpp, int stride)
+void gaussBlur_4(BYTE* scl, BYTE* tcl, int w, int h, float rx, float ry, int bpp, int stride)
 {
 	int bxsX[4];
 	boxesForGauss(rx, bxsX, 4);
@@ -268,11 +269,7 @@ void GdiplusBlur::gaussBlur_4(BYTE* scl, BYTE* tcl, int w, int h, float rx, floa
 	boxBlur_4(scl, tcl, w, h, (bxsX[3] - 1) / 2, (bxsY[3] - 1) / 2, bpp, stride);
 }
 
-GdiplusBlur::GdiplusBlur()
-{
-}
-
-void GdiplusBlur::DoGaussianBlur(Gdiplus::Bitmap* img, float radiusX, float radiusY)
+void DoGaussianBlur(Gdiplus::Bitmap* img, float radiusX, float radiusY)
 {
 	if (img == 0 || (radiusX == 0.0f && radiusY == 0.0f)) return;
 
@@ -321,7 +318,7 @@ void GdiplusBlur::DoGaussianBlur(Gdiplus::Bitmap* img, float radiusX, float radi
 	delete temp;
 }
 
-void GdiplusBlur::DoGaussianBlurPower(Gdiplus::Bitmap* img, float radiusX, float radiusY, int nPower)
+void DoGaussianBlurPower(Gdiplus::Bitmap* img, float radiusX, float radiusY, int nPower)
 {
 	Gdiplus::Bitmap* pBitmap = img->Clone(0, 0, img->GetWidth(), img->GetHeight(), PixelFormat32bppARGB);
 	DoGaussianBlur(pBitmap, radiusX, radiusY);
@@ -336,3 +333,4 @@ void GdiplusBlur::DoGaussianBlurPower(Gdiplus::Bitmap* img, float radiusX, float
 	delete pBitmap;
 }
 /* end  image gauss blur functions from https://github.com/kenjinote/DropShadow/  */
+}

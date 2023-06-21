@@ -43,7 +43,7 @@ namespace weasel
 		virtual ~UI()
 		{
 			if (pimpl_)
-				DestroyAll();
+				Destroy();
 			if (pDWR)
 				pDWR.reset();
 		}
@@ -51,10 +51,8 @@ namespace weasel
 		// 创建输入法界面
 		bool Create(HWND parent);
 
-		// 未退出应用，结束输入后，销毁界面
+		// 销毁界面
 		void Destroy();
-		// 退出应用后销毁界面及相应资源
-		void DestroyAll();
 		
 		// 界面显隐
 		void Show();
@@ -110,6 +108,7 @@ namespace weasel
 		IDWriteTextFormat1* pLabelTextFormat;
 		IDWriteTextFormat1* pCommentTextFormat;
 		IDWriteTextLayout2* pTextLayout;
+		ID2D1SolidColorBrush* pBrush;
 	private:
 		UIStyle& _style;
 		void _ParseFontFace(const std::wstring fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);

@@ -63,6 +63,7 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 		pRenderTarget->SetTextAntialiasMode(mode);
 		pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	}
+	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
 	//get the dpi information
 	if (dpi == 0)
 	{
@@ -85,6 +86,7 @@ DirectWriteResources::~DirectWriteResources()
 	SafeRelease(&pTextFormat);
 	SafeRelease(&pLabelTextFormat);
 	SafeRelease(&pCommentTextFormat);
+	SafeRelease(&pBrush);
 	SafeRelease(&pRenderTarget);
 	SafeRelease(&pDWFactory);
 	SafeRelease(&pD2d1Factory);
