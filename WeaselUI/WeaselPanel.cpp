@@ -390,7 +390,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 		BYTE alpha = (BYTE)((shadowColor >> 24) & 255);
 		Gdiplus::Color shadow_color = Gdiplus::Color::MakeARGB(alpha, r, g, b);
 		static Gdiplus::Bitmap* pBitmapDropShadow;
-		pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurMarginX * 2, (INT)rc.Height() + blurMarginY * 2, PixelFormat32bppARGB);
+		pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurMarginX * 2, (INT)rc.Height() + blurMarginY * 2, PixelFormat32bppPARGB);
 
 		Gdiplus::Graphics g_shadow(pBitmapDropShadow);
 		g_shadow.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
