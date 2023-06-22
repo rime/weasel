@@ -48,11 +48,11 @@
     <ClCompile Include="GdiplusBlur.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fontClasses.cpp">
+    <ClCompile Include="DirectWriteResources.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VHorizontalLayout.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Layouts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -89,11 +89,8 @@
     <ClInclude Include="GdiplusBlur.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="fontClasses.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VHorizontalLayout.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Layouts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -11,10 +11,10 @@ namespace weasel
 			: StandardLayout(style, context, status), mr_inputPos(inputPos), m_layout(layout) { }
 		virtual ~FullScreenLayout(){ delete m_layout; }
 
-		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL);
+		virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL);
 
 	private:
-		bool AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& step, DirectWriteResources* pDWR = NULL);
+		bool AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& step, PDWR pDWR = NULL);
 
 		const CRect& mr_inputPos;
 		Layout* m_layout;

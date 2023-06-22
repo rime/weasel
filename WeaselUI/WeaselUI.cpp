@@ -10,11 +10,7 @@ public:
 
 	UIImpl(weasel::UI &ui)
 		: panel(ui), shown(false) {}
-	~UIImpl()
-	{
-		// ensure destroy heap resources of panel
-		panel.CleanUp();
-	}
+	~UIImpl() {}
 	void Refresh() {
 		if (!panel.IsWindow()) return;
 		if (timer)
@@ -113,27 +109,20 @@ bool UI::Create(HWND parent)
 	return true;
 }
 
-// for ending of composition
-void UI::Destroy()
+void UI::Destroy(bool full)
 {
 	if (pimpl_)
 	{
-		// destroy panel not delete it, avoiding re initialization font resources
+		// destroy panel
 		if (pimpl_->panel.IsWindow())
 		{
 			pimpl_->panel.DestroyWindow();
 		}
-	}
-}
-// for ending of app, destroy pimpl_
-void UI::DestroyAll()
-{
-	if (pimpl_)
-	{
-		if (pimpl_->panel.IsWindow())
-			pimpl_->panel.DestroyWindow();
-		delete pimpl_;
-		pimpl_ = 0;
+		if(full)
+		{
+			delete pimpl_;
+			pimpl_ = 0;
+		}
 	}
 }
 

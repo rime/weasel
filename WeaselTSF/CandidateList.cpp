@@ -369,7 +369,7 @@ void CCandidateList::_DisposeUIWindowAll()
 	}
 
 	// call _ui->DestroyAll() to clean resources
-	_ui->DestroyAll();
+	_ui->Destroy(true);
 }
 
 void CCandidateList::_MakeUIWindow()

@@ -42,7 +42,7 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) { m_osize = {0,0}; return 0; };
+	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 #ifdef USE_MOUSE_EVENTS
 	LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -61,7 +61,6 @@ public:
 	void MoveTo(RECT const& rc);
 	void Refresh();
 	void DoPaint(CDCHandle dc);
-	void CleanUp();
 
 private:
 	void _InitFontRes(void);
@@ -116,8 +115,6 @@ private:
 
 	bool hide_candidates;
 	// for multi font_face & font_point
-	GdiplusBlur* m_blurer;
-	DirectWriteResources* pDWR;
-	ID2D1SolidColorBrush* pBrush;
+	PDWR pDWR;
 };
 

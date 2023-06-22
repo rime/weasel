@@ -3,7 +3,7 @@
 
 using namespace weasel;
 
-void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
+void weasel::FullScreenLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 {
 	if (_context.empty())
 	{
@@ -71,7 +71,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	_contentRect.DeflateRect(offsetX, offsetY);
 }
 
-bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& step, DirectWriteResources* pDWR)
+bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& step, PDWR pDWR)
 {
 	if (_context.empty() || step == 0)
 		return false;
