@@ -252,7 +252,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	{
 		CRect recth = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
 		if(m_istorepos)	recth.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-		recth.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+		recth.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 		// capture widow
 		if (recth.PtInRect(point)) _CaptureRect(recth);
 		else _CaptureRect(rcw);
@@ -287,7 +287,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 		for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 			CRect rect = m_layout->GetCandidateRect((int)i);
 			if(m_istorepos)	rect.OffsetRect(0, m_offsetys[i]);
-			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+			rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 			if (rect.PtInRect(point))
 			{
 				// if not select by number, to be test
@@ -564,7 +564,7 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 						rc_hi.InflateRect((STATUS_ICON_SIZE - hilitedSz.cx) / 2, 0);
 				}
 
-				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+				rc_hi.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 				IsToRoundStruct rd = m_layout->GetTextRoundInfo();
 				if(m_istorepos) {
 					std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
@@ -604,7 +604,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 					rect.OffsetRect(0, m_offsetys[i]);
 					ReconfigRoundInfo(rd, i, m_candidateCount);
 				}
-				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+				rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 				_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType, rd);
 				drawn = true;
 			}
@@ -621,7 +621,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 					rect.OffsetRect(0, m_offsetys[i]);
 					ReconfigRoundInfo(rd, i, m_candidateCount);
 				}
-				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+				rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd, m_style.candidate_border_color);
 				drawn = true;
 			}
@@ -634,7 +634,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
 				ReconfigRoundInfo(rd, m_ctx.cinfo.highlighted, m_candidateCount);
 			}
-			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+			rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_style.hilited_candidate_border_color);
 			drawn = true;
 		}
@@ -662,16 +662,16 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			{
 				CRect rc = m_layout->GetHighlightRect();
 				if(m_istorepos) rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-				rc.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+				rc.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 				int vgap = m_layout->MARK_HEIGHT ? (rc.Height() - m_layout->MARK_HEIGHT) / 2 : 0;
 				int hgap = m_layout->MARK_WIDTH ? (rc.Width() - m_layout->MARK_WIDTH) / 2 : 0;
 				CRect hlRc;
 				if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					hlRc = CRect(rc.left + hgap, rc.top + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1,
-					rc.left + hgap + m_layout->MARK_WIDTH, rc.top + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1 + m_layout->MARK_HEIGHT);
+					hlRc = CRect(rc.left + hgap, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1,
+					rc.left + hgap + m_layout->MARK_WIDTH, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1 + m_layout->MARK_HEIGHT);
 				else
-					hlRc = CRect(rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
-					rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
+					hlRc = CRect(rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
+					rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
 				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, pDWR->pTextFormat);
 			}
 			// Draw label

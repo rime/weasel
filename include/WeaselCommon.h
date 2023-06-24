@@ -305,7 +305,8 @@ namespace weasel
 		int spacing;
 		int candidate_spacing;
 		int hilite_spacing;
-		int hilite_padding;
+		int hilite_padding_x;
+		int hilite_padding_y;
 		int round_corner;
 		int round_corner_ex;
 		int shadow_radius;
@@ -369,7 +370,8 @@ namespace weasel
 			spacing(0),
 			candidate_spacing(0),
 			hilite_spacing(0),
-			hilite_padding(0),
+			hilite_padding_x(0),
+			hilite_padding_y(0),
 			round_corner(0),
 			round_corner_ex(0),
 			shadow_radius(0),
@@ -433,7 +435,8 @@ namespace weasel
 					|| spacing != st.spacing
 					|| candidate_spacing != st.candidate_spacing
 					|| hilite_spacing != st.hilite_spacing
-					|| hilite_padding != st.hilite_padding
+					|| hilite_padding_x != st.hilite_padding_x
+					|| hilite_padding_y != st.hilite_padding_y
 					|| round_corner != st.round_corner
 					|| round_corner_ex != st.round_corner_ex
 					|| shadow_radius != st.shadow_radius
@@ -502,7 +505,8 @@ namespace boost {
 			ar & s.spacing;
 			ar & s.candidate_spacing;
 			ar & s.hilite_spacing;
-			ar & s.hilite_padding;
+			ar & s.hilite_padding_x;
+			ar & s.hilite_padding_y;
 			ar & s.round_corner;
 			ar & s.round_corner_ex;
 			ar & s.shadow_radius;

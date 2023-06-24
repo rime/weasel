@@ -31,7 +31,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
-	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2 : 0;
+	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2 : 0;
 	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
 	/* Preedit */
@@ -188,7 +188,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	// calc page indicator 
 	if(page_en && candidates_count && !_style.inline_preedit)
 	{
-		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
+		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding_y - pgh;
 		int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
 		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
 		_nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing, 
@@ -236,7 +236,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
-	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding * 2 : 0;
+	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2 : 0;
 	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
 	/* Preedit */
@@ -431,7 +431,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 	// calc page indicator 
 	if(page_en && candidates_count && !_style.inline_preedit)
 	{
-		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding - pgh;
+		int _prey = _contentSize.cy - offsetY - real_margin_y + _style.hilite_padding_y - pgh;
 		int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
 		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
 		_nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing, 

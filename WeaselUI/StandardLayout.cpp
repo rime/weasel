@@ -155,7 +155,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 	if(!_style.inline_preedit)
 	{
 		CRect textRect(_preeditRect);
-		textRect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		textRect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
 		textHemispherical = _IsHighlightOverCandidateWindow(textRect, dc);
 		const bool hilite_rd_info[3][2][4] = {
 			// vertical
@@ -190,7 +190,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 	if(candidates_count)
 	{
 		CRect cand0Rect(_candidateRects[0]);
-		cand0Rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		cand0Rect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
 		cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect, dc);
 		if(textHemispherical || cand0Hemispherical)
 		{
@@ -256,7 +256,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 			for (auto i = 0; i < candidates_count; i++)
 			{
 				CRect hilite_rect(_candidateRects[i]);
-				hilite_rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+				hilite_rect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
 				bool current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(hilite_rect, dc);
 				int type = 0;	// default FIRST_CAND
 				if (candidates_count == 1)	// ONLY_CAND

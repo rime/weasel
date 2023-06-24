@@ -940,8 +940,15 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/spacing", &style.spacing);
 	RimeConfigGetInt(config, "style/layout/candidate_spacing", &style.candidate_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
-	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
-	style.hilite_padding = abs(style.hilite_padding);
+
+	if(!RimeConfigGetInt(config, "style/layout/hilite_padding_x", &style.hilite_padding_x))
+		RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding_x);
+	style.hilite_padding_x = abs(style.hilite_padding_x);
+
+	if(!RimeConfigGetInt(config, "style/layout/hilite_padding_y", &style.hilite_padding_y))
+		RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding_y);
+	style.hilite_padding_y = abs(style.hilite_padding_y);
+
 	RimeConfigGetInt(config, "style/layout/shadow_radius", &style.shadow_radius);
 	// negative shadow radius not allow
 	if(style.shadow_radius < 0)
@@ -958,18 +965,35 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if(!RimeConfigGetInt(config, "style/layout/corner_radius", &style.round_corner_ex))
 		RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner_ex);
 	// fix padding and spacing settings
-	if (style.hilite_padding * 2 > style.spacing)		// if hilite_padding over spacing, increase spacing
-		style.spacing = style.hilite_padding * 2;
-	if (style.hilite_padding * 2 > style.candidate_spacing)		// if hilite_padding over candidate spacing, increase candidate spacing
-		style.candidate_spacing = style.hilite_padding * 2;
-	if (style.hilite_padding > style.margin_x && style.margin_x >=0)		// if hilite_padiing over margin_x, increase margin_x
-		style.margin_x = style.hilite_padding;
-	else if (style.hilite_padding > -style.margin_x && style.margin_x < 0)
-		style.margin_x = -(style.hilite_padding);
-	if (style.hilite_padding > style.margin_y && style.margin_y >=0)		// if hilite_padiing over margin_y, increase margin_y
-		style.margin_y = style.hilite_padding;
-	else if (style.hilite_padding > -style.margin_y && style.margin_y < 0)
-		style.margin_y = -(style.hilite_padding);
+	if(style.layout_type != weasel::UIStyle::LAYOUT_VERTICAL_TEXT)
+	{
+		if (style.hilite_padding_y * 2 > style.spacing)		// if hilite_padding over spacing, increase spacing
+			style.spacing = style.hilite_padding_y * 2;
+		if (style.hilite_padding_x * 2 > style.candidate_spacing)		// if hilite_padding over candidate spacing, increase candidate spacing
+			style.candidate_spacing = style.hilite_padding_x * 2;
+		if (style.hilite_padding_y > style.hilite_spacing)
+			style.hilite_spacing = style.hilite_padding_x;
+	}
+	else
+	{
+		if (style.hilite_padding_x * 2 > style.spacing)		// if hilite_padding over spacing, increase spacing
+			style.spacing = style.hilite_padding_x * 2;
+		if (style.hilite_padding_y * 2 > style.candidate_spacing)		// if hilite_padding over candidate spacing, increase candidate spacing
+			style.candidate_spacing = style.hilite_padding_y * 2;
+		if (style.hilite_padding_x > style.hilite_spacing)
+			style.hilite_spacing = style.hilite_padding_x;
+	}
+
+	if (style.hilite_padding_x > style.margin_x && style.margin_x >=0)		// if hilite_padiing over margin_x, increase margin_x
+		style.margin_x = style.hilite_padding_x;
+	else if (style.hilite_padding_x > -style.margin_x && style.margin_x < 0)
+		style.margin_x = -(style.hilite_padding_x);
+
+	if (style.hilite_padding_y > style.margin_y && style.margin_y >=0)		// if hilite_padiing over margin_y, increase margin_y
+		style.margin_y = style.hilite_padding_y;
+	else if (style.hilite_padding_y > -style.margin_y && style.margin_y < 0)
+		style.margin_y = -(style.hilite_padding_y);
+
 	Bool enhanced_postion = False;
 	if (RimeConfigGetBool(config, "style/enhanced_position", &enhanced_postion) || initialize)
 	{
