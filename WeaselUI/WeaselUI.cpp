@@ -115,9 +115,11 @@ void UI::Destroy(bool full)
 		{
 			pimpl_->panel.DestroyWindow();
 		}
+		if(full)
 		{
 			delete pimpl_;
 			pimpl_ = 0;
+			pDWR.reset();
 		}
 	}
 }

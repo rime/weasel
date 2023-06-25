@@ -150,8 +150,7 @@ void WeaselPanel::_InitFontRes(void)
 		GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
 	// prepare d2d1 resources
 	if (pDWR == NULL)
-		pDWR.reset(new DirectWriteResources(m_style, dpiX));
-		//pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
+		pDWR = std::make_shared< DirectWriteResources>(m_style, dpiX);
 	// if style changed, re-initialize font resources
 	else if (m_ostyle != m_style)
 	{
@@ -842,7 +841,6 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	m_osize = {0,0};
 	delete m_layout;
 	m_layout = NULL;
-	pDWR.reset();
 	return 0; 
 }
 

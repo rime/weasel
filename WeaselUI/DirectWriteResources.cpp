@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include <string>
 #include <WeaselUI.h>
-//#include "fontClasses.h"
 
 using namespace weasel;
 #define STYLEORWEIGHT	(L":[^:]*[^a-f0-9:]+[^:]*")	
