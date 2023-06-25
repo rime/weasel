@@ -37,11 +37,11 @@ namespace weasel
 		virtual CRect GetPrepageRect() { return _prePageRect; }
 		virtual CRect GetNextpageRect() { return _nextPageRect; }
 
-		void GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR, LPSIZE lpSize) const;
+		void GetTextSizeDW(const std::wstring text, size_t nCount, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR, LPSIZE lpSize) const;
 
 	protected:
 		/* Utility functions */
-		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat = NULL, PDWR pDWR = NULL) const;
+		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, ComPtr<IDWriteTextFormat1> pTextFormat = NULL, PDWR pDWR = NULL) const;
 		bool _IsHighlightOverCandidateWindow(CRect& rc, CDCHandle& dc);
 		void _PrepareRoundInfo(CDCHandle& dc);
 

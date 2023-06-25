@@ -69,6 +69,7 @@ WeaselPanel::~WeaselPanel()
 	Gdiplus::GdiplusShutdown(_m_gdiplusToken);
 	delete m_layout;
 	m_layout = NULL;
+	pDWR.reset();
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -432,7 +433,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
 	std::wstring const& t = text.str;
-	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat;
+	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat.Get();
 
 	if (!t.empty()) {
 		weasel::TextRange range;
@@ -524,7 +525,7 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 {
 	bool drawn = false;
 	std::wstring const& t = text.str;
-	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat;
+	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat.Get();
 
 	if (!t.empty()) {
 		weasel::TextRange range;
@@ -585,9 +586,9 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	const std::vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::vector<Text> &labels(m_ctx.cinfo.labels);
 
-	IDWriteTextFormat1* txtFormat = pDWR->pTextFormat;
-	IDWriteTextFormat1* labeltxtFormat = pDWR->pLabelTextFormat;
-	IDWriteTextFormat1* commenttxtFormat = pDWR->pCommentTextFormat;
+	ComPtr<IDWriteTextFormat1> txtFormat = pDWR->pTextFormat;
+	ComPtr<IDWriteTextFormat1> labeltxtFormat = pDWR->pLabelTextFormat;
+	ComPtr<IDWriteTextFormat1> commenttxtFormat = pDWR->pCommentTextFormat;
 	BackType bkType = BackType::CAND;
 
 
@@ -672,28 +673,28 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				else
 					hlRc = CRect(rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
 					rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
-				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, pDWR->pTextFormat);
+				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, pDWR->pTextFormat.Get());
 			}
 			// Draw label
 			std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
 			if (!label.empty()) {
 				rect = m_layout->GetCandidateLabelRect((int)i);
 				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
-				_TextOut(rect, label.c_str(), label.length(), label_text_color, labeltxtFormat);
+				_TextOut(rect, label.c_str(), label.length(), label_text_color, labeltxtFormat.Get());
 			}
 			// Draw text
 			std::wstring text = candidates.at(i).str;
 			if (!text.empty()) {
 				rect = m_layout->GetCandidateTextRect((int)i);
 				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
-				_TextOut(rect, text.c_str(), text.length(), candidate_text_color, txtFormat);
+				_TextOut(rect, text.c_str(), text.length(), candidate_text_color, txtFormat.Get());
 			}
 			// Draw comment
 			std::wstring comment = comments.at(i).str;
 			if (!comment.empty()) {
 				rect = m_layout->GetCandidateCommentRect((int)i);
 				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
-				_TextOut(rect, comment.c_str(), comment.length(), comment_text_color, commenttxtFormat);
+				_TextOut(rect, comment.c_str(), comment.length(), comment_text_color, commenttxtFormat.Get());
 			}
 			drawn = true;
 		}
@@ -841,6 +842,7 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	m_osize = {0,0};
 	delete m_layout;
 	m_layout = NULL;
+	pDWR.reset();
 	return 0; 
 }
 
@@ -938,7 +940,7 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 	pDWR->pBrush->SetColor(D2D1::ColorF(r, g, b, alpha));
 
 	if (NULL != pDWR->pBrush && NULL != pTextFormat) {
-		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), reinterpret_cast<IDWriteTextLayout**>(pDWR->pTextLayout.GetAddressOf()));
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
 			DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
 			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
@@ -957,13 +959,13 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 			offsety += omt.top;
 
 		if (pDWR->pTextLayout != NULL) {
-			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout, pDWR->pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout.Get(), pDWR->pBrush.Get(), D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 #if 0
 			D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
 			pDWR->pRenderTarget->DrawRectangle(&rectf, pDWR->pBrush);
 #endif
 		}
-		SafeRelease(&pDWR->pTextLayout);
+		pDWR->pTextLayout.Reset();
 	}
 }
 

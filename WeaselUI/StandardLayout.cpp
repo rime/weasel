@@ -10,7 +10,7 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	return std::wstring(buffer);
 }
 
-void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
+void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
@@ -24,9 +24,9 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 	// 创建文本布局 
 	if (pTextFormat != NULL){
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, _style.max_height, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), 0, _style.max_height, reinterpret_cast<IDWriteTextLayout**>(pDWR->pTextLayout.GetAddressOf()));
 		else
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), _style.max_width, 0, reinterpret_cast<IDWriteTextLayout**>(pDWR->pTextLayout.GetAddressOf()));
 	}
 
 	if (SUCCEEDED(hr))
@@ -44,17 +44,17 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
-		SafeRelease(&pDWR->pTextLayout);
+		pDWR->pTextLayout.Reset();
 		
 		if(_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
 			size_t max_width = _style.max_width == 0 ? textMetrics.width : _style.max_width;
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, max_width, textMetrics.height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), max_width, textMetrics.height,  reinterpret_cast<IDWriteTextLayout**>(pDWR->pTextLayout.GetAddressOf()));
 		}
 		else
 		{
 			size_t max_height = _style.max_height == 0 ? textMetrics.height : _style.max_height;
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.width, max_height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), textMetrics.width, max_height,  reinterpret_cast<IDWriteTextLayout**>(pDWR->pTextLayout.GetAddressOf()));
 		}
 
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
@@ -75,10 +75,10 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 				lpSize->cy += overhangMetrics.bottom + 1;
 		}
 	}
-	SafeRelease(&pDWR->pTextLayout);
+	pDWR->pTextLayout.Reset();
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat, PDWR pDWR) const
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR) const
 {
 	const std::wstring& preedit = text.str;
 	const std::vector<weasel::TextAttribute> &attrs = text.attributes;

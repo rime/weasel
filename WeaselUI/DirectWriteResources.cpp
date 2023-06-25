@@ -50,10 +50,10 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 	HRESULT hResult = S_OK;
 	// create factory
 	if (pD2d1Factory == NULL)
-		hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2d1Factory);
+		hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, pD2d1Factory.GetAddressOf());
 	// create IDWriteFactory
 	if (pDWFactory == NULL)
-		hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWFactory));
+		hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(pDWFactory.GetAddressOf()));
 	/* ID2D1HwndRenderTarget */
 	if (pRenderTarget == NULL)
 	{
@@ -82,15 +82,15 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 
 DirectWriteResources::~DirectWriteResources()
 {
-	SafeRelease(&pPreeditTextFormat);
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
-	SafeRelease(&pBrush);
-	SafeRelease(&pRenderTarget);
-	SafeRelease(&pDWFactory);
-	SafeRelease(&pD2d1Factory);
-	SafeRelease(&pTextLayout);
+	pPreeditTextFormat.Reset();
+	pTextFormat.Reset();
+	pLabelTextFormat.Reset();
+	pCommentTextFormat.Reset();
+	pBrush.Reset();
+	pRenderTarget.Reset();
+	pDWFactory.Reset();
+	pD2d1Factory.Reset();
+	pTextLayout.Reset();
 }
 
 HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
@@ -98,10 +98,10 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	std::wstring comment_font_face, int comment_font_point, bool vertical_text) 
 {
 	// prepare d2d1 resources
-	SafeRelease(&pPreeditTextFormat);
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
+	pPreeditTextFormat.Reset();
+	pTextFormat.Reset();
+	pLabelTextFormat.Reset();
+	pCommentTextFormat.Reset();
 	DWRITE_WORD_WRAPPING wrapping = ((_style.max_width == 0 && _style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) 
 			|| (_style.max_height == 0 && _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)) ?
 		DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_CHARACTER;
@@ -121,7 +121,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
+			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(pTextFormat.GetAddressOf()));
 	if( pTextFormat != NULL)
 	{
 		if (vertical_text)
@@ -144,7 +144,8 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pPreeditTextFormat));
+			//font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pPreeditTextFormat));
+			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(pPreeditTextFormat.GetAddressOf()));
 	if( pPreeditTextFormat != NULL)
 	{
 		if (vertical_text)
@@ -168,7 +169,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
+			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(pLabelTextFormat.GetAddressOf()));
 	if( pLabelTextFormat != NULL)
 	{
 		if (vertical_text)
@@ -192,7 +193,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
+			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(pCommentTextFormat.GetAddressOf()));
 	if( pCommentTextFormat != NULL)
 	{
 		if (vertical_text)
@@ -228,10 +229,10 @@ void weasel::DirectWriteResources::SetDpi(UINT dpi)
 	dpiScaleX_ = dpi / 72.0f;
 	dpiScaleY_ = dpi / 72.0f;
 	
-	SafeRelease(&pPreeditTextFormat);
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
+	pPreeditTextFormat.Reset();
+	pTextFormat.Reset();
+	pLabelTextFormat.Reset();
+	pCommentTextFormat.Reset();
 	InitResources(_style);
 }
 
@@ -278,13 +279,13 @@ void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr, DWRITE
 		fontStyle = DWRITE_FONT_STYLE_NORMAL;
 }
 
-void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std::vector<std::wstring> fontVector)
+void DirectWriteResources::_SetFontFallback(ComPtr<IDWriteTextFormat1> textFormat, std::vector<std::wstring> fontVector)
 {
-	IDWriteFontFallback* pSysFallback;
-	pDWFactory->GetSystemFontFallback(&pSysFallback);
-	IDWriteFontFallback* pFontFallback = NULL;
-	IDWriteFontFallbackBuilder* pFontFallbackBuilder = NULL;
-	pDWFactory->CreateFontFallbackBuilder(&pFontFallbackBuilder);
+	ComPtr<IDWriteFontFallback> pSysFallback;
+	pDWFactory->GetSystemFontFallback(pSysFallback.GetAddressOf());
+	ComPtr<IDWriteFontFallback> pFontFallback = NULL;
+	ComPtr<IDWriteFontFallbackBuilder> pFontFallbackBuilder = NULL;
+	pDWFactory->CreateFontFallbackBuilder(pFontFallbackBuilder.GetAddressOf());
 	std::vector<std::wstring> fallbackFontsVector;
 	for (UINT32 i = 0; i < fontVector.size(); i++)
 	{
@@ -333,12 +334,12 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std:
 		fallbackFontsVector.swap(std::vector<std::wstring>());
 	}
 	// add system defalt font fallback
-	pFontFallbackBuilder->AddMappings(pSysFallback);
-	pFontFallbackBuilder->CreateFontFallback(&pFontFallback);
-	textFormat->SetFontFallback(pFontFallback);
+	pFontFallbackBuilder->AddMappings(pSysFallback.Get());
+	pFontFallbackBuilder->CreateFontFallback(pFontFallback.GetAddressOf());
+	textFormat->SetFontFallback(pFontFallback.Get());
 	fallbackFontsVector.swap(std::vector<std::wstring>());
-	SafeRelease(&pFontFallback);
-	SafeRelease(&pSysFallback);
-	SafeRelease(&pFontFallbackBuilder);
+	pFontFallback.Reset();
+	pSysFallback.Reset();
+	pFontFallbackBuilder.Reset();
 }
 
