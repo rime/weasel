@@ -26,8 +26,8 @@ Layout::Layout(const UIStyle& style, const Context& context, const Status& statu
 			offsetY -= _style.shadow_radius/2;
 		}
 	}
-	offsetX += _style.border + 1;
-	offsetY += _style.border + 1;
+	offsetX += _style.border*2 + 1;
+	offsetY += _style.border*2 + 1;
 }
 
 GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft)

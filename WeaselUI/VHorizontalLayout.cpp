@@ -42,7 +42,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing - 1;
+		width += size.cx + xoffset * 2 + _style.spacing;
 		height = max(height, offsetY + real_margin_y + size.cy + szy);
 		if(ShouldDisplayStatusIcon()) height += STATUS_ICON_SIZE;
 	}
@@ -54,7 +54,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
 		_auxiliaryRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing - 1;
+		width += size.cx + xoffset * 2 + _style.spacing;
 		height = max(height, offsetY + real_margin_y + size.cy);
 	}
 	/* Candidates */
@@ -172,9 +172,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 				_candidateCommentRects[i].OffsetRect(offset, 0);
 			}
 			if (!IsInlinePreedit() && !_context.preedit.str.empty())
-				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - 1 - _preeditRect.left, 0);
+				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - _preeditRect.left, 0);
 			if (!_context.aux.str.empty())
-				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - 1 - _auxiliaryRect.left, 0);
+				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - _auxiliaryRect.left, 0);
 		}
 	}
 	else
@@ -247,7 +247,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 		// icon size wider then preedit text
 		int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szx) / 2 : 0;
 		_preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing - 1;
+		width += size.cx + xoffset * 2 + _style.spacing;
 		height = max(height, offsetY + real_margin_y + size.cy + szy);
 		if(ShouldDisplayStatusIcon()) height += STATUS_ICON_SIZE;
 	}
@@ -258,7 +258,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 		// icon size wider then auxiliary text
 		int xoffset = (STATUS_ICON_SIZE >= size.cx && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cx) / 2 : 0;
 		_auxiliaryRect.SetRect(width + xoffset, h, width + xoffset + size.cx, h + size.cy);
-		width += size.cx + xoffset * 2 + _style.spacing - 1;
+		width += size.cx + xoffset * 2 + _style.spacing;
 		height = max(height, offsetY + real_margin_y + size.cy);
 	}
 	// candidates
@@ -411,9 +411,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 			}
 			_highlightRect = _candidateRects[id];
 			if (!IsInlinePreedit() && !_context.preedit.str.empty())
-				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - 1 - _preeditRect.left, 0);
+				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - _preeditRect.left, 0);
 			if (!_context.aux.str.empty())
-				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - 1 - _auxiliaryRect.left, 0);
+				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - _auxiliaryRect.left, 0);
 		}
 	}
 
