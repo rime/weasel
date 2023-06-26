@@ -48,7 +48,6 @@ namespace weasel
 			if (pDWR)
 			{ 
 				pDWR.reset();
-				delete pDWR.get();
 			}
 		}
 

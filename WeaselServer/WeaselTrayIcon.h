@@ -26,5 +26,6 @@ protected:
 	WeaselTrayMode m_mode;
 	std::wstring m_schema_zhung_icon;
 	std::wstring m_schema_ascii_icon;
+	bool m_disabled;
 };
 
