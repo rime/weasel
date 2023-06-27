@@ -110,8 +110,6 @@ namespace weasel
 		ComPtr<IDWriteTextFormat1> pTextFormat;
 		ComPtr<IDWriteTextFormat1> pLabelTextFormat;
 		ComPtr<IDWriteTextFormat1> pCommentTextFormat;
-		ComPtr<IDWriteTextLayout2> pTextLayout;
-		ComPtr<ID2D1SolidColorBrush> pBrush;
 	private:
 		UIStyle& _style;
 		void _ParseFontFace(const std::wstring fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);

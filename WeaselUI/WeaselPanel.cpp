@@ -149,18 +149,12 @@ void WeaselPanel::_InitFontRes(void)
 	if (hMonitor)
 		GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
 	// prepare d2d1 resources
-	if (pDWR == NULL)
+	// if style changed, or dpi changed, or pDWR NULL, re-initialize directwrite resources
+	if ((pDWR == NULL) || (m_ostyle != m_style) || (dpiX != dpi))
+	{
+		pDWR.reset();
 		pDWR = std::make_shared< DirectWriteResources>(m_style, dpiX);
-	// if style changed, re-initialize font resources
-	else if (m_ostyle != m_style)
-	{
-		pDWR->InitResources(m_style, dpiX);
 		pDWR->pRenderTarget->SetTextAntialiasMode((D2D1_TEXT_ANTIALIAS_MODE)m_style.antialias_mode);
-
-	}
-	else if( dpiX != dpi)
-	{
-		pDWR->InitResources(m_style, dpiX);
 	}
 	m_ostyle = m_style;
 	dpi = dpiX;
@@ -935,14 +929,15 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 	float g = (float)(GetGValue(inColor))/255.0f;
 	float b = (float)(GetBValue(inColor))/255.0f;
 	float alpha = (float)((inColor >> 24) & 255) / 255.0f;
-	pDWR->pBrush->SetColor(D2D1::ColorF(r, g, b, alpha));
-
-	if (NULL != pDWR->pBrush && NULL != pTextFormat) {
-		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), reinterpret_cast<IDWriteTextLayout**>(pDWR->pTextLayout.GetAddressOf()));
+	ID2D1SolidColorBrush* pBrush = NULL;
+	pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(r, g, b, alpha), &pBrush);
+	if (NULL != pBrush && NULL != pTextFormat) {
+		IDWriteTextLayout2* pTextLayout = NULL;
+		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), reinterpret_cast<IDWriteTextLayout**>(&pTextLayout));
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
 			DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
-			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pDWR->pTextLayout->SetFlowDirection(flow);
+			pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pTextLayout->SetFlowDirection(flow);
 		}
 
 		// offsetx for font glyph over left
@@ -950,20 +945,21 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 		float offsety = rc.top;
 		// prepare for space when first character overhanged
 		DWRITE_OVERHANG_METRICS omt;
-		pDWR->pTextLayout->GetOverhangMetrics(&omt);
+		pTextLayout->GetOverhangMetrics(&omt);
 		if (m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT && omt.left > 0)
 			offsetx += omt.left;
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && omt.top > 0)
 			offsety += omt.top;
 
-		if (pDWR->pTextLayout != NULL) {
-			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout.Get(), pDWR->pBrush.Get(), D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		if (pTextLayout != NULL) {
+			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 #if 0
 			D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
 			pDWR->pRenderTarget->DrawRectangle(&rectf, pDWR->pBrush);
 #endif
 		}
-		pDWR->pTextLayout.Reset();
+		SafeRelease(&pBrush);
+		SafeRelease(&pTextLayout);
 	}
 }
 

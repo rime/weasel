@@ -42,8 +42,7 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 	pPreeditTextFormat(NULL),
 	pTextFormat(NULL),
 	pLabelTextFormat(NULL),
-	pCommentTextFormat(NULL),
-	pTextLayout(NULL)
+	pCommentTextFormat(NULL)
 {
 	D2D1_TEXT_ANTIALIAS_MODE mode = _style.antialias_mode <= 3 ? (D2D1_TEXT_ANTIALIAS_MODE)(_style.antialias_mode) : D2D1_TEXT_ANTIALIAS_MODE_FORCE_DWORD; // prepare d2d1 resources
 	HRESULT hResult = S_OK;
@@ -62,7 +61,6 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 		pRenderTarget->SetTextAntialiasMode(mode);
 		pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	}
-	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
 	//get the dpi information
 	if (dpi == 0)
 	{
@@ -85,11 +83,9 @@ DirectWriteResources::~DirectWriteResources()
 	pTextFormat.Reset();
 	pLabelTextFormat.Reset();
 	pCommentTextFormat.Reset();
-	pBrush.Reset();
 	pRenderTarget.Reset();
 	pDWFactory.Reset();
 	pD2d1Factory.Reset();
-	pTextLayout.Reset();
 }
 
 HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
