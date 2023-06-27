@@ -957,7 +957,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 			style.spacing = style.hilite_padding_y * 2;
 		if (style.hilite_padding_x * 2 > style.candidate_spacing)		// if hilite_padding over candidate spacing, increase candidate spacing
 			style.candidate_spacing = style.hilite_padding_x * 2;
-		if (style.hilite_padding_y > style.hilite_spacing)
+		if (style.hilite_padding_x > style.hilite_spacing)
 			style.hilite_spacing = style.hilite_padding_x;
 	}
 	else
@@ -966,8 +966,8 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 			style.spacing = style.hilite_padding_x * 2;
 		if (style.hilite_padding_y * 2 > style.candidate_spacing)		// if hilite_padding over candidate spacing, increase candidate spacing
 			style.candidate_spacing = style.hilite_padding_y * 2;
-		if (style.hilite_padding_x > style.hilite_spacing)
-			style.hilite_spacing = style.hilite_padding_x;
+		if (style.hilite_padding_y > style.hilite_spacing)
+			style.hilite_spacing = style.hilite_padding_y;
 	}
 
 	if (style.hilite_padding_x > style.margin_x && style.margin_x >=0)		// if hilite_padiing over margin_x, increase margin_x
