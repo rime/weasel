@@ -72,7 +72,7 @@
     </Link>
     <ResourceCompile>
       <Culture>0x7804</Culture>
-      <AdditionalIncludeDirectories>$(SolutionDir)\include\wtl10;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include\wtl;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Midl>
