@@ -783,6 +783,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			// decide if custom schema zhung icon to show
 			LoadIconNecessary(m_current_zhung_icon, m_style.current_zhung_icon, m_iconEnabled, IDI_ZH);
 			LoadIconNecessary(m_current_ascii_icon, m_style.current_ascii_icon, m_iconAlpha, IDI_EN);
+			LoadIconNecessary(m_current_half_icon, m_style.current_half_icon, m_iconHalf, IDI_HALF_SHAPE);
+			LoadIconNecessary(m_current_full_icon, m_style.current_full_icon, m_iconFull, IDI_FULL_SHAPE);
 			CRect iconRect(m_layout->GetStatusIconRect());
 			if (m_istorepos && !m_ctx.aux.str.empty())
 				iconRect.OffsetRect(0, m_offsety_aux);

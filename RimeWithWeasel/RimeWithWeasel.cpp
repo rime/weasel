@@ -372,7 +372,7 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	if (session_id == 0)
 		weasel_status.disabled = m_disabled;
 
-	_GetStatus(weasel_status, session_id);
+	_GetStatus(weasel_status, session_id, weasel_context);
 
 	if (!is_tsf) {
 		_GetContext(weasel_context, session_id);
@@ -467,6 +467,46 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 		}
 		else
 			m_ui->style().current_ascii_icon = L"";
+		memset(buffer, '\0', sizeof(buffer));
+		if (RimeConfigGetString(&config, "schema/half_icon", buffer, BUF_SIZE))
+		{
+			std::wstring tmp = utf8towcs(buffer);
+			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
+			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
+			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+			{
+				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
+				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
+				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+					m_ui->style().current_half_icon = L"";
+				else
+					m_ui->style().current_half_icon = (share_dir + L"\\" + tmp);
+			}
+			else
+				m_ui->style().current_half_icon = user_dir + L"\\" + tmp;
+		}
+		else
+			m_ui->style().current_half_icon = L"";
+		memset(buffer, '\0', sizeof(buffer));
+		if (RimeConfigGetString(&config, "schema/full_icon", buffer, BUF_SIZE))
+		{
+			std::wstring tmp = utf8towcs(buffer);
+			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
+			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
+			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+			{
+				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
+				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
+				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+					m_ui->style().current_full_icon = L"";
+				else
+					m_ui->style().current_full_icon = (share_dir + L"\\" + tmp);
+			}
+			else
+				m_ui->style().current_full_icon = user_dir + L"\\" + tmp;
+		}
+		else
+			m_ui->style().current_full_icon = L"";
 	}
 	// load schema icon end
 	RimeConfigClose(&config);
@@ -1145,7 +1185,7 @@ static void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options
 	RimeConfigEnd(&app_iter);
 }
 
-void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
+void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id, weasel::Context& ctx)
 {
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
@@ -1161,6 +1201,8 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 				_LoadSchemaSpecificSettings(schema_id);
 				_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
+				m_ui->Update(ctx, stat);
+				m_ui->ShowWithTimeout(1200);
 			}
 		}
 		stat.schema_name = utf8towcs(status.schema_name);

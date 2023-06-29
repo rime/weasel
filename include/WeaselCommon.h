@@ -290,6 +290,8 @@ namespace weasel
 		bool ascii_tip_follow_cursor;
 		std::wstring current_zhung_icon;
 		std::wstring current_ascii_icon;
+		std::wstring current_half_icon;
+		std::wstring current_full_icon;
 		bool enhanced_position;
 
 		std::wstring label_text_format;
@@ -353,6 +355,8 @@ namespace weasel
 			ascii_tip_follow_cursor(false),
 			current_zhung_icon(),
 			current_ascii_icon(),
+			current_half_icon(),
+			current_full_icon(),
 			enhanced_position(false),
 
 			label_text_format(L"%s."),
@@ -423,6 +427,8 @@ namespace weasel
 					|| ascii_tip_follow_cursor != st.ascii_tip_follow_cursor
 					|| current_zhung_icon != st.current_zhung_icon
 					|| current_ascii_icon != st.current_ascii_icon
+					|| current_half_icon != st.current_half_icon
+					|| current_full_icon != st.current_full_icon
 					|| enhanced_position != st.enhanced_position
 					|| label_text_format != st.label_text_format
 					|| min_width != st.min_width
@@ -489,6 +495,8 @@ namespace boost {
 			ar & s.ascii_tip_follow_cursor;
 			ar & s.current_zhung_icon;
 			ar & s.current_ascii_icon;
+			ar & s.current_half_icon;
+			ar & s.current_full_icon;
 			ar& s.enhanced_position;
 			ar & s.label_text_format;
 			// layout
