@@ -11,15 +11,15 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
 #include <atlbase.h>
-#include <wtl10/atlapp.h>
+#include <wtl/atlapp.h>
 
 extern CAppModule _Module;
 
 #include <atlwin.h>
 
-#include <wtl10/atlframe.h>
-#include <wtl10/atlctrls.h>
-#include <wtl10/atldlgs.h>
+#include <wtl/atlframe.h>
+#include <wtl/atlctrls.h>
+#include <wtl/atldlgs.h>
 
 #include <string>
 #include <shellapi.h>

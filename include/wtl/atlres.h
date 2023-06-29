@@ -1,4 +1,4 @@
-// Windows Template Library - WTL version 9.10
+// Windows Template Library - WTL version 10.0
 // Copyright (C) Microsoft Corporation, WTL Team. All rights reserved.
 //
 // This file is a part of the Windows Template Library.
@@ -11,33 +11,27 @@
 
 #pragma once
 
-#if defined(_WIN32_WCE) && !defined(__ATLRESCE_H__)
-	#error Use atlresCE.h instead of atlres.h for Windows CE
-#endif
-
 
 #ifdef RC_INVOKED
 #ifndef _INC_WINDOWS
 
   #define _INC_WINDOWS
 
-  #ifndef _WIN32_WCE
-    #define VS_VERSION_INFO     1
+  #define VS_VERSION_INFO     1
 
-    #ifdef APSTUDIO_INVOKED
-      #define APSTUDIO_HIDDEN_SYMBOLS // Ignore following symbols
-    #endif // APSTUDIO_INVOKED
+  #ifdef APSTUDIO_INVOKED
+    #define APSTUDIO_HIDDEN_SYMBOLS // Ignore following symbols
+  #endif // APSTUDIO_INVOKED
 
-    #ifndef WINVER
-      #define WINVER 0x0400   // default to Windows Version 4.0
-    #endif // !WINVER
+  #ifndef WINVER
+    #define WINVER 0x0500
+  #endif // !WINVER
 
-    #include <winresrc.h>
+  #include <winresrc.h>
 
     // operation messages sent to DLGINIT
-    #define LB_ADDSTRING    (WM_USER+1)
-    #define CB_ADDSTRING    (WM_USER+3)
-  #endif // !_WIN32_WCE
+  #define LB_ADDSTRING    (WM_USER+1)
+  #define CB_ADDSTRING    (WM_USER+3)
 
   #ifdef APSTUDIO_INVOKED
     #undef APSTUDIO_HIDDEN_SYMBOLS
