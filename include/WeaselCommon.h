@@ -210,6 +210,7 @@ namespace weasel
 		void reset()
 		{
 			schema_name.clear();
+			schema_id.clear();
 			ascii_mode = false;
 			composing = false;
 			disabled = false;
@@ -217,6 +218,8 @@ namespace weasel
 		}
 		// 輸入方案
 		std::wstring schema_name;
+		// 輸入方案 id
+		std::wstring schema_id;
 		// 轉換開關
 		bool ascii_mode;
 		// 寫作狀態

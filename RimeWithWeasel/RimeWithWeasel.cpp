@@ -531,6 +531,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		messages.push_back(std::string("status.ascii_mode=") + std::to_string(status.is_ascii_mode) + '\n');
 		messages.push_back(std::string("status.composing=") + std::to_string(status.is_composing) + '\n');
 		messages.push_back(std::string("status.disabled=") + std::to_string(status.is_disabled) + '\n');
+		messages.push_back(std::string("status.schema_id=") + std::string(status.schema_id) + '\n');
 		RimeFreeStatus(&status);
 	}
 	
@@ -1083,6 +1084,7 @@ void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& 
 		if(status.schema_id)
 			schema_id = status.schema_id;
 		stat.schema_name = utf8towcs(status.schema_name);
+		stat.schema_id = utf8towcs(status.schema_id);
 		stat.ascii_mode = !!status.is_ascii_mode;
 		stat.composing = !!status.is_composing;
 		stat.disabled = !!status.is_disabled;
@@ -1095,6 +1097,7 @@ void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& 
 				_LoadSchemaSpecificSettings(schema_id);
 				_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
+				ctx.aux.str = stat.schema_name;
 				m_ui->Update(ctx, stat);
 				m_ui->ShowWithTimeout(1200);
 			}
