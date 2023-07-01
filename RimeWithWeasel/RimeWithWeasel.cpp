@@ -9,6 +9,7 @@
 #include <regex>
 #include <rime_api.h>
 
+#define TRANSPARENT_COLOR	0x00000000
 #define ARGB2ABGR(value)	((value & 0xff000000) | ((value & 0x000000ff) << 16) | (value & 0x0000ff00) | ((value & 0x00ff0000) >> 16)) 
 #define RGBA2ABGR(value)    (((value & 0xff) << 24) | ((value & 0xff000000) >> 24) | ((value & 0x00ff0000) >> 8) | ((value & 0x0000ff00) << 8))
 typedef enum
@@ -655,11 +656,14 @@ static inline int ConvertColorToAbgr(int color, ColorFormat fmt = COLOR_ABGR)
 	else return RGBA2ABGR(color);
 }
 
-static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* value, ColorFormat fmt = COLOR_ABGR)
+static Bool _RimeConfigGetColor32bWithFallback(RimeConfig* config, const char* key, int& value, const ColorFormat& fmt, const int& fallback)
 {
 	char color[256] = { 0 };
 	if (!RimeConfigGetString(config, key, color, 256))
+	{
+		value = fallback;
 		return False;
+	}
 	std::string color_str = std::string(color);
 	// color code hex 
 	if (std::regex_match(color_str, HEX_REGEX))
@@ -669,9 +673,9 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 		tmp = tmp.substr(0, 8);
 		if(tmp.length() == 6) // color code without alpha, xxyyzz add alpha ff
 		{
-			*value = std::stoi(tmp, 0, 16);
-			if(fmt != COLOR_RGBA) *value |= 0xff000000;
-			else *value = (*value << 8) | 0x000000ff;
+			value = std::stoi(tmp, 0, 16);
+			if(fmt != COLOR_RGBA) value |= 0xff000000;
+			else value = (value << 8) | 0x000000ff;
 		}
 		else if(tmp.length() == 3) // color hex code xyz => xxyyzz and alpha ff
 		{
@@ -679,9 +683,9 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 				+ tmp.substr(1, 1) + tmp.substr(1, 1)
 				+ tmp.substr(2, 1) + tmp.substr(2, 1);
 			
-			*value = std::stoi(tmp, 0, 16);
-			if(fmt != COLOR_RGBA) *value |= 0xff000000;
-			else *value = (*value << 8) | 0x000000ff;
+			value = std::stoi(tmp, 0, 16);
+			if(fmt != COLOR_RGBA) value |= 0xff000000;
+			else value = (value << 8) | 0x000000ff;
 		}
 		else if(tmp.length() == 4)	// color hex code vxyz => vvxxyyzz
 		{
@@ -694,34 +698,40 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 			int value1 = std::stoi(tmp1, 0, 16);
 			tmp1 = tmp.substr(6);
 			int value2 = std::stoi(tmp1, 0, 16);
-			*value = (value1 << (tmp1.length() * 4)) | value2;
+			value = (value1 << (tmp1.length() * 4)) | value2;
 		}
-		else if(tmp.length() > 6)	/* color code with alpha */
+		else if(tmp.length() > 6 && tmp.length() <= 8)	/* color code with alpha */
 		{
 			// stoi limitation, split to handle
 			std::string tmp1 = tmp.substr(0, 6);
 			int value1 = std::stoi(tmp1, 0, 16);
 			tmp1 = tmp.substr(6);
 			int value2 = std::stoi(tmp1, 0, 16);
-			*value = (value1 << (tmp1.length() * 4)) | value2;
+			value = (value1 << (tmp1.length() * 4)) | value2;
 		}
 		else	// reject other code, length less then 3 or length == 5
+		{
+			value = fallback;
 			return False;
-		*value = ConvertColorToAbgr(*value, fmt);
-		*value = (*value & 0xffffffff);
+		}
+		value = ConvertColorToAbgr(value, fmt);
+		value = (value & 0xffffffff);
 		return True;
 	}
 	// regular number or other stuff, if user use pure dec number, they should take care themselves
 	else
 	{
 		int tmp = 0;
-		if (!RimeConfigGetInt(config, key, &tmp)) return False;
-
+		if (!RimeConfigGetInt(config, key, &tmp))
+		{
+			value = fallback;
+			return False;
+		}
 		if(fmt != COLOR_RGBA)
-			*value = (tmp | 0xff000000) & 0xffffffff;
+			value = (tmp | 0xff000000) & 0xffffffff;
 		else
-			*value = ((tmp << 8) | 0x000000ff) & 0xffffffff;
-		*value = ConvertColorToAbgr(*value, fmt);
+			value = ((tmp << 8) | 0x000000ff) & 0xffffffff;
+		value = ConvertColorToAbgr(value, fmt);
 		return True;
 	}
 }
@@ -964,106 +974,28 @@ static bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string 
 		else
 			fmt = COLOR_ABGR;
 
-		RimeConfigGetColor32b(config, (prefix + "/back_color").c_str(), &style.back_color, fmt);
-		style.back_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/shadow_color").c_str(), &style.shadow_color, fmt))
-		{
-			style.shadow_color = 0x00000000;
-		}
-
-		style.prevpage_color = 0;
-		style.nextpage_color = 0;
-		RimeConfigGetColor32b(config, (prefix + "/prevpage_color").c_str(), &style.prevpage_color, fmt);
-		RimeConfigGetColor32b(config, (prefix + "/nextpage_color").c_str(), &style.nextpage_color, fmt);
-		style.shadow_color &= 0xffffffff;
-		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color, fmt);
-		style.text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color, fmt))
-		{
-			style.candidate_text_color = style.text_color;
-		}
-		style.candidate_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color, fmt))
-		{
-			style.candidate_back_color = style.back_color & 0x00ffffff;
-		}
-		style.candidate_back_color &= 0xffffffff;
-
-		if (!RimeConfigGetColor32b(config, (prefix + "/border_color").c_str(), &style.border_color, fmt))
-		{
-			style.border_color = style.text_color;
-		}
-		style.border_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_text_color").c_str(), &style.hilited_text_color, fmt))
-		{
-			style.hilited_text_color = style.text_color;
-		}
-		style.hilited_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_back_color").c_str(), &style.hilited_back_color, fmt))
-		{
-			style.hilited_back_color = style.back_color;
-		}
-		style.hilited_back_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_text_color").c_str(), &style.hilited_candidate_text_color, fmt))
-		{
-			style.hilited_candidate_text_color = style.hilited_text_color;
-		}
-		style.hilited_candidate_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color, fmt))
-		{
-			style.hilited_candidate_back_color = style.hilited_back_color;
-		}
-		style.hilited_candidate_back_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color, fmt))
-		{
-			style.hilited_candidate_shadow_color = style.shadow_color  & 0x00ffffff;
-		}
-		style.hilited_candidate_shadow_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color, fmt))
-		{
-			style.hilited_shadow_color = style.shadow_color  & 0x00ffffff;
-		}
-		style.hilited_shadow_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color, fmt))
-		{
-			style.candidate_shadow_color = style.shadow_color & 0x00ffffff;
-		}
-		style.candidate_shadow_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_border_color").c_str(), &style.candidate_border_color, fmt))
-		{
-			style.candidate_border_color = 0x00000000;
-		}
-		style.candidate_border_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_border_color").c_str(), &style.hilited_candidate_border_color, fmt))
-		{
-			style.hilited_candidate_border_color = 0x00000000;
-		}
-		style.hilited_candidate_border_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color, fmt))
-		{
-			style.label_text_color = blend_colors(style.candidate_text_color, style.candidate_back_color);
-		}
-		style.label_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_label_color").c_str(), &style.hilited_label_text_color, fmt))
-		{
-			style.hilited_label_text_color = blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color);
-		}
-		style.hilited_label_text_color &= 0xffffffff;
-		style.comment_text_color = style.label_text_color;
-		style.hilited_comment_text_color = style.hilited_label_text_color;
-		if (RimeConfigGetColor32b(config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color, fmt))
-		{
-			style.hilited_comment_text_color = style.comment_text_color;
-		}
-		style.comment_text_color &= 0xffffffff;
-		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color, fmt);
-		style.hilited_comment_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_mark_color").c_str(), &style.hilited_mark_color, fmt))
-		{
-			// default transparent hilited_candidate_back_color
-			style.hilited_mark_color = style.hilited_candidate_back_color & 0x00ffffff;
-		}
-		style.hilited_mark_color &= 0xffffffff;
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/back_color").c_str(), style.back_color, fmt, 0xffffffff);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/shadow_color").c_str(), style.shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/prevpage_color").c_str(), style.prevpage_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/nextpage_color").c_str(), style.nextpage_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/text_color").c_str(), style.text_color, fmt, 0xff000000);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_text_color").c_str(), style.candidate_text_color, fmt, style.text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_back_color").c_str(), style.candidate_back_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/border_color").c_str(), style.border_color, fmt, style.text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_text_color").c_str(), style.hilited_text_color, fmt, style.text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_back_color").c_str(), style.hilited_back_color, fmt, style.back_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_text_color").c_str(), style.hilited_candidate_text_color, fmt, style.hilited_text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_back_color").c_str(), style.hilited_candidate_back_color, fmt, style.hilited_back_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_shadow_color").c_str(), style.hilited_candidate_shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_shadow_color").c_str(), style.hilited_shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_shadow_color").c_str(), style.candidate_shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_border_color").c_str(), style.candidate_border_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_border_color").c_str(), style.hilited_candidate_border_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/label_color").c_str(), style.label_text_color, fmt, blend_colors(style.candidate_text_color, style.candidate_back_color));
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_label_color").c_str(), style.hilited_label_text_color, fmt, blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color));
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/comment_text_color").c_str(), style.comment_text_color, fmt, style.label_text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_comment_text_color").c_str(), style.hilited_comment_text_color, fmt, style.hilited_label_text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_mark_color").c_str(), style.hilited_mark_color, fmt, TRANSPARENT_COLOR);
 		return true;
 	}
 	return false;
