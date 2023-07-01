@@ -887,19 +887,33 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 	// fix padding and spacing settings
 	if(style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 	{
+		// hilite_padding vs spacing
 		if (style.hilite_padding_y * 2 > style.spacing)		// if hilite_padding over spacing, increase spacing
 			style.spacing = style.hilite_padding_y * 2;
-		if (style.hilite_padding_x * 2 > style.candidate_spacing)		// if hilite_padding over candidate spacing, increase candidate spacing
-			style.candidate_spacing = style.hilite_padding_x * 2;
+		// hilite_padding vs candidate_spacing
+		if (style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_VERTICAL) {
+			if (style.hilite_padding_y * 2 > style.candidate_spacing)		// vertical, if hilite_padding_y over candidate spacing, increase candidate spacing
+				style.candidate_spacing = style.hilite_padding_y * 2;
+		} else {
+			if (style.hilite_padding_x * 2 > style.candidate_spacing)		// horizontal, if hilite_padding_x over candidate spacing, increase candidate spacing
+				style.candidate_spacing = style.hilite_padding_x * 2;
+		}
+		// hilite_padding_x vs hilite_spacing
 		if (style.hilite_padding_x > style.hilite_spacing)
 			style.hilite_spacing = style.hilite_padding_x;
 	}
-	else
+	else	// LAYOUT_VERTICAL_TEXT
 	{
+		// hilite_padding_x vs spacing
 		if (style.hilite_padding_x * 2 > style.spacing)		// if hilite_padding over spacing, increase spacing
 			style.spacing = style.hilite_padding_x * 2;
-		if (style.hilite_padding_y * 2 > style.candidate_spacing)		// if hilite_padding over candidate spacing, increase candidate spacing
+		// hilite_padding vs candidate_spacing
+		if (style.hilite_padding_x * 2 > style.candidate_spacing)		// if hilite_padding_x over candidate spacing, increase candidate spacing
+			style.candidate_spacing = style.hilite_padding_x * 2;
+		// vertical_text_with_wrap and hilite_padding_y over candidate_spacing
+		if (style.vertical_text_with_wrap && (style.hilite_padding_y * 2 > style.candidate_spacing))
 			style.candidate_spacing = style.hilite_padding_y * 2;
+		// hilite_padding_y vs hilite_spacing
 		if (style.hilite_padding_y > style.hilite_spacing)
 			style.hilite_spacing = style.hilite_padding_y;
 	}
