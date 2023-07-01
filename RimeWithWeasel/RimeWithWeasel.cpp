@@ -867,10 +867,10 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/candidate_spacing", &style.candidate_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
 
-	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_x", &style.hilite_padding_x, "style/layout/hilite_padiing");
+	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_x", &style.hilite_padding_x, "style/layout/hilite_padding");
 	style.hilite_padding_x = abs(style.hilite_padding_x);
 
-	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_y", &style.hilite_padding_y, "style/layout/hilite_padiing");
+	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_y", &style.hilite_padding_y, "style/layout/hilite_padding");
 	style.hilite_padding_y = abs(style.hilite_padding_y);
 
 	RimeConfigGetInt(config, "style/layout/shadow_radius", &style.shadow_radius);
