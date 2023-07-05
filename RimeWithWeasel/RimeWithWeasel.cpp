@@ -754,24 +754,27 @@ void _RimeConfigGetStringWithFallback(RimeConfig* config, const char* key, T& va
 	} 
 	else value = fallback;
 }
-
-static void _RimeGetIntWithFallback(RimeConfig* config, const char* key, int* value, const char* fb_key = NULL)
+static inline void _abs(int* value) { *value = abs(*value); }
+static void _RimeGetIntWithFallback(RimeConfig* config, const char* key, int* value, const char* fb_key = NULL, std::function<void(int*)> func = NULL)
 {
 	if (!RimeConfigGetInt(config, key, value)) {
 		if(fb_key)
 			RimeConfigGetInt(config, fb_key, value);
 	}
+	if (func) func(value);
 }
 
-static void _RimeGetStringWithFunc(RimeConfig* config, const char* key, std::wstring& value, const std::function<void(std::wstring&)> func=NULL)
+static void _RimeGetStringWithFunc(RimeConfig* config, const char* key, std::wstring& value, const std::wstring* fallback = NULL, const std::function<void(std::wstring&)> func=NULL)
 {
 	const int BUF_SIZE = 2047;
 	char buffer[BUF_SIZE + 1] = { 0 };
 	if (RimeConfigGetString(config, key, buffer, BUF_SIZE)) {
 		std::wstring tmp = string_to_wstring(buffer, CP_UTF8);
-		if(func) func(tmp);
+		if (func) func(tmp);
 		value = tmp;
 	}
+	else if(fallback)
+		value = *fallback;
 }
 
 static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
@@ -782,15 +785,15 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 	const int BUF_SIZE = 255;
 	char buffer[BUF_SIZE + 1] = { 0 };
 	// get font faces
-	_RimeGetStringWithFunc(config, "style/font_face", style.font_face, _RemoveSpaceAroundSep);
-	_RimeGetStringWithFunc(config, "style/label_font_face", style.label_font_face, _RemoveSpaceAroundSep);
-	_RimeGetStringWithFunc(config, "style/comment_font_face", style.comment_font_face, _RemoveSpaceAroundSep);
+	_RimeGetStringWithFunc(config, "style/font_face", style.font_face, NULL, _RemoveSpaceAroundSep);
+	_RimeGetStringWithFunc(config, "style/label_font_face", style.label_font_face, &style.font_face, _RemoveSpaceAroundSep);
+	_RimeGetStringWithFunc(config, "style/comment_font_face", style.comment_font_face, &style.font_face, _RemoveSpaceAroundSep);
 	// get font points
 	_RimeGetIntWithFallback(config, "style/font_point", &style.font_point);
 	if (style.font_point <= 0)
 		style.font_point = 12;
-	_RimeGetIntWithFallback(config, "style/label_font_point", &style.label_font_point, "style/font_point");
-	_RimeGetIntWithFallback(config, "style/comment_font_point", &style.comment_font_point, "style/font_point");
+	_RimeGetIntWithFallback(config, "style/label_font_point", &style.label_font_point, "style/font_point", _abs);
+	_RimeGetIntWithFallback(config, "style/comment_font_point", &style.comment_font_point, "style/font_point", _abs);
 	_RimeGetBool(config, "style/inline_preedit", initialize, style.inline_preedit, true, false);
 	_RimeGetBool(config, "style/vertical_auto_reverse", initialize, style.vertical_auto_reverse, true, false);
 	const std::map<std::string, UIStyle::PreeditType> _preeditMap = { 
@@ -823,10 +826,10 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 	_RimeGetBool(config, "style/vertical_text_with_wrap", false, style.vertical_text_with_wrap, true, false);
 	_RimeGetStringWithFunc(config, "style/label_format", style.label_text_format);
 	_RimeGetStringWithFunc(config, "style/mark_text", style.mark_text);
-	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
-	RimeConfigGetInt(config, "style/layout/max_width", &style.max_width);
-	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
-	RimeConfigGetInt(config, "style/layout/max_height", &style.max_height);
+	_RimeGetIntWithFallback(config, "style/layout/min_width", &style.min_width, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/max_width", &style.max_width, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/min_height", &style.min_height, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/max_height", &style.max_height, NULL, _abs);
 	// layout (alternative to style/horizontal)
 	const std::map < std::string , UIStyle::LayoutType > _layoutMap = {
 		{std::string("vertical"),					UIStyle::LAYOUT_VERTICAL},
@@ -842,71 +845,54 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 		style.max_width = 0;
 		style.inline_preedit = false;
 	}
-	_RimeGetIntWithFallback(config, "style/layout/border", &style.border, "style/layout/border_width");
-	RimeConfigGetInt(config, "style/layout/margin_x", &style.margin_x);
-	RimeConfigGetInt(config, "style/layout/margin_y", &style.margin_y);
-	RimeConfigGetInt(config, "style/layout/spacing", &style.spacing);
-	RimeConfigGetInt(config, "style/layout/candidate_spacing", &style.candidate_spacing);
-	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
-	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_x", &style.hilite_padding_x, "style/layout/hilite_padding");
-	style.hilite_padding_x = abs(style.hilite_padding_x);
-	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_y", &style.hilite_padding_y, "style/layout/hilite_padding");
-	style.hilite_padding_y = abs(style.hilite_padding_y);
-
-	RimeConfigGetInt(config, "style/layout/shadow_radius", &style.shadow_radius);
-	// negative shadow radius not allow
-	if(style.shadow_radius < 0)
-		style.shadow_radius = - style.shadow_radius;
+	_RimeGetIntWithFallback(config, "style/layout/border", &style.border, "style/layout/border_width", _abs);
+	_RimeGetIntWithFallback(config, "style/layout/margin_x", &style.margin_x);
+	_RimeGetIntWithFallback(config, "style/layout/margin_y", &style.margin_y);
+	_RimeGetIntWithFallback(config, "style/layout/spacing", &style.spacing, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/candidate_spacing", &style.candidate_spacing, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/hilite_spacing", &style.hilite_spacing, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_x", &style.hilite_padding_x, "style/layout/hilite_padding", _abs);
+	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_y", &style.hilite_padding_y, "style/layout/hilite_padding", _abs);
+	_RimeGetIntWithFallback(config, "style/layout/shadow_radius", &style.shadow_radius, NULL, _abs);
+	// disable shadow for fullscreen layout
 	style.shadow_radius *= (!( style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ));
-	RimeConfigGetInt(config, "style/layout/shadow_offset_x", &style.shadow_offset_x);
-	RimeConfigGetInt(config, "style/layout/shadow_offset_y", &style.shadow_offset_y);
+	_RimeGetIntWithFallback(config, "style/layout/shadow_offset_x", &style.shadow_offset_x);
+	_RimeGetIntWithFallback(config, "style/layout/shadow_offset_y", &style.shadow_offset_y);
 	// round_corner as alias of hilited_corner_radius
-	_RimeGetIntWithFallback(config, "style/layout/hilited_corner_radius", &style.round_corner, "style/layout/round_corner");
+	_RimeGetIntWithFallback(config, "style/layout/hilited_corner_radius", &style.round_corner, "style/layout/round_corner", _abs);
 	// corner_radius not set, fallback to round_corner
-	_RimeGetIntWithFallback(config, "style/layout/corner_radius", &style.round_corner_ex, "style/layout/round_corner");
+	_RimeGetIntWithFallback(config, "style/layout/corner_radius", &style.round_corner_ex, "style/layout/round_corner", _abs);
 	// fix padding and spacing settings
 	if(style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 	{
 		// hilite_padding vs spacing
-		if (style.hilite_padding_y * 2 > style.spacing)		// if hilite_padding over spacing, increase spacing
-			style.spacing = style.hilite_padding_y * 2;
+		style.spacing = max(style.spacing, style.hilite_padding_y * 2);	// if hilite_padding over spacing, increase spacing
 		// hilite_padding vs candidate_spacing
 		if (style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_VERTICAL) {
-			if (style.hilite_padding_y * 2 > style.candidate_spacing)		// vertical, if hilite_padding_y over candidate spacing, increase candidate spacing
-				style.candidate_spacing = style.hilite_padding_y * 2;
+			style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_y * 2);	// vertical, if hilite_padding_y over candidate spacing, increase candidate spacing
 		} else {
-			if (style.hilite_padding_x * 2 > style.candidate_spacing)		// horizontal, if hilite_padding_x over candidate spacing, increase candidate spacing
-				style.candidate_spacing = style.hilite_padding_x * 2;
+			style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_x * 2);	// horizontal, if hilite_padding_x over candidate spacing, increase candidate spacing
 		}
 		// hilite_padding_x vs hilite_spacing
-		if (style.hilite_padding_x > style.hilite_spacing)
-			style.hilite_spacing = style.hilite_padding_x;
+		style.hilite_spacing = max(style.hilite_spacing, style.hilite_padding_x);
 	}
 	else	// LAYOUT_VERTICAL_TEXT
 	{
 		// hilite_padding_x vs spacing
-		if (style.hilite_padding_x * 2 > style.spacing)		// if hilite_padding over spacing, increase spacing
-			style.spacing = style.hilite_padding_x * 2;
+		style.spacing = max(style.spacing, style.hilite_padding_x * 2); // if hilite_padding over spacing, increase spacing
 		// hilite_padding vs candidate_spacing
-		if (style.hilite_padding_x * 2 > style.candidate_spacing)		// if hilite_padding_x over candidate spacing, increase candidate spacing
-			style.candidate_spacing = style.hilite_padding_x * 2;
+		style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_x * 2); // if hilite_padding_x over candidate spacing, increase candidate spacing
 		// vertical_text_with_wrap and hilite_padding_y over candidate_spacing
-		if (style.vertical_text_with_wrap && (style.hilite_padding_y * 2 > style.candidate_spacing))
-			style.candidate_spacing = style.hilite_padding_y * 2;
+		if (style.vertical_text_with_wrap)
+			style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_y * 2);
 		// hilite_padding_y vs hilite_spacing
-		if (style.hilite_padding_y > style.hilite_spacing)
-			style.hilite_spacing = style.hilite_padding_y;
+		style.hilite_spacing = max(style.hilite_spacing, style.hilite_padding_y);
 	}
 	// fix padding and margin settings
-	if (style.hilite_padding_x > style.margin_x && style.margin_x >=0)		// if hilite_padiing over margin_x, increase margin_x
-		style.margin_x = style.hilite_padding_x;
-	else if (style.hilite_padding_x > -style.margin_x && style.margin_x < 0)
-		style.margin_x = -(style.hilite_padding_x);
-
-	if (style.hilite_padding_y > style.margin_y && style.margin_y >=0)		// if hilite_padiing over margin_y, increase margin_y
-		style.margin_y = style.hilite_padding_y;
-	else if (style.hilite_padding_y > -style.margin_y && style.margin_y < 0)
-		style.margin_y = -(style.hilite_padding_y);
+	int scale = style.margin_x < 0 ? -1 : 1;
+	style.margin_x = scale * max(style.hilite_padding_x, abs(style.margin_x));
+	scale = style.margin_y < 0 ? -1 : 1;
+	style.margin_y = scale * max(style.hilite_padding_y, abs(style.margin_y));
 	// get enhanced_position
 	_RimeGetBool(config, "style/enhanced_position", initialize, style.enhanced_position, true, false);
 	// get color scheme
