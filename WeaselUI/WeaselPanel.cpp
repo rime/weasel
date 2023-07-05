@@ -69,7 +69,7 @@ WeaselPanel::~WeaselPanel()
 	Gdiplus::GdiplusShutdown(_m_gdiplusToken);
 	delete m_layout;
 	m_layout = NULL;
-	pDWR.reset();
+	//pDWR.reset();
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -944,8 +944,8 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 		}
 
 		// offsetx for font glyph over left
-		float offsetx = rc.left;
-		float offsety = rc.top;
+		float offsetx = (float)rc.left;
+		float offsety = (float)rc.top;
 		// prepare for space when first character overhanged
 		DWRITE_OVERHANG_METRICS omt;
 		pTextLayout->GetOverhangMetrics(&omt);

@@ -17,7 +17,8 @@ void DictManagementDialog::Populate() {
 	RimeUserDictIterator iter = {0};
 	api_->user_dict_iterator_init(&iter);
 	while (const char* dict = api_->next_user_dict(&iter)) {
-		user_dict_list_.AddString(utf8towcs(dict));
+		std::wstring txt = string_to_wstring(dict, CP_UTF8);
+		user_dict_list_.AddString(txt.c_str());
 	}
 	api_->user_dict_iterator_destroy(&iter);
 	user_dict_list_.SetCurSel(-1);
@@ -69,7 +70,8 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 	WCHAR dict_name[100] = {0};
 	user_dict_list_.GetText(sel, dict_name);
 	path += std::wstring(L"\\") + dict_name + L".userdb.txt";
-	if (!api_->backup_user_dict(wcstoutf8(dict_name))) {
+	std::string dict_name_str = wstring_to_string(dict_name, CP_UTF8);
+	if (!api_->backup_user_dict(dict_name_str.c_str())) {
 		MessageBox(L"不知哪裏出錯了，未能完成導出操作。", L":-(", MB_OK | MB_ICONERROR);
 		return 0;
 	}
@@ -112,7 +114,8 @@ LRESULT DictManagementDialog::OnExport(WORD, WORD code, HWND, BOOL&) {
 	if (IDOK == dlg.DoModal()) {
 		char path[MAX_PATH] = {0};
 		WideCharToMultiByte(CP_ACP, 0, dlg.m_szFileName, -1, path, _countof(path), NULL, NULL);
-		int result = api_->export_user_dict(wcstoutf8(dict_name), path);
+		std::string dict_name_str = wstring_to_string(dict_name, CP_UTF8);
+		int result = api_->export_user_dict(dict_name_str.c_str(), path);
 		if (result < 0) {
 			MessageBox(L"不知哪裏出錯了，未能完成操作。", L":-(", MB_OK | MB_ICONERROR);
 		}
@@ -143,7 +146,7 @@ LRESULT DictManagementDialog::OnImport(WORD, WORD code, HWND, BOOL&) {
 	if (IDOK == dlg.DoModal()) {
 		char path[MAX_PATH] = {0};
 		WideCharToMultiByte(CP_ACP, 0, dlg.m_szFileName, -1, path, _countof(path), NULL, NULL);
-		int result = api_->import_user_dict(wcstoutf8(dict_name), path);
+		int result = api_->import_user_dict(wstring_to_string(dict_name, CP_UTF8).c_str(), path);
 		if (result < 0) {
 			MessageBox(L"不知哪裏出錯了，未能完成操作。", L":-(", MB_OK | MB_ICONERROR);
 		}
