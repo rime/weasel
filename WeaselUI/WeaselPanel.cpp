@@ -925,22 +925,28 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREDRAW);
 }
 
-void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int inColor, IDWriteTextFormat* pTextFormat)
+void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int inColor, IDWriteTextFormat1* pTextFormat)
 {
 	if (pTextFormat == NULL) return;
 	float r = (float)(GetRValue(inColor))/255.0f;
 	float g = (float)(GetGValue(inColor))/255.0f;
 	float b = (float)(GetBValue(inColor))/255.0f;
 	float alpha = (float)((inColor >> 24) & 255) / 255.0f;
-	ID2D1SolidColorBrush* pBrush = NULL;
-	pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(r, g, b, alpha), &pBrush);
-	if (NULL != pBrush && NULL != pTextFormat) {
-		IDWriteTextLayout2* pTextLayout = NULL;
-		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), reinterpret_cast<IDWriteTextLayout**>(&pTextLayout));
+	HRESULT hr = S_OK;
+	if (pDWR->pBrush == NULL)
+	{
+		hr = pDWR->CreateBrush(D2D1::ColorF(r, g, b, alpha));
+		if (FAILED(hr))	MessageBox(L"Failed CreateBrush", L"Info");
+	}
+	else
+		pDWR->SetBrushColor(D2D1::ColorF(r, g, b, alpha));
+
+	if (NULL != pDWR->pBrush && NULL != pTextFormat) {
+		pDWR->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height());
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
 			DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
-			pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pTextLayout->SetFlowDirection(flow);
+			pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pDWR->SetLayoutFlowDirection(flow);
 		}
 
 		// offsetx for font glyph over left
@@ -948,21 +954,20 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 		float offsety = (float)rc.top;
 		// prepare for space when first character overhanged
 		DWRITE_OVERHANG_METRICS omt;
-		pTextLayout->GetOverhangMetrics(&omt);
+		pDWR->GetLayoutOverhangMetrics(&omt);
 		if (m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT && omt.left > 0)
 			offsetx += omt.left;
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && omt.top > 0)
 			offsety += omt.top;
 
-		if (pTextLayout != NULL) {
-			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		if (pDWR->pTextLayout != NULL) {
+			pDWR->DrawTextLayoutAt({ offsetx, offsety });
 #if 0
 			D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
-			pDWR->pRenderTarget->DrawRectangle(&rectf, pDWR->pBrush);
+			pDWR->DrawRect(&rectf);
 #endif
 		}
-		SafeRelease(&pBrush);
-		SafeRelease(&pTextLayout);
+		pDWR->ResetLayout();
 	}
 }
 

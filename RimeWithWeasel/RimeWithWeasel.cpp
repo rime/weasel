@@ -528,6 +528,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		messages.push_back(std::string("status.ascii_mode=") + std::to_string(status.is_ascii_mode) + '\n');
 		messages.push_back(std::string("status.composing=") + std::to_string(status.is_composing) + '\n');
 		messages.push_back(std::string("status.disabled=") + std::to_string(status.is_disabled) + '\n');
+		messages.push_back(std::string("status.full_shape=") + std::to_string(status.is_full_shape) + '\n');
 		messages.push_back(std::string("status.schema_id=") + std::string(status.schema_id) + '\n');
 		RimeFreeStatus(&status);
 	}

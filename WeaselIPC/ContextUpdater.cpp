@@ -136,4 +136,10 @@ void StatusUpdater::Store(Deserializer::KeyType const& k, std::wstring const& va
 		m_pTarget->p_status->disabled = bool_value;
 		return;
 	}
+
+	if (k[1] == L"full_shape")
+	{
+		m_pTarget->p_status->full_shape = bool_value;
+		return;
+	}
 }

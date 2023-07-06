@@ -3,6 +3,8 @@
 #include "Compartment.h"
 #include <resource.h>
 #include <functional>
+#include "ResponseParser.h"
+#include "CandidateList.h"
 
 STDAPI CCompartmentEventSink::QueryInterface(REFIID riid, _Outptr_ void **ppvObj)
 {
@@ -195,6 +197,48 @@ HRESULT WeaselTSF::_SetKeyboardOpen(BOOL fOpen)
 	return hr;
 }
 
+HRESULT WeaselTSF::_GetCompartmentDWORD(DWORD& value, const GUID guid)
+{
+	HRESULT hr = E_FAIL;
+	com_ptr<ITfCompartmentMgr> pComMgr;
+	if (_pThreadMgr->QueryInterface(&pComMgr) == S_OK)
+	{
+		ITfCompartment* pCompartment;
+		if (pComMgr->GetCompartment(guid, &pCompartment) == S_OK)
+		{
+			VARIANT var;
+			if (pCompartment->GetValue(&var) == S_OK)
+			{
+				if (var.vt == VT_I4)
+					value = var.lVal;
+				else
+					hr = S_FALSE;
+			}
+		}
+		pCompartment->Release();
+	}
+	return hr;
+}
+
+HRESULT WeaselTSF::_SetCompartmentDWORD(const DWORD& value, const GUID guid)
+{
+	HRESULT hr = S_OK;
+	com_ptr<ITfCompartmentMgr> pComMgr;
+	if (_pThreadMgr->QueryInterface(&pComMgr) == S_OK)
+	{
+		ITfCompartment* pCompartment;
+		if (pComMgr->GetCompartment(guid, &pCompartment) == S_OK)
+		{
+			VARIANT var;
+			var.vt = VT_I4;
+			var.lVal = value;
+			hr = pCompartment->SetValue(_tfClientId, &var);
+		}
+		pCompartment->Release();
+	}
+	return hr;
+}
+
 BOOL WeaselTSF::_InitCompartment()
 {
 	using namespace std::placeholders;
@@ -207,6 +251,14 @@ BOOL WeaselTSF::_InitCompartment()
 		(IUnknown *)_pThreadMgr,
 		GUID_COMPARTMENT_KEYBOARD_OPENCLOSE
 	);
+
+	_pConvertionCompartmentSink = new CCompartmentEventSink(callback);
+	if (!_pConvertionCompartmentSink)
+		return FALSE;
+	hr = _pConvertionCompartmentSink->_Advise(
+		(IUnknown*)_pThreadMgr,
+		GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION
+	);
 	return SUCCEEDED(hr);
 }
 
@@ -215,6 +267,10 @@ void WeaselTSF::_UninitCompartment()
 	if (_pKeyboardCompartmentSink) {
 		_pKeyboardCompartmentSink->_Unadvise();
 		_pKeyboardCompartmentSink = NULL;
+	}
+	if (_pConvertionCompartmentSink) {
+		_pConvertionCompartmentSink->_Unadvise();
+		_pConvertionCompartmentSink = NULL;
 	}
 
 }
@@ -228,6 +284,16 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 			m_client.TrayCommand(ID_WEASELTRAY_DISABLE_ASCII);
 		}
 		_EnableLanguageBar(isOpen);
+	}
+	else if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION))
+	{
+		BOOL isOpen = _IsKeyboardOpen();
+		if (isOpen)
+		{
+			weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
+			bool ok = m_client.GetResponseData(std::ref(parser));
+			_UpdateLanguageBar(_status);
+		}
 	}
 	return S_OK;
 }
