@@ -344,8 +344,8 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 
 	// blur buffer
-	int blurMarginX = m_layout->offsetX * 3;
-	int blurMarginY = m_layout->offsetY * 3;
+	int blurMarginX = m_layout->offsetX;
+	int blurMarginY = m_layout->offsetY;
 
 	GraphicsRoundRectPath* hiliteBackPath;
 	if (rd.Hemispherical && type!= BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style)) 
