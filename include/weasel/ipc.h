@@ -24,6 +24,7 @@ public:
   size_t size() const noexcept { return span_.size(); }
   size_t size_bytes() const noexcept { return span_.size_bytes(); }
   size_t length() const noexcept { return length_; }
+  void clear() noexcept { length_ = 0; std::memset(span_.data(), 0, span_.size()); }
 
   bool set_length(const size_t length)
   {
@@ -34,9 +35,9 @@ public:
 
   bool write_bytes(const char* buf, const size_t length)
   {
-    if (length > size()) return false;
-    std::copy_n(buf, length, span_.data());
-    length_ = length;
+    if (length_ + length > size()) return false;
+    std::copy_n(buf, length, span_.data() + length_);
+    length_ += length;
     return true;
   }
 
@@ -179,7 +180,7 @@ private:
   void run(const callback& cb);
 
   std::wstring pipe_name_;
-  std::vector<pipe> pipes_;
+  std::vector<std::unique_ptr<pipe>> pipes_;
   std::unique_ptr<std::thread> lobby_th_;
   std::atomic<bool> running_;
   HANDLE h_terminate_;
