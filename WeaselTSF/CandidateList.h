@@ -1,5 +1,4 @@
 #pragma once
-#include <WeaselUI.h>
 #include "ctffunc.h"
 
 class WeaselTSF;
@@ -69,7 +68,7 @@ private:
 	void _DisposeUIWindowAll();
 	void _MakeUIWindow();
 
-	std::unique_ptr<weasel::UI> _ui;
+	// std::unique_ptr<weasel::UI> _ui;
 	DWORD _cRef;
 	com_ptr<WeaselTSF> _tsf;
 	DWORD uiid;
@@ -79,5 +78,9 @@ private:
 	weasel::UIStyle _style;
 
 	com_ptr<ITfContext> _pContextDocument;
+
+	// mock
+	bool shown_;
+	weasel::Context ctx_;
 };
 
