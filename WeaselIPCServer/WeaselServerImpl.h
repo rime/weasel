@@ -49,6 +49,7 @@ namespace weasel
 		DWORD OnEndMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam);
 		DWORD OnCommitComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam);
 		DWORD OnClearComposition(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam);
+		DWORD OnSelectCandidateOnCurrentPage(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam);
 
 	public:
 		ServerImpl();

@@ -22,6 +22,7 @@ namespace weasel
 		bool ProcessKeyEvent(KeyEvent const& keyEvent);
 		bool CommitComposition();
 		bool ClearComposition();
+		bool SelectCandidateOnCurrentPage(size_t index);
 		void UpdateInputPosition(RECT const& rc);
 		void FocusIn();
 		void FocusOut();

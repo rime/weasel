@@ -199,6 +199,14 @@ void RimeWithWeaselHandler::ClearComposition(UINT session_id)
 	m_active_session = session_id;
 }
 
+void RimeWithWeaselHandler::SelectCandidateOnCurrentPage(size_t index, UINT session_id)
+{
+	DLOG(INFO) << "select candidate on current page, session_id = " << session_id << ", index = " << index;
+	if (m_disabled) return;
+	RimeApi* api = rime_get_api();
+	api->select_candidate_on_current_page(session_id, index);
+}
+
 void RimeWithWeaselHandler::FocusIn(DWORD client_caps, UINT session_id)
 {
 	DLOG(INFO) << "Focus in: session_id = " << session_id << ", client_caps = " << client_caps;

@@ -325,6 +325,8 @@ void CCandidateList::StartUI()
 		return;
 	}
 
+	_ui->SetSelectCallback([this](const std::wstring str, const size_t index) { _tsf->InsertText(str, index); });
+	// ToDo: send select candidate info back to rime
 	pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
 	//pUIElementMgr->UpdateUIElement(uiid);
 	if (_pbShow)
@@ -411,4 +413,13 @@ com_ptr<ITfContext> WeaselTSF::_GetUIContextDocument()
 void WeaselTSF::_DeleteCandidateList()
 {
 	_cand->Destroy();
+}
+
+void WeaselTSF::InsertText(const std::wstring& wstr, size_t index)
+{
+	_InsertText(_pEditSessionContext, wstr);
+	_EndComposition(_pEditSessionContext, false);
+	m_client.SelectCandidateOnCurrentPage(index);
+	// fake a presskey
+	m_client.ProcessKeyEvent(0);
 }
