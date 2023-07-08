@@ -2,7 +2,6 @@
 
 #include "resource.h"
 #include <WeaselIPC.h>
-#include <WeaselUI.h>
 #include <RimeWithWeasel.h>
 #include <WeaselUtility.h>
 #include <winsparkle.h>
@@ -59,7 +58,7 @@ protected:
 	void SetupMenuHandlers();
 
 	weasel::Server m_server;
-	weasel::UI m_ui;
-	WeaselTrayIcon tray_icon;
+	// weasel::UI m_ui;
+	// WeaselTrayIcon tray_icon;
 	std::unique_ptr<RimeWithWeaselHandler> m_handler;
 };

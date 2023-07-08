@@ -2,8 +2,7 @@
 #include "WeaselServerApp.h"
 
 WeaselServerApp::WeaselServerApp()
-	: m_handler(std::make_unique<RimeWithWeaselHandler>(&m_ui))
-	, tray_icon(m_ui)
+	: m_handler(std::make_unique<RimeWithWeaselHandler>())
 {
 	//m_handler.reset(new RimeWithWeaselHandler(&m_ui));
 	m_server.SetRequestHandler(m_handler.get());
@@ -22,21 +21,21 @@ int WeaselServerApp::Run()
 	//win_sparkle_set_appcast_url("http://localhost:8000/weasel/update/appcast.xml");
 	win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
 	win_sparkle_init();
-	m_ui.Create(m_server.GetHWnd());
+	// m_ui.Create(m_server.GetHWnd());
 
-	tray_icon.Create(m_server.GetHWnd());
-	tray_icon.Refresh();
+	// tray_icon.Create(m_server.GetHWnd());
+	// tray_icon.Refresh();
 
 	m_handler->Initialize();
 	m_handler->OnUpdateUI([this]() {
-		tray_icon.Refresh();
+		// tray_icon.Refresh();
 	});
 
 	int ret = m_server.Run();
 
 	m_handler->Finalize();
-	m_ui.Destroy();
-	tray_icon.RemoveIcon();
+	// m_ui.Destroy();
+	// tray_icon.RemoveIcon();
 	win_sparkle_cleanup();
 
 	return ret;

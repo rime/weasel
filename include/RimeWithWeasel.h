@@ -1,6 +1,5 @@
 #pragma once
 #include <WeaselIPC.h>
-#include <WeaselUI.h>
 #include <map>
 #include <string>
 
@@ -12,7 +11,8 @@ class RimeWithWeaselHandler :
 	public weasel::RequestHandler
 {
 public:
-	RimeWithWeaselHandler(weasel::UI *ui);
+	RimeWithWeaselHandler();
+	// RimeWithWeaselHandler(weasel::UI *ui);
 	virtual ~RimeWithWeaselHandler();
 	virtual void Initialize();
 	virtual void Finalize();
@@ -47,7 +47,7 @@ private:
 	void _UpdateInlinePreeditStatus(UINT session_id);
 
 	AppOptionsByAppName m_app_options;
-	weasel::UI* m_ui;  // reference
+	// weasel::UI* m_ui;  // reference
 	UINT m_active_session;
 	bool m_disabled;
 	std::string m_last_schema_id;
