@@ -5,6 +5,8 @@
 #include <aclapi.h> // for ACL
 #include <boost/thread.hpp>
 #include <PipeChannel.h>
+#include <weasel/ipc.h>
+#include <boost/interprocess/streams/bufferstream.hpp>
 
 #include "SecurityAttribute.h"
 
@@ -68,16 +70,24 @@ namespace weasel
 		}
 
 	private:
+    using stream = boost::interprocess::wbufferstream;
 		void _Finailize();
-		template<typename _Resp>
-		void HandlePipeMessage(PipeMessage pipe_msg, _Resp resp);
+		//void HandlePipeMessage(PipeMessage pipe_msg, _Resp resp);
+		void HandlePipeMessage(pbuffer in, pbuffer out);
 
-		std::unique_ptr<PipeServer> channel;
+		// std::unique_ptr<PipeServer> channel;
+		orch orch;
 		std::unique_ptr<boost::thread> pipeThread;
 		RequestHandler *m_pRequestHandler;  // reference
 		std::map<UINT, CommandHandler> m_MenuHandlers;
 		HMODULE m_hUser32Module;
 		SecurityAttribute sa;
+
+    void write_send_buffer(std::wstring&);
+		char* recv_buffer;
+		char* send_buffer;
+    pbuffer out;
+    wchar_t* test_buf;
 	};
 
 

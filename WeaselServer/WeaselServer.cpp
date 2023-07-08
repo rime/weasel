@@ -14,11 +14,19 @@
 #include <ShellScalingApi.h>
 #include <WinUser.h>
 #include <memory>
+#include <thread>
 #pragma comment(lib, "Shcore.lib")
 CAppModule _Module;
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
+  AllocConsole();
+  std::thread th([]()
+  {
+    // Sleep(30 * 1000);
+    // ExitProcess(0);
+
+  });
 	if( !IsWindowsBlueOrLaterEx() )
 	{
 		::MessageBox(NULL, L"僅支持Windows 8.1或更高版本系統", L"系統版本過低", MB_ICONERROR);

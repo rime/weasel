@@ -86,42 +86,6 @@ enum pipe_state
   writing
 };
 
-class pipe_impl
-{
-public:
-  pipe_impl(
-    HANDLE h_pipe,
-    OVERLAPPED ov,
-    HANDLE h_terminate,
-    callback cb
-  ) :
-    state(reading),
-    has_pending_io(false),
-    h_pipe_(h_pipe),
-    ov_(ov),
-    h_terminate_(h_terminate),
-    cb_(std::move(cb)),
-    buf_req_(std::make_shared<buffer>(8192)),
-    buf_res_(std::make_shared<buffer>(8192)),
-    valid_(true) {}
-  ~pipe_impl();
-  void run();
-  void fetch_result();
-  void dispatch_data();
-
-  pipe_state state;
-  bool has_pending_io;
-
-private:
-  HANDLE h_pipe_;
-  OVERLAPPED ov_;
-  HANDLE h_terminate_;
-  callback cb_;
-  pbuffer buf_req_;
-  pbuffer buf_res_;
-  bool valid_;
-};
-
 class pipe
 {
 public:
@@ -131,25 +95,19 @@ public:
     HANDLE h_terminate,
     callback cb
   ) :
-    pipe_impl_(new pipe_impl(
-      h_pipe,
-      ov,
-      h_terminate,
-      cb
-    ))
-  {
-  }
+    state_(reading),
+    has_pending_io_(false),
+    h_pipe_(h_pipe),
+    ov_(ov),
+    h_terminate_(h_terminate),
+    cb_(std::move(cb)),
+    buf_req_(std::make_shared<buffer>(8192)),
+    buf_res_(std::make_shared<buffer>(8192)),
+    valid_(true) { }
   pipe(const pipe&) = delete;
   pipe& operator=(const pipe&) = delete;
-  pipe(pipe&& rhs) noexcept
-  {
-    pipe_impl_ = std::move(rhs.pipe_impl_);
-  }
-  pipe& operator=(pipe&& rhs) noexcept
-  {
-    pipe_impl_ = std::move(rhs.pipe_impl_);
-    return *this;
-  }
+  pipe(pipe&&) = delete;
+  pipe& operator=(pipe&&) = delete;
   ~pipe();
 
   void run();
@@ -157,8 +115,19 @@ public:
 
 private:
   void run_internal();
+  void fetch_result();
+  void dispatch_data();
+
+  pipe_state state_;
+  bool has_pending_io_;
+  HANDLE h_pipe_;
+  OVERLAPPED ov_;
+  HANDLE h_terminate_;
+  callback cb_;
+  pbuffer buf_req_;
+  pbuffer buf_res_;
+  bool valid_;
   std::unique_ptr<std::thread> th_;
-  std::unique_ptr<pipe_impl> pipe_impl_;
 };
 
 
