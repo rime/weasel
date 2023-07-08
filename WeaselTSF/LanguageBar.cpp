@@ -34,7 +34,7 @@ static void HMENU2ITfMenu(HMENU hMenu, ITfMenu *pTfMenu)
 }
 
 CLangBarItemButton::CLangBarItemButton(com_ptr<WeaselTSF> pTextService, REFGUID guid, weasel::UIStyle& style)
-	: _status(0), _style(style), _current_schema_zhung_icon(), _current_schema_ascii_icon()
+	: _status(0)
 {
 	DllAddRef();
 
@@ -156,7 +156,9 @@ STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 {
 	if (ascii_mode)
 	{
+		/*
 		if(_style.current_ascii_icon.empty())
+		*/
 			*phIcon = (HICON)LoadImageW(
 					g_hInst,
 					MAKEINTRESOURCEW(IDI_EN),
@@ -164,6 +166,7 @@ STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 					GetSystemMetrics(SM_CXSMICON),
 					GetSystemMetrics(SM_CYSMICON),
 					LR_SHARED);
+		/*
 		else
 			*phIcon = (HICON)LoadImageW(
 					NULL,
@@ -172,10 +175,13 @@ STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 					GetSystemMetrics(SM_CXSMICON),
 					GetSystemMetrics(SM_CYSMICON),
 					LR_LOADFROMFILE);
+		*/
 	}
 	else
 	{
+		/*
 		if( _style.current_zhung_icon.empty()) 
+		*/
 			*phIcon = (HICON)LoadImageW(
 					g_hInst,
 					MAKEINTRESOURCEW(IDI_ZH),
@@ -183,6 +189,7 @@ STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 					GetSystemMetrics(SM_CXSMICON),
 					GetSystemMetrics(SM_CYSMICON),
 					LR_SHARED);
+		/*
 		else
 			*phIcon = (HICON)LoadImageW(
 					NULL,
@@ -191,6 +198,7 @@ STDAPI CLangBarItemButton::GetIcon(HICON *phIcon)
 					GetSystemMetrics(SM_CXSMICON),
 					GetSystemMetrics(SM_CYSMICON),
 					LR_LOADFROMFILE);
+		*/
 	}
 	return (*phIcon == NULL)? E_FAIL: S_OK;
 }
@@ -233,6 +241,7 @@ void CLangBarItemButton::UpdateWeaselStatus(weasel::Status stat)
 			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
 		}
 	}
+	/*
 	if (_current_schema_zhung_icon != _style.current_zhung_icon) {
 		_current_schema_zhung_icon = _style.current_zhung_icon;
 		if (_pLangBarItemSink) {
@@ -245,6 +254,7 @@ void CLangBarItemButton::UpdateWeaselStatus(weasel::Status stat)
 			_pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
 		}
 	}
+	*/
 
 }
 
