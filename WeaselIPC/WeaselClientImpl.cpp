@@ -93,6 +93,14 @@ bool ClientImpl::ClearComposition()
 	return ret != 0;
 }
 
+bool ClientImpl::SelectCandidateOnCurrentPage(size_t index)
+{
+	if(!_Active())
+		return false;
+	LRESULT ret = _SendMessage(WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE, index, session_id);
+	return ret != 0;
+}
+
 void ClientImpl::UpdateInputPosition(RECT const& rc)
 {
 	if (!_Active())
@@ -242,6 +250,11 @@ bool Client::CommitComposition()
 bool Client::ClearComposition()
 {
 	return m_pImpl->ClearComposition();
+}
+
+bool Client::SelectCandidateOnCurrentPage(size_t index)
+{
+	return m_pImpl->SelectCandidateOnCurrentPage(index);
 }
 
 void Client::UpdateInputPosition(RECT const& rc)

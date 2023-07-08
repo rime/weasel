@@ -118,6 +118,7 @@ public:
 
 
 	com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
+	void InsertText(const std::wstring& wstr, size_t index);
 
 private:
 	/* TSF Related */

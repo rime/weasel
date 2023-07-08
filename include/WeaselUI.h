@@ -8,6 +8,7 @@
 #include <dwrite_2.h>
 #include <memory>
 #include <wrl/client.h>
+#include <functional>
 using namespace Microsoft::WRL;
 namespace weasel
 {
@@ -79,6 +80,8 @@ namespace weasel
 		UIStyle& style() { return style_; }
 		UIStyle& ostyle() { return ostyle_; }
 		PDWR pdwr() { return pDWR; }
+		std::function<void(const std::wstring, const size_t index)>& selectCallback() { return _SelectCallback; }
+		void SetSelectCallback(std::function<void(const std::wstring, const size_t index)> const & func) { _SelectCallback = func; }
 
 	private:
 		UIImpl* pimpl_;
@@ -89,6 +92,7 @@ namespace weasel
 		Status status_;
 		UIStyle style_;
 		UIStyle ostyle_;
+		std::function<void(const std::wstring, const size_t index)> _SelectCallback;
 	};
 
 	class DirectWriteResources

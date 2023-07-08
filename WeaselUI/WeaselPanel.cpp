@@ -50,6 +50,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	dpi(96),
 	hide_candidates(false),
 	pDWR(ui.pdwr()),
+	_SelectCallback(ui.selectCallback()),
 	_m_gdiplusToken(0)
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -284,9 +285,8 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 			rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 			if (rect.PtInRect(point))
 			{
-				// if not select by number, to be test
-				if(i < MAX_CANDIDATES_COUNT - 1) SendInputKey(0x31 + i);
-				else	SendInputKey(0x30);
+				if (_SelectCallback)
+					_SelectCallback(m_ctx.cinfo.candies.at(i).str, i);
 				break;
 			}
 		}
