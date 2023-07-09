@@ -279,6 +279,8 @@ inline void critical(const T &msg)
 
 } // namespace spdlog
 
+#if 0
+
 //
 // enable/disable log calls at compile time according to global level.
 //
@@ -345,6 +347,8 @@ inline void critical(const T &msg)
 #else
 #    define SPDLOG_LOGGER_CRITICAL(logger, ...) (void)0
 #    define SPDLOG_CRITICAL(...) (void)0
+#endif
+
 #endif
 
 #ifdef SPDLOG_HEADER_ONLY
