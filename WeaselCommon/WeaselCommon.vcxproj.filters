@@ -27,6 +27,9 @@
     <ClInclude Include="..\include\weasel\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\weasel\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WeaselCommon.cpp">

@@ -2,10 +2,10 @@
 #define NOMINMAX
 #include "spdlog/spdlog.h"
 
-namespace weasel
+namespace weasel::log
 {
 // compile funcs to decrease build time
-inline void init_console(bool to_stderr = false);
+void init_console(bool to_stderr = false);
 
 #ifdef WEASEL_NO_LOGGING
 
@@ -14,7 +14,8 @@ inline void init_console(bool to_stderr = false);
 
 #else // WEASEL_NO_LOGGING
 
-#define LOG(severity, ...) SPDLOG_##severity(__VA_ARGS__)
+// #define LOG(severity, ...) spdlog::severity(__VA_ARGS__)
+#define LOG(severity, ...) spdlog::default_logger_raw()->log(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, spdlog::level::severity, __VA_ARGS__)
 #define CHECK(cond, ...)       \
   (cond) ?                     \
   (void) 0 :                   \
@@ -35,7 +36,7 @@ inline void init_console(bool to_stderr = false);
 #endif // defined(DEBUG) || defined(_DEBUG)
 
 
-#define LOG_LASTERROR(str) LOG(ERROR, "{0} ({1:x})", str, GetLastError())
+#define LOG_LASTERROR(severity, str) LOG(severity, "{0} ({1:x})", str, GetLastError())
 #define CHECK_EQ(a, b) CHECK((a) == (b))
 #define CHECK_NE(a, b) CHECK((a) != (b))
 #define CHECK_GE(a, b) CHECK((a) >= (b))

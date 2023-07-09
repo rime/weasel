@@ -157,7 +157,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -178,6 +178,13 @@
       <Command>
       </Command>
     </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>$(ProjectDir)$(TargetName)$(TargetExt).manifest</AdditionalManifestFiles>
+      <OutputManifestFile>$(TargetName).manifest</OutputManifestFile>
+    </Manifest>
+    <ManifestResourceCompile>
+      <ResourceOutputFileName />
+    </ManifestResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -263,7 +270,8 @@
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
     <Manifest>
-      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+      <AdditionalManifestFiles>$(ProjectDir)$(TargetName)$(TargetExt).manifest</AdditionalManifestFiles>
+      <OutputManifestFile>$(TargetName).manifest</OutputManifestFile>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -342,6 +350,10 @@
       <Command>
       </Command>
     </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>$(ProjectDir)$(TargetName)$(TargetExt).manifest</AdditionalManifestFiles>
+      <OutputManifestFile>$(TargetName).manifest</OutputManifestFile>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHant|x64'">
     <Midl>
@@ -416,6 +428,10 @@
       <Command>
       </Command>
     </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>$(ProjectDir)$(TargetName)$(TargetExt).manifest</AdditionalManifestFiles>
+      <OutputManifestFile>$(TargetName).manifest</OutputManifestFile>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseHans|x64'">
     <Midl>
@@ -455,6 +471,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MessageDispatcher.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -467,16 +484,15 @@
     </ClCompile>
     <ClCompile Include="SystemTraySDK.cpp" />
     <ClCompile Include="WeaselServer.cpp" />
-    <ClCompile Include="WeaselServerApp.cpp" />
-    <ClCompile Include="WeaselService.cpp" />
     <ClCompile Include="WeaselTrayIcon.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Message.h" />
+    <ClInclude Include="MessageDispatcher.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SystemTraySDK.h" />
-    <ClInclude Include="WeaselServerApp.h" />
-    <ClInclude Include="WeaselService.h" />
+    <ClInclude Include="Util.h" />
     <ClInclude Include="WeaselTrayIcon.h" />
   </ItemGroup>
   <ItemGroup>
@@ -487,13 +503,11 @@
       <Project>{1c497821-bd63-4f02-9094-32b185b62f23}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\WeaselIPCServer\WeaselIPCServer.vcxproj">
-      <Project>{26930622-cfa2-43df-a9f3-4aa4a313b2a4}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    <ProjectReference Include="..\WeaselCommon\WeaselCommon.vcxproj">
+      <Project>{cfeb3ee1-04d8-4bf5-85a5-ed35edaaf63a}</Project>
     </ProjectReference>
     <ProjectReference Include="..\WeaselIPC\WeaselIPC.vcxproj">
       <Project>{ce11a2df-8d20-4b07-a935-4b0d03f0303d}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -505,6 +519,9 @@
   <ItemGroup>
     <Image Include="..\resource\full.ico" />
     <Image Include="..\resource\half.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="WeaselServer.exe.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

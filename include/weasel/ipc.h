@@ -6,79 +6,83 @@
 #include <thread>
 #include <vector>
 #include <wil/resource.h>
-#include <boost/core/span.hpp>
+
+#define WEASEL_IPC_WINDOW L"WeaselIPCWindow_1.0"
+#define WEASEL_IPC_PIPE_NAME L"WeaselNamedPipe"
+
+#define WEASEL_IPC_BUFFER_SIZE (4 * 1024)
+#define WEASEL_IPC_BUFFER_LENGTH (WEASEL_IPC_BUFFER_SIZE / sizeof(WCHAR))
 
 namespace weasel
 {
 
+enum ipc_command
+{	
+	WEASEL_IPC_ECHO = (WM_APP + 1),
+	WEASEL_IPC_START_SESSION,
+	WEASEL_IPC_END_SESSION,
+	WEASEL_IPC_PROCESS_KEY_EVENT,
+	WEASEL_IPC_SHUTDOWN_SERVER,
+	WEASEL_IPC_FOCUS_IN,
+	WEASEL_IPC_FOCUS_OUT,
+	WEASEL_IPC_UPDATE_INPUT_POS,
+	WEASEL_IPC_START_MAINTENANCE,
+	WEASEL_IPC_END_MAINTENANCE,
+	WEASEL_IPC_COMMIT_COMPOSITION,
+	WEASEL_IPC_CLEAR_COMPOSITION,
+	WEASEL_IPC_TRAY_COMMAND,
+	WEASEL_IPC_LAST_COMMAND
+};
+
 class buffer
 {
 public:
-  buffer(size_t size) : length_(0), span_(new char[ size ], size)
+  using byte = unsigned char;
+
+  buffer() : size_(), length_(), data_(nullptr)
   {
   }
-
-  ~buffer() { delete[ ] span_.data(); }
-
-  char* data() const noexcept { return span_.data(); }
-  size_t size() const noexcept { return span_.size(); }
-  size_t size_bytes() const noexcept { return span_.size_bytes(); }
-  size_t length() const noexcept { return length_; }
-  void clear() noexcept { length_ = 0; std::memset(span_.data(), 0, span_.size()); }
-
-  bool set_length(const size_t length)
+  buffer(const size_t size)
   {
-    if (length > span_.size()) return false;
-    length_ = length;
-    return true;
+    create(size);
   }
+  ~buffer() = default;
+  buffer (const buffer &) = delete;
+  buffer& operator=(const buffer&) = delete;
+  buffer (buffer &&rhs) = delete;
+  buffer& operator=(buffer &&) = delete;
 
-  bool write_bytes(const char* buf, const size_t length)
+  void create(const size_t size) noexcept
   {
-    if (length_ + length > size()) return false;
-    std::copy_n(buf, length, span_.data() + length_);
-    length_ += length;
-    return true;
+    size_ = size;
+    length_ = 0;
+    data_.reset(new byte[size+2]);
+    // for safe string/wstring
+    std::memset(data_.get(), 0, size+2);
   }
-
-  bool write_string(const std::string& s)
-  {
-    return write_bytes(s.c_str(), s.size() + 1);
-  }
-
-  bool read_bytes(std::string& out)
-  {
-    if (length_ < 1) return false;
-    span_[ length_ - 1 ] = '\0';
-    out.assign(span_.data());
-    return true;
-  }
-
-  bool write_wstring(const std::wstring& s)
-  {
-    const wchar_t* cstr = s.c_str();
-    constexpr auto f = sizeof(wchar_t) / sizeof(char);
-    const size_t len = (s.size() + 1) * sizeof(wchar_t) / sizeof(char);
-    return write_bytes(reinterpret_cast<const char*>(cstr), len);
-  }
-
-  bool read_wstring(std::wstring& out)
-  {
-    // Windows platform specific
-    if (length_ < 2) return false;
-    span_[ length_ - 1 ] = '\0';
-    span_[ length_ - 2 ] = '\0';
-    out.assign(reinterpret_cast<const wchar_t*>(span_.data()));
-    return true;
-  }
-
+  [[nodiscard]] byte* data() const noexcept { return data_.get(); }
+  [[nodiscard]] size_t size() const noexcept { return size_; }
+  [[nodiscard]] size_t length() const noexcept { return length_; }
+  bool set_length(const size_t length) noexcept { if (length > size_) return false; length_ = length; return true; }
+  void clear() noexcept { length_ = 0; std::memset(data_.get(), 0, size_); }
+  
 private:
-  size_t length_;
-  boost::span<char, boost::dynamic_extent> span_;
+  size_t size_{};
+  size_t length_{};
+  std::shared_ptr<byte[]> data_;
 };
 
-using pbuffer = std::shared_ptr<buffer>;
-using callback = std::function<void(pbuffer in, pbuffer out, bool& should_run)>;
+template <typename T>
+bool write_buffer(buffer& buf, const T* data, const size_t length)
+{
+    const size_t len_in_byte = sizeof(T) * length;
+    if (len_in_byte + buf.length() > buf.size()) return false;
+    std::memcpy(buf.data() + buf.length(), data, len_in_byte);
+    buf.set_length(buf.length() + len_in_byte);
+    return true;
+}
+
+using callback = std::function<void(buffer& in, buffer& out, bool& should_run)>;
 
 enum pipe_state
 {
@@ -101,8 +105,8 @@ public:
     ov_(ov),
     h_terminate_(h_terminate),
     cb_(std::move(cb)),
-    buf_req_(std::make_shared<buffer>(8192)),
-    buf_res_(std::make_shared<buffer>(8192)),
+    buf_req_(8192),
+    buf_res_(8192),
     valid_(true) { }
   pipe(const pipe&) = delete;
   pipe& operator=(const pipe&) = delete;
@@ -124,13 +128,11 @@ private:
   OVERLAPPED ov_;
   HANDLE h_terminate_;
   callback cb_;
-  pbuffer buf_req_;
-  pbuffer buf_res_;
+  buffer buf_req_;
+  buffer buf_res_;
   bool valid_;
   std::unique_ptr<std::thread> th_;
 };
-
-
 
 class orch
 {
@@ -144,13 +146,13 @@ public:
 
   void start(const callback& cb);
   void stop();
+  void join();
 
 private:
   void run(const callback& cb);
 
   std::wstring pipe_name_;
   std::vector<std::unique_ptr<pipe>> pipes_;
-  std::unique_ptr<std::thread> lobby_th_;
   std::atomic<bool> running_;
   HANDLE h_terminate_;
 };

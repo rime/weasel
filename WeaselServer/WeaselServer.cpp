@@ -3,118 +3,126 @@
 //	WTL MessageLoop 封装了消息循环. 实现了 getmessage/dispatchmessage....
 
 #include "stdafx.h"
-#include "resource.h"
-#include "WeaselService.h"
-#include <WeaselIPC.h>
-#include <WeaselUI.h>
-#include <RimeWithWeasel.h>
-#include <WeaselUtility.h>
-#include <winsparkle.h>
-#include <functional>
-#include <ShellScalingApi.h>
-#include <WinUser.h>
-#include <memory>
 #include <thread>
-#pragma comment(lib, "Shcore.lib")
+#include <WinUser.h>
+#include <VersionHelpers.h>
+#include <weasel/version.h>
+#include <weasel/log.h>
+#include <weasel/util.h>
+#include <WeaselUtility.h>
+#include "Util.h"
+#include "MessageDispatcher.h"
+
 CAppModule _Module;
+
+#define HAS_FLAG(x) (!wcscmp((x), lpstrCmdLine))
+
+namespace
+{
+bool debugMode = false;
+
+void quit_old_instance()
+{
+  weasel::Client c;
+  if (c.Connect()) c.ShutdownServer();
+}
+
+void parse_cmdline(LPTSTR lpstrCmdLine)
+{
+  if (HAS_FLAG(L"/debug"))
+  {
+    debugMode = true;
+  }
+  if (HAS_FLAG(L"/userdir"))
+  {
+    explore(WeaselUserDataPath());
+    ExitProcess(0);
+  }
+  if (HAS_FLAG(L"/weaseldir"))
+  {
+    explore(weasel::utils::install_dir());
+    ExitProcess(0);
+  }
+  if (HAS_FLAG(L"/q") || HAS_FLAG(L"/quit"))
+  {
+    quit_old_instance();
+    ExitProcess(0);
+  }
+  if (HAS_FLAG(L"/update"))
+  {
+    check_update();
+  }
+}
+
+void print_weasel_version()
+{
+  LOG(info, "weasel " WEASEL_BUILD_STRING);
+}
+
+void check_os_version()
+{
+  if (!IsWindows8Point1OrGreater())
+  {
+    MessageBox(NULL, L"僅支持Windows 8.1或更高版本系統", L"系統版本過低", MB_ICONERROR);
+    ExitProcess(-1);
+  }
+}
+
+void check_user()
+{
+  constexpr size_t len = _countof(L"SYSTEM");
+  WCHAR user[ MAX_PATH ] = { 0 };
+  DWORD size = len;
+  GetUserNameW(user, &size);
+  if (!_wcsicmp(user, L"SYSTEM"))
+  {
+    ExitProcess(-1);
+  }
+}
+}
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
-  AllocConsole();
-  std::thread th([]()
+  // 防止服务进程开启输入法
+  ImmDisableIME(-1);
+  parse_cmdline(lpstrCmdLine);
+#if defined(_DEBUG) || defined(DEBUG)
+  debugMode = true;
+#endif
+
+  if (debugMode) {
+    AllocConsole();
+    weasel::log::init_console();
+  }
+
+  print_weasel_version();
+  check_os_version();
+  check_user();
+  quit_old_instance();
+  // ensure user data directory exists
+  CreateDirectoryW(WeaselUserDataPath().c_str(), NULL);
+
+  HRESULT hRes = ::CoInitialize(NULL);
+  ATLASSERT(SUCCEEDED(hRes));
+  AtlInitCommonControls(ICC_BAR_CLASSES);	// add flags to support other controls
+  hRes = _Module.Init(NULL, hInstance);
+  ATLASSERT(SUCCEEDED(hRes));
+
+  int nRet;
+  try
   {
-    // Sleep(30 * 1000);
-    // ExitProcess(0);
+    RegisterApplicationRestart(NULL, 0);
+    message_dispatcher dispatcher;
+    if (nRet = dispatcher.init(); nRet != 0) throw std::exception("failed to init dispatcher");
+    nRet = dispatcher.run();
+  } catch (...)
+  {
+    // bad luck...
+    nRet = -1;
+  }
 
-  });
-	if( !IsWindowsBlueOrLaterEx() )
-	{
-		::MessageBox(NULL, L"僅支持Windows 8.1或更高版本系統", L"系統版本過低", MB_ICONERROR);
-		return 0;
-	}
-	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+  _Module.Term();
+  ::CoUninitialize();
 
-	// 防止服务进程开启输入法
-	ImmDisableIME(-1);
-
-	WCHAR user_name[20] = {0};
-	DWORD size = _countof(user_name);
-	GetUserName(user_name, &size);
-	if (!_wcsicmp(user_name, L"SYSTEM"))
-	{
-		return 1;
-	}
-
-	HRESULT hRes = ::CoInitialize(NULL);
-	// If you are running on NT 4.0 or higher you can use the following call instead to 
-	// make the EXE free threaded. This means that calls come in on a random RPC thread.
-	//HRESULT hRes = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
-	ATLASSERT(SUCCEEDED(hRes));
-
-	// this resolves ATL window thunking problem when Microsoft Layer for Unicode (MSLU) is used
-	::DefWindowProc(NULL, 0, 0, 0L);
-
-	AtlInitCommonControls(ICC_BAR_CLASSES);	// add flags to support other controls
-
-	hRes = _Module.Init(NULL, hInstance);
-	ATLASSERT(SUCCEEDED(hRes));
-
-	if (!wcscmp(L"/userdir", lpstrCmdLine))
-	{
-		CreateDirectory(WeaselUserDataPath().c_str(), NULL);
-		WeaselServerApp::explore(WeaselUserDataPath());
-		return 0;
-	}
-	if (!wcscmp(L"/weaseldir", lpstrCmdLine))
-	{
-		WeaselServerApp::explore(WeaselServerApp::install_dir());
-		return 0;
-	}
-
-	// command line option /q stops the running server
-	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);
-	// restart if already running
-	if(quit)
-	{
-		weasel::Client client;
-		if (client.Connect())  // try to connect to running server
-		{
-			client.ShutdownServer();
-		}
-		return 0;
-	}
-
-	bool check_updates = !wcscmp(L"/update", lpstrCmdLine);
-	if (check_updates)
-	{
-		WeaselServerApp::check_update();
-	}
-
-	CreateDirectory(WeaselUserDataPath().c_str(), NULL);
-
-	int nRet = 0;
-	// named mutex to ensure only one instance running
-    HANDLE hMutex = CreateMutex(NULL, FALSE, L"WeaselServerNamedMutex");
-    if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        CloseHandle(hMutex);
-		::MessageBox(NULL, L"已有算法服务實例正在運行", L"已有算法服务實例正在運行", MB_ICONINFORMATION);
-		return 0;
-	}
-	try
-	{
-		WeaselServerApp app;
-		RegisterApplicationRestart(NULL, 0);
-		nRet = app.Run();
-	}
-	catch (...)
-	{
-		// bad luck...
-		nRet = -1;
-	}
-
-	_Module.Term();
-	::CoUninitialize();
-
-	CloseHandle(hMutex);
-	return nRet;
+  return nRet;
 }

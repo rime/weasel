@@ -148,6 +148,7 @@
     <ClInclude Include="..\include\weasel\ipc.h" />
     <ClInclude Include="..\include\weasel\log.h" />
     <ClInclude Include="..\include\weasel\util.h" />
+    <ClInclude Include="..\include\weasel\version.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

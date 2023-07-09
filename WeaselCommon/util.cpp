@@ -50,12 +50,13 @@
                                      SDDL_ALL_APP_PACKAGES \
                                      SDDL_ACE_END
 
-namespace weasel
+namespace weasel::utils
 {
 
 namespace
 {
 std::wstring wusername;
+std::wstring winstall_dir;
 }
 
 SECURITY_ATTRIBUTES make_security_attributes()
@@ -79,7 +80,7 @@ SECURITY_ATTRIBUTES make_security_attributes()
 
   if (r == FALSE)
   {
-    LOG_LASTERROR("ConvertStrToSD Failed");
+    LOG_LASTERROR(err, "ConvertStrToSD Failed");
     LocalFree(pd);
     THROW_IF_WIN32_BOOL_FALSE(FALSE);
   }
@@ -101,11 +102,25 @@ std::wstring get_wusername()
 
   if (result == FALSE)
   {
-    LOG_LASTERROR("GetUserNameW failed");
+    LOG_LASTERROR(err, "GetUserNameW failed");
   }
 
   wusername = wun;
   return wusername;
+}
+
+std::wstring install_dir()
+{
+  if (!winstall_dir.empty()) return winstall_dir;
+  
+  WCHAR exe_path[MAX_PATH] = { 0 };
+  GetModuleFileNameW(GetModuleHandle(NULL), exe_path, _countof(exe_path));
+  std::wstring dir(exe_path);
+  size_t pos = dir.find_last_of(L"\\");
+  dir.resize(pos);
+
+  winstall_dir = dir;
+  return dir;
 }
 
 }

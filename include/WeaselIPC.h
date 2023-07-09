@@ -3,15 +3,12 @@
 #include <WeaselUtility.h>
 #include <windows.h>
 #include <functional>
-#include <memory>
 
 #define WEASEL_IPC_WINDOW L"WeaselIPCWindow_1.0"
 #define WEASEL_IPC_PIPE_NAME L"WeaselNamedPipe"
 
-#define WEASEL_IPC_METADATA_SIZE 1024
 #define WEASEL_IPC_BUFFER_SIZE (4 * 1024)
 #define WEASEL_IPC_BUFFER_LENGTH (WEASEL_IPC_BUFFER_SIZE / sizeof(WCHAR))
-#define WEASEL_IPC_SHARED_MEMORY_SIZE (sizeof(PipeMessage) + WEASEL_IPC_BUFFER_SIZE)
 
 enum WEASEL_IPC_COMMAND
 {	

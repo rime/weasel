@@ -2,7 +2,7 @@
 #include <wil/resource.h>
 #include <xstring>
 
-namespace weasel
+namespace weasel::utils
 {
 
 #pragma region win32
@@ -55,6 +55,7 @@ inline std::wstring utf8towcs(const std::string_view input)
 SECURITY_ATTRIBUTES make_security_attributes();
 
 std::wstring get_wusername();
+std::wstring install_dir();
 
 }
 

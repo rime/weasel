@@ -2,7 +2,7 @@
 #include <weasel/log.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-namespace weasel
+namespace weasel::log
 {
 
 namespace
@@ -10,7 +10,7 @@ namespace
 
 void init_shared()
 {
-  spdlog::set_pattern("%!(%s:%#): %v");
+  spdlog::set_pattern("%C-%m-%d %T %!(%s:%#): %v");
   spdlog::flush_on(spdlog::level::warn);
 #if defined(DEBUG) || defined(_DEBUG)
   spdlog::set_level(spdlog::level::debug);

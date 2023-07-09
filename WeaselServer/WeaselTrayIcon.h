@@ -1,10 +1,8 @@
 #pragma once
 #include <WeaselUI.h>
-#include <WeaselIPC.h>
 #include "SystemTraySDK.h"
 
-#define	WM_WEASEL_TRAY_NOTIFY (WEASEL_IPC_LAST_COMMAND + 100)
-
+#define	WM_WEASEL_TRAY_NOTIFY (weasel::WEASEL_IPC_LAST_COMMAND + 100)
 
 class WeaselTrayIcon : public CSystemTray
 {
