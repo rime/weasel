@@ -2,6 +2,7 @@
 #include "WeaselIPC.h"
 #include "WeaselTSF.h"
 #include "KeyEvent.h"
+#include "CandidateList.h"
 
 void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
@@ -18,6 +19,14 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 	}
 	else
     {
+		// cheet key code when vertical auto reverse happened, swap up and down
+		if(_cand->GetIsReposition())
+		{
+			if(ke.keycode == ibus::Up)
+				ke.keycode = ibus::Down;
+			else if(ke.keycode == ibus::Down)
+				ke.keycode = ibus::Up;
+		}
 		*pfEaten = (BOOL) m_client.ProcessKeyEvent(ke);
     }
 }

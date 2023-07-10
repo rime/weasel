@@ -54,6 +54,7 @@ public:
 	void EndUI();
 
 	com_ptr<ITfContext> GetContextDocument();
+	bool GetIsReposition(){ if(_ui) return _ui->GetIsReposition(); else return false; }
 
 	weasel::UIStyle &style();
 
