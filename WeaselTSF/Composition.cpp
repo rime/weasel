@@ -54,7 +54,10 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec)
 
 		/* set selection */
 		TF_SELECTION tfSelection;
-		pRangeComposition->Collapse(ec, TF_ANCHOR_END);
+		if(_inlinePreeditEnabled)
+			pRangeComposition->Collapse(ec, TF_ANCHOR_END);
+		else
+			pRangeComposition->Collapse(ec, TF_ANCHOR_START);
 		tfSelection.range = pRangeComposition;
 		tfSelection.style.ase = TF_AE_NONE;
 		tfSelection.style.fInterimChar = FALSE;
