@@ -285,7 +285,6 @@ void message_dispatcher::pipe_msg_converter(weasel::ipc::buffer& in, weasel::ipc
   out.clear();
 
   const pipe_message msg{in, out};
-  Sleep(1000);
   process_message(&msg);
   
   in.clear();

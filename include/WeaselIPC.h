@@ -71,7 +71,7 @@ namespace weasel
 	// IPC實現類聲明
 
 	class ClientImpl;
-	class ServerImpl;
+	// class ServerImpl;
 
 	// IPC接口類
 
@@ -119,6 +119,7 @@ namespace weasel
 		ClientImpl* m_pImpl;
 	};
 
+/*
 	class Server
 	{
 	public:
@@ -139,5 +140,6 @@ namespace weasel
 	private:
 		ServerImpl* m_pImpl;
 	};
+*/
 
 }

@@ -30,6 +30,15 @@
     <ClInclude Include="..\include\weasel\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\weasel\ipc\ipc_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\weasel\ipc\ipc_client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\weasel\ipc\ipc_msg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WeaselCommon.cpp">
@@ -45,6 +54,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\weasel\ipc_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

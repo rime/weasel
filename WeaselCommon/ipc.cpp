@@ -49,10 +49,10 @@ std::wstring get_pipe_name()
 }
 }
 
-pipe_client::pipe_client(bool expect_error)
+pipe_client::pipe_client(bool suppress_error)
   : buf_req(8192),
     buf_res(8192),
-    expect_error_(expect_error),
+    suppress_error_(suppress_error),
     fail_count_(0),
     h_pipe_(INVALID_HANDLE_VALUE),
     ov_()
@@ -63,7 +63,6 @@ pipe_client::pipe_client(bool expect_error)
 pipe_client::pipe_client() : pipe_client(false)
 {
 }
-
 
 bool pipe_client::transact()
 {
@@ -154,7 +153,7 @@ bool pipe_client::transact_internal()
     return true;
   } else
   {
-    if (expect_error_) DLOG_LASTERROR(info, "TransactNamedPipe failed");
+    if (suppress_error_) DLOG_LASTERROR(info, "TransactNamedPipe failed");
     else LOG_LASTERROR(err, "TransactNamedPipe failed");
     return false;
   }
@@ -176,7 +175,7 @@ bool pipe_client::reconnect()
     );
   if (pipe == INVALID_HANDLE_VALUE)
   {
-    if (expect_error_) DLOG_LASTERROR(info, "CreateFileW failed");
+    if (suppress_error_) DLOG_LASTERROR(info, "CreateFileW failed");
     else LOG_LASTERROR(err, "CreateFileW failed");
     return false;
   }
