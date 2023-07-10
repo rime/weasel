@@ -80,6 +80,7 @@ namespace weasel
 		UIStyle& style() { return style_; }
 		UIStyle& ostyle() { return ostyle_; }
 		PDWR pdwr() { return pDWR; }
+		bool GetIsReposition(); 
 		std::function<void(const std::wstring, const size_t index)>& selectCallback() { return _SelectCallback; }
 		void SetSelectCallback(std::function<void(const std::wstring, const size_t index)> const & func) { _SelectCallback = func; }
 

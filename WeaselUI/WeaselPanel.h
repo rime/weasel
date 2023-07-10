@@ -61,6 +61,7 @@ public:
 	void MoveTo(RECT const& rc);
 	void Refresh();
 	void DoPaint(CDCHandle dc);
+	bool GetIsReposition(){ return m_istorepos; }
 
 private:
 	void _InitFontRes(void);

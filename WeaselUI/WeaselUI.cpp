@@ -124,6 +124,14 @@ void UI::Destroy(bool full)
 	}
 }
 
+bool UI::GetIsReposition()
+{
+	if( pimpl_ ) 
+		return pimpl_->panel.GetIsReposition(); 
+	else
+		return false;
+}
+
 void UI::Show()
 {
 	if (pimpl_)
