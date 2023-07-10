@@ -784,8 +784,9 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 	char buffer[BUF_SIZE + 1] = { 0 };
 	// get font faces
 	_RimeGetStringWithFunc(config, "style/font_face", style.font_face, NULL, _RemoveSpaceAroundSep);
-	_RimeGetStringWithFunc(config, "style/label_font_face", style.label_font_face, &style.font_face, _RemoveSpaceAroundSep);
-	_RimeGetStringWithFunc(config, "style/comment_font_face", style.comment_font_face, &style.font_face, _RemoveSpaceAroundSep);
+	std::wstring* const pFallbackFontFace = initialize ? &style.font_face : NULL;
+	_RimeGetStringWithFunc(config, "style/label_font_face", style.label_font_face, pFallbackFontFace, _RemoveSpaceAroundSep);
+	_RimeGetStringWithFunc(config, "style/comment_font_face", style.comment_font_face, pFallbackFontFace, _RemoveSpaceAroundSep);
 	// able to set label font/comment font empty, force fallback to font face.
 	if (style.label_font_face.empty())
 		style.label_font_face = style.font_face;
