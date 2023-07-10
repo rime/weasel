@@ -3,19 +3,19 @@
 #include <StringAlgorithm.hpp>
 
 using namespace weasel;
+using namespace weasel::ipc;
 
 ClientImpl::ClientImpl()
 	: session_id(0),
-	  channel(GetPipeName()),
-	  is_ime(false)
+	  is_ime(false),
+    pipe(true)
 {
 	_InitializeClientInfo();
 }
 
 ClientImpl::~ClientImpl()
 {
-	if (channel.Connected())
-		Disconnect();
+  Disconnect();
 }
 
 //http://stackoverflow.com/questions/557081/how-do-i-get-the-hmodule-for-the-currently-executing-code
@@ -51,14 +51,12 @@ void ClientImpl::_InitializeClientInfo()
 
 bool ClientImpl::Connect(ServerLauncher const& launcher)
 {
-	return channel.Connect();
+	return true;
 }
 
 void ClientImpl::Disconnect()
 {
-	if (_Active())
-		EndSession();
-	channel.Disconnect();
+	if (_Active()) EndSession();
 }
 
 void ClientImpl::ShutdownServer()
@@ -140,6 +138,8 @@ void ClientImpl::StartSession()
 	if (_Active() && Echo())
 		return;
 
+  DWORD dummy;
+  write_buffer(pipe.buf_req, &dummy, 1);
 	_WriteClientInfo();
 	UINT ret = _SendMessage(WEASEL_IPC_START_SESSION, 0, 0);
 	session_id = ret;
@@ -178,25 +178,35 @@ bool ClientImpl::GetResponseData(ResponseHandler const& handler)
 		return false;
 	}
 
-	return channel.HandleResponseData(handler);
+  return handler((LPWSTR)(pipe.buf_res.data() + sizeof(DWORD)), pipe.buf_res.size() / sizeof(WCHAR));
+	// return channel.HandleResponseData(handler);
 }
 
 
 bool ClientImpl::_WriteClientInfo()
 {
-	channel << L"action=session\n";
-	channel << L"session.client_app=" << app_name.c_str() << L"\n";
-	channel << L"session.client_type=" << (is_ime ? L"ime" : L"tsf") << L"\n";
-	channel << L".\n";
+  write_buffer(pipe.buf_req, L"action=session\n");
+  write_buffer(pipe.buf_req, L"session.client_app=");
+  write_buffer(pipe.buf_req, app_name.c_str(), app_name.length());
+  write_buffer(pipe.buf_req, L"session.client_type=");
+  if (is_ime)
+    write_buffer(pipe.buf_req, L"ime");
+  else
+    write_buffer(pipe.buf_req, L"tsf");
+  write_buffer(pipe.buf_req, L"\n");
+  write_buffer(pipe.buf_req, L".\n");
 	return true;
 }
 
 
-LRESULT ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lParam)
+LRESULT ClientImpl::_SendMessage(ipc_command Msg, DWORD wParam, DWORD lParam)
 {
 	try {
 		PipeMessage req{ Msg, wParam, lParam };
-		return channel.Transact(req);
+	  auto raw_buf = reinterpret_cast<PipeMessage*>(pipe.buf_req.data());
+	  *raw_buf = req;
+	  if (pipe.buf_req.length() < sizeof(DWORD)) pipe.buf_req.set_length(sizeof(DWORD));
+    return pipe.transact();
 	}
 	catch (DWORD /* ex */) {
 		return 0;

@@ -9,8 +9,7 @@
 #define MSG_IS(type) auto msg = dynamic_cast<const type *>(message); msg != nullptr
 
 message_dispatcher::message_dispatcher()
-  : orch_(weasel::GetPipeName()),
-    handler_(std::make_unique<RimeWithWeaselHandler>())
+  : handler_(std::make_unique<RimeWithWeaselHandler>())
 {
 }
 
@@ -64,7 +63,7 @@ int message_dispatcher::run()
   // start pipe orchestrator in background
   std::thread orch_th([this]()
   {
-    this->orch_.start([this](weasel::buffer& in, weasel::buffer& out, bool &should_run)
+    this->orch_.start([this](weasel::ipc::buffer& in, weasel::ipc::buffer& out, bool &should_run)
     {
       this->pipe_msg_converter(in, out, should_run);
     });
@@ -107,6 +106,7 @@ bool message_dispatcher::process_message(const message* message)
 bool message_dispatcher::process_message(const message* message, bool lock)
 {
   using weasel::utils::install_dir;
+  using namespace weasel;
 
   if (lock) std::lock_guard lg(this->mu_);
 
@@ -168,15 +168,16 @@ bool message_dispatcher::process_message(const message* message, bool lock)
     const auto session_id = lparam;
     
     // skip for result code
-    weasel::write_buffer(*out, &res, 1);
+    weasel::ipc::write_buffer(*out, &res, 1);
 
     auto write_cb = [&](std::wstring msg) -> bool
     {
-      weasel::write_buffer(*out, msg.c_str(), msg.length());
+      weasel::ipc::write_buffer(*out, msg.c_str(), msg.length());
       // seems nobody cares about the return value
       return true;
     };
-    
+
+    using namespace weasel::ipc;
     switch (msg->in_msg->Msg)
     {
     case WEASEL_IPC_ECHO:
@@ -279,11 +280,12 @@ bool message_dispatcher::process_message(const message* message, bool lock)
   return false;
 }
 
-void message_dispatcher::pipe_msg_converter(weasel::buffer& in, weasel::buffer& out, bool& should_run)
+void message_dispatcher::pipe_msg_converter(weasel::ipc::buffer& in, weasel::ipc::buffer& out, bool& should_run)
 {
   out.clear();
 
   const pipe_message msg{in, out};
+  Sleep(1000);
   process_message(&msg);
   
   in.clear();

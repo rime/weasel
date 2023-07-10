@@ -16,14 +16,14 @@ struct menu_message : message
 
 struct pipe_message : message
 {
-  weasel::buffer* in;
+  weasel::ipc::buffer* in;
   weasel::PipeMessage* in_msg;
-  weasel::buffer::byte* in_data;
-  weasel::buffer* out;
+  weasel::ipc::buffer::byte* in_data;
+  weasel::ipc::buffer* out;
   DWORD* out_res_code;
-  weasel::buffer::byte* out_data;
+  weasel::ipc::buffer::byte* out_data;
   
-  explicit pipe_message(weasel::buffer& _in, weasel::buffer& _out) : in(&_in), out(&_out)
+  explicit pipe_message(weasel::ipc::buffer& _in, weasel::ipc::buffer& _out) : in(&_in), out(&_out)
   {
     in_msg = reinterpret_cast<weasel::PipeMessage*>(in->data());
     in_data = in->data() + sizeof(weasel::PipeMessage);

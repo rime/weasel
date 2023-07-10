@@ -10,7 +10,7 @@ namespace
 
 void init_shared()
 {
-  spdlog::set_pattern("%C-%m-%d %T %!(%s:%#): %v");
+  spdlog::set_pattern("[%^%L%$]%C-%m-%d %T %!(%s:%#): %v");
   spdlog::flush_on(spdlog::level::warn);
 #if defined(DEBUG) || defined(_DEBUG)
   spdlog::set_level(spdlog::level::debug);

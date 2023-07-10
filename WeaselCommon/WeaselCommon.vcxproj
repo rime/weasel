@@ -149,6 +149,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\include\weasel\ipc.h" />
+    <ClInclude Include="..\include\weasel\ipc\ipc_base.h" />
+    <ClInclude Include="..\include\weasel\ipc\ipc_client.h" />
+    <ClInclude Include="..\include\weasel\ipc\ipc_msg.h" />
     <ClInclude Include="..\include\weasel\log.h" />
     <ClInclude Include="..\include\weasel\util.h" />
     <ClInclude Include="..\include\weasel\version.h" />

@@ -3,6 +3,7 @@
 #include <WeaselUtility.h>
 #include <windows.h>
 #include <functional>
+#include <weasel/ipc.h>
 
 #define WEASEL_IPC_WINDOW L"WeaselIPCWindow_1.0"
 #define WEASEL_IPC_PIPE_NAME L"WeaselNamedPipe"
@@ -10,37 +11,13 @@
 #define WEASEL_IPC_BUFFER_SIZE (4 * 1024)
 #define WEASEL_IPC_BUFFER_LENGTH (WEASEL_IPC_BUFFER_SIZE / sizeof(WCHAR))
 
-enum WEASEL_IPC_COMMAND
-{	
-	WEASEL_IPC_ECHO = (WM_APP + 1),
-	WEASEL_IPC_START_SESSION,
-	WEASEL_IPC_END_SESSION,
-	WEASEL_IPC_PROCESS_KEY_EVENT,
-	WEASEL_IPC_SHUTDOWN_SERVER,
-	WEASEL_IPC_FOCUS_IN,
-	WEASEL_IPC_FOCUS_OUT,
-	WEASEL_IPC_UPDATE_INPUT_POS,
-	WEASEL_IPC_START_MAINTENANCE,
-	WEASEL_IPC_END_MAINTENANCE,
-	WEASEL_IPC_COMMIT_COMPOSITION,
-	WEASEL_IPC_CLEAR_COMPOSITION,
-	WEASEL_IPC_TRAY_COMMAND,
-	WEASEL_IPC_LAST_COMMAND
-};
 
 namespace weasel
 {
 	struct PipeMessage {
-		WEASEL_IPC_COMMAND Msg;
+		weasel::ipc::ipc_command Msg;
 		UINT wParam;
 		UINT lParam;
-	};
-
-	struct IPCMetadata
-	{
-		enum { WINDOW_CLASS_LENGTH = 64 };
-		UINT32 server_hwnd;
-		WCHAR server_window_class[WINDOW_CLASS_LENGTH];
 	};
 
 	struct KeyEvent
@@ -163,13 +140,4 @@ namespace weasel
 		ServerImpl* m_pImpl;
 	};
 
-	inline std::wstring GetPipeName()
-	{
-		std::wstring pipe_name;
-		pipe_name += L"\\\\.\\pipe\\";
-		pipe_name += getUsername();
-		pipe_name += L"\\";
-		pipe_name += WEASEL_IPC_PIPE_NAME;
-		return pipe_name;
-	}
 }

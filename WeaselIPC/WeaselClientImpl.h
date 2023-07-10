@@ -2,6 +2,8 @@
 #include <WeaselIPC.h>
 #include <PipeChannel.h>
 
+#include "weasel/ipc.h"
+
 namespace weasel
 {
 
@@ -32,17 +34,18 @@ namespace weasel
 		void _InitializeClientInfo();
 		bool _WriteClientInfo();
 
-		LRESULT _SendMessage(WEASEL_IPC_COMMAND Msg, DWORD wParam, DWORD lParam);
+		LRESULT _SendMessage(ipc::ipc_command Msg, DWORD wParam, DWORD lParam);
 
-		bool _Connected() const { return channel.Connected(); }
-		bool _Active() const { return channel.Connected() && session_id != 0; }
+		bool _Connected() const { return true; }
+		bool _Active() const { return session_id != 0; }
 
 	private:
 		UINT session_id;
 		std::wstring app_name;
 		bool is_ime;
 
-		PipeChannel<PipeMessage> channel;
+	  ipc::pipe_client pipe;
+		// PipeChannel channel;
 	};
 
 }

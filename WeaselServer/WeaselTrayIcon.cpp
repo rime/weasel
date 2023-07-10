@@ -5,6 +5,8 @@
 #include <resource.h>
 #include <weasel/ipc.h>
 
+using namespace weasel::ipc;
+
 static UINT mode_icon[] = { IDI_ZH, IDI_ZH, IDI_EN, IDI_RELOAD };
 static const WCHAR *mode_label[] = { NULL, /*L"中文"*/ NULL, /*L"西文"*/ NULL, L"維護中" };
 

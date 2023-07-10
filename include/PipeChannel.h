@@ -5,6 +5,8 @@
 #include <boost/interprocess/streams/bufferstream.hpp>
 #include <boost/thread.hpp>
 
+#include "WeaselIPC.h"
+
 namespace weasel {
 
 	class PipeChannelBase {
@@ -48,11 +50,6 @@ namespace weasel {
 
 
 	/* Pipe based IPC channel */
-	template<
-		typename _TyMsg,
-		typename _TyRes = DWORD,
-		size_t _MsgSize = sizeof(_TyMsg),
-		size_t _ResSize = sizeof(_TyRes)>
 	class PipeChannel : public PipeChannelBase
 	{
 	public:
@@ -61,13 +58,10 @@ namespace weasel {
 
 		using Ptr = std::shared_ptr<PipeChannel>;
 		using UPtr = std::unique_ptr<PipeChannel>;
-		using Msg = _TyMsg;
-		using Res = _TyRes;
-
-		enum class ChannalCommand {
-			NEW_MSG_PIPE,
-			REFRESH
-		};
+		using Msg = PipeMessage;
+		using Res = DWORD;
+		size_t _MsgSize = sizeof(PipeMessage);
+		size_t _ResSize = sizeof(DWORD);
 
 	public:
 		PipeChannel(std::wstring &&pn_cmd, SECURITY_ATTRIBUTES *s = NULL, size_t bs = 4 * 1024)
@@ -98,7 +92,7 @@ namespace weasel {
 			return *this;
 		}
 
-		_TyRes Transact(Msg &msg)
+		DWORD Transact(Msg &msg)
 		{
 			_Ensure();
 			_Send(hpipe, msg);
@@ -151,9 +145,9 @@ namespace weasel {
 			ClearBufferStream();
 		}
 
-		_TyRes _ReceiveResponse()
+		DWORD _ReceiveResponse()
 		{
-			_TyRes result;
+			DWORD result;
 			_Receive(hpipe, &result, sizeof(result));
 			return result;
 		}

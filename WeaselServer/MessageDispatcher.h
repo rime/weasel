@@ -36,8 +36,8 @@ private:
   bool process_message(const message* message);
   bool process_message(const message* message, bool lock);
   // pipe message
-  void pipe_msg_converter(weasel::buffer& in, weasel::buffer& out, bool& should_run);
-  weasel::orch orch_;
+  void pipe_msg_converter(weasel::ipc::buffer& in, weasel::ipc::buffer& out, bool& should_run);
+  weasel::ipc::orch orch_;
   
   std::unique_ptr<RimeWithWeaselHandler> handler_;
 

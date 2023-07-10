@@ -35,7 +35,6 @@ void init_console(bool to_stderr = false);
 
 #endif // defined(DEBUG) || defined(_DEBUG)
 
-
 #define LOG_LASTERROR(severity, str) LOG(severity, "{0} ({1:x})", str, GetLastError())
 #define CHECK_EQ(a, b) CHECK((a) == (b))
 #define CHECK_NE(a, b) CHECK((a) != (b))
@@ -44,12 +43,13 @@ void init_console(bool to_stderr = false);
 #define CHECK_GT(a, b) CHECK((a) > (b))
 #define CHECK_LT(a, b) CHECK((a) < (b))
 
-#define DCHECK_EQ(a, b) CHECK_EQ(a, b)
-#define DCHECK_NE(a, b) CHECK_NE(a, b)
-#define DCHECK_GE(a, b) CHECK_GE(a, b)
-#define DCHECK_LE(a, b) CHECK_LE(a, b)
-#define DCHECK_GT(a, b) CHECK_GT(a, b)
-#define DCHECK_LT(a, b) CHECK_LT(a, b)
+#define DLOG_LASTERROR(severity, str) DLOG(severity, "{0} ({1:x})", str, GetLastError())
+#define DCHECK_EQ(a, b) DCHECK((a) == (b))
+#define DCHECK_NE(a, b) DCHECK((a) != (b))
+#define DCHECK_GE(a, b) DCHECK((a) >= (b))
+#define DCHECK_LE(a, b) DCHECK((a) <= (b))
+#define DCHECK_GT(a, b) DCHECK((a) > (b))
+#define DCHECK_LT(a, b) DCHECK((a) < (b))
 
 } // namespace weasel::common::log
 
