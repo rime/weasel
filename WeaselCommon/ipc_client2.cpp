@@ -1,7 +1,6 @@
 ﻿#include "pch.h"
 #include <weasel/ipc.h>
-
-#include "log.h"
+#include <weasel/log.h>
 
 namespace weasel::ipc
 {

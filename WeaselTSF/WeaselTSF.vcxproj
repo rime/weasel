@@ -474,6 +474,10 @@
     <None Include="WeaselTSF.def" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\WeaselCommon\WeaselCommon.vcxproj">
+      <Project>{cfeb3ee1-04d8-4bf5-85a5-ed35edaaf63a}</Project>
+      <Name>WeaselCommon</Name>
+    </ProjectReference>
     <ProjectReference Include="..\WeaselIPC\WeaselIPC.vcxproj">
       <Project>{ce11a2df-8d20-4b07-a935-4b0d03f0303d}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

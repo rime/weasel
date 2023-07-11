@@ -56,6 +56,7 @@ SECURITY_ATTRIBUTES make_security_attributes();
 
 std::wstring get_wusername();
 std::wstring install_dir();
+std::wstring user_data_dir();
 
 }
 

@@ -57,6 +57,7 @@ namespace
 {
 std::wstring wusername;
 std::wstring winstall_dir;
+std::wstring wuserdata_dir;
 }
 
 SECURITY_ATTRIBUTES make_security_attributes()
@@ -113,14 +114,35 @@ std::wstring install_dir()
 {
   if (!winstall_dir.empty()) return winstall_dir;
   
-  WCHAR exe_path[MAX_PATH] = { 0 };
-  GetModuleFileNameW(GetModuleHandle(NULL), exe_path, _countof(exe_path));
-  std::wstring dir(exe_path);
-  size_t pos = dir.find_last_of(L"\\");
-  dir.resize(pos);
+  WCHAR exe_path[MAX_PATH] = {0};
+  DWORD len = GetModuleFileNameW(GetModuleHandle(NULL), exe_path, ARRAYSIZE(exe_path));
+  PWSTR start = exe_path + len;
+  while ((start > exe_path) && (*(start - 1) != '\\')) start--;
+  start[0] = L'\0';
+  
+  winstall_dir = exe_path;
+  return winstall_dir;
+}
 
-  winstall_dir = dir;
-  return dir;
+std::wstring user_data_dir()
+{
+  if (!wuserdata_dir.empty()) return wuserdata_dir;
+  WCHAR path[MAX_PATH] = {0};
+  const WCHAR key[] = LR"(Software\Rime\Weasel)";
+  wil::unique_hkey hkey;
+  auto ret = RegOpenKeyW(HKEY_CURRENT_USER, key, &hkey);
+  if (ret == ERROR_SUCCESS)
+  {
+    DWORD len = sizeof(path);
+    DWORD type = 0;
+    ret = RegQueryValueExW(hkey.get(), L"RimeUserDir", NULL, &type, reinterpret_cast<LPBYTE>(path), &len);
+    if (ret == ERROR_SUCCESS && type == REG_SZ && path[0])
+    {
+      return path;
+    }
+  }
+  ExpandEnvironmentStringsW(LR"(%AppData%\Rime)", path, ARRAYSIZE(path));
+  return path;
 }
 
 }

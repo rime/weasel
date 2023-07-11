@@ -155,7 +155,7 @@ bool message_dispatcher::process_message(const message* message, bool lock)
       explore(WeaselUserDataPath());
       break;
     default:
-      LOG(warn, "Unknown menu message(%d, %d)", msg->op, msg->session_id);
+      LOG(warn, "Unknown menu message({}, {})", msg->op, msg->session_id);
       return false;
     }
     return true;
@@ -163,9 +163,9 @@ bool message_dispatcher::process_message(const message* message, bool lock)
   else if(MSG_IS(pipe_message)) {
     // handle pipe msg
     auto out = msg->out;
-    UINT lparam = msg->in_msg->lParam, wparam = msg->in_msg->wParam;
     DWORD res = 0;
-    const auto session_id = lparam;
+    auto data = msg->in_msg->data;
+    auto session_id = msg->in_msg->session_id;
     
     // skip for result code
     weasel::ipc::write_buffer(*out, &res, 1);
@@ -178,48 +178,56 @@ bool message_dispatcher::process_message(const message* message, bool lock)
     };
 
     using namespace weasel::ipc;
-    switch (msg->in_msg->Msg)
+    switch (msg->in_msg->cmd)
     {
     case WEASEL_IPC_ECHO:
+      DLOG(debug, "WEASEL_IPC_ECHO({},{})", msg->in_msg->data, msg->in_msg->session_id);
       if (handler_ == nullptr) { res = 0; break; }
       res = handler_->FindSession(session_id);
       break;
     case WEASEL_IPC_START_SESSION:
+      DLOG(debug, "WEASEL_IPC_START_SESSION({},{})", msg->in_msg->data, msg->in_msg->session_id);
       if (handler_ == nullptr) { res = 0; break; }
       res = handler_->AddSession(reinterpret_cast<LPWSTR>(msg->in_data), write_cb); 
       break;
     case WEASEL_IPC_END_SESSION:
+      DLOG(debug, "WEASEL_IPC_END_SESSION({},{})", msg->in_msg->data, msg->in_msg->session_id);
       if (handler_ == nullptr) { res = 0; break; }
       res = handler_->RemoveSession(session_id);
       break;
     case WEASEL_IPC_PROCESS_KEY_EVENT:
+      DLOG(debug, "WEASEL_IPC_PROCESS_KEY_EVENT({},{})", msg->in_msg->data, msg->in_msg->session_id);
       {
-        weasel::KeyEvent e(wparam);
+        weasel::KeyEvent e(data);
       
         if (handler_ == nullptr) { res = 0; break; }
         res = handler_->ProcessKeyEvent(e, session_id, write_cb);
       }
       break;
     case WEASEL_IPC_SHUTDOWN_SERVER:
+      DLOG(debug, "WEASEL_IPC_SHUTDOWN_SERVER({},{})", msg->in_msg->data, msg->in_msg->session_id);
       stop();
       break;
     case WEASEL_IPC_FOCUS_IN:
+      DLOG(debug, "WEASEL_IPC_FOCUS_IN({},{})", msg->in_msg->data, msg->in_msg->session_id);
       {
-        DWORD param = wparam;
+        DWORD param = data;
       
         if (handler_ == nullptr) { res = 0; break; }
         handler_->FocusIn(param, session_id);
       }
       break;
     case WEASEL_IPC_FOCUS_OUT:
+      DLOG(debug, "WEASEL_IPC_FOCUS_OUT({},{})", msg->in_msg->data, msg->in_msg->session_id);
       {
-        DWORD param = wparam;
+        DWORD param = data;
         
         if (handler_ == nullptr) { res = 0; break; }
         handler_->FocusOut(param, session_id);
       } 
       break;
     case WEASEL_IPC_UPDATE_INPUT_POS:
+      DLOG(debug, "WEASEL_IPC_UPDATE_INPUT_POS({},{})", msg->in_msg->data, msg->in_msg->session_id);
       {
         if (handler_ == nullptr) { res = 0; break; }
         /*
@@ -236,10 +244,10 @@ bool message_dispatcher::process_message(const message* message, bool lock)
          */
         RECT rc;
         constexpr int width = 6;
-        int hi_res = (wparam >> 31) & 0x01;
-        rc.left = ((wparam & 0x7ff) - (wparam & 0x800)) << hi_res;
-        rc.top = (((wparam >> 12) & 0x7ff) - ((wparam >> 12) & 0x800)) << hi_res;
-        int height = ((wparam >> 24) & 0x7f) << hi_res;
+        int hi_res = (data >> 31) & 0x01;
+        rc.left = ((data & 0x7ff) - (data & 0x800)) << hi_res;
+        rc.top = (((data >> 12) & 0x7ff) - ((data >> 12) & 0x800)) << hi_res;
+        int height = ((data >> 24) & 0x7f) << hi_res;
         rc.right = rc.left + width;
         rc.bottom = rc.top + height;
 
@@ -247,24 +255,29 @@ bool message_dispatcher::process_message(const message* message, bool lock)
         PhysicalToLogicalPointForPerMonitorDPI(NULL, &lt);
         PhysicalToLogicalPointForPerMonitorDPI(NULL, &rb);
         rc = {lt.x, lt.y, rb.x, rb.y};
-        handler_->UpdateInputPosition(rc, lparam);
+        handler_->UpdateInputPosition(rc, session_id);
       }
       break;
     case WEASEL_IPC_START_MAINTENANCE:
+      DLOG(debug, "WEASEL_IPC_START_MAINTENANCE({},{})", msg->in_msg->data, msg->in_msg->session_id);
       if (handler_) handler_->StartMaintenance();
       break;
     case WEASEL_IPC_END_MAINTENANCE:
+      DLOG(debug, "WEASEL_IPC_END_MAINTENANCE({},{})", msg->in_msg->data, msg->in_msg->session_id);
       if (handler_) handler_->EndMaintenance();
       break;
     case WEASEL_IPC_COMMIT_COMPOSITION:
+      DLOG(debug, "WEASEL_IPC_COMMIT_COMPOSITION({},{})", msg->in_msg->data, msg->in_msg->session_id);
       if (handler_) handler_->CommitComposition(session_id);
       break;
     case WEASEL_IPC_CLEAR_COMPOSITION:
+      DLOG(debug, "WEASEL_IPC_CLEAR_COMPOSITION({},{})", msg->in_msg->data, msg->in_msg->session_id);
       if (handler_) handler_->ClearComposition(session_id);
       break;
     case WEASEL_IPC_TRAY_COMMAND:
+      DLOG(debug, "WEASEL_IPC_TRAY_COMMAND({},{})", msg->in_msg->data, msg->in_msg->session_id);
       {
-        menu_message m(wparam, lparam);
+        menu_message m(data, session_id);
         process_message(&m, false);
       }
       break;

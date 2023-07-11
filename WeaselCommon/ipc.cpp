@@ -75,7 +75,7 @@ bool pipe_client::transact()
   {
     if (!(reconnect() && transact_internal()))
     {
-      fail_count_++;
+      // fail_count_++;
       return false;
     }
   }
@@ -125,6 +125,7 @@ bool pipe_client::transact_internal()
       break;
     case WAIT_TIMEOUT:
       LOG(warn, "pipe timed out");
+      fail_count_++;
       return false;
     case WAIT_ABANDONED:
       LOG(err, "pipe may be corrupted");

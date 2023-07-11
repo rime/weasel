@@ -17,7 +17,7 @@ struct menu_message : message
 struct pipe_message : message
 {
   weasel::ipc::buffer* in;
-  weasel::PipeMessage* in_msg;
+  weasel::ipc::ipc_header* in_msg;
   weasel::ipc::buffer::byte* in_data;
   weasel::ipc::buffer* out;
   DWORD* out_res_code;
@@ -25,8 +25,8 @@ struct pipe_message : message
   
   explicit pipe_message(weasel::ipc::buffer& _in, weasel::ipc::buffer& _out) : in(&_in), out(&_out)
   {
-    in_msg = reinterpret_cast<weasel::PipeMessage*>(in->data());
-    in_data = in->data() + sizeof(weasel::PipeMessage);
+    in_msg = reinterpret_cast<weasel::ipc::ipc_header*>(in->data());
+    in_data = in->data() + sizeof(weasel::ipc::ipc_header);
     out_res_code = reinterpret_cast<DWORD*>(out->data());
     out_data = out->data() + sizeof(DWORD);
   }

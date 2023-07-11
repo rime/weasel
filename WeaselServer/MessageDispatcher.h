@@ -2,6 +2,7 @@
 #include <memory>
 #include <mutex>
 #include <weasel/ipc.h>
+#define NO_OLD_IPC
 #include "RimeWithWeasel.h"
 #include "Message.h"
 
@@ -11,7 +12,12 @@ class message_dispatcher
 {
 public:
   message_dispatcher();
-  ~message_dispatcher();
+  ~message_dispatcher() override;
+  message_dispatcher(const message_dispatcher&) = delete;
+  message_dispatcher& operator=(const message_dispatcher&) = delete;
+  message_dispatcher(message_dispatcher&&) = delete;
+  message_dispatcher& operator=(message_dispatcher&&) = delete;
+  
   int init();
   int run();
 

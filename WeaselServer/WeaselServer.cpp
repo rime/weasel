@@ -9,7 +9,6 @@
 #include <weasel/version.h>
 #include <weasel/log.h>
 #include <weasel/util.h>
-#include <WeaselUtility.h>
 #include "Util.h"
 #include "MessageDispatcher.h"
 
@@ -23,8 +22,8 @@ bool debugMode = false;
 
 void quit_old_instance()
 {
-  weasel::Client c;
-  if (c.Connect()) c.ShutdownServer();
+  weasel::ipc::client c(true);
+  c.shutdown_server();
 }
 
 void parse_cmdline(LPTSTR lpstrCmdLine)
@@ -35,7 +34,7 @@ void parse_cmdline(LPTSTR lpstrCmdLine)
   }
   if (HAS_FLAG(L"/userdir"))
   {
-    explore(WeaselUserDataPath());
+    explore(weasel::utils::user_data_dir());
     ExitProcess(0);
   }
   if (HAS_FLAG(L"/weaseldir"))
@@ -100,7 +99,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
   check_user();
   quit_old_instance();
   // ensure user data directory exists
-  CreateDirectoryW(WeaselUserDataPath().c_str(), NULL);
+  CreateDirectoryW(weasel::utils::user_data_dir().c_str(), NULL);
 
   HRESULT hRes = ::CoInitialize(NULL);
   ATLASSERT(SUCCEEDED(hRes));

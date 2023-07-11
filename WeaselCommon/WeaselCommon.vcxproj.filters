@@ -56,7 +56,7 @@
     <ClCompile Include="util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\weasel\ipc_client.cpp">
+    <ClCompile Include="ipc_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
