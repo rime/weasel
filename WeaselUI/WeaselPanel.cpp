@@ -161,7 +161,6 @@ void WeaselPanel::_InitFontRes(void)
 	dpi = dpiX;
 }
 
-#ifdef USE_MOUSE_EVENTS
 static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
 {
 	if (!hDC || !lpRect || IsRectEmpty(lpRect)) return NULL;
@@ -289,9 +288,9 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	return 0;
 }
 
-#ifdef USE_MOUSE_HOVER
 LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	if(!m_style.mouse_hover_ms) return 0;
 	CPoint point;
 	point.x = GET_X_LPARAM(lParam);
 	point.y = GET_Y_LPARAM(lParam);
@@ -312,12 +311,12 @@ LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT WeaselPanel::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (m_mouse_entry == false)
+	if (m_mouse_entry == false && m_style.mouse_hover_ms)
 	{
 		TRACKMOUSEEVENT tme;
 		tme.cbSize = sizeof(TRACKMOUSEEVENT);
 		tme.dwFlags = TME_HOVER | TME_LEAVE;
-		tme.dwHoverTime = 400; // 400 ms 
+		tme.dwHoverTime = m_style.mouse_hover_ms; // unit: ms 
 		tme.hwndTrack = m_hWnd;
 		TrackMouseEvent(&tme);
 	}
@@ -329,8 +328,6 @@ LRESULT WeaselPanel::OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	m_mouse_entry = false;
 	return 0;
 }
-#endif /*  USE_MOUSE_HOVER */
-#endif /* USE_MOUSE_EVENTS */
 
 void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, IsToRoundStruct rd = IsToRoundStruct(), COLORREF bordercolor=TRANS_COLOR)
 {
@@ -797,10 +794,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	}
 	_LayerUpdate(rcw, memDC);
 
-#ifdef USE_MOUSE_EVENTS
 	// turn off WS_EX_TRANSPARENT after drawings, for better resp performance
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, ::GetWindowLong(m_hWnd, GWL_EXSTYLE) & (~WS_EX_TRANSPARENT));
-#endif
 	// clean objs
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
