@@ -10,7 +10,7 @@
 #define RIME_REG_KEY L"Software\\Rime"
 
 #define USE_MOUSE_EVENTS
-//#define USE_MOUSE_HOVER
+#define USE_MOUSE_HOVER
 //#define USE_SHARP_COLOR_CODE
 
 //#define _DEBUG_

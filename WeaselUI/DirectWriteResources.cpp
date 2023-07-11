@@ -34,7 +34,7 @@ std::vector<std::wstring> wc_split(const wchar_t* in, const wchar_t* delim)
 	};
 }
 
-DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0) :
+DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 96) :
 	_style(style),
 	dpiScaleX_(0),
 	dpiScaleY_(0),
@@ -67,17 +67,9 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 	}
 	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), pBrush.GetAddressOf());
 	//get the dpi information
-	if (dpi == 0)
-	{
-		pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
-		dpiScaleX_ /= 72.0f;
-		dpiScaleY_ /= 72.0f;
-	}
-	else
-	{
-		dpiScaleX_ = dpi / 72.0f;
-		dpiScaleY_ = dpi / 72.0f;
-	}
+	dpiScaleX_ = dpiScaleY_ = dpi;
+	dpiScaleX_ /= 72.0f;
+	dpiScaleY_ /= 72.0f;
 
 	InitResources(style, dpi);
 }
@@ -214,7 +206,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	return hResult;
 }
 
-HRESULT DirectWriteResources::InitResources(UIStyle& style, UINT dpi = 0)
+HRESULT DirectWriteResources::InitResources(UIStyle& style, UINT dpi = 96)
 {
 	_style = style;
 	if(dpi)

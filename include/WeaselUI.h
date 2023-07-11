@@ -81,8 +81,9 @@ namespace weasel
 		UIStyle& ostyle() { return ostyle_; }
 		PDWR pdwr() { return pDWR; }
 		bool GetIsReposition(); 
-		std::function<void(const std::wstring, const size_t index)>& selectCallback() { return _SelectCallback; }
-		void SetSelectCallback(std::function<void(const std::wstring, const size_t index)> const & func) { _SelectCallback = func; }
+
+		std::function<void(size_t* const, size_t* const, bool* const)>& uiCallback() { return _UICallback; }
+		void SetUICallBack(std::function<void(size_t* const, size_t* const, bool* const)> const & func) { _UICallback = func; }
 
 	private:
 		UIImpl* pimpl_;
@@ -93,7 +94,7 @@ namespace weasel
 		Status status_;
 		UIStyle style_;
 		UIStyle ostyle_;
-		std::function<void(const std::wstring, const size_t index)> _SelectCallback;
+		std::function<void(size_t* const, size_t* const, bool* const)> _UICallback;
 	};
 
 	class DirectWriteResources
