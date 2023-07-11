@@ -13,7 +13,7 @@ inline wil::unique_event_nothrow make_manual_reset_event()
   return event;
 }
 
-inline std::string wcstoutf8(const std::wstring_view input)
+inline std::string ws_to_u8s(const std::wstring& input)
 {
   if (input.empty()) return {};
   const auto char_count = WideCharToMultiByte(
@@ -42,20 +42,35 @@ inline std::string wcstoutf8(const std::wstring_view input)
   return result;
 }
 
-inline std::wstring utf8towcs(const std::string_view input)
+inline std::wstring u8s_to_ws(const std::string& input)
 {
   if (input.empty()) return {};
 
-  auto wchar_count = MultiByteToWideChar(CP_UTF8, 0, input.data(), input.size(), nullptr, 0);
+  auto wchar_count = MultiByteToWideChar(
+    CP_UTF8,
+    0,
+    input.data(),
+    input.size(),
+    nullptr,
+    0
+  );
   std::wstring result;
   result.resize(wchar_count);
-  MultiByteToWideChar(CP_UTF8, 0, input.data(), input.size(), result.data(), result.size());
+  MultiByteToWideChar(
+    CP_UTF8,
+    0,
+    input.data(),
+    input.size(),
+    result.data(),
+    result.size()
+  );
 }
 
 SECURITY_ATTRIBUTES make_security_attributes();
 
 std::wstring get_wusername();
 std::wstring install_dir();
+std::wstring shared_data_dir();
 std::wstring user_data_dir();
 
 }

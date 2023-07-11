@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include <weasel/ipc.h>
 #include <weasel/log.h>
 
@@ -122,16 +122,16 @@ void client::update_input_position(const RECT& rc)
 {
   if (!active()) return;
 	/*
-	ÒÆÎ»±êÖ¾ = 1bit == 0
+	ç§»ä½æ ‡å¿— = 1bit == 0
 	height:0~127 = 7bit
-	top:-2048~2047 = 12bit£¨ÓÐ·ûºÅ£©
-	left:-2048~2047 = 12bit£¨ÓÐ·ûºÅ£©
+	top:-2048~2047 = 12bitï¼ˆæœ‰ç¬¦å·ï¼‰
+	left:-2048~2047 = 12bitï¼ˆæœ‰ç¬¦å·ï¼‰
 
-	¸ß½âÎö¶ÈÏÂ£º
-	ÒÆÎ»±êÖ¾ = 1bit == 1
-	height:0~254 = 7bit£¨ÉáÆúµÍ1Î»£©
-	top:-4096~4094 = 12bit£¨ÓÐ·ûºÅ£¬ÉáÆúµÍ1Î»£©
-	left:-4096~4094 = 12bit£¨ÓÐ·ûºÅ£¬ÉáÆúµÍ1Î»£©
+	é«˜è§£æžåº¦ä¸‹ï¼š
+	ç§»ä½æ ‡å¿— = 1bit == 1
+	height:0~254 = 7bitï¼ˆèˆå¼ƒä½Ž1ä½ï¼‰
+	top:-4096~4094 = 12bitï¼ˆæœ‰ç¬¦å·ï¼Œèˆå¼ƒä½Ž1ä½ï¼‰
+	left:-4096~4094 = 12bitï¼ˆæœ‰ç¬¦å·ï¼Œèˆå¼ƒä½Ž1ä½ï¼‰
 	*/
 	int hi_res = (rc.bottom - rc.top >= 128 || rc.left < -2048 || rc.left >= 2048 || rc.top < -2048 || rc.top >= 2048);
 	int left = std::max(-2048, std::min(2047, static_cast<int>(rc.left >> hi_res)));

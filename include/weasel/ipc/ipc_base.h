@@ -12,6 +12,8 @@
 #define WEASEL_IPC_PIPE_NAME L"WeaselNamedPipe"
 #define WEASEL_IPC_BUFFER_LENGTH 8192 // bytes
 
+using session_id_t = uint32_t;
+
 namespace weasel::ipc
 {
 

@@ -124,6 +124,11 @@ std::wstring install_dir()
   return winstall_dir;
 }
 
+std::wstring shared_data_dir()
+{
+  return install_dir() + L"\\data";
+}
+
 std::wstring user_data_dir()
 {
   if (!wuserdata_dir.empty()) return wuserdata_dir;

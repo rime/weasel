@@ -23,4 +23,9 @@ struct key_event
 };
 #pragma pack(pop)
 
+namespace msg
+{
+
+}
+
 }

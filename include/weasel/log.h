@@ -14,7 +14,6 @@ void init_console(bool to_stderr = false);
 
 #else // WEASEL_NO_LOGGING
 
-// #define LOG(severity, ...) spdlog::severity(__VA_ARGS__)
 #define LOG(severity, ...) spdlog::default_logger_raw()->log(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, spdlog::level::severity, __VA_ARGS__)
 #define CHECK(cond, ...)       \
   (cond) ?                     \

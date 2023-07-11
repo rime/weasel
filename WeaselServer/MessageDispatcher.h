@@ -2,7 +2,6 @@
 #include <memory>
 #include <mutex>
 #include <weasel/ipc.h>
-#define NO_OLD_IPC
 #include "RimeWithWeasel.h"
 #include "Message.h"
 
