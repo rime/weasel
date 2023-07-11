@@ -6,7 +6,14 @@
 #include "Util.h"
 #include "resource.h"
 
+// #define DEBUG_LOG_PIPE_MSG
+
 #define MSG_IS(type) auto msg = dynamic_cast<const type *>(message); msg != nullptr
+#ifdef DEBUG_LOG_PIPE_MSG
+#define LOG_PIPE_MSG(x) DLOG(debug, x "({},{})", msg->in_msg->data, msg->in_msg->session_id);
+#else
+#define LOG_PIPE_MSG(x) (void)0
+#endif
 
 message_dispatcher::message_dispatcher()
   : handler_(std::make_unique<RimeWithWeaselHandler>())
@@ -181,22 +188,22 @@ bool message_dispatcher::process_message(const message* message, bool lock)
     switch (msg->in_msg->cmd)
     {
     case WEASEL_IPC_ECHO:
-      DLOG(debug, "WEASEL_IPC_ECHO({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_ECHO");
       if (handler_ == nullptr) { res = 0; break; }
       res = handler_->FindSession(session_id);
       break;
     case WEASEL_IPC_START_SESSION:
-      DLOG(debug, "WEASEL_IPC_START_SESSION({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_START_SESSION");
       if (handler_ == nullptr) { res = 0; break; }
       res = handler_->AddSession(reinterpret_cast<LPWSTR>(msg->in_data), write_cb); 
       break;
     case WEASEL_IPC_END_SESSION:
-      DLOG(debug, "WEASEL_IPC_END_SESSION({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_END_SESSION");
       if (handler_ == nullptr) { res = 0; break; }
       res = handler_->RemoveSession(session_id);
       break;
     case WEASEL_IPC_PROCESS_KEY_EVENT:
-      DLOG(debug, "WEASEL_IPC_PROCESS_KEY_EVENT({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_PROCESS_KEY_EVENT");
       {
         weasel::KeyEvent e(data);
       
@@ -205,11 +212,11 @@ bool message_dispatcher::process_message(const message* message, bool lock)
       }
       break;
     case WEASEL_IPC_SHUTDOWN_SERVER:
-      DLOG(debug, "WEASEL_IPC_SHUTDOWN_SERVER({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_SHUTDOWN_SERVER");
       stop();
       break;
     case WEASEL_IPC_FOCUS_IN:
-      DLOG(debug, "WEASEL_IPC_FOCUS_IN({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_FOCUS_IN");
       {
         DWORD param = data;
       
@@ -218,7 +225,7 @@ bool message_dispatcher::process_message(const message* message, bool lock)
       }
       break;
     case WEASEL_IPC_FOCUS_OUT:
-      DLOG(debug, "WEASEL_IPC_FOCUS_OUT({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_FOCUS_OUT");
       {
         DWORD param = data;
         
@@ -227,7 +234,7 @@ bool message_dispatcher::process_message(const message* message, bool lock)
       } 
       break;
     case WEASEL_IPC_UPDATE_INPUT_POS:
-      DLOG(debug, "WEASEL_IPC_UPDATE_INPUT_POS({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_UPDATE_INPUT_POS");
       {
         if (handler_ == nullptr) { res = 0; break; }
         /*
@@ -259,23 +266,23 @@ bool message_dispatcher::process_message(const message* message, bool lock)
       }
       break;
     case WEASEL_IPC_START_MAINTENANCE:
-      DLOG(debug, "WEASEL_IPC_START_MAINTENANCE({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_START_MAINTENANCE");
       if (handler_) handler_->StartMaintenance();
       break;
     case WEASEL_IPC_END_MAINTENANCE:
-      DLOG(debug, "WEASEL_IPC_END_MAINTENANCE({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_END_MAINTENANCE");
       if (handler_) handler_->EndMaintenance();
       break;
     case WEASEL_IPC_COMMIT_COMPOSITION:
-      DLOG(debug, "WEASEL_IPC_COMMIT_COMPOSITION({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_COMMIT_COMPOSITION");
       if (handler_) handler_->CommitComposition(session_id);
       break;
     case WEASEL_IPC_CLEAR_COMPOSITION:
-      DLOG(debug, "WEASEL_IPC_CLEAR_COMPOSITION({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_CLEAR_COMPOSITION");
       if (handler_) handler_->ClearComposition(session_id);
       break;
     case WEASEL_IPC_TRAY_COMMAND:
-      DLOG(debug, "WEASEL_IPC_TRAY_COMMAND({},{})", msg->in_msg->data, msg->in_msg->session_id);
+      LOG_PIPE_MSG("WEASEL_IPC_TRAY_COMMAND");
       {
         menu_message m(data, session_id);
         process_message(&m, false);
