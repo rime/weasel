@@ -287,7 +287,7 @@ bool message_dispatcher::process_message(const message* message, bool lock)
     return true;
   } else
   {
-    DLOG(err, "Unknown message type {}", typeid(message).name());
+    DLOG(err, "Unknown message type {}", typeid(*message).name());
   }
   
   return false;

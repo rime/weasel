@@ -5,301 +5,94 @@
 using namespace weasel;
 using namespace weasel::ipc;
 
-ClientImpl::ClientImpl()
-	: session_id(0),
-	  is_ime(false),
-    pipe(true)
-{
-	_InitializeClientInfo();
-}
-
-ClientImpl::~ClientImpl()
-{
-  Disconnect();
-}
-
-//http://stackoverflow.com/questions/557081/how-do-i-get-the-hmodule-for-the-currently-executing-code
-HMODULE GetCurrentModule()
-{ // NB: XP+ solution!
-  HMODULE hModule = NULL;
-  GetModuleHandleEx(
-    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-    (LPCTSTR)GetCurrentModule,
-    &hModule);
-
-  return hModule;
-}
-
-void ClientImpl::_InitializeClientInfo()
-{
-	// get app name
-	WCHAR exe_path[MAX_PATH] = {0};
-	GetModuleFileName(NULL, exe_path, MAX_PATH);
-	std::wstring path = exe_path;
-	size_t separator_pos = path.find_last_of(L"\\/");
-	if (separator_pos < path.size())
-		app_name = path.substr(separator_pos + 1);
-	else
-		app_name = path;
-	to_lower(app_name);
-	// determine client type
-	GetModuleFileName(GetCurrentModule(), exe_path, MAX_PATH);
-	path = exe_path;
-	to_lower(path);
-	is_ime = ends_with(path, L".ime");
-}
-
-bool ClientImpl::Connect(ServerLauncher const& launcher)
-{
-	return true;
-}
-
-void ClientImpl::Disconnect()
-{
-	if (_Active()) EndSession();
-}
-
-void ClientImpl::ShutdownServer()
-{
-	_SendMessage(WEASEL_IPC_SHUTDOWN_SERVER, 0, 0);
-}
-
-bool ClientImpl::ProcessKeyEvent(KeyEvent const& keyEvent)
-{
-	if (!_Active())
-		return false;
-
-	LRESULT ret = _SendMessage(WEASEL_IPC_PROCESS_KEY_EVENT, keyEvent, session_id);
-	return ret != 0;
-}
-
-bool ClientImpl::CommitComposition()
-{
-	if (!_Active())
-		return false;
-
-	LRESULT ret = _SendMessage(WEASEL_IPC_COMMIT_COMPOSITION, 0, session_id);
-	return ret != 0;
-}
-
-bool ClientImpl::ClearComposition()
-{
-	if (!_Active())
-		return false;
-
-	LRESULT ret = _SendMessage(WEASEL_IPC_CLEAR_COMPOSITION, 0, session_id);
-	return ret != 0;
-}
-
-void ClientImpl::UpdateInputPosition(RECT const& rc)
-{
-	if (!_Active())
-		return;
-	/*
-	移位标志 = 1bit == 0
-	height:0~127 = 7bit
-	top:-2048~2047 = 12bit（有符号）
-	left:-2048~2047 = 12bit（有符号）
-
-	高解析度下：
-	移位标志 = 1bit == 1
-	height:0~254 = 7bit（舍弃低1位）
-	top:-4096~4094 = 12bit（有符号，舍弃低1位）
-	left:-4096~4094 = 12bit（有符号，舍弃低1位）
-	*/
-	int hi_res = static_cast<int>(rc.bottom - rc.top >= 128 || 
-		rc.left < -2048 || rc.left >= 2048 || rc.top < -2048 || rc.top >= 2048);
-	int left = max(-2048, min(2047, rc.left >> hi_res));
-	int top = max(-2048, min(2047, rc.top >> hi_res));
-	int height = max(0, min(127, (rc.bottom - rc.top) >> hi_res));
-	DWORD compressed_rect = ((hi_res & 0x01) << 31) | ((height & 0x7f) << 24) | 
-		                    ((top & 0xfff) << 12) | (left & 0xfff);
-	_SendMessage(WEASEL_IPC_UPDATE_INPUT_POS, compressed_rect, session_id);
-}
-
-void ClientImpl::FocusIn()
-{
-	DWORD client_caps = 0;  /* TODO */
-	_SendMessage(WEASEL_IPC_FOCUS_IN, client_caps, session_id);
-}
-
-void ClientImpl::FocusOut()
-{
-	_SendMessage(WEASEL_IPC_FOCUS_OUT, 0, session_id);
-}
-
-void ClientImpl::TrayCommand(UINT menuId)
-{
-	_SendMessage(WEASEL_IPC_TRAY_COMMAND, menuId, session_id);
-}
-
-void ClientImpl::StartSession()
-{
-	if (_Active() && Echo())
-		return;
-
-  DWORD dummy;
-  write_buffer(pipe.buf_req, &dummy, 1);
-	_WriteClientInfo();
-	UINT ret = _SendMessage(WEASEL_IPC_START_SESSION, 0, 0);
-	session_id = ret;
-}
-
-void ClientImpl::EndSession()
-{
-	_SendMessage(WEASEL_IPC_END_SESSION, 0, session_id);
-	session_id = 0;
-}
-
-void ClientImpl::StartMaintenance()
-{
-	_SendMessage(WEASEL_IPC_START_MAINTENANCE, 0, 0);
-	session_id = 0;
-}
-
-void ClientImpl::EndMaintenance()
-{
-	_SendMessage(WEASEL_IPC_END_MAINTENANCE, 0, 0);
-	session_id = 0;
-}
-
-bool ClientImpl::Echo()
-{
-	if (!_Active())
-		return false;
-
-	UINT serverEcho = _SendMessage(WEASEL_IPC_ECHO, 0, session_id);
-	return (serverEcho == session_id);
-}
-
-bool ClientImpl::GetResponseData(ResponseHandler const& handler)
-{
-	if (!handler) {
-		return false;
-	}
-
-  return handler((LPWSTR)(pipe.buf_res.data() + sizeof(DWORD)), pipe.buf_res.size() / sizeof(WCHAR));
-	// return channel.HandleResponseData(handler);
-}
-
-
-bool ClientImpl::_WriteClientInfo()
-{
-  write_buffer(pipe.buf_req, L"action=session\n");
-  write_buffer(pipe.buf_req, L"session.client_app=");
-  write_buffer(pipe.buf_req, app_name.c_str(), app_name.length());
-  write_buffer(pipe.buf_req, L"session.client_type=");
-  if (is_ime)
-    write_buffer(pipe.buf_req, L"ime");
-  else
-    write_buffer(pipe.buf_req, L"tsf");
-  write_buffer(pipe.buf_req, L"\n");
-  write_buffer(pipe.buf_req, L".\n");
-	return true;
-}
-
-
-LRESULT ClientImpl::_SendMessage(ipc_command Msg, DWORD wParam, DWORD lParam)
-{
-	try {
-		PipeMessage req{ Msg, wParam, lParam };
-	  auto raw_buf = reinterpret_cast<PipeMessage*>(pipe.buf_req.data());
-	  *raw_buf = req;
-	  if (pipe.buf_req.length() < sizeof(DWORD)) pipe.buf_req.set_length(sizeof(DWORD));
-    return pipe.transact();
-	}
-	catch (DWORD /* ex */) {
-		return 0;
-	}
-}
-
-
 Client::Client() 
-	: m_pImpl(new ClientImpl())
+	: client_(new client())
 {}
 
 Client::~Client()
 {
-	if (m_pImpl)
-		delete m_pImpl;
+  if (client_)
+  {
+    delete client_;
+    client_ = nullptr;
+  }
 }
 
 bool Client::Connect(ServerLauncher launcher)
 {
-	return m_pImpl->Connect(launcher);
+  return true;
 }
 
 void Client::Disconnect()
 {
-	m_pImpl->Disconnect();
 }
 
 void Client::ShutdownServer()
 {
-	m_pImpl->ShutdownServer();
+  client_->shutdown_server();
 }
 
 bool Client::ProcessKeyEvent(KeyEvent const& keyEvent)
 {
-	return m_pImpl->ProcessKeyEvent(keyEvent);
+  return client_->process_key_event(keyEvent);
 }
 
 bool Client::CommitComposition()
 {
-	return m_pImpl->CommitComposition();
+  return client_->commit_composition();
 }
 
 bool Client::ClearComposition()
 {
-	return m_pImpl->ClearComposition();
+  return client_->clear_composition();
 }
 
 void Client::UpdateInputPosition(RECT const& rc)
 {
-	m_pImpl->UpdateInputPosition(rc);
+  return client_->update_input_position(rc);
 }
 
 void Client::FocusIn()
 {
-	m_pImpl->FocusIn();
+  client_->focus_in();
 }
 
 void Client::FocusOut()
 {
-	m_pImpl->FocusOut();
+  client_->focus_out();
 }
 
 void Client::StartSession()
 {
-	m_pImpl->StartSession();
+  client_->start_session();
 }
 
 void Client::EndSession()
 {
-	m_pImpl->EndSession();
+  client_->end_session();
 }
 
 void Client::StartMaintenance()
 {
-	m_pImpl->StartMaintenance();
+  client_->start_maintenance();
 }
 
 void Client::EndMaintenance()
 {
-	m_pImpl->EndMaintenance();
+  client_->end_maintenance();
 }
 
 void Client::TrayCommand(UINT menuId)
 {
-	m_pImpl->TrayCommand(menuId);
+  client_->tray_command(menuId);
 }
 
 bool Client::Echo()
 {
-	return m_pImpl->Echo();
+  return client_->echo();
 }
 
 bool Client::GetResponseData(ResponseHandler handler)
 {
-	return m_pImpl->GetResponseData(handler);
+  return client_->get_response_data(handler);
 }

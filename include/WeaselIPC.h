@@ -5,36 +5,10 @@
 #include <functional>
 #include <weasel/ipc.h>
 
-#define WEASEL_IPC_WINDOW L"WeaselIPCWindow_1.0"
-#define WEASEL_IPC_PIPE_NAME L"WeaselNamedPipe"
-
-#define WEASEL_IPC_BUFFER_SIZE (4 * 1024)
-#define WEASEL_IPC_BUFFER_LENGTH (WEASEL_IPC_BUFFER_SIZE / sizeof(WCHAR))
-
-
 namespace weasel
 {
-	struct PipeMessage {
-		weasel::ipc::ipc_command Msg;
-		UINT wParam;
-		UINT lParam;
-	};
-
-	struct KeyEvent
-	{
-		UINT keycode : 16;
-		UINT mask : 16;
-		KeyEvent() : keycode(0), mask(0) {}
-		KeyEvent(UINT _keycode, UINT _mask) : keycode(_keycode), mask(_mask) {}
-		KeyEvent(UINT x)
-		{
-			*reinterpret_cast<UINT*>(this) = x;
-		}
-		operator UINT32 const() const
-		{
-			return *reinterpret_cast<UINT32 const*>(this);
-		}
-	};
+  using PipeMessage = weasel::ipc::ipc_header;
+  using KeyEvent = weasel::ipc::key_event;
 
 	// 處理請求之物件
 	struct RequestHandler
@@ -66,12 +40,6 @@ namespace weasel
 
 	// 啟動服務進程之物件
 	typedef CommandHandler ServerLauncher;
-
-
-	// IPC實現類聲明
-
-	class ClientImpl;
-	// class ServerImpl;
 
 	// IPC接口類
 
@@ -116,30 +84,6 @@ namespace weasel
 		bool GetResponseData(ResponseHandler handler);
 
 	private:
-		ClientImpl* m_pImpl;
+		weasel::ipc::client* client_;
 	};
-
-/*
-	class Server
-	{
-	public:
-		Server();
-		virtual ~Server();
-
-		// 初始化服务
-		int Start();
-		// 结束服务
-		int Stop();
-		// 消息循环
-		int Run();
-
-		void SetRequestHandler(RequestHandler* pHandler);
-		void AddMenuHandler(UINT uID, CommandHandler handler);
-		HWND GetHWnd();
-
-	private:
-		ServerImpl* m_pImpl;
-	};
-*/
-
 }

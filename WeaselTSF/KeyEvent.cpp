@@ -38,7 +38,7 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 	ibus::Keycode code = TranslateKeycode(vkey, kinfo);
 	if (code)
 	{
-		result.keycode = code;
+		result.key_code = code;
 		return true;
 	}
 
@@ -52,11 +52,11 @@ bool ConvertKeyEvent(UINT vkey, KeyInfo kinfo, const LPBYTE keyState, weasel::Ke
 	int ret = ToUnicodeEx(vkey, UINT(kinfo), table, buf, buf_len, 0, NULL);
 	if (ret == 1)
 	{
-		result.keycode = UINT(buf[0]);
+		result.key_code = UINT(buf[0]);
 		return true;
 	}
 
-	result.keycode = 0;
+	result.key_code = 0;
 	return false;
 }
 

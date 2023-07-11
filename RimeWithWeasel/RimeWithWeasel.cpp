@@ -177,10 +177,10 @@ namespace ibus
 
 BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, EatLine eat)
 {
-	DLOG(INFO) << "Process key event: keycode = " << keyEvent.keycode << ", mask = " << keyEvent.mask
+	DLOG(INFO) << "Process key event: keycode = " << keyEvent.key_code << ", mask = " << keyEvent.mask
 		 << ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
-	Bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
+	Bool handled = RimeProcessKey(session_id, keyEvent.key_code, expand_ibus_modifier(keyEvent.mask));
 	_Respond(session_id, eat);
 	_UpdateUI(session_id);
 	m_active_session = session_id;
