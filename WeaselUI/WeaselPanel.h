@@ -119,5 +119,5 @@ private:
 	bool hide_candidates;
 	// for multi font_face & font_point
 	PDWR pDWR;
-	std::function<void(const std::wstring, const size_t index)>& _SelectCallback;
+	std::function<void(size_t *const, size_t *const, bool *const)>& _UICallback;
 };
