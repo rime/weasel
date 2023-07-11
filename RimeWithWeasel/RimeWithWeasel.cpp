@@ -806,6 +806,7 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 		style.font_point = 12;
 	_RimeGetIntWithFallback(config, "style/label_font_point", &style.label_font_point, "style/font_point", _abs);
 	_RimeGetIntWithFallback(config, "style/comment_font_point", &style.comment_font_point, "style/font_point", _abs);
+	_RimeGetIntWithFallback(config, "style/mouse_hover_ms", &style.mouse_hover_ms, NULL, _abs);
 	_RimeGetBool(config, "style/inline_preedit", initialize, style.inline_preedit, true, false);
 	_RimeGetBool(config, "style/vertical_auto_reverse", initialize, style.vertical_auto_reverse, true, false);
 	const std::map<std::string, UIStyle::PreeditType> _preeditMap = { 

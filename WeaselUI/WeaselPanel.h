@@ -28,32 +28,24 @@ public:
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 		MESSAGE_HANDLER(WM_DPICHANGED, OnDpiChanged)
-#ifdef USE_MOUSE_EVENTS
 		MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLeftClicked)
 		MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
-#ifdef USE_MOUSE_HOVER
 		MESSAGE_HANDLER(WM_MOUSEHOVER, OnMouseHover)
 		MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
 		MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
-#endif /*  USE_MOUSE_HOVER */
-#endif /* USE_MOUSE_EVENTS */
 		CHAIN_MSG_MAP(CDoubleBufferImpl<WeaselPanel>)
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-#ifdef USE_MOUSE_EVENTS
 	LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-#ifdef USE_MOUSE_HOVER
 	LRESULT OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-#endif /*  USE_MOUSE_HOVER */
-#endif	/* USE_MOUSE_EVENTS */
 
 	WeaselPanel(weasel::UI &ui);
 	~WeaselPanel();
@@ -65,12 +57,8 @@ public:
 
 private:
 	void _InitFontRes(void);
-#ifdef USE_MOUSE_EVENTS
 	void _CaptureRect(CRect& rect);
-#ifdef USE_MOUSE_HOVER
 	bool m_mouse_entry = false;
-#endif /*  USE_MOUSE_HOVER */
-#endif	/* USE_MOUSE_EVENTS */
 	void _CreateLayout();
 	void _ResizeWindow();
 	void _RepositionWindow(bool adj = false);

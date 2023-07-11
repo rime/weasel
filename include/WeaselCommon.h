@@ -9,8 +9,6 @@
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
 
-#define USE_MOUSE_EVENTS
-#define USE_MOUSE_HOVER
 //#define USE_SHARP_COLOR_CODE
 
 //#define _DEBUG_
@@ -285,6 +283,7 @@ namespace weasel
 		std::wstring font_face;
 		std::wstring label_font_face;
 		std::wstring comment_font_face;
+		int mouse_hover_ms;
 		int font_point;
 		int label_font_point;
 		int comment_font_point;
@@ -347,6 +346,7 @@ namespace weasel
 		UIStyle() : font_face(),
 			label_font_face(),
 			comment_font_face(),
+			mouse_hover_ms(0),
 			font_point(0),
 			label_font_point(0),
 			comment_font_point(0),
@@ -421,6 +421,7 @@ namespace weasel
 					|| font_face != st.font_face
 					|| label_font_face != st.label_font_face
 					|| comment_font_face != st.comment_font_face
+					|| mouse_hover_ms != st.mouse_hover_ms
 					|| font_point != st.font_point
 					|| label_font_point != st.label_font_point
 					|| comment_font_point != st.comment_font_point
@@ -486,6 +487,7 @@ namespace boost {
 			ar & s.font_face;
 			ar & s.label_font_face;
 			ar & s.comment_font_face;
+			ar & s.mouse_hover_ms;
 			ar & s.font_point;
 			ar & s.label_font_point;
 			ar & s.comment_font_point;
