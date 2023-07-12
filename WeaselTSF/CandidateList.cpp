@@ -7,9 +7,9 @@ using namespace std;
 using namespace weasel;
 
 CCandidateList::CCandidateList(com_ptr<WeaselTSF> pTextService)
-	: _tsf(pTextService)
+	: _ui(make_unique<UI>())
+	, _tsf(pTextService)
 	, _pbShow(TRUE)
-	, shown_(false)
 {
 	_cRef = 1;
 }
@@ -85,20 +85,16 @@ STDMETHODIMP CCandidateList::GetGUID(GUID * pguid)
 
 STDMETHODIMP CCandidateList::Show(BOOL showCandidateWindow)
 {
-	shown_ = showCandidateWindow;
-	/*
 	if (showCandidateWindow)
 		_ui->Show();
 	else
 		_ui->Hide();
-	*/
 	return S_OK;
 }
 
 STDMETHODIMP CCandidateList::IsShown(BOOL * pIsShow)
 {
-	// *pIsShow = _ui->IsShown();
-	*pIsShow = shown_;
+	*pIsShow = _ui->IsShown();
 	return S_OK;
 }
 
@@ -128,23 +124,20 @@ STDMETHODIMP CCandidateList::GetDocumentMgr(ITfDocumentMgr ** ppdim)
 
 STDMETHODIMP CCandidateList::GetCount(UINT * pCandidateCount)
 {
-	// *pCandidateCount = _ui->ctx().cinfo.candies.size();
-	*pCandidateCount = ctx_.cinfo.candies.size();
+	*pCandidateCount = _ui->ctx().cinfo.candies.size();
 	return S_OK;
 }
 
 STDMETHODIMP CCandidateList::GetSelection(UINT * pSelectedCandidateIndex)
 {
-	// *pSelectedCandidateIndex = _ui->ctx().cinfo.highlighted;
-	*pSelectedCandidateIndex = ctx_.cinfo.highlighted;
+	*pSelectedCandidateIndex = _ui->ctx().cinfo.highlighted;
 	return S_OK;
 }
 
 STDMETHODIMP CCandidateList::GetString(UINT uIndex, BSTR * pbstr)
 {
 	*pbstr = nullptr;
-	// auto &cinfo = _ui->ctx().cinfo;
-	auto& cinfo = ctx_.cinfo;
+	auto &cinfo = _ui->ctx().cinfo;
 	if (uIndex >= cinfo.candies.size())
 		return E_INVALIDARG;
 
@@ -230,7 +223,6 @@ STDMETHODIMP CCandidateList::FinalizeExactCompositionString()
 
 void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 {
-	/*
 	if (_ui->style().inline_preedit) {
 		_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
 	}
@@ -242,7 +234,6 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 	/// if it is owned by active view window
 	//_UpdateOwner();
 	_ui->Update(ctx, status);
-	*/
 	if (_pbShow == FALSE)
 		_UpdateUIElement();
 
@@ -254,12 +245,12 @@ void CCandidateList::UpdateUI(const Context & ctx, const Status & status)
 
 void CCandidateList::UpdateStyle(const UIStyle & sty)
 {
-	// _ui->style() = sty;
+	_ui->style() = sty;
 }
 
 void CCandidateList::UpdateInputPosition(RECT const & rc)
 {
-	// _ui->UpdateInputPosition(rc);
+	_ui->UpdateInputPosition(rc);
 }
 
 void CCandidateList::Destroy()
@@ -338,7 +329,7 @@ void CCandidateList::StartUI()
 	//pUIElementMgr->UpdateUIElement(uiid);
 	if (_pbShow)
 	{
-		// _ui->style() = _style;
+		_ui->style() = _style;
 		_MakeUIWindow();
 	}
 }
@@ -362,19 +353,16 @@ com_ptr<ITfContext> CCandidateList::GetContextDocument()
 
 void CCandidateList::_DisposeUIWindow()
 {
-	/*
 	if (_ui == nullptr)
 	{
 		return;
 	}
 
 	_ui->Destroy();
-	*/
 }
 
 void CCandidateList::_DisposeUIWindowAll()
 {
-	/*
 	if (_ui == nullptr)
 	{
 		return;
@@ -382,13 +370,12 @@ void CCandidateList::_DisposeUIWindowAll()
 
 	// call _ui->DestroyAll() to clean resources
 	_ui->Destroy(true);
-	*/
 }
 
 void CCandidateList::_MakeUIWindow()
 {
 	HWND p = _GetActiveWnd();
-	// _ui->Create(p);
+	_ui->Create(p);
 }
 
 void WeaselTSF::_UpdateUI(const Context & ctx, const Status & status)
