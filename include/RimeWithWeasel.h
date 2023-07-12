@@ -5,6 +5,8 @@
 
 #include <rime_api.h>
 
+#include "WeaselUI.h"
+
 typedef std::map<std::string, bool> AppOptions;
 typedef std::map<std::string, AppOptions> AppOptionsByAppName;
 class RimeWithWeaselHandler :
@@ -47,7 +49,7 @@ private:
 	void _UpdateInlinePreeditStatus(UINT session_id);
 
 	AppOptionsByAppName m_app_options;
-	// weasel::UI* m_ui;  // reference
+	weasel::UI* m_ui;  // reference
 	UINT m_active_session;
 	bool m_disabled;
 	std::string m_last_schema_id;

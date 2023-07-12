@@ -34,7 +34,8 @@ int expand_ibus_modifier(int m)
 }
 
 RimeWithWeaselHandler::RimeWithWeaselHandler()
-	: m_active_session(0)
+	: m_ui(new weasel::UI)
+  , m_active_session(0)
 	, m_disabled(true)
 	, _UpdateUICallback(NULL)
 {
@@ -45,8 +46,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
 }
 
-void _UpdateUIStyle(RimeConfig* config, bool initialize);
-// void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
+void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, std::string color = "");
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
@@ -97,13 +97,11 @@ void RimeWithWeaselHandler::Initialize()
 	RimeConfig config = { NULL };
 	if (RimeConfigOpen("weasel", &config))
 	{
-		/*
 		if (m_ui)
 		{
 			_UpdateUIStyle(&config, m_ui, true);
 			m_base_style = m_ui->style();
 		}
-		*/
 		_LoadAppOptions(&config, m_app_options);
 		RimeConfigClose(&config);
 	}
@@ -294,8 +292,8 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 	// ime | tsf
 	RimeSetProperty(session_id, "client_type", client_type.c_str());
 	// inline preedit
-	// bool inline_preedit = m_ui->style().inline_preedit && (client_type == "tsf");	
-	bool inline_preedit = true;
+	bool inline_preedit = m_ui->style().inline_preedit;	
+	// bool inline_preedit = true;
 	RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
 	// show soft cursor on weasel panel but not inline
 	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
@@ -369,54 +367,53 @@ bool RimeWithWeaselHandler::_IsDeployerRunning()
 
 void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 {
-	weasel::Status weasel_status;
-	weasel::Context weasel_context;
+	// weasel::Status weasel_status;
+	// weasel::Context weasel_context;
+	//
+	// bool is_tsf = _IsSessionTSF(session_id);
+	//
+	// if (session_id == 0)
+	// 	weasel_status.disabled = m_disabled;
+	//
+	// _GetStatus(weasel_status, session_id);
+	//
+	// if (!is_tsf) {
+	// 	_GetContext(weasel_context, session_id);
+	// }
 
-	bool is_tsf = _IsSessionTSF(session_id);
+	if (!m_ui) return;
 
-	if (session_id == 0)
-		weasel_status.disabled = m_disabled;
-
-	_GetStatus(weasel_status, session_id);
-
-	if (!is_tsf) {
-		_GetContext(weasel_context, session_id);
-	}
-
-	// if (!m_ui) return;
-	return;
-
-	/*
-	if (RimeGetOption(session_id, "inline_preedit"))
-		m_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
-	else
-		m_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
+	// if (RimeGetOption(session_id, "inline_preedit"))
+	// 	m_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
+	// else
+	// 	m_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
 
 	// ensure text color not transparent if server recovers from crashed.
-	weasel::UIStyle& style(m_ui->style());
-	if(CANDIDATE_COLOR_ABNORMAL(style.text_color, style.hilited_candidate_text_color, style.candidate_text_color))
-	{
-		RimeConfig weaselconfig;
-		if (RimeConfigOpen("weasel", &weaselconfig))
-		{
-			_UpdateUIStyleColor(&weaselconfig, style);
-			m_base_style = style;
-			RimeConfigClose(&weaselconfig);
-		}
-	}
-	if (weasel_status.composing)
-	{
-		m_ui->Update(weasel_context, weasel_status);
-		if (!is_tsf) m_ui->Show();
-	}
-	else if (!_ShowMessage(weasel_context, weasel_status))
-	{
-		m_ui->Hide();
-		m_ui->Update(weasel_context, weasel_status);
-	}
-	*/
+	// weasel::UIStyle& style(m_ui->style());
+	// if(CANDIDATE_COLOR_ABNORMAL(style.text_color, style.hilited_candidate_text_color, style.candidate_text_color))
+	// {
+	// 	RimeConfig weaselconfig;
+	// 	if (RimeConfigOpen("weasel", &weaselconfig))
+	// 	{
+	// 		_UpdateUIStyleColor(&weaselconfig, style);
+	// 		m_base_style = style;
+	// 		RimeConfigClose(&weaselconfig);
+	// 	}
+	// }
+	// if (weasel_status.composing)
+	// {
+	// 	m_ui->Update(weasel_context, weasel_status);
+	// 	if (!is_tsf) m_ui->Show();
+	// }
+	// else if (!_ShowMessage(weasel_context, weasel_status))
+	// {
+	// 	m_ui->Hide();
+	// 	m_ui->Update(weasel_context, weasel_status);
+	// }
+  
+  // TODO: ShowMessage
 	
-	_RefreshTrayIcon(session_id, _UpdateUICallback);
+	// TODO: _RefreshTrayIcon(session_id, _UpdateUICallback);
 
 	m_message_type.clear();
 	m_message_value.clear();
@@ -424,8 +421,6 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 
 void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schema_id)
 {
-	return;
-	/*
 	if (!m_ui) return;
 	const int BUF_SIZE = 255;
 	char buffer[BUF_SIZE + 1];
@@ -492,7 +487,6 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	}
 	// load schema icon end
 	RimeConfigClose(&config);
-	*/
 }
 
 bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& status) {
@@ -532,13 +526,11 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 		else if (m_message_value == "simplification")
 			tips = L"汉字";
 	}
-	/*
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();
 
 	m_ui->Update(ctx, status);
 	m_ui->ShowWithTimeout(1200 + 200 * tips.length());
-	*/
 	return true;
 }
 inline std::string _GetLabelText(const std::vector<weasel::Text> &labels, int id, const wchar_t *format)
@@ -581,8 +573,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		if (is_composing)
 		{
 			actions.insert("ctx");
-			auto x = weasel::UIStyle::COMPOSITION;
-			switch (x)
+			switch (m_ui->style().preedit_type)
 			{
 			case weasel::UIStyle::PREVIEW:
 				if (ctx.commit_text_preview != NULL)
@@ -612,16 +603,14 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				std::string topush = std::string("ctx.preedit=") + ctx.composition.preedit + "  [";
 				for (auto i = 0; i < ctx.menu.num_candidates; i++)
 				{
-					/*
 					std::string label = m_ui->style().label_font_point > 0 ? _GetLabelText(cinfo.labels, i, m_ui->style().label_text_format.c_str()) : "";
 					std::string comment = m_ui->style().comment_font_point > 0 ? wstring_to_string(cinfo.comments.at(i).str, CP_UTF8) : "";
 					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : wstring_to_string(m_ui->style().mark_text, CP_UTF8);
 					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
 					topush += " " + prefix + label + std::string(ctx.menu.candidates[i].text) + " " + comment;
-					*/
 				}
 				messages.push_back(topush + " ]\n");
-				//messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
+				messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
 				if (ctx.composition.sel_start <= ctx.composition.sel_end)
 				{
 					messages.push_back(std::string("ctx.preedit.cursor=") +
@@ -652,7 +641,6 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 
 	// style
 	bool has_synced = RimeGetOption(session_id, "__synced");
-	/*
 	if (!has_synced) {
 		std::wstringstream ss;
 		boost::archive::text_woarchive oa(ss);
@@ -662,7 +650,6 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		messages.push_back(std::string("style=") + wcstoutf8(ss.str().c_str()) + '\n');
 		RimeSetOption(session_id, "__synced", true);
 	}
-	*/
 
 	// summarize
 
@@ -778,9 +765,8 @@ static inline void _RemoveSpaceAroundSep(std::wstring& str)
 	str = std::regex_replace(str, std::wregex(L"^\\s*|\\s*$"), L"");
 }
 
-static void _UpdateUIStyle(RimeConfig* config, bool initialize)
+static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 {
-	/*
 	if (!ui) return;
 
 	weasel::UIStyle &style(ui->style());
@@ -995,7 +981,6 @@ static void _UpdateUIStyle(RimeConfig* config, bool initialize)
 	// color scheme
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
 		_UpdateUIStyleColor(config, style);
-	*/
 }
 
 static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, std::string color)
@@ -1217,10 +1202,10 @@ bool RimeWithWeaselHandler::_IsSessionTSF(UINT session_id)
 
 void RimeWithWeaselHandler::_UpdateInlinePreeditStatus(UINT session_id)
 {
-	// if (!m_ui)	return;
+	if (!m_ui)	return;
 	// set inline_preedit option
-	// bool inline_preedit = m_ui->style().inline_preedit && _IsSessionTSF(session_id);
-	bool inline_preedit = true;
+	bool inline_preedit = m_ui->style().inline_preedit && _IsSessionTSF(session_id);
+	// bool inline_preedit = true;
 	RimeSetOption(session_id, "inline_preedit", Bool(inline_preedit));
 	// show soft cursor on weasel panel but not inline
 	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
