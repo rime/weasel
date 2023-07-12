@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include <WeaselIPC.h>
 #include <RimeWithWeasel.h>
 
 #include <boost/interprocess/streams/bufferstream.hpp>
@@ -21,13 +20,9 @@ int server_main();
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+		return client_main();
 	if (argc == 1)  // no args
 	{
-		return client_main();
-	}
-	else if(argc > 1 && !wcscmp(L"/start", argv[1]))
-	{
-		return server_main();
 	}
 	else if (argc > 1 && !wcscmp(L"/stop", argv[1]))
 	{
@@ -77,14 +72,9 @@ const char* wcstomb(const wchar_t* wcs)
 
 int console_main()
 {
-	weasel::Client client;
-	if (!client.Connect())
-	{
-		std::cerr << "failed to connect to server." << std::endl;
-		return -2;
-	}
-	client.StartSession();
-	if (!client.Echo())
+	weasel::ipc::client client;
+	client.start_session();
+	if (!client.echo())
 	{
 		std::cerr << "failed to start session." << std::endl;
 		return -3;
@@ -95,18 +85,18 @@ int console_main()
 		int ch = std::cin.get();
 		if (!std::cin.good())
 			break;
-		bool eaten = client.ProcessKeyEvent(weasel::KeyEvent(ch, 0));
+		bool eaten = client.process_key_event(weasel::ipc::key_event(ch, 0));
 		std::cout << "server replies: " << eaten << std::endl;
 		if (eaten)
 		{
 			WCHAR response[WEASEL_IPC_BUFFER_LENGTH];
-			bool ret = client.GetResponseData(std::bind<bool>(read_buffer, std::placeholders::_1, std::placeholders::_2, std::ref(response)));
+			bool ret = client.get_response_data(std::bind<bool>(read_buffer, std::placeholders::_1, std::placeholders::_2, std::ref(response)));
 			std::cout << "get response data: " << ret << std::endl;
 			std::cout << "buffer reads: " << std::endl << wcstomb(response) << std::endl;
 		}
 	}
 
-	client.EndSession();
+	client.end_session();
 	
 	return 0;
 }
@@ -114,29 +104,27 @@ int console_main()
 int client_main()
 {
 	//launch_server();
-	Sleep(1000);
-	weasel::Client client;
-	if (!client.Connect())
-	{
-		std::cerr << "failed to connect to server." << std::endl;
-		return -2;
-	}
-	client.StartSession();
-	if (!client.Echo())
+	// Sleep(1000);
+	weasel::ipc::client client;
+	client.start_session();
+	if (!client.echo())
 	{
 		std::cerr << "failed to login." << std::endl;
 		return -3;
 	}
-	bool eaten = client.ProcessKeyEvent(weasel::KeyEvent(L'A', 0));
-	std::cout << "server replies: " << eaten << std::endl;
-	if (eaten)
-	{
-		WCHAR response[WEASEL_IPC_BUFFER_LENGTH];
-		bool ret = client.GetResponseData(std::bind<bool>(read_buffer, std::placeholders::_1, std::placeholders::_2, std::ref(response)));
-		std::cout << "get response data: " << ret << std::endl;
-		std::cout << "buffer reads: " << std::endl << wcstomb(response) << std::endl;
-	}
-	client.EndSession();
+  for (auto i = 0; i < 3; ++i)
+  {
+    bool eaten = client.process_key_event(weasel::ipc::key_event(L'A', 0));
+    std::cout << "server replies: " << eaten << std::endl;
+    if (eaten)
+    {
+      WCHAR response[WEASEL_IPC_BUFFER_LENGTH];
+      bool ret = client.get_response_data(std::bind<bool>(read_buffer, std::placeholders::_1, std::placeholders::_2, std::ref(response)));
+      std::cout << "get response data: " << ret << std::endl;
+      std::cout << "buffer reads: " << std::endl << wcstomb(response) << std::endl;
+    }
+  }
+	client.end_session();
 
 	system("pause");
 	return 0;
@@ -180,21 +168,4 @@ private:
 	unsigned int m_counter;
 };
 
-int server_main()
-{
-	HRESULT hRes = _Module.Init(NULL, GetModuleHandle(NULL));
-	ATLASSERT(SUCCEEDED(hRes));
 
-	weasel::Server server;
-	//weasel::UI ui;
-	//const std::unique_ptr<weasel::RequestHandler> handler(new RimeWithWeaselHandler(&ui));
-	const std::unique_ptr<weasel::RequestHandler> handler(new TestRequestHandler);
-
-	server.SetRequestHandler(handler.get());
-	if (!server.Start())
-		return -4;
-	std::cerr << "server running." << std::endl;
-	int ret = server.Run();
-	std::cerr << "server quitting." << std::endl;
-	return ret;
-}
