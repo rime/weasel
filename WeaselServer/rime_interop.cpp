@@ -155,7 +155,7 @@ session_id_t rime::add_session(const ipc::buffer& in, ipc::buffer& out)
   }
 
   session_id_t id = RimeCreateSession();
-  read_client_info(id, in);
+  // read_client_info(id, in);
 
   auto status = new_rime_struct<RimeStatus>();
   if (RimeGetStatus(id, &status))
@@ -173,6 +173,12 @@ session_id_t rime::add_session(const ipc::buffer& in, ipc::buffer& out)
 }
 
 session_id_t rime::remove_session(session_id_t session_id)
+{
+  // TODO
+  return 0;
+}
+
+void rime::end_maintenance()
 {
 }
 
