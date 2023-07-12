@@ -515,10 +515,6 @@
     <ProjectReference Include="..\WeaselCommon\WeaselCommon.vcxproj">
       <Project>{cfeb3ee1-04d8-4bf5-85a5-ed35edaaf63a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\WeaselUI\WeaselUI.vcxproj">
-      <Project>{10b3b8bf-7294-4661-9a8a-2ffc920fa2f4}</Project>
-      <Name>WeaselUI</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resource\en.ico" />
