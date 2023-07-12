@@ -407,10 +407,6 @@ int install(bool hant, bool silent, bool old_ime_support)
 {
 	std::wstring ime_src_path;
 	int retval = 0;
-	if (old_ime_support)
-	{
-		retval += install_ime_file(ime_src_path, L".ime", hant, silent, &register_ime);
-	}
 	retval += install_ime_file(ime_src_path, L".dll", hant, silent, &register_text_service);
 
 	// 写注册表
