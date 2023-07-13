@@ -39,5 +39,7 @@ protected:
 	CButton remove_;
 	CButton default_dir_;
 	CButton custom_dir_;
+	CButton ok_;
+	CButton ime_;
 	CEdit dir_;
 };
