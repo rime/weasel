@@ -441,11 +441,20 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	memset(buffer, '\0', sizeof(buffer));
 	if (RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
 	{
-		RimeConfig weaselconfig;
-		if (RimeConfigOpen("weasel", &weaselconfig))
+		std::string color_name(buffer);
+		RimeConfigIterator preset = {0};
+		if(RimeConfigBeginMap(&preset, &config, ("preset_color_schemes/" + color_name).c_str()))
 		{
-			_UpdateUIStyleColor(&weaselconfig, m_ui->style(), std::string(buffer));
-			RimeConfigClose(&weaselconfig);
+			_UpdateUIStyleColor(&config, m_ui->style(), color_name);
+		}
+		else
+		{
+			RimeConfig weaselconfig;
+			if (RimeConfigOpen("weasel", &weaselconfig))
+			{
+				_UpdateUIStyleColor(&weaselconfig, m_ui->style(), std::string(buffer));
+				RimeConfigClose(&weaselconfig);
+			}
 		}
 	}
 	// load schema icon start
