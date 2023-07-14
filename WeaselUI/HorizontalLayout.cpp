@@ -10,10 +10,14 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	int w = offsetX + real_margin_x;
 
 	/* calc mark_text sizes */
-	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
+	if ((_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
-		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
+		if(_style.mark_text.empty())
+			GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
+		else
+			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
+
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_WIDTH + 4;

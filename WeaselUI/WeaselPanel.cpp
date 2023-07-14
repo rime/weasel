@@ -621,6 +621,29 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				ReconfigRoundInfo(rd, m_ctx.cinfo.highlighted, m_candidateCount);
 			}
 			rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
+			if (m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
+			{
+				BYTE r = GetRValue(m_style.hilited_mark_color);
+				BYTE g = GetGValue(m_style.hilited_mark_color);
+				BYTE b = GetBValue(m_style.hilited_mark_color);
+				BYTE alpha = (BYTE)((m_style.hilited_mark_color >> 24) & 255);
+				Gdiplus::Graphics g_back(dc);
+				g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+				Gdiplus::Color mark_color = Gdiplus::Color::MakeARGB(alpha, r, g, b);
+				Gdiplus::SolidBrush mk_brush(mark_color);
+				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+				{
+					CRect mkrc{ rect.left + m_style.round_corner, rect.top, rect.right - m_style.round_corner, rect.top + m_layout->MARK_HEIGHT / 2 };
+					GraphicsRoundRectPath mk_path(mkrc, 2);
+					g_back.FillPath(&mk_brush, &mk_path);
+				}
+				else
+				{
+					CRect mkrc{ rect.left, rect.top + m_style.round_corner, rect.left + m_layout->MARK_WIDTH / 2, rect.bottom - m_style.round_corner };
+					GraphicsRoundRectPath mk_path(mkrc, 2);
+					g_back.FillPath(&mk_brush, &mk_path);
+				}
+			}
 			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_style.hilited_candidate_border_color);
 			drawn = true;
 		}
