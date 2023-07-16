@@ -37,6 +37,7 @@ private:
 	bool _IsDeployerRunning();
 	void _UpdateUI(UINT session_id);
 	void _LoadSchemaSpecificSettings(const std::string& schema_id);
+	void _LoadAppInlinePreeditSet(UINT session_id, bool ignore_app_name = false);
 	bool _ShowMessage(weasel::Context& ctx, weasel::Status& status);
 	bool _Respond(UINT session_id, EatLine eat);
 	void _ReadClientInfo(UINT session_id, LPWSTR buffer);
@@ -52,6 +53,7 @@ private:
 	UINT m_active_session;
 	bool m_disabled;
 	std::string m_last_schema_id;
+	std::string m_last_app_name;
 	weasel::UIStyle m_base_style;
 
 	std::function<void()> _UpdateUICallback;
