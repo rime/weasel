@@ -34,7 +34,8 @@ void SwitcherSettingsDialog::Populate() {
 			RimeSchemaInfo* info = (RimeSchemaInfo*)item.reserved;
 			if (!strcmp(item.schema_id, schema_id) && recruited.find(info) == recruited.end()) {
 				recruited.insert(info);
-				schema_list_.AddItem(k, 0, utf8towcs(item.name));
+				std::wstring itemwstr = string_to_wstring(item.name, CP_UTF8);
+				schema_list_.AddItem(k, 0, itemwstr.c_str());
 				schema_list_.SetItemData(k, (DWORD_PTR)info);
 				schema_list_.SetCheckState(k, TRUE);
 				++k;
@@ -47,12 +48,14 @@ void SwitcherSettingsDialog::Populate() {
 		RimeSchemaInfo* info = (RimeSchemaInfo*)item.reserved;
 		if (recruited.find(info) == recruited.end()) {
 			recruited.insert(info);
-			schema_list_.AddItem(k, 0, utf8towcs(item.name));
+			std::wstring itemwstr = string_to_wstring(item.name, CP_UTF8);
+			schema_list_.AddItem(k, 0, itemwstr.c_str());
 			schema_list_.SetItemData(k, (DWORD_PTR)info);
 			++k;
 		}
 	}
-	hotkeys_.SetWindowTextW(utf8towcs(api_->get_hotkeys(settings_)));
+	std::wstring txt = string_to_wstring(api_->get_hotkeys(settings_), CP_UTF8);
+	hotkeys_.SetWindowTextW(txt.c_str());
 	loaded_ = true;
 	modified_ = false;
 }
@@ -69,14 +72,15 @@ void SwitcherSettingsDialog::ShowDetails(RimeSchemaInfo* info) {
     if (const char* description = api_->get_schema_description(info)) {
         (details += "\n\n") += description;
     }
-	description_.SetWindowTextW(utf8towcs(details.c_str()));
+	std::wstring txt = string_to_wstring(details.c_str(), CP_UTF8);
+	description_.SetWindowTextW(txt.c_str());
 }
 
 LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	schema_list_.SubclassWindow(GetDlgItem(IDC_SCHEMA_LIST));
 	schema_list_.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 	schema_list_.AddColumn(L"方案名稱", 0);
-	WTL::CRect rc;
+	CRect rc;
 	schema_list_.GetClientRect(&rc);
 	schema_list_.SetColumnWidth(0, rc.Width() - 20);
 

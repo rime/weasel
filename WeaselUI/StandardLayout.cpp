@@ -10,7 +10,7 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	return std::wstring(buffer);
 }
 
-void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
+void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR,  LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
@@ -24,9 +24,9 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 	// 创建文本布局 
 	if (pTextFormat != NULL){
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, _style.max_height, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), 0, _style.max_height);
 		else
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), _style.max_width, 0);
 	}
 
 	if (SUCCEEDED(hr))
@@ -34,36 +34,36 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
 			DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
-			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pDWR->pTextLayout->SetFlowDirection(flow);
+			pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pDWR->SetLayoutFlowDirection(flow);
 		}
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;
-		hr = pDWR->pTextLayout->GetMetrics(&textMetrics);
+		hr = pDWR->GetLayoutMetrics(&textMetrics);
 		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
 
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
-		SafeRelease(&pDWR->pTextLayout);
+		pDWR->ResetLayout();
 		
 		if(_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
 			size_t max_width = _style.max_width == 0 ? textMetrics.width : _style.max_width;
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, max_width, textMetrics.height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), max_width, textMetrics.height);
 		}
 		else
 		{
 			size_t max_height = _style.max_height == 0 ? textMetrics.height : _style.max_height;
-			hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.width, max_height,  reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
+			hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), textMetrics.width, max_height);
 		}
 
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
-			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pDWR->pTextLayout->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pDWR->SetLayoutFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
 		}
 		DWRITE_OVERHANG_METRICS overhangMetrics;
-		hr = pDWR->pTextLayout->GetOverhangMetrics(&overhangMetrics);
+		hr = pDWR->GetLayoutOverhangMetrics(&overhangMetrics);
 		{
 			if (overhangMetrics.left > 0)
 				lpSize->cx += overhangMetrics.left + 1;
@@ -75,10 +75,10 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 				lpSize->cy += overhangMetrics.bottom + 1;
 		}
 	}
-	SafeRelease(&pDWR->pTextLayout);
+	pDWR->ResetLayout();
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat, PDWR pDWR) const
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR) const
 {
 	const std::wstring& preedit = text.str;
 	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
@@ -155,7 +155,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 	if(!_style.inline_preedit)
 	{
 		CRect textRect(_preeditRect);
-		textRect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		textRect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
 		textHemispherical = _IsHighlightOverCandidateWindow(textRect, dc);
 		const bool hilite_rd_info[3][2][4] = {
 			// vertical
@@ -190,7 +190,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 	if(candidates_count)
 	{
 		CRect cand0Rect(_candidateRects[0]);
-		cand0Rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		cand0Rect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
 		cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect, dc);
 		if(textHemispherical || cand0Hemispherical)
 		{
@@ -256,7 +256,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 			for (auto i = 0; i < candidates_count; i++)
 			{
 				CRect hilite_rect(_candidateRects[i]);
-				hilite_rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+				hilite_rect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
 				bool current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(hilite_rect, dc);
 				int type = 0;	// default FIRST_CAND
 				if (candidates_count == 1)	// ONLY_CAND

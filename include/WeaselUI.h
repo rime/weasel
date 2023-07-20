@@ -7,7 +7,8 @@
 #include <d2d1.h>
 #include <dwrite_2.h>
 #include <memory>
-
+#include <wrl/client.h>
+using namespace Microsoft::WRL;
 namespace weasel
 {
 
@@ -45,7 +46,9 @@ namespace weasel
 			if (pimpl_)
 				Destroy(true);
 			if (pDWR)
+			{ 
 				pDWR.reset();
+			}
 		}
 
 		// 创建输入法界面
@@ -98,20 +101,50 @@ namespace weasel
 			std::wstring font_face, int font_point,
 			std::wstring comment_font_face, int comment_font_point, bool vertical_text = false);
 		HRESULT InitResources(UIStyle& style, UINT dpi);
+
+		HRESULT CreateTextLayout(std::wstring text, int nCount, IDWriteTextFormat1* txtFormat, float width, float height) {
+			return pDWFactory->CreateTextLayout(text.c_str(), nCount, txtFormat, width, height, reinterpret_cast<IDWriteTextLayout**>(pTextLayout.GetAddressOf()));
+		}
+		void DrawRect(D2D1_RECT_F* rect,float strokeWidth=1.0f, ID2D1StrokeStyle* sstyle=(ID2D1StrokeStyle*)0) {
+			pRenderTarget->DrawRectangle(rect, pBrush.Get(), strokeWidth, sstyle);
+		}
+		HRESULT GetLayoutOverhangMetrics(DWRITE_OVERHANG_METRICS* overhangMetrics) {
+			return pTextLayout->GetOverhangMetrics(overhangMetrics);
+		}
+		HRESULT GetLayoutMetrics(DWRITE_TEXT_METRICS* metrics) {
+			return pTextLayout->GetMetrics(metrics);
+		}
+		HRESULT SetLayoutReadingDirection(DWRITE_READING_DIRECTION direct) {
+			return pTextLayout->SetReadingDirection(direct);
+		}
+		HRESULT SetLayoutFlowDirection(DWRITE_FLOW_DIRECTION direct) {
+			return pTextLayout->SetFlowDirection(direct);
+		}
+		void DrawTextLayoutAt(D2D1_POINT_2F point) {
+			pRenderTarget->DrawTextLayout(point, pTextLayout.Get(), pBrush.Get(), D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		}
+		HRESULT CreateBrush(D2D1_COLOR_F color) {
+			return pRenderTarget->CreateSolidColorBrush(color, pBrush.GetAddressOf());
+		}
+		void ResetLayout() { pTextLayout.Reset(); }
+		void SetBrushColor(D2D1_COLOR_F color) {
+			pBrush->SetColor(color);
+		}
 		void SetDpi(UINT dpi);
+
 		float dpiScaleX_, dpiScaleY_;
-		ID2D1Factory* pD2d1Factory;
-		IDWriteFactory2* pDWFactory;
-		ID2D1DCRenderTarget* pRenderTarget;
-		IDWriteTextFormat1* pPreeditTextFormat;
-		IDWriteTextFormat1* pTextFormat;
-		IDWriteTextFormat1* pLabelTextFormat;
-		IDWriteTextFormat1* pCommentTextFormat;
-		IDWriteTextLayout2* pTextLayout;
-		ID2D1SolidColorBrush* pBrush;
+		ComPtr<ID2D1Factory> pD2d1Factory;
+		ComPtr<IDWriteFactory2> pDWFactory;
+		ComPtr<ID2D1DCRenderTarget> pRenderTarget;
+		ComPtr<IDWriteTextFormat1> pPreeditTextFormat;
+		ComPtr<IDWriteTextFormat1> pTextFormat;
+		ComPtr<IDWriteTextFormat1> pLabelTextFormat;
+		ComPtr<IDWriteTextFormat1> pCommentTextFormat;
+		ComPtr<IDWriteTextLayout2> pTextLayout;
+		ComPtr<ID2D1SolidColorBrush> pBrush;
 	private:
 		UIStyle& _style;
 		void _ParseFontFace(const std::wstring fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);
-		void _SetFontFallback(IDWriteTextFormat1* pTextFormat, std::vector<std::wstring> fontVector);
+		void _SetFontFallback(ComPtr<IDWriteTextFormat1> pTextFormat, std::vector<std::wstring> fontVector);
 	};
 }

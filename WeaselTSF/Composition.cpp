@@ -115,13 +115,12 @@ void WeaselTSF::_EndComposition(com_ptr<ITfContext> pContext, BOOL clear)
 	CEndCompositionEditSession *pEditSession;
 	HRESULT hr;
 
+	_cand->EndUI();
 	if ((pEditSession = new CEndCompositionEditSession(this, pContext, _pComposition, clear)) != NULL)
 	{
 		pContext->RequestEditSession(_tfClientId, pEditSession, TF_ES_SYNC | TF_ES_READWRITE, &hr);
 		pEditSession->Release();
 	}
-	// after pEditSession, less flicker
-	_cand->EndUI();
 }
 
 /* Get Text Extent */

@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include <string>
+#include <algorithm>
+#include <map>
 #include <WeaselUI.h>
-//#include "fontClasses.h"
 
 using namespace weasel;
 #define STYLEORWEIGHT	(L":[^:]*[^a-f0-9:]+[^:]*")	
@@ -40,20 +41,21 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 	pD2d1Factory(NULL),
 	pDWFactory(NULL),
 	pRenderTarget(NULL),
+	pBrush(NULL),
+	pTextLayout(NULL),
 	pPreeditTextFormat(NULL),
 	pTextFormat(NULL),
 	pLabelTextFormat(NULL),
-	pCommentTextFormat(NULL),
-	pTextLayout(NULL)
+	pCommentTextFormat(NULL)
 {
 	D2D1_TEXT_ANTIALIAS_MODE mode = _style.antialias_mode <= 3 ? (D2D1_TEXT_ANTIALIAS_MODE)(_style.antialias_mode) : D2D1_TEXT_ANTIALIAS_MODE_FORCE_DWORD; // prepare d2d1 resources
 	HRESULT hResult = S_OK;
 	// create factory
 	if (pD2d1Factory == NULL)
-		hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2d1Factory);
+		hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, pD2d1Factory.GetAddressOf());
 	// create IDWriteFactory
 	if (pDWFactory == NULL)
-		hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWFactory));
+		hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(pDWFactory.GetAddressOf()));
 	/* ID2D1HwndRenderTarget */
 	if (pRenderTarget == NULL)
 	{
@@ -63,7 +65,7 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 		pRenderTarget->SetTextAntialiasMode(mode);
 		pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	}
-	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
+	pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), pBrush.GetAddressOf());
 	//get the dpi information
 	if (dpi == 0)
 	{
@@ -82,15 +84,15 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style, UINT dpi = 0)
 
 DirectWriteResources::~DirectWriteResources()
 {
-	SafeRelease(&pPreeditTextFormat);
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
-	SafeRelease(&pBrush);
-	SafeRelease(&pRenderTarget);
-	SafeRelease(&pDWFactory);
-	SafeRelease(&pD2d1Factory);
-	SafeRelease(&pTextLayout);
+	pPreeditTextFormat.Reset();
+	pTextFormat.Reset();
+	pLabelTextFormat.Reset();
+	pCommentTextFormat.Reset();
+	pTextLayout.Reset();
+	pBrush.Reset();
+	pRenderTarget.Reset();
+	pDWFactory.Reset();
+	pD2d1Factory.Reset();
 }
 
 HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
@@ -98,10 +100,10 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	std::wstring comment_font_face, int comment_font_point, bool vertical_text) 
 {
 	// prepare d2d1 resources
-	SafeRelease(&pPreeditTextFormat);
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
+	pPreeditTextFormat.Reset();
+	pTextFormat.Reset();
+	pLabelTextFormat.Reset();
+	pCommentTextFormat.Reset();
 	DWRITE_WORD_WRAPPING wrapping = ((_style.max_width == 0 && _style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) 
 			|| (_style.max_height == 0 && _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)) ?
 		DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_CHARACTER;
@@ -117,11 +119,11 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
 	// setup font weight and font style by the first unit of font_face setting string
-	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
+	_ParseFontFace(font_face, fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
+			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(pTextFormat.GetAddressOf()));
 	if( pTextFormat != NULL)
 	{
 		if (vertical_text)
@@ -144,7 +146,8 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pPreeditTextFormat));
+			//font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pPreeditTextFormat));
+			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(pPreeditTextFormat.GetAddressOf()));
 	if( pPreeditTextFormat != NULL)
 	{
 		if (vertical_text)
@@ -164,11 +167,11 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	// label font text format set up
 	fontFaceStrVector = ws_split(label_font_face, L",");
 	// setup weight and style of label_font_face
-	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
+	_ParseFontFace(label_font_face, fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
+			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(pLabelTextFormat.GetAddressOf()));
 	if( pLabelTextFormat != NULL)
 	{
 		if (vertical_text)
@@ -188,11 +191,11 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	// comment font text format set up
 	fontFaceStrVector = ws_split(comment_font_face, L",");
 	// setup weight and style of label_font_face
-	_ParseFontFace(fontFaceStrVector[0], fontWeight, fontStyle);
+	_ParseFontFace(comment_font_face, fontWeight, fontStyle);
 	fontFaceStrVector[0] = std::regex_replace(fontFaceStrVector[0], std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
 	hResult = pDWFactory->CreateTextFormat(_mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
+			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(pCommentTextFormat.GetAddressOf()));
 	if( pCommentTextFormat != NULL)
 	{
 		if (vertical_text)
@@ -228,63 +231,76 @@ void weasel::DirectWriteResources::SetDpi(UINT dpi)
 	dpiScaleX_ = dpi / 72.0f;
 	dpiScaleY_ = dpi / 72.0f;
 	
-	SafeRelease(&pPreeditTextFormat);
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
+	pPreeditTextFormat.Reset();
+	pTextFormat.Reset();
+	pLabelTextFormat.Reset();
+	pCommentTextFormat.Reset();
 	InitResources(_style);
+}
+
+static std::wstring _MatchWordsOutLowerCaseTrim1st(const std::wstring& wstr, const std::wstring& pat)
+{
+	std::wstring mat = L"";
+	std::wsmatch mc;
+	std::wregex pattern(pat, std::wregex::icase);
+	std::wstring::const_iterator iter = wstr.cbegin();
+	std::wstring::const_iterator end = wstr.cend();
+	while (regex_search(iter, end, mc, pattern)) {
+		for (const auto& m : mc) {
+			mat = m;
+			mat = mat.substr(1);
+			break;
+		}
+		iter = mc.suffix().first;
+	}
+	std::wstring res;
+	std::transform(mat.begin(), mat.end(), std::back_inserter(res), ::tolower);
+	return res;
 }
 
 void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle)
 {
-	if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":thin", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_THIN;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":extra_light", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_LIGHT;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":ultra_light", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_LIGHT;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":light", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_LIGHT;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":semi_light", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":medium", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_MEDIUM;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":demi_bold", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_DEMI_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":semi_bold", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":bold", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":extra_bold", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":ultra_bold", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BOLD;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":black", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_BLACK;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":heavy", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_HEAVY;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":extra_black", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BLACK;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":ultra_black", std::wregex::icase)))
-		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BLACK;
-	else
-		fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
+	const std::wstring patWeight(L"(:thin|:extra_light|:ultra_light|:light|:semi_light|:medium|:demi_bold|:semi_bold|:bold|:extra_bold|:ultra_bold|:black|:heavy|:extra_black|:ultra_black)");
+	const std::map<std::wstring, DWRITE_FONT_WEIGHT> _mapWeight = {
+		{L"thin",			DWRITE_FONT_WEIGHT_THIN},
+		{L"extra_light",	DWRITE_FONT_WEIGHT_EXTRA_LIGHT},
+		{L"ultra_light",	DWRITE_FONT_WEIGHT_ULTRA_LIGHT},
+		{L"light",			DWRITE_FONT_WEIGHT_LIGHT},
+		{L"semi_light",		DWRITE_FONT_WEIGHT_SEMI_LIGHT},
+		{L"medium",			DWRITE_FONT_WEIGHT_MEDIUM},
+		{L"demi_bold",		DWRITE_FONT_WEIGHT_DEMI_BOLD},
+		{L"semi_bold",		DWRITE_FONT_WEIGHT_SEMI_BOLD},
+		{L"bold",			DWRITE_FONT_WEIGHT_BOLD},
+		{L"extra_bold",		DWRITE_FONT_WEIGHT_EXTRA_BOLD},
+		{L"ultra_bold",		DWRITE_FONT_WEIGHT_ULTRA_BOLD},
+		{L"black",			DWRITE_FONT_WEIGHT_BLACK},
+		{L"heavy",			DWRITE_FONT_WEIGHT_HEAVY},
+		{L"extra_black",	DWRITE_FONT_WEIGHT_EXTRA_BLACK},
+		{L"normal",			DWRITE_FONT_WEIGHT_NORMAL},
+		{L"ultra_black",	DWRITE_FONT_WEIGHT_ULTRA_BLACK}
+	};
+	std::wstring weight = _MatchWordsOutLowerCaseTrim1st(fontFaceStr, patWeight);
+	auto it = _mapWeight.find(weight);
+	fontWeight = (it != _mapWeight.end()) ? it->second : DWRITE_FONT_WEIGHT_NORMAL;
 
-	if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":italic", std::wregex::icase)))
-		fontStyle = DWRITE_FONT_STYLE_ITALIC;
-	else if (std::regex_search(fontFaceStr, std::wsmatch(), std::wregex(L":oblique", std::wregex::icase)))
-		fontStyle = DWRITE_FONT_STYLE_OBLIQUE;
-	else
-		fontStyle = DWRITE_FONT_STYLE_NORMAL;
+	const std::wstring patStyle(L"(:italic|:oblique|:normal)");
+	const std::map<std::wstring, DWRITE_FONT_STYLE> _mapStyle = {
+		{L"italic",		DWRITE_FONT_STYLE_ITALIC},
+		{L"oblique",	DWRITE_FONT_STYLE_OBLIQUE},
+		{L"normal",		DWRITE_FONT_STYLE_NORMAL},
+	};
+	std::wstring style = _MatchWordsOutLowerCaseTrim1st(fontFaceStr, patStyle);
+	auto it2 = _mapStyle.find(style);
+	fontStyle = (it2 != _mapStyle.end()) ? it2->second : DWRITE_FONT_STYLE_NORMAL;
 }
 
-void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std::vector<std::wstring> fontVector)
+void DirectWriteResources::_SetFontFallback(ComPtr<IDWriteTextFormat1> textFormat, std::vector<std::wstring> fontVector)
 {
-	IDWriteFontFallback* pSysFallback;
-	pDWFactory->GetSystemFontFallback(&pSysFallback);
-	IDWriteFontFallback* pFontFallback = NULL;
-	IDWriteFontFallbackBuilder* pFontFallbackBuilder = NULL;
-	pDWFactory->CreateFontFallbackBuilder(&pFontFallbackBuilder);
+	ComPtr<IDWriteFontFallback> pSysFallback;
+	pDWFactory->GetSystemFontFallback(pSysFallback.GetAddressOf());
+	ComPtr<IDWriteFontFallback> pFontFallback = NULL;
+	ComPtr<IDWriteFontFallbackBuilder> pFontFallbackBuilder = NULL;
+	pDWFactory->CreateFontFallbackBuilder(pFontFallbackBuilder.GetAddressOf());
 	std::vector<std::wstring> fallbackFontsVector;
 	for (UINT32 i = 0; i < fontVector.size(); i++)
 	{
@@ -333,12 +349,11 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std:
 		fallbackFontsVector.swap(std::vector<std::wstring>());
 	}
 	// add system defalt font fallback
-	pFontFallbackBuilder->AddMappings(pSysFallback);
-	pFontFallbackBuilder->CreateFontFallback(&pFontFallback);
-	textFormat->SetFontFallback(pFontFallback);
+	pFontFallbackBuilder->AddMappings(pSysFallback.Get());
+	pFontFallbackBuilder->CreateFontFallback(pFontFallback.GetAddressOf());
+	textFormat->SetFontFallback(pFontFallback.Get());
 	fallbackFontsVector.swap(std::vector<std::wstring>());
-	SafeRelease(&pFontFallback);
-	SafeRelease(&pSysFallback);
-	SafeRelease(&pFontFallbackBuilder);
+	pFontFallback.Reset();
+	pSysFallback.Reset();
+	pFontFallbackBuilder.Reset();
 }
-

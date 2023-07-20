@@ -14,4 +14,3 @@ public:
 	int SyncUserData();
 };
 
-const WCHAR* utf8towcs(const char* utf8_str);

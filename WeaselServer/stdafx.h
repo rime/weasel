@@ -21,7 +21,8 @@
   #pragma conform(forScope, off)
   #pragma comment(linker, "/NODEFAULTLIB:atlthunk.lib")
 #endif // _WTL_SUPPORT_SDK_ATL3
-
+// wtl10 require _RICHEDIT_VER > 0x0300, undef it first
+#undef _RICHEDIT_VER
 #include <atlbase.h>
 #include <atlwin.h>
 

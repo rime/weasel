@@ -94,9 +94,6 @@ bool UI::Create(HWND parent)
 {
 	if (pimpl_)
 	{
-		// re create panel cause destroied before
-		if(pimpl_->panel.IsWindow())
-			pimpl_->panel.DestroyWindow();
 		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_LAYERED | WS_EX_TRANSPARENT, 0U, 0);
 		return true;
 	}
@@ -122,6 +119,7 @@ void UI::Destroy(bool full)
 		{
 			delete pimpl_;
 			pimpl_ = 0;
+			pDWR.reset();
 		}
 	}
 }

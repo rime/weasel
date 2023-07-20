@@ -113,6 +113,12 @@ void StatusUpdater::Store(Deserializer::KeyType const& k, std::wstring const& va
 
 	bool bool_value = (!value.empty() && value != L"0");
 
+	if (k[1] == L"schema_id")
+	{
+		m_pTarget->p_status->schema_id = value;
+		return;
+	}
+
 	if (k[1] == L"ascii_mode")
 	{
 		m_pTarget->p_status->ascii_mode = bool_value;
@@ -128,6 +134,12 @@ void StatusUpdater::Store(Deserializer::KeyType const& k, std::wstring const& va
 	if (k[1] == L"disabled")
 	{
 		m_pTarget->p_status->disabled = bool_value;
+		return;
+	}
+
+	if (k[1] == L"full_shape")
+	{
+		m_pTarget->p_status->full_shape = bool_value;
 		return;
 	}
 }

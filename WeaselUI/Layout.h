@@ -72,7 +72,7 @@ namespace weasel
 		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const = 0;
 		virtual bool IsInlinePreedit() const = 0;
 		virtual bool ShouldDisplayStatusIcon() const = 0;
-		virtual void GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, PDWR pDWR,  LPSIZE lpSize) const = 0;
+		virtual void GetTextSizeDW(const std::wstring text, size_t nCount, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR,  LPSIZE lpSize) const = 0;
 		
 		int offsetX = 0;
 		int offsetY = 0;

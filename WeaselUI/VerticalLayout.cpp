@@ -23,7 +23,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
 	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
-	int pgw = page_en ? pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding * 2 : 0;
+	int pgw = page_en ? pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding_x * 2 : 0;
 	int pgh = page_en ? max(pgszl.cy, pgszr.cy) : 0;
 
 	/*  preedit and auxiliary rectangle calc start */
@@ -36,7 +36,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 		// icon size higher then preedit text
 		int yoffset = (STATUS_ICON_SIZE >= szy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - szy) / 2 : 0;
 		_preeditRect.SetRect(real_margin_x, height + yoffset, real_margin_x + size.cx, height + yoffset + size.cy);
-		height += szy + 2 * yoffset + _style.spacing - 1;
+		height += szy + 2 * yoffset + _style.spacing;
 		width = max(width, real_margin_x * 2 + size.cx + szx);
 		if(ShouldDisplayStatusIcon()) width += STATUS_ICON_SIZE;
 		_preeditRect.OffsetRect(offsetX, offsetY);
@@ -49,7 +49,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 		// icon size higher then auxiliary text
 		int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon()) ? (STATUS_ICON_SIZE - size.cy) / 2 : 0;
 		_auxiliaryRect.SetRect(real_margin_x, height + yoffset, real_margin_x + size.cx, height + yoffset + size.cy);
-		height += size.cy + 2 * yoffset + _style.spacing - 1;
+		height += size.cy + 2 * yoffset + _style.spacing;
 		width = max(width, real_margin_x * 2 + size.cx);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 	}
@@ -182,7 +182,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 	// calc page indicator 
 	if(page_en && candidates_count && !_style.inline_preedit)
 	{
-		int _prex = _contentSize.cx - offsetX - real_margin_x + _style.hilite_padding - pgw;
+		int _prex = _contentSize.cx - offsetX - real_margin_x + _style.hilite_padding_x - pgw;
 		int _prey = (_preeditRect.top + _preeditRect.bottom) / 2 - pgszl.cy / 2;
 		_prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
 		_nextPageRect.SetRect(_prePageRect.right + _style.hilite_spacing, 

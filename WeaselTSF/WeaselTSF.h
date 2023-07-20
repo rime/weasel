@@ -81,6 +81,8 @@ public:
     BOOL _IsKeyboardDisabled();
     BOOL _IsKeyboardOpen();
     HRESULT _SetKeyboardOpen(BOOL fOpen);
+	HRESULT _GetCompartmentDWORD(DWORD& value, const GUID guid);
+	HRESULT _SetCompartmentDWORD(const DWORD& value, const GUID guid);
 
 	/* Composition */
 	void _StartComposition(com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled);
@@ -162,6 +164,7 @@ private:
 	std::wstring _editSessionText;
 
 	com_ptr<CCompartmentEventSink> _pKeyboardCompartmentSink;
+	com_ptr<CCompartmentEventSink> _pConvertionCompartmentSink;
 
 	com_ptr<ITfComposition> _pComposition;
 

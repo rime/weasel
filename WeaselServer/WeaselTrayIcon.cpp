@@ -8,7 +8,7 @@ static UINT mode_icon[] = { IDI_ZH, IDI_ZH, IDI_EN, IDI_RELOAD };
 static const WCHAR *mode_label[] = { NULL, /*L"中文"*/ NULL, /*L"西文"*/ NULL, L"維護中" };
 
 WeaselTrayIcon::WeaselTrayIcon(weasel::UI &ui)
-	: m_style(ui.style()), m_status(ui.status()), m_mode(INITIAL), m_schema_zhung_icon(), m_schema_ascii_icon()
+	: m_style(ui.style()), m_status(ui.status()), m_mode(INITIAL), m_schema_zhung_icon(), m_schema_ascii_icon(), m_disabled(false)
 {
 }
 
@@ -43,6 +43,7 @@ void WeaselTrayIcon::Refresh()
 			RemoveIcon();
 			m_mode = INITIAL;
 		}
+		m_disabled = false;
 		return;
 	}
 	WeaselTrayMode mode = m_status.disabled ? DISABLED : 
@@ -79,10 +80,13 @@ void WeaselTrayIcon::Refresh()
 		else
 			SetIcon(mode_icon[mode]);
 
-		if (mode_label[mode])
+		if (mode_label[mode] && m_disabled == false)
 		{
 			ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
+			m_disabled = true;
 		}
+		if(m_mode != DISABLED)
+			m_disabled = false;
 	}
 	else if (!Visible())
 	{

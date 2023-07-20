@@ -4,11 +4,11 @@
 #include <StringAlgorithm.hpp>
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
-#include <VersionHelpers.hpp>
-#include <math.h>
 #include <regex>
 #include <rime_api.h>
+#include <map>
 
+#define TRANSPARENT_COLOR	0x00000000
 #define ARGB2ABGR(value)	((value & 0xff000000) | ((value & 0x000000ff) << 16) | (value & 0x0000ff00) | ((value & 0x00ff0000) >> 16)) 
 #define RGBA2ABGR(value)    (((value & 0xff) << 24) | ((value & 0xff000000) >> 24) | ((value & 0x00ff0000) >> 8) | ((value & 0x0000ff00) << 8))
 typedef enum
@@ -25,15 +25,14 @@ typedef enum
 	#define HEX_REGEX		std::regex("^0x[0-9a-f]+$", std::regex::icase)
 	#define TRIMHEAD_REGEX	std::regex("0x", std::regex::icase)
 #endif
-#define COLORTRANSPARENT(color)		((color & 0xff000000) == 0)
-#define CANDIDATE_COLOR_ABNORMAL(c1, c2, c3)	(COLORTRANSPARENT(c1) && COLORTRANSPARENT(c2) && COLORTRANSPARENT(c3))
+using namespace weasel;
 
 int expand_ibus_modifier(int m)
 {
 	return (m & 0xff) | ((m & 0xff00) << 16);
 }
 
-RimeWithWeaselHandler::RimeWithWeaselHandler(weasel::UI *ui)
+RimeWithWeaselHandler::RimeWithWeaselHandler(UI *ui)
 	: m_ui(ui)
 	, m_active_session(0)
 	, m_disabled(true)
@@ -46,8 +45,8 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
 }
 
-void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
-bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, std::string color = "");
+void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize);
+bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string color = "");
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _UpdateUICallback)
@@ -55,7 +54,7 @@ void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _Update
 	// Dangerous, don't touch
 	static char app_name[50];
 	RimeGetProperty(session_id, "client_app", app_name, sizeof(app_name) - 1);
-	if (utf8towcs(app_name) == std::wstring(L"explorer.exe")) 
+	if (string_to_wstring(app_name, CP_UTF8) == std::wstring(L"explorer.exe")) 
 		boost::thread th([=]() { ::Sleep(100); if (_UpdateUICallback) _UpdateUICallback(); });
 	else 
 		if (_UpdateUICallback) _UpdateUICallback();
@@ -67,11 +66,8 @@ void RimeWithWeaselHandler::_Setup()
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
 	weasel_traits.user_data_dir = weasel_user_data_dir();
 	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
-	const int len = 20;
-	char utf8_str[len];
-	memset(utf8_str, 0, sizeof(utf8_str));
-	WideCharToMultiByte(CP_UTF8, 0, WEASEL_IME_NAME, -1, utf8_str, len - 1, NULL, NULL);
-	weasel_traits.distribution_name = utf8_str;
+	std::string distribution_name(wstring_to_string(WEASEL_IME_NAME, CP_UTF8));
+	weasel_traits.distribution_name = distribution_name.c_str();
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
 	weasel_traits.app_name = "rime.weasel";
@@ -173,7 +169,7 @@ namespace ibus
 	};
 }
 
-BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT session_id, EatLine eat)
+BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, EatLine eat)
 {
 	DLOG(INFO) << "Process key event: keycode = " << keyEvent.keycode << ", mask = " << keyEvent.mask
 		 << ", session_id = " << session_id;
@@ -266,12 +262,12 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 		{
 			std::wstring lwr = line;
 			to_lower(lwr);
-			app_name = wcstoutf8(lwr.substr(kClientAppKey.length()).c_str());
+			app_name = wstring_to_string(lwr.substr(kClientAppKey.length()).c_str(), CP_UTF8);
 		}
 		const std::wstring kClientTypeKey = L"session.client_type=";
 		if (starts_with(line, kClientTypeKey))
 		{
-			client_type = wcstoutf8(line.substr(kClientTypeKey.length()).c_str());
+			client_type = wstring_to_string(line.substr(kClientTypeKey.length()).c_str(), CP_UTF8);
 		}
 	}
     // set app specific options
@@ -298,21 +294,21 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
 }
 
-void RimeWithWeaselHandler::_GetCandidateInfo(weasel::CandidateInfo & cinfo, RimeContext & ctx)
+void RimeWithWeaselHandler::_GetCandidateInfo(CandidateInfo & cinfo, RimeContext & ctx)
 {
 	cinfo.candies.resize(ctx.menu.num_candidates);
 	cinfo.comments.resize(ctx.menu.num_candidates);
 	cinfo.labels.resize(ctx.menu.num_candidates);
 	for (int i = 0; i < ctx.menu.num_candidates; ++i)
 	{
-		cinfo.candies[i].str = std::regex_replace(utf8towcs(ctx.menu.candidates[i].text),  std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+		cinfo.candies[i].str = std::regex_replace(string_to_wstring(ctx.menu.candidates[i].text, CP_UTF8),  std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
 		if (ctx.menu.candidates[i].comment)
 		{
-			cinfo.comments[i].str = std::regex_replace(utf8towcs(ctx.menu.candidates[i].comment),  std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+			cinfo.comments[i].str = std::regex_replace(string_to_wstring(ctx.menu.candidates[i].comment, CP_UTF8),  std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
 		}
 		if (RIME_STRUCT_HAS_MEMBER(ctx, ctx.select_labels) && ctx.select_labels)
 		{
-			cinfo.labels[i].str = std::regex_replace(utf8towcs(ctx.select_labels[i]),  std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+			cinfo.labels[i].str = std::regex_replace(string_to_wstring(ctx.select_labels[i], CP_UTF8),  std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
 		}
 		else if (ctx.menu.select_keys)
 		{
@@ -366,15 +362,15 @@ bool RimeWithWeaselHandler::_IsDeployerRunning()
 
 void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 {
-	weasel::Status weasel_status;
-	weasel::Context weasel_context;
+	Status weasel_status;
+	Context weasel_context;
 
 	bool is_tsf = _IsSessionTSF(session_id);
 
 	if (session_id == 0)
 		weasel_status.disabled = m_disabled;
 
-	_GetStatus(weasel_status, session_id);
+	_GetStatus(weasel_status, session_id, weasel_context);
 
 	if (!is_tsf) {
 		_GetContext(weasel_context, session_id);
@@ -383,22 +379,10 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	if (!m_ui) return;
 
 	if (RimeGetOption(session_id, "inline_preedit"))
-		m_ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
+		m_ui->style().client_caps |= INLINE_PREEDIT_CAPABLE;
 	else
-		m_ui->style().client_caps &= ~weasel::INLINE_PREEDIT_CAPABLE;
+		m_ui->style().client_caps &= ~INLINE_PREEDIT_CAPABLE;
 
-	// ensure text color not transparent if server recovers from crashed.
-	weasel::UIStyle& style(m_ui->style());
-	if(CANDIDATE_COLOR_ABNORMAL(style.text_color, style.hilited_candidate_text_color, style.candidate_text_color))
-	{
-		RimeConfig weaselconfig;
-		if (RimeConfigOpen("weasel", &weaselconfig))
-		{
-			_UpdateUIStyleColor(&weaselconfig, style);
-			m_base_style = style;
-			RimeConfigClose(&weaselconfig);
-		}
-	}
 	if (weasel_status.composing)
 	{
 		m_ui->Update(weasel_context, weasel_status);
@@ -416,17 +400,36 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	m_message_value.clear();
 }
 
+void _LoadIconSettingFromSchema(RimeConfig& config, char *buffer, const int& BUF_SIZE, 
+		const char* key1, const char* key2, const std::wstring& user_dir, const std::wstring& shared_dir, std::wstring& value)
+{
+	memset(buffer, '\0', (BUF_SIZE+1));
+	if (RimeConfigGetString(&config, key1, buffer, BUF_SIZE) || (key2 != NULL && RimeConfigGetString(&config, key2, buffer, BUF_SIZE))) {
+		std::wstring tmp = string_to_wstring(buffer, CP_UTF8);
+		DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
+		if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))) {
+			dwAttrib = GetFileAttributes((shared_dir + L"\\" + tmp).c_str());
+			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+				value = L"";
+			else
+				value = (shared_dir + L"\\" + tmp);
+		}
+		else value = user_dir + L"\\" + tmp;
+	}
+	else value = L"";
+}
+
 void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schema_id)
 {
 	if (!m_ui) return;
 	const int BUF_SIZE = 255;
 	char buffer[BUF_SIZE + 1];
 	RimeConfig config;
-	if (!RimeSchemaOpen(schema_id.c_str(), &config))
-		return;
+	if (!RimeSchemaOpen(schema_id.c_str(), &config)) return;
 	m_ui->style() = m_base_style;
 	_UpdateUIStyle(&config, m_ui, false);
 
+	// load schema color style config
 	memset(buffer, '\0', sizeof(buffer));
 	if (RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
 	{
@@ -439,54 +442,18 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	}
 	// load schema icon start
 	{
-		memset(buffer, '\0', sizeof(buffer));
-		if (RimeConfigGetString(&config, "schema/icon", buffer, BUF_SIZE)
-				|| RimeConfigGetString(&config, "schema/zhung_icon", buffer, BUF_SIZE))
-		{
-			std::wstring tmp = utf8towcs(buffer);
-			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
-			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
-			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
-			{
-				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
-				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
-				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
-					m_ui->style().current_zhung_icon = L"";
-				else
-					m_ui->style().current_zhung_icon = (share_dir + L"\\" + tmp);
-			}
-			else
-				m_ui->style().current_zhung_icon = user_dir + L"\\" + tmp;
-		}
-		else
-			m_ui->style().current_zhung_icon = L"";
-
-		memset(buffer, '\0', sizeof(buffer));
-		if (RimeConfigGetString(&config, "schema/ascii_icon", buffer, BUF_SIZE))
-		{
-			std::wstring tmp = utf8towcs(buffer);
-			std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
-			DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
-			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
-			{
-				std::wstring share_dir = string_to_wstring(weasel_shared_data_dir());
-				dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
-				if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
-					m_ui->style().current_ascii_icon = L"";
-				else
-					m_ui->style().current_ascii_icon = (share_dir + L"\\" + tmp);
-			}
-			else
-				m_ui->style().current_ascii_icon = user_dir + L"\\" + tmp;
-		}
-		else
-			m_ui->style().current_ascii_icon = L"";
+		std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
+		std::wstring shared_dir = string_to_wstring(weasel_shared_data_dir());
+		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/icon", "schema/zhung_icon", user_dir, shared_dir, m_ui->style().current_zhung_icon);
+		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/ascii_icon", NULL, user_dir, shared_dir, m_ui->style().current_ascii_icon);
+		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/full_icon", NULL, user_dir, shared_dir, m_ui->style().current_full_icon);
+		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/half_icon", NULL, user_dir, shared_dir, m_ui->style().current_half_icon);
 	}
 	// load schema icon end
 	RimeConfigClose(&config);
 }
 
-bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& status) {
+bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 	// show as auxiliary string
 	std::wstring& tips(ctx.aux.str);
 	bool show_icon = false;
@@ -530,7 +497,7 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 	m_ui->ShowWithTimeout(1200 + 200 * tips.length());
 	return true;
 }
-inline std::string _GetLabelText(const std::vector<weasel::Text> &labels, int id, const wchar_t *format)
+inline std::string _GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format)
 {
 	wchar_t buffer[128];
 	swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
@@ -561,6 +528,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		messages.push_back(std::string("status.ascii_mode=") + std::to_string(status.is_ascii_mode) + '\n');
 		messages.push_back(std::string("status.composing=") + std::to_string(status.is_composing) + '\n');
 		messages.push_back(std::string("status.disabled=") + std::to_string(status.is_disabled) + '\n');
+		messages.push_back(std::string("status.full_shape=") + std::to_string(status.is_full_shape) + '\n');
+		messages.push_back(std::string("status.schema_id=") + std::string(status.schema_id) + '\n');
 		RimeFreeStatus(&status);
 	}
 	
@@ -572,7 +541,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 			actions.insert("ctx");
 			switch (m_ui->style().preedit_type)
 			{
-			case weasel::UIStyle::PREVIEW:
+			case UIStyle::PREVIEW:
 				if (ctx.commit_text_preview != NULL)
 				{
 					std::string first = ctx.commit_text_preview;
@@ -584,7 +553,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 					break;
 				}
 				// no preview, fall back to composition
-			case weasel::UIStyle::COMPOSITION:
+			case UIStyle::COMPOSITION:
 				messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
 				if (ctx.composition.sel_start <= ctx.composition.sel_end)
 				{
@@ -594,8 +563,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.cursor_pos)) + '\n');
 				}
 				break;
-			case weasel::UIStyle::PREVIEW_ALL:
-				weasel::CandidateInfo cinfo;
+			case UIStyle::PREVIEW_ALL:
+				CandidateInfo cinfo;
 				_GetCandidateInfo(cinfo, ctx);
 				std::string topush = std::string("ctx.preedit=") + ctx.composition.preedit + "  [";
 				for (auto i = 0; i < ctx.menu.num_candidates; i++)
@@ -620,14 +589,14 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		}
 		if (ctx.menu.num_candidates)
 		{
-			weasel::CandidateInfo cinfo;
+			CandidateInfo cinfo;
 			std::wstringstream ss;
 			boost::archive::text_woarchive oa(ss);
 			_GetCandidateInfo(cinfo, ctx);
 
 			oa << cinfo;
 
-			messages.push_back(std::string("ctx.cand=") + wcstoutf8(ss.str().c_str()) + '\n');
+			messages.push_back(std::string("ctx.cand=") + wstring_to_string(ss.str().c_str(), CP_UTF8) + '\n');
 		}
 		RimeFreeContext(&ctx);
 	}
@@ -644,7 +613,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		oa << m_ui->style();
 
 		actions.insert("style");
-		messages.push_back(std::string("style=") + wcstoutf8(ss.str().c_str()) + '\n');
+		messages.push_back(std::string("style=") + wstring_to_string(ss.str().c_str(), CP_UTF8) + '\n');
 		RimeSetOption(session_id, "__synced", true);
 	}
 
@@ -664,7 +633,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 
 	return std::all_of(messages.begin(), messages.end(), [&eat](std::string &msg)
 	{
-		return eat(std::wstring(utf8towcs(msg.c_str())));
+		return eat(std::wstring(string_to_wstring(msg.c_str(), CP_UTF8)));
 	});
 }
 
@@ -676,19 +645,22 @@ static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor)
 		(GetBValue(fcolor) * 2 + GetBValue(bcolor)) / 3
 		) | ((((fcolor >> 24)+(bcolor >> 24)/2) << 24));
 }
-
+// convertions from color format to COLOR_ABGR
 static inline int ConvertColorToAbgr(int color, ColorFormat fmt = COLOR_ABGR)
 {
 	if(fmt == COLOR_ABGR) return color;
 	else if(fmt == COLOR_ARGB) return ARGB2ABGR(color);
 	else return RGBA2ABGR(color);
 }
-
-static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* value, ColorFormat fmt = COLOR_ABGR)
+// parse color value, with fallback value
+static Bool _RimeConfigGetColor32bWithFallback(RimeConfig* config, const std::string key, int& value, const ColorFormat& fmt, const int& fallback)
 {
 	char color[256] = { 0 };
-	if (!RimeConfigGetString(config, key, color, 256))
+	if (!RimeConfigGetString(config, key.c_str(), color, 256))
+	{
+		value = fallback;
 		return False;
+	}
 	std::string color_str = std::string(color);
 	// color code hex 
 	if (std::regex_match(color_str, HEX_REGEX))
@@ -698,9 +670,9 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 		tmp = tmp.substr(0, 8);
 		if(tmp.length() == 6) // color code without alpha, xxyyzz add alpha ff
 		{
-			*value = std::stoi(tmp, 0, 16);
-			if(fmt != COLOR_RGBA) *value |= 0xff000000;
-			else *value = (*value << 8) | 0x000000ff;
+			value = std::stoi(tmp, 0, 16);
+			if(fmt != COLOR_RGBA) value |= 0xff000000;
+			else value = (value << 8) | 0x000000ff;
 		}
 		else if(tmp.length() == 3) // color hex code xyz => xxyyzz and alpha ff
 		{
@@ -708,9 +680,9 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 				+ tmp.substr(1, 1) + tmp.substr(1, 1)
 				+ tmp.substr(2, 1) + tmp.substr(2, 1);
 			
-			*value = std::stoi(tmp, 0, 16);
-			if(fmt != COLOR_RGBA) *value |= 0xff000000;
-			else *value = (*value << 8) | 0x000000ff;
+			value = std::stoi(tmp, 0, 16);
+			if(fmt != COLOR_RGBA) value |= 0xff000000;
+			else value = (value << 8) | 0x000000ff;
 		}
 		else if(tmp.length() == 4)	// color hex code vxyz => vvxxyyzz
 		{
@@ -723,264 +695,216 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 			int value1 = std::stoi(tmp1, 0, 16);
 			tmp1 = tmp.substr(6);
 			int value2 = std::stoi(tmp1, 0, 16);
-			*value = (value1 << (tmp1.length() * 4)) | value2;
+			value = (value1 << (tmp1.length() * 4)) | value2;
 		}
-		else if(tmp.length() > 6)	/* color code with alpha */
+		else if(tmp.length() > 6 && tmp.length() <= 8)	/* color code with alpha */
 		{
 			// stoi limitation, split to handle
 			std::string tmp1 = tmp.substr(0, 6);
 			int value1 = std::stoi(tmp1, 0, 16);
 			tmp1 = tmp.substr(6);
 			int value2 = std::stoi(tmp1, 0, 16);
-			*value = (value1 << (tmp1.length() * 4)) | value2;
+			value = (value1 << (tmp1.length() * 4)) | value2;
 		}
 		else	// reject other code, length less then 3 or length == 5
+		{
+			value = fallback;
 			return False;
-		*value = ConvertColorToAbgr(*value, fmt);
-		*value = (*value & 0xffffffff);
+		}
+		value = ConvertColorToAbgr(value, fmt);
+		value = (value & 0xffffffff);
 		return True;
 	}
 	// regular number or other stuff, if user use pure dec number, they should take care themselves
 	else
 	{
 		int tmp = 0;
-		if (!RimeConfigGetInt(config, key, &tmp)) return False;
-
+		if (!RimeConfigGetInt(config, key.c_str(), &tmp))
+		{
+			value = fallback;
+			return False;
+		}
 		if(fmt != COLOR_RGBA)
-			*value = (tmp | 0xff000000) & 0xffffffff;
+			value = (tmp | 0xff000000) & 0xffffffff;
 		else
-			*value = ((tmp << 8) | 0x000000ff) & 0xffffffff;
-		*value = ConvertColorToAbgr(*value, fmt);
+			value = ((tmp << 8) | 0x000000ff) & 0xffffffff;
+		value = ConvertColorToAbgr(value, fmt);
 		return True;
 	}
 }
-
+// for remove useless spaces around seperators, begining and ending
 static inline void _RemoveSpaceAroundSep(std::wstring& str)
 {
-	str = std::regex_replace(str, std::wregex(L"\\s*,\\s*"), L",");
-	str = std::regex_replace(str, std::wregex(L"\\s*:\\s*"), L":");
-	str = std::regex_replace(str, std::wregex(L"^\\s*|\\s*$"), L"");
+	str = std::regex_replace(str, std::wregex(L"\\s*(,|:|^|$)\\s*"), L"$1");
 }
-
-static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
+// parset bool type configuration to T type value trueValue / falseValue
+template <class T>
+static void _RimeGetBool(RimeConfig* config, char* key, bool cond, T& value, const T& trueValue, const T& falseValue) {
+	Bool tempb = False;
+	if (RimeConfigGetBool(config, key, &tempb) || cond)
+		value = (!!tempb) ? trueValue : falseValue;
+}
+//	parse string option to T type value, with fallback 
+template <typename T>
+void _RimeParseStringOptWithFallback(RimeConfig* config, const std::string key, T& value, const std::map<std::string, T> amap, const T& fallback) {
+	char str_buff[256] = { 0 };
+	if (RimeConfigGetString(config, key.c_str(), str_buff, sizeof(str_buff) - 1)) {
+		auto it = amap.find(std::string(str_buff));
+		value = (it != amap.end()) ? it->second : fallback;
+	} 
+	else value = fallback;
+}
+static inline void _abs(int* value) { *value = abs(*value); }	// turn *value to be non-negative
+// get int type value with fallback key fb_key, and func to execute after reading
+static void _RimeGetIntWithFallback(RimeConfig* config, const char* key, int* value, const char* fb_key = NULL, std::function<void(int*)> func = NULL)
 {
-	if (!ui) return;
-
-	weasel::UIStyle &style(ui->style());
-
+	if (!RimeConfigGetInt(config, key, value) && fb_key != NULL) {
+			RimeConfigGetInt(config, fb_key, value);
+	}
+	if (func) func(value);
+}
+// get string value, with fallback value *fallback, and func to execute after reading
+static void _RimeGetStringWithFunc(RimeConfig* config, const char* key, std::wstring& value, const std::wstring* fallback = NULL, const std::function<void(std::wstring&)> func=NULL)
+{
 	const int BUF_SIZE = 2047;
-	char buffer[BUF_SIZE + 1];
-	memset(buffer, '\0', sizeof(buffer));
-	if (RimeConfigGetString(config, "style/font_face", buffer, BUF_SIZE))
-	{
-		std::wstring tmp = utf8towcs(buffer);
-		// remove spaces around seperators  : , 
-		_RemoveSpaceAroundSep(tmp);
-		style.font_face = tmp;
+	char buffer[BUF_SIZE + 1] = { 0 };
+	if (RimeConfigGetString(config, key, buffer, BUF_SIZE)) {
+		std::wstring tmp = string_to_wstring(buffer, CP_UTF8);
+		if (func) func(tmp);
+		value = tmp;
 	}
-	memset(buffer, '\0', sizeof(buffer));
-	if (RimeConfigGetString(config, "style/label_font_face", buffer, BUF_SIZE))
-	{
-		std::wstring tmp = utf8towcs(buffer);
-		// remove spaces around seperators  : , 
-		_RemoveSpaceAroundSep(tmp);
-		style.label_font_face = tmp;
-	}
-	memset(buffer, '\0', sizeof(buffer));
-	if (RimeConfigGetString(config, "style/comment_font_face", buffer, BUF_SIZE))
-	{
-		std::wstring tmp = utf8towcs(buffer);
-		// remove spaces around seperators  : , 
-		_RemoveSpaceAroundSep(tmp);
-		style.comment_font_face = tmp;
-	}
-	RimeConfigGetInt(config, "style/font_point", &style.font_point);
+	else if(fallback)
+		value = *fallback;
+}
+// update ui's style parameters, ui has been check before referenced 
+static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
+{
+	UIStyle &style(ui->style());
+	const int BUF_SIZE = 255;
+	char buffer[BUF_SIZE + 1] = { 0 };
+	// get font faces
+	_RimeGetStringWithFunc(config, "style/font_face", style.font_face, NULL, _RemoveSpaceAroundSep);
+	std::wstring* const pFallbackFontFace = initialize ? &style.font_face : NULL;
+	_RimeGetStringWithFunc(config, "style/label_font_face", style.label_font_face, pFallbackFontFace, _RemoveSpaceAroundSep);
+	_RimeGetStringWithFunc(config, "style/comment_font_face", style.comment_font_face, pFallbackFontFace, _RemoveSpaceAroundSep);
+	// able to set label font/comment font empty, force fallback to font face.
+	if (style.label_font_face.empty())
+		style.label_font_face = style.font_face;
+	if (style.comment_font_face.empty())
+		style.comment_font_face = style.font_face;
+	// get font points
+	_RimeGetIntWithFallback(config, "style/font_point", &style.font_point);
 	if (style.font_point <= 0)
 		style.font_point = 12;
-	if (!RimeConfigGetInt(config, "style/label_font_point", &style.label_font_point))
-	{
-		RimeConfigGetInt(config, "style/font_point", &style.label_font_point);
-	}
-	if (!RimeConfigGetInt(config, "style/comment_font_point", &style.comment_font_point))
-	{
-		RimeConfigGetInt(config, "style/font_point", &style.comment_font_point);
-	}
-	Bool inline_preedit = False;
-	if (RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit) || initialize)
-	{
-		style.inline_preedit = !!inline_preedit;
-	}
-	Bool vertical_auto_reverse = False;
-	if (RimeConfigGetBool(config, "style/vertical_auto_reverse", &vertical_auto_reverse) || initialize)
-	{
-		style.vertical_auto_reverse = !!vertical_auto_reverse;
-	}
-
-	char preedit_type[20] = { 0 };
-	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
-	{
-		if (!std::strcmp(preedit_type, "composition"))
-			style.preedit_type = weasel::UIStyle::COMPOSITION;
-		else if (!std::strcmp(preedit_type, "preview"))
-			style.preedit_type = weasel::UIStyle::PREVIEW;
-		else if (!std::strcmp(preedit_type, "preview_all"))
-			style.preedit_type = weasel::UIStyle::PREVIEW_ALL;
-	}
-	char antialias_mode[20] = { 0 };
-	if (RimeConfigGetString(config, "style/antialias_mode", antialias_mode, sizeof(antialias_mode) - 1))
-	{
-		if (!std::strcmp(antialias_mode, "force_dword"))
-			style.antialias_mode = weasel::UIStyle::FORCE_DWORD;
-		else if (!std::strcmp(antialias_mode, "cleartype"))
-			style.antialias_mode = weasel::UIStyle::CLEARTYPE;
-		else if (!std::strcmp(antialias_mode, "grayscale"))
-			style.antialias_mode = weasel::UIStyle::GRAYSCALE;
-		else if (!std::strcmp(antialias_mode, "aliased"))
-			style.antialias_mode = weasel::UIStyle::ALIASED;
-		else
-			style.antialias_mode = weasel::UIStyle::DEFAULT;
-	}
-
-	char align_type[20] = { 0 };
-	if (RimeConfigGetString(config, "style/layout/align_type", align_type, sizeof(align_type) - 1))
-	{
-		if (!std::strcmp(align_type, "top"))
-			style.align_type = weasel::UIStyle::ALIGN_TOP;
-		else if (!std::strcmp(align_type, "center"))
-			style.align_type = weasel::UIStyle::ALIGN_CENTER;
-		else
-			style.align_type = weasel::UIStyle::ALIGN_BOTTOM;
-	}
-	Bool display_tray_icon = False;
-	if (RimeConfigGetBool(config, "style/display_tray_icon", &display_tray_icon) || initialize)
-	{
-		style.display_tray_icon = !!display_tray_icon;
-	}
-
-	Bool ascii_tip_follow_cursor = False;
-	if (RimeConfigGetBool(config, "style/ascii_tip_follow_cursor", &ascii_tip_follow_cursor) || initialize)
-	{
-		style.ascii_tip_follow_cursor = !!ascii_tip_follow_cursor;
-	}
-
-	Bool horizontal = False;
-	if (RimeConfigGetBool(config, "style/horizontal", &horizontal) || initialize)
-	{
-		style.layout_type = horizontal ? weasel::UIStyle::LAYOUT_HORIZONTAL : weasel::UIStyle::LAYOUT_VERTICAL;
-	}
-
-	Bool fullscreen = False;
-	if (RimeConfigGetBool(config, "style/fullscreen", &fullscreen) && fullscreen)
-	{
-		style.layout_type = (style.layout_type == weasel::UIStyle::LAYOUT_HORIZONTAL)
-			 ? weasel::UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN : weasel::UIStyle::LAYOUT_VERTICAL_FULLSCREEN;
-	}
-
-	Bool vertical_text = False;
-	if ( RimeConfigGetBool(config, "style/vertical_text", &vertical_text))
-	{
-		if(vertical_text)
-			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL_TEXT;
-	}
-	Bool vertical_text_left_to_right = False;
-	if ( RimeConfigGetBool(config, "style/vertical_text_left_to_right", &vertical_text_left_to_right))
-	{
-		style.vertical_text_left_to_right = !!vertical_text_left_to_right;
-	}
-	Bool vertical_text_with_wrap = false;
-	if ( RimeConfigGetBool(config, "style/vertical_text_with_wrap", &vertical_text_with_wrap) )
-	{
-		style.vertical_text_with_wrap = !!vertical_text_with_wrap;
-	}
-
-	char label_text_format[128] = { 0 };
-	if (RimeConfigGetString(config, "style/label_format", label_text_format, sizeof(label_text_format) - 1))
-	{
-		style.label_text_format = utf8towcs(label_text_format);
-	}
-	char mark_text[128] = { 0 };
-	if (RimeConfigGetString(config, "style/mark_text", mark_text, sizeof(mark_text) - 1))
-	{
-		style.mark_text = utf8towcs(mark_text);
-	}
-
-	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
-	RimeConfigGetInt(config, "style/layout/max_width", &style.max_width);
-	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
-	RimeConfigGetInt(config, "style/layout/max_height", &style.max_height);
+	_RimeGetIntWithFallback(config, "style/label_font_point", &style.label_font_point, "style/font_point", _abs);
+	_RimeGetIntWithFallback(config, "style/comment_font_point", &style.comment_font_point, "style/font_point", _abs);
+	_RimeGetBool(config, "style/inline_preedit", initialize, style.inline_preedit, true, false);
+	_RimeGetBool(config, "style/vertical_auto_reverse", initialize, style.vertical_auto_reverse, true, false);
+	const std::map<std::string, UIStyle::PreeditType> _preeditMap = { 
+		{std::string("composition"),	UIStyle::COMPOSITION}, 
+		{std::string("preview"),		UIStyle::PREVIEW}, 
+		{std::string("preview_all"),	UIStyle::PREVIEW_ALL} 
+	};
+	_RimeParseStringOptWithFallback(config, "style/preedit_type", style.preedit_type, _preeditMap, UIStyle::COMPOSITION);
+	const std::map < std::string , UIStyle::AntiAliasMode > _aliasModeMap = {
+		{std::string("force_dword"),	UIStyle::FORCE_DWORD},
+		{std::string("cleartype"),		UIStyle::CLEARTYPE},
+		{std::string("grayscale"),		UIStyle::GRAYSCALE},
+		{std::string("aliased"),		UIStyle::ALIASED},
+		{std::string("default"),		UIStyle::DEFAULT}
+	};
+	_RimeParseStringOptWithFallback(config, "style/antialias_mode", style.antialias_mode, _aliasModeMap, UIStyle::DEFAULT);
+	const std::map<std::string, UIStyle::LayoutAlignType> _alignType = {
+		{std::string("top"),	UIStyle::ALIGN_TOP},
+		{std::string("center"),	UIStyle::ALIGN_CENTER},
+		{std::string("bottom"),	UIStyle::ALIGN_BOTTOM}
+	};
+	_RimeParseStringOptWithFallback(config, "style/layout/align_type", style.align_type, _alignType, UIStyle::ALIGN_CENTER);
+	_RimeGetBool(config, "style/display_tray_icon", initialize, style.display_tray_icon, true, false);
+	_RimeGetBool(config, "style/ascii_tip_follow_cursor", initialize, style.ascii_tip_follow_cursor, true, false);
+	_RimeGetBool(config, "style/horizontal", initialize, style.layout_type, UIStyle::LAYOUT_HORIZONTAL, UIStyle::LAYOUT_VERTICAL);
+	_RimeGetBool(config, "style/fullscreen", false, style.layout_type, 
+			((style.layout_type == UIStyle::LAYOUT_HORIZONTAL) ? UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN : UIStyle::LAYOUT_VERTICAL_FULLSCREEN), style.layout_type);
+	_RimeGetBool(config, "style/vertical_text", false, style.layout_type, UIStyle::LAYOUT_VERTICAL_TEXT, style.layout_type);
+	_RimeGetBool(config, "style/vertical_text_left_to_right", false, style.vertical_text_left_to_right, true, false);
+	_RimeGetBool(config, "style/vertical_text_with_wrap", false, style.vertical_text_with_wrap, true, false);
+	_RimeGetStringWithFunc(config, "style/label_format", style.label_text_format);
+	_RimeGetStringWithFunc(config, "style/mark_text", style.mark_text);
+	_RimeGetIntWithFallback(config, "style/layout/min_width", &style.min_width, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/max_width", &style.max_width, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/min_height", &style.min_height, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/max_height", &style.max_height, NULL, _abs);
 	// layout (alternative to style/horizontal)
-	char layout_type[256] = {0};
-	if (RimeConfigGetString(config, "style/layout/type", layout_type, sizeof(layout_type) - 1))
-	{
-		if (!std::strcmp(layout_type, "vertical"))
-			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL;
-		else if (!std::strcmp(layout_type, "horizontal"))
-			style.layout_type = weasel::UIStyle::LAYOUT_HORIZONTAL;
-		else if (!std::strcmp(layout_type, "vertical_text"))
-			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL_TEXT;
-
-		if (!std::strcmp(layout_type, "vertical+fullscreen"))
-			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL_FULLSCREEN;
-		else if (!std::strcmp(layout_type, "horizontal+fullscreen"))
-			style.layout_type = weasel::UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN;
-		else
-			LOG(WARNING) << "Invalid style type: " << layout_type;
-	}
+	const std::map < std::string , UIStyle::LayoutType > _layoutMap = {
+		{std::string("vertical"),					UIStyle::LAYOUT_VERTICAL},
+		{std::string("horizontal"),					UIStyle::LAYOUT_HORIZONTAL},
+		{std::string("vertical_text"),				UIStyle::LAYOUT_VERTICAL_TEXT},
+		{std::string("vertical+fullscreen"),		UIStyle::LAYOUT_VERTICAL_FULLSCREEN},
+		{std::string("horizontal+fullscreen"),		UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN}
+	};
+	_RimeParseStringOptWithFallback(config, "style/layout/type", style.layout_type, _layoutMap, style.layout_type);
 	// disable max_width when full screen
-	if( style.layout_type == weasel::UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || style.layout_type == weasel::UIStyle::LAYOUT_VERTICAL_FULLSCREEN )
+	if( style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN )
 	{
 		style.max_width = 0;
 		style.inline_preedit = false;
 	}
-	if (!RimeConfigGetInt(config, "style/layout/border", &style.border)) {
-		RimeConfigGetInt(config, "style/layout/border_width", &style.border);
-	}
-	RimeConfigGetInt(config, "style/layout/margin_x", &style.margin_x);
-	RimeConfigGetInt(config, "style/layout/margin_y", &style.margin_y);
-	RimeConfigGetInt(config, "style/layout/spacing", &style.spacing);
-	RimeConfigGetInt(config, "style/layout/candidate_spacing", &style.candidate_spacing);
-	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
-	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
-	style.hilite_padding = abs(style.hilite_padding);
-	RimeConfigGetInt(config, "style/layout/shadow_radius", &style.shadow_radius);
-	// negative shadow radius not allow
-	if(style.shadow_radius < 0)
-		style.shadow_radius = - style.shadow_radius;
-	style.shadow_radius *= (!fullscreen);
-	RimeConfigGetInt(config, "style/layout/shadow_offset_x", &style.shadow_offset_x);
-	RimeConfigGetInt(config, "style/layout/shadow_offset_y", &style.shadow_offset_y);
+	_RimeGetIntWithFallback(config, "style/layout/border", &style.border, "style/layout/border_width", _abs);
+	_RimeGetIntWithFallback(config, "style/layout/margin_x", &style.margin_x);
+	_RimeGetIntWithFallback(config, "style/layout/margin_y", &style.margin_y);
+	_RimeGetIntWithFallback(config, "style/layout/spacing", &style.spacing, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/candidate_spacing", &style.candidate_spacing, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/hilite_spacing", &style.hilite_spacing, NULL, _abs);
+	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_x", &style.hilite_padding_x, "style/layout/hilite_padding", _abs);
+	_RimeGetIntWithFallback(config, "style/layout/hilite_padding_y", &style.hilite_padding_y, "style/layout/hilite_padding", _abs);
+	_RimeGetIntWithFallback(config, "style/layout/shadow_radius", &style.shadow_radius, NULL, _abs);
+	// disable shadow for fullscreen layout
+	style.shadow_radius *= (!( style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ));
+	_RimeGetIntWithFallback(config, "style/layout/shadow_offset_x", &style.shadow_offset_x);
+	_RimeGetIntWithFallback(config, "style/layout/shadow_offset_y", &style.shadow_offset_y);
 	// round_corner as alias of hilited_corner_radius
-	if(!RimeConfigGetInt(config, "style/layout/hilited_corner_radius", &style.round_corner))
-	{
-		RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner);
-	}
-	// neither round_corner_ex or corner_radius set, fallback to round_corner
-	if(!RimeConfigGetInt(config, "style/layout/corner_radius", &style.round_corner_ex))
-		RimeConfigGetInt(config, "style/layout/round_corner", &style.round_corner_ex);
+	_RimeGetIntWithFallback(config, "style/layout/hilited_corner_radius", &style.round_corner, "style/layout/round_corner", _abs);
+	// corner_radius not set, fallback to round_corner
+	_RimeGetIntWithFallback(config, "style/layout/corner_radius", &style.round_corner_ex, "style/layout/round_corner", _abs);
 	// fix padding and spacing settings
-	if (style.hilite_padding * 2 > style.spacing)		// if hilite_padding over spacing, increase spacing
-		style.spacing = style.hilite_padding * 2;
-	if (style.hilite_padding * 2 > style.candidate_spacing)		// if hilite_padding over candidate spacing, increase candidate spacing
-		style.candidate_spacing = style.hilite_padding * 2;
-	if (style.hilite_padding > style.margin_x && style.margin_x >=0)		// if hilite_padiing over margin_x, increase margin_x
-		style.margin_x = style.hilite_padding;
-	else if (style.hilite_padding > -style.margin_x && style.margin_x < 0)
-		style.margin_x = -(style.hilite_padding);
-	if (style.hilite_padding > style.margin_y && style.margin_y >=0)		// if hilite_padiing over margin_y, increase margin_y
-		style.margin_y = style.hilite_padding;
-	else if (style.hilite_padding > -style.margin_y && style.margin_y < 0)
-		style.margin_y = -(style.hilite_padding);
-	Bool enhanced_postion = False;
-	if (RimeConfigGetBool(config, "style/enhanced_position", &enhanced_postion) || initialize)
+	if(style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 	{
-		style.enhanced_position = !!enhanced_postion;
+		// hilite_padding vs spacing
+		style.spacing = max(style.spacing, style.hilite_padding_y * 2);	// if hilite_padding over spacing, increase spacing
+		// hilite_padding vs candidate_spacing
+		if (style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN || style.layout_type == UIStyle::LAYOUT_VERTICAL) {
+			style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_y * 2);	// vertical, if hilite_padding_y over candidate spacing, increase candidate spacing
+		} else {
+			style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_x * 2);	// horizontal, if hilite_padding_x over candidate spacing, increase candidate spacing
+		}
+		// hilite_padding_x vs hilite_spacing
+		style.hilite_spacing = max(style.hilite_spacing, style.hilite_padding_x);
 	}
-	// color scheme
+	else	// LAYOUT_VERTICAL_TEXT
+	{
+		// hilite_padding_x vs spacing
+		style.spacing = max(style.spacing, style.hilite_padding_x * 2); // if hilite_padding over spacing, increase spacing
+		// hilite_padding vs candidate_spacing
+		style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_x * 2); // if hilite_padding_x over candidate spacing, increase candidate spacing
+		// vertical_text_with_wrap and hilite_padding_y over candidate_spacing
+		if (style.vertical_text_with_wrap)
+			style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_y * 2);
+		// hilite_padding_y vs hilite_spacing
+		style.hilite_spacing = max(style.hilite_spacing, style.hilite_padding_y);
+	}
+	// fix padding and margin settings
+	int scale = style.margin_x < 0 ? -1 : 1;
+	style.margin_x = scale * max(style.hilite_padding_x, abs(style.margin_x));
+	scale = style.margin_y < 0 ? -1 : 1;
+	style.margin_y = scale * max(style.hilite_padding_y, abs(style.margin_y));
+	// get enhanced_position
+	_RimeGetBool(config, "style/enhanced_position", initialize, style.enhanced_position, true, false);
+	// get color scheme
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
 		_UpdateUIStyleColor(config, style);
 }
-
-static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, std::string color)
+// load color configs to style, by "style/color_scheme" or specific scheme name "color" which is default empty
+static bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string color)
 {
 	const int BUF_SIZE = 255;
 	char buffer[BUF_SIZE + 1];
@@ -990,126 +914,37 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, std:
 	if(RimeConfigGetString(config, color_mark.c_str(), buffer, BUF_SIZE) || !color.empty())
 	{
 		std::string prefix("preset_color_schemes/");
-		if (color.empty())
-			prefix += buffer;
-		else
-			prefix += color;
-
+		prefix += (color.empty()) ? buffer : color;
 		// define color format, default abgr if not set
 		ColorFormat fmt = COLOR_ABGR;
-		char color_format[20] = { 0 };
-		if (RimeConfigGetString(config, (prefix + "/color_format").c_str(), color_format, sizeof(color_format) - 1))
-		{
-			if (!std::strcmp(color_format, "argb"))
-				fmt = COLOR_ARGB;
-			else if (!std::strcmp(color_format, "rgba"))
-				fmt = COLOR_RGBA;
-			else
-				fmt = COLOR_ABGR;
-		}
-		else
-			fmt = COLOR_ABGR;
-
-		RimeConfigGetColor32b(config, (prefix + "/back_color").c_str(), &style.back_color, fmt);
-		style.back_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/shadow_color").c_str(), &style.shadow_color, fmt))
-		{
-			style.shadow_color = 0x00000000;
-		}
-
-		style.prevpage_color = 0;
-		style.nextpage_color = 0;
-		RimeConfigGetColor32b(config, (prefix + "/prevpage_color").c_str(), &style.prevpage_color, fmt);
-		RimeConfigGetColor32b(config, (prefix + "/nextpage_color").c_str(), &style.nextpage_color, fmt);
-		style.shadow_color &= 0xffffffff;
-		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color, fmt);
-		style.text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color, fmt))
-		{
-			style.candidate_text_color = style.text_color;
-		}
-		style.candidate_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color, fmt))
-		{
-			style.candidate_back_color = style.back_color & 0x00ffffff;
-		}
-		style.candidate_back_color &= 0xffffffff;
-
-		if (!RimeConfigGetColor32b(config, (prefix + "/border_color").c_str(), &style.border_color, fmt))
-		{
-			style.border_color = style.text_color;
-		}
-		style.border_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_text_color").c_str(), &style.hilited_text_color, fmt))
-		{
-			style.hilited_text_color = style.text_color;
-		}
-		style.hilited_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_back_color").c_str(), &style.hilited_back_color, fmt))
-		{
-			style.hilited_back_color = style.back_color;
-		}
-		style.hilited_back_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_text_color").c_str(), &style.hilited_candidate_text_color, fmt))
-		{
-			style.hilited_candidate_text_color = style.hilited_text_color;
-		}
-		style.hilited_candidate_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color, fmt))
-		{
-			style.hilited_candidate_back_color = style.hilited_back_color;
-		}
-		style.hilited_candidate_back_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color, fmt))
-		{
-			style.hilited_candidate_shadow_color = style.shadow_color  & 0x00ffffff;
-		}
-		style.hilited_candidate_shadow_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color, fmt))
-		{
-			style.hilited_shadow_color = style.shadow_color  & 0x00ffffff;
-		}
-		style.hilited_shadow_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color, fmt))
-		{
-			style.candidate_shadow_color = style.shadow_color & 0x00ffffff;
-		}
-		style.candidate_shadow_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_border_color").c_str(), &style.candidate_border_color, fmt))
-		{
-			style.candidate_border_color = 0x00000000;
-		}
-		style.candidate_border_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_border_color").c_str(), &style.hilited_candidate_border_color, fmt))
-		{
-			style.hilited_candidate_border_color = 0x00000000;
-		}
-		style.hilited_candidate_border_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color, fmt))
-		{
-			style.label_text_color = blend_colors(style.candidate_text_color, style.candidate_back_color);
-		}
-		style.label_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_label_color").c_str(), &style.hilited_label_text_color, fmt))
-		{
-			style.hilited_label_text_color = blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color);
-		}
-		style.hilited_label_text_color &= 0xffffffff;
-		style.comment_text_color = style.label_text_color;
-		style.hilited_comment_text_color = style.hilited_label_text_color;
-		if (RimeConfigGetColor32b(config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color, fmt))
-		{
-			style.hilited_comment_text_color = style.comment_text_color;
-		}
-		style.comment_text_color &= 0xffffffff;
-		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color, fmt);
-		style.hilited_comment_text_color &= 0xffffffff;
-		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_mark_color").c_str(), &style.hilited_mark_color, fmt))
-		{
-			// default transparent hilited_candidate_back_color
-			style.hilited_mark_color = style.hilited_candidate_back_color & 0x00ffffff;
-		}
-		style.hilited_mark_color &= 0xffffffff;
+		const std::map<std::string, ColorFormat> _colorFmt = {
+			{std::string("argb"), COLOR_ARGB},
+			{std::string("rgba"), COLOR_RGBA},
+			{std::string("abgr"), COLOR_ABGR}
+		};
+		_RimeParseStringOptWithFallback(config, (prefix+"/color_format"), fmt, _colorFmt, COLOR_ABGR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/back_color"), style.back_color, fmt, 0xffffffff);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/shadow_color"), style.shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/prevpage_color"), style.prevpage_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/nextpage_color"), style.nextpage_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/text_color"), style.text_color, fmt, 0xff000000);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_text_color"), style.candidate_text_color, fmt, style.text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_back_color"), style.candidate_back_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/border_color"), style.border_color, fmt, style.text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_text_color"), style.hilited_text_color, fmt, style.text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_back_color"), style.hilited_back_color, fmt, style.back_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_text_color"), style.hilited_candidate_text_color, fmt, style.hilited_text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_back_color"), style.hilited_candidate_back_color, fmt, style.hilited_back_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_shadow_color"), style.hilited_candidate_shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_shadow_color"), style.hilited_shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_shadow_color"), style.candidate_shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_border_color"), style.candidate_border_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_border_color"), style.hilited_candidate_border_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/label_color"), style.label_text_color, fmt, blend_colors(style.candidate_text_color, style.candidate_back_color));
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_label_color"), style.hilited_label_text_color, fmt, blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color));
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/comment_text_color"), style.comment_text_color, fmt, style.label_text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_comment_text_color"), style.hilited_comment_text_color, fmt, style.hilited_label_text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_mark_color"), style.hilited_mark_color, fmt, TRANSPARENT_COLOR);
 		return true;
 	}
 	return false;
@@ -1135,7 +970,7 @@ static void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options
 	RimeConfigEnd(&app_iter);
 }
 
-void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
+void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& ctx)
 {
 	RIME_STRUCT(RimeStatus, status);
 	if (RimeGetStatus(session_id, &status))
@@ -1143,6 +978,12 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 		std::string schema_id = "";
 		if(status.schema_id)
 			schema_id = status.schema_id;
+		stat.schema_name = string_to_wstring(status.schema_name, CP_UTF8);
+		stat.schema_id = string_to_wstring(status.schema_id, CP_UTF8);
+		stat.ascii_mode = !!status.is_ascii_mode;
+		stat.composing = !!status.is_composing;
+		stat.disabled = !!status.is_disabled;
+		stat.full_shape = !!status.is_full_shape;
 		if (schema_id != m_last_schema_id)
 		{
 			m_last_schema_id = schema_id;
@@ -1151,30 +992,27 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 				_LoadSchemaSpecificSettings(schema_id);
 				_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
+				ctx.aux.str = stat.schema_name;
+				m_ui->Update(ctx, stat);
+				m_ui->ShowWithTimeout(1200);
 			}
 		}
-		stat.schema_name = utf8towcs(status.schema_name);
-		stat.ascii_mode = !!status.is_ascii_mode;
-		stat.composing = !!status.is_composing;
-		stat.disabled = !!status.is_disabled;
-		stat.full_shape = !!status.is_full_shape;
 		RimeFreeStatus(&status);
 	}
-
 }
 
-void RimeWithWeaselHandler::_GetContext(weasel::Context & weasel_context, UINT session_id)
+void RimeWithWeaselHandler::_GetContext(Context & weasel_context, UINT session_id)
 {
 	RIME_STRUCT(RimeContext, ctx);
 	if (RimeGetContext(session_id, &ctx))
 	{
 		if (ctx.composition.length > 0)
 		{
-			weasel_context.preedit.str = utf8towcs(ctx.composition.preedit);
+			weasel_context.preedit.str = string_to_wstring(ctx.composition.preedit, CP_UTF8);
 			if (ctx.composition.sel_start < ctx.composition.sel_end)
 			{
-				weasel::TextAttribute attr;
-				attr.type = weasel::HIGHLIGHTED;
+				TextAttribute attr;
+				attr.type = HIGHLIGHTED;
 				attr.range.start = utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start);
 				attr.range.end = utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end);
 
@@ -1183,7 +1021,7 @@ void RimeWithWeaselHandler::_GetContext(weasel::Context & weasel_context, UINT s
 		}
 		if (ctx.menu.num_candidates)
 		{
-			weasel::CandidateInfo &cinfo(weasel_context.cinfo);
+			CandidateInfo &cinfo(weasel_context.cinfo);
 			_GetCandidateInfo(cinfo, ctx);
 		}
 		RimeFreeContext(&ctx);
@@ -1206,4 +1044,3 @@ void RimeWithWeaselHandler::_UpdateInlinePreeditStatus(UINT session_id)
 	// show soft cursor on weasel panel but not inline
 	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
 }
-
