@@ -169,6 +169,8 @@ program_files:
   File "curl-ca-bundle.crt"
   File "rime-install.bat"
   File "rime-install-config.bat"
+  File "start_service.bat"
+  File "stop_service.bat"
   File "weasel.dll"
   ${If} ${RunningX64}
     File "weaselx64.dll"

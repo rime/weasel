@@ -1,5 +1,7 @@
 ﻿#include "stdafx.h"
 #include <resource.h>
+#include <thread>
+#include <shellapi.h>
 #include "WeaselTSF.h"
 #include "LanguageBar.h"
 #include "CandidateList.h"
@@ -277,10 +279,45 @@ void CLangBarItemButton::SetLangbarStatus(DWORD dwStatus, BOOL fSet)
 	return;
 }
 
+BOOL is_wow64()
+{
+	DWORD errorCode;
+	if (GetSystemWow64DirectoryW(NULL, 0) == 0)
+		if ((errorCode = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
+			return FALSE;
+		else
+			ExitProcess((UINT)errorCode);
+	else
+		return TRUE;
+}
 
 void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 {
-	m_client.TrayCommand(wID);
+	if(wID != ID_WEASELTRAY_RERUN_SERVICE)
+		m_client.TrayCommand(wID);
+	else
+	{
+		std::wstring WEASEL_REG_NAME_;
+		if(is_wow64())
+			WEASEL_REG_NAME_ = L"Software\\WOW6432Node\\Rime\\Weasel";
+		else
+			WEASEL_REG_NAME_ = L"Software\\Rime\\Weasel";
+
+		TCHAR szValue[MAX_PATH];
+		DWORD dwBufLen = MAX_PATH;
+
+		LONG lRes = RegGetValue(HKEY_LOCAL_MACHINE, WEASEL_REG_NAME_.c_str(), L"WeaselRoot", RRF_RT_REG_SZ, NULL, szValue, &dwBufLen);
+		if(lRes == ERROR_SUCCESS)
+		{
+			std::wstring dir(szValue);
+			std::thread th([dir]() {
+				ShellExecuteW(NULL, L"open", (dir + L"\\stop_service.bat").c_str(), NULL, dir.c_str(), SW_HIDE);
+				Sleep(100);
+				ShellExecuteW(NULL, L"open", (dir + L"\\start_service.bat").c_str(), NULL, dir.c_str(), SW_HIDE);
+				});
+			th.detach();
+		}
+	}
 }
 
 HWND WeaselTSF::_GetFocusedContextWindow()
