@@ -430,7 +430,19 @@ void WeaselTSF::_HandleMousePageEvent(const bool nextPage)
 {
 	// ToDo: if feature new api comes, replace the processes bellow
 	weasel::KeyEvent ke{ 0, 0 };
-	ke.keycode = nextPage ? ibus::Page_Down : ibus::Page_Up;
+	if(_cand->style().paging_on_scroll)
+		ke.keycode = nextPage ? ibus::Page_Down : ibus::Page_Up;
+	else
+	{
+		ke.keycode = nextPage ? ibus::Down : ibus::Up;
+		if(_cand->GetIsReposition())
+		{
+			if(ke.keycode == ibus::Up)
+				ke.keycode = ibus::Down;
+			else if(ke.keycode == ibus::Down)
+				ke.keycode = ibus::Up;
+		}
+	}
 	m_client.ProcessKeyEvent(ke);
 	DoEditSession(0);
 }
