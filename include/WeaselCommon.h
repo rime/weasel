@@ -280,6 +280,7 @@ namespace weasel
 		LayoutType layout_type;
 		bool vertical_text_left_to_right;
 		bool vertical_text_with_wrap;
+		bool paging_on_scroll;
 		std::wstring font_face;
 		std::wstring label_font_face;
 		std::wstring comment_font_face;
@@ -367,6 +368,7 @@ namespace weasel
 			layout_type(LAYOUT_VERTICAL),
 			vertical_text_left_to_right(false),
 			vertical_text_with_wrap(false),
+			paging_on_scroll(false),
 			min_width(0),
 			max_width(0),
 			min_height(0),
@@ -418,6 +420,7 @@ namespace weasel
 					|| layout_type != st.layout_type
 					|| vertical_text_left_to_right != st.vertical_text_left_to_right
 					|| vertical_text_with_wrap != st.vertical_text_with_wrap
+					|| paging_on_scroll != st.paging_on_scroll
 					|| font_face != st.font_face
 					|| label_font_face != st.label_font_face
 					|| comment_font_face != st.comment_font_face
@@ -508,6 +511,7 @@ namespace boost {
 			ar & s.layout_type;
 			ar & s.vertical_text_left_to_right;
 			ar & s.vertical_text_with_wrap;
+			ar & s.paging_on_scroll;
 			ar & s.min_width;
 			ar & s.max_width;
 			ar & s.min_height;
