@@ -805,7 +805,7 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 		{std::string("preview"),		UIStyle::PREVIEW}, 
 		{std::string("preview_all"),	UIStyle::PREVIEW_ALL} 
 	};
-	_RimeParseStringOptWithFallback(config, "style/preedit_type", style.preedit_type, _preeditMap, UIStyle::COMPOSITION);
+	_RimeParseStringOptWithFallback(config, "style/preedit_type", style.preedit_type, _preeditMap, style.preedit_type);
 	const std::map < std::string , UIStyle::AntiAliasMode > _aliasModeMap = {
 		{std::string("force_dword"),	UIStyle::FORCE_DWORD},
 		{std::string("cleartype"),		UIStyle::CLEARTYPE},
@@ -813,13 +813,13 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 		{std::string("aliased"),		UIStyle::ALIASED},
 		{std::string("default"),		UIStyle::DEFAULT}
 	};
-	_RimeParseStringOptWithFallback(config, "style/antialias_mode", style.antialias_mode, _aliasModeMap, UIStyle::DEFAULT);
+	_RimeParseStringOptWithFallback(config, "style/antialias_mode", style.antialias_mode, _aliasModeMap, style.antialias_mode);
 	const std::map<std::string, UIStyle::LayoutAlignType> _alignType = {
 		{std::string("top"),	UIStyle::ALIGN_TOP},
 		{std::string("center"),	UIStyle::ALIGN_CENTER},
 		{std::string("bottom"),	UIStyle::ALIGN_BOTTOM}
 	};
-	_RimeParseStringOptWithFallback(config, "style/layout/align_type", style.align_type, _alignType, UIStyle::ALIGN_CENTER);
+	_RimeParseStringOptWithFallback(config, "style/layout/align_type", style.align_type, _alignType, style.align_type);
 	_RimeGetBool(config, "style/display_tray_icon", initialize, style.display_tray_icon, true, false);
 	_RimeGetBool(config, "style/ascii_tip_follow_cursor", initialize, style.ascii_tip_follow_cursor, true, false);
 	_RimeGetBool(config, "style/horizontal", initialize, style.layout_type, UIStyle::LAYOUT_HORIZONTAL, UIStyle::LAYOUT_VERTICAL);
