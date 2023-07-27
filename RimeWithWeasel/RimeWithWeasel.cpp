@@ -621,7 +621,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 					messages.push_back(std::string("ctx.preedit.cursor=") +
 						std::to_string(utf8towcslen(first.c_str(), 0)) + ',' +
 						std::to_string(utf8towcslen(first.c_str(), first.size())) + ',' +
-						std::to_string(utf8towcslen(first.c_str(), ctx.composition.cursor_pos)) + '\n');
+						std::to_string(utf8towcslen(first.c_str(), first.size())) + '\n');
 					break;
 				}
 				// no preview, fall back to composition
