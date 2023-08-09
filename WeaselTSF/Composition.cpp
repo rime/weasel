@@ -374,6 +374,7 @@ void WeaselTSF::_UpdateComposition(com_ptr<ITfContext> pContext)
 	_pEditSessionContext = pContext;
 	
 	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+	_UpdateCompositionWindow(pContext);
 
 }
 
