@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "InstallOptionsDlg.h"
 #include <atlstr.h>
 
@@ -34,7 +34,7 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 
 	ok_.Attach(GetDlgItem(IDOK));
 	if (installed)
-		ok_.SetWindowTextW(L"\u4fee\u6539\u8cc7\u6599\u593e");
+		ok_.SetWindowTextW(L"修改資料夾");
 
 	ime_.Attach(GetDlgItem(IDC_CHECK_INSTIME));
 	if (installed)
@@ -69,7 +69,7 @@ LRESULT InstallOptionsDialog::OnRemove(WORD, WORD code, HWND, BOOL&) {
 	uninstall(non_silent);
 	installed = false;
 	ime_.EnableWindow(!installed);
-	ok_.SetWindowTextW(L"\u5b89\u88dd");
+	ok_.SetWindowTextW(L"安裝");
 	cn_.EnableWindow(!installed);
 	tw_.EnableWindow(!installed);
 	remove_.EnableWindow(installed);
