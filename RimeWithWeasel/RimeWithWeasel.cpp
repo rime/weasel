@@ -485,7 +485,7 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(UINT session_id, bool ignor
 		if (m_app_options.find(app_name) != m_app_options.end())
 		{
 			AppOptions& options(m_app_options[app_name]);
-			bool* pfind = new bool(false);
+			auto pfind = std::make_shared<bool>(false);
 			std::for_each(options.begin(), options.end(), [session_id, app_name, pfind, this](std::pair<const std::string, bool> &pair)
 			{
 			if(pair.first == "inline_preedit")
@@ -498,10 +498,8 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(UINT session_id, bool ignor
 			});
 			if (!(*pfind))
 			{
-				delete pfind;
 				goto load_schema_inline;
 			}
-			delete pfind;
 		}
 		else
 		{
