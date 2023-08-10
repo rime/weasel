@@ -241,7 +241,21 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 		recth.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 		// capture widow
 		if (recth.PtInRect(point)) _CaptureRect(recth);
-		else _CaptureRect(rcw);
+		else {
+			// if shadow_color transparent, decrease the capture rectangle size
+			if(COLORTRANSPARENT(m_style.shadow_color) && m_style.shadow_radius != 0) {
+				CRect crc(rcw);
+				int shadow_gap = (m_style.shadow_offset_x ==0 && m_style.shadow_offset_y == 0) ? 2 * m_style.shadow_radius : m_style.shadow_radius + m_style.shadow_radius / 2;
+				int ofx = m_style.hilite_padding_x + abs(m_style.shadow_offset_x) + shadow_gap > abs(m_style.margin_x) ?
+					m_style.hilite_padding_x + abs(m_style.shadow_offset_x) + shadow_gap - abs(m_style.margin_x) : 0;
+				int ofy = m_style.hilite_padding_y + abs(m_style.shadow_offset_y) + shadow_gap > abs(m_style.margin_y) ?
+					m_style.hilite_padding_y + abs(m_style.shadow_offset_y) + shadow_gap - abs(m_style.margin_y) : 0;
+				crc.DeflateRect(m_layout->offsetX - ofx, m_layout->offsetY - ofy);
+				_CaptureRect(crc);
+			} else {
+				_CaptureRect(rcw);
+			}
+		}
 	}
 	// button response
 	{
