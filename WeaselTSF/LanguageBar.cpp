@@ -109,7 +109,11 @@ STDAPI CLangBarItemButton::Show(BOOL fShow)
 
 STDAPI CLangBarItemButton::GetTooltipString(BSTR *pbstrToolTip)
 {
+#ifdef WEASEL_HANT
 	*pbstrToolTip = SysAllocString(L"左鍵切換模式，右鍵打開菜單");
+#else
+	*pbstrToolTip = SysAllocString(L"左键切换模式，右键打开菜单");
+#endif
 	return (*pbstrToolTip == NULL)? E_OUTOFMEMORY: S_OK;
 }
 
