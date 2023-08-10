@@ -33,8 +33,11 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	dir_.EnableWindow(user_dir.empty() ? FALSE : TRUE);
 
 	ok_.Attach(GetDlgItem(IDOK));
-	if (installed)
-		ok_.SetWindowTextW(L"修改資料夾");
+	if (installed) {
+		CString str;
+		str.LoadStringW(IDS_STRING_MODIFY);
+		ok_.SetWindowTextW(str);
+	}
 
 	ime_.Attach(GetDlgItem(IDC_CHECK_INSTIME));
 	if (installed)
@@ -69,7 +72,9 @@ LRESULT InstallOptionsDialog::OnRemove(WORD, WORD code, HWND, BOOL&) {
 	uninstall(non_silent);
 	installed = false;
 	ime_.EnableWindow(!installed);
-	ok_.SetWindowTextW(L"安裝");
+	CString str;
+	str.LoadStringW(IDS_STRING_INSTALL);
+	ok_.SetWindowTextW(str);
 	cn_.EnableWindow(!installed);
 	tw_.EnableWindow(!installed);
 	remove_.EnableWindow(installed);

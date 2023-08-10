@@ -1,10 +1,27 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by WeaselSetup.rc
+// Microsoft Visual C++ 生成的包含文件。
+// 供 WeaselSetup.rc 使用
 //
 #define IDI_WEASELSETUP                 107
 #define IDR_WEASELSETUP                 107
 #define IDR_MAINFRAME                   128
+#define IDS_STRING_INSTALL              129
+#define IDS_STRING_MODIFY               130
+
+#define IDS_STR_INSTALL_FAILED			131
+#define IDS_STR_INSTALL_SUCCESS_CAP		132
+#define IDS_STR_UNINSTALL_SUCCESS_CAP	133
+#define IDS_STR_UNINSTALL_FAILED		134
+#define IDS_STR_ERRCANCELFSREDIRECT		135
+#define IDS_STR_ERRRECOVERFSREDIRECT	136
+#define IDS_STR_ERRREGIME				137
+#define IDS_STR_ERRREGTSF				138
+#define IDS_STR_ERRREGIMEWRITESVREXE	139
+#define IDS_STR_INORUN_FAILED			140
+#define IDS_STR_ERRWRITEWEASELROOT		141
+#define IDS_STR_INSTALL_SUCCESS_INFO    142
+#define IDS_STR_UNINSTALL_SUCCESS_INFO  143
+
 #define IDD_INSTALL_OPTIONS             201
 #define IDD_DIALOG1                     203
 #define IDC_RADIO_CN                    1000

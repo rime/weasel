@@ -24,6 +24,16 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
 
+	LCID lcid = GetUserDefaultLCID();
+	if (lcid == 2052 || lcid == 3072 || lcid == 4100) {
+		LANGID langId = SetThreadUILanguage(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED));
+		SetThreadLocale(langId);
+	}
+	else {
+		LANGID langId = SetThreadUILanguage(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL));
+		SetThreadLocale(langId);
+	}
+
 	int nRet = Run(lpstrCmdLine);
 
 	_Module.Term();
