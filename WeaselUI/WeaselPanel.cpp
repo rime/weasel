@@ -355,7 +355,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 
 	GraphicsRoundRectPath* hiliteBackPath;
 	if (rd.Hemispherical && type!= BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style)) 
-		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - m_style.border/2 + (m_style.border % 2), rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
+		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (m_style.border%2 ? m_style.border / 2 : 0) , rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
 	else // background or current candidate background not out of window background
 		hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 
