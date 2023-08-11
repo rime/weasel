@@ -112,7 +112,7 @@ static int CustomInstall(bool installing)
 		0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, KEY, L"安裝失敗", MB_ICONERROR | MB_OK);
+		MSG_ID_CAP(KEY, IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -121,7 +121,7 @@ static int CustomInstall(bool installing)
 		(user_dir.length() + 1) * sizeof(WCHAR));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, L"無法寫入 RimeUserDir", L"安裝失敗", MB_ICONERROR | MB_OK);
+		MSG_BY_IDS(IDS_STR_ERR_WRITE_USER_DIR, IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
@@ -129,7 +129,7 @@ static int CustomInstall(bool installing)
 	ret = RegSetValueEx(hKey, L"Hant", 0, REG_DWORD, (const BYTE*)&data, sizeof(DWORD));
 	if (FAILED(HRESULT_FROM_WIN32(ret)))
 	{
-		MessageBox(NULL, L"無法寫入 Hant", L"安裝失敗", MB_ICONERROR | MB_OK);
+		MSG_BY_IDS(IDS_STR_ERR_WRITE_HANT, IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
 		return 1;
 	}
 	if (_has_installed)
@@ -143,7 +143,7 @@ static int CustomInstall(bool installing)
 			ShellExecuteW(NULL, NULL, (dir + L"\\WeaselDeployer.exe").c_str(), L"/deploy", NULL, SW_SHOWNORMAL);
 			});
 		th.detach();
-		MessageBox(NULL, L"修改用戶資料夾位置成功:)", L"修改成功", MB_ICONINFORMATION | MB_OK);
+		MSG_BY_IDS(IDS_STR_MODIFY_SUCCESS_INFO, IDS_STR_MODIFY_SUCCESS_CAP, MB_ICONINFORMATION | MB_OK);
 	}
 
 	return 0;

@@ -1,6 +1,27 @@
 #pragma once
 
 #include "resource.h"
+#include <atlstr.h>
+
+#define MSG_BY_IDS(idInfo, idCap, uType) \
+	{\
+		CString info, cap;\
+		info.LoadStringW(idInfo);\
+		cap.LoadStringW(idCap);\
+		LANGID langID = GetThreadUILanguage();\
+		MessageBoxExW(NULL, info, cap, uType, langID);\
+	}
+
+#define MSG_ID_CAP(info, idCap, uType) \
+	{\
+		CString cap;\
+		cap.LoadStringW(idCap);\
+		LANGID langID = GetThreadUILanguage();\
+		MessageBoxExW(NULL, info, cap, uType, langID);\
+	}
+
+#define MSG_NOT_SILENT_BY_IDS(silent, idInfo, idCap, uType) {if(!silent)  MSG_BY_IDS(idInfo, idCap, uType); }
+#define MSG_NOT_SILENT_ID_CAP(silent, info, idCap, uType) {if(!silent)	MSG_ID_CAP(info, idCap, uType);}
 
 class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog>
 {
