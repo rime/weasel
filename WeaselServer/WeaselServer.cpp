@@ -19,9 +19,22 @@ CAppModule _Module;
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
+	LCID lcid = GetUserDefaultLCID();
+	if (lcid == 2052 || lcid == 3072 || lcid == 4100) {
+		LANGID langId = SetThreadUILanguage(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED));
+		SetThreadLocale(langId);
+	}
+	else {
+		LANGID langId = SetThreadUILanguage(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL));
+		SetThreadLocale(langId);
+	}
+
 	if( !IsWindowsBlueOrLaterEx() )
 	{
-		::MessageBox(NULL, L"僅支持Windows 8.1或更高版本系統", L"系統版本過低", MB_ICONERROR);
+		if(GetThreadUILanguage() == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL))
+			::MessageBox(NULL, L"僅支持Windows 8.1或更高版本系統", L"系統版本過低", MB_ICONERROR);
+		else
+			::MessageBox(NULL, L"仅支持Windows 8.1或更高版本系统", L"系统版本过低", MB_ICONERROR);
 		return 0;
 	}
 	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
