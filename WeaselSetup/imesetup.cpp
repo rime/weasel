@@ -5,25 +5,7 @@
 #include <WeaselCommon.h>
 #include <msctf.h>
 #include <strsafe.h>
-#include <atlstr.h>
-#include "resource.h"
-
-#define MSG_NOT_SILENT_BY_IDS(silent, idInfo, idCap, uType) \
-	if(!silent) {\
-		CString info, cap;\
-		info.LoadStringW(idInfo);\
-		cap.LoadStringW(idCap);\
-		LANGID langID = GetThreadUILanguage();\
-		MessageBoxExW(NULL, info, cap, uType, langID);\
-	}
-
-#define MSG_NOT_SILENT_ID_CAP(silent, info, idCap, uType) \
-	if(!silent) {\
-		CString cap;\
-		cap.LoadStringW(idCap);\
-		LANGID langID = GetThreadUILanguage();\
-		MessageBoxExW(NULL, info, cap, uType, langID);\
-	}
+#include "InstallOptionsDlg.h"
 
 
 // {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
@@ -413,8 +395,12 @@ int register_text_service(const std::wstring& tsf_path, bool register_ime, bool 
 	else
 	{
 		WCHAR msg[100];
-		StringCchPrintfW(msg, _countof(msg), L"註冊輸入法錯誤 regsvr32.exe %s", params.c_str());
-		if (!silent) MessageBoxW(NULL, msg, L"安装/卸載失败", MB_ICONERROR | MB_OK);
+		CString str;
+		str.LoadStringW(IDS_STR_ERRREGTSF);
+		StringCchPrintfW(msg, _countof(msg), str, params.c_str());
+		//StringCchPrintfW(msg, _countof(msg), L"註冊輸入法錯誤 regsvr32.exe %s", params.c_str());
+		//if (!silent) MessageBoxW(NULL, msg, L"安装/卸載失败", MB_ICONERROR | MB_OK);
+		MSG_NOT_SILENT_ID_CAP(silent, msg, IDS_STR_INORUN_FAILED, MB_ICONERROR | MB_OK);
 		return 1;
 	}
 
