@@ -14,6 +14,7 @@
 #include <rime_levers_api.h>
 #pragma warning(default: 4005)
 #include <fstream>
+#include "WeaselDeployer.h"
 
 static void CreateFileIfNotExist(std::string filename)
 {
@@ -118,7 +119,8 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 		CloseHandle(hMutex);
 		if (report_errors)
 		{
-			MessageBox(NULL, L"正在執行另一項部署任務，方纔所做的修改將在輸入法再次啓動後生效。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+			//MessageBox(NULL, L"正在執行另一項部署任務，方纔所做的修改將在輸入法再次啓動後生效。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+			MSG_BY_IDS(IDS_STR_DEPLOYING_RESTARTREQ, IDS_STR_WEASEL, MB_OK | MB_ICONINFORMATION);
 		}
 		return 1;
 	}
@@ -159,7 +161,8 @@ int Configurator::DictManagement() {
 	{
 		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
-		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+		//MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+		MSG_BY_IDS(IDS_STR_DEPLOYING_WAIT, IDS_STR_WEASEL, MB_OK | MB_ICONINFORMATION);
 		return 1;
 	}
 
@@ -201,7 +204,8 @@ int Configurator::SyncUserData() {
 	{
 		LOG(WARNING) << "another deployer process is running; aborting operation.";
 		CloseHandle(hMutex);
-		MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+		//MessageBox(NULL, L"正在執行另一項部署任務，請稍候再試。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
+		MSG_BY_IDS(IDS_STR_DEPLOYING_WAIT, IDS_STR_WEASEL, MB_OK | MB_ICONINFORMATION);
 		return 1;
 	}
 
