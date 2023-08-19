@@ -241,7 +241,21 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 		recth.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 		// capture widow
 		if (recth.PtInRect(point)) _CaptureRect(recth);
-		else _CaptureRect(rcw);
+		else {
+			// if shadow_color transparent, decrease the capture rectangle size
+			if(COLORTRANSPARENT(m_style.shadow_color) && m_style.shadow_radius != 0) {
+				CRect crc(rcw);
+				int shadow_gap = (m_style.shadow_offset_x ==0 && m_style.shadow_offset_y == 0) ? 2 * m_style.shadow_radius : m_style.shadow_radius + m_style.shadow_radius / 2;
+				int ofx = m_style.hilite_padding_x + abs(m_style.shadow_offset_x) + shadow_gap > abs(m_style.margin_x) ?
+					m_style.hilite_padding_x + abs(m_style.shadow_offset_x) + shadow_gap - abs(m_style.margin_x) : 0;
+				int ofy = m_style.hilite_padding_y + abs(m_style.shadow_offset_y) + shadow_gap > abs(m_style.margin_y) ?
+					m_style.hilite_padding_y + abs(m_style.shadow_offset_y) + shadow_gap - abs(m_style.margin_y) : 0;
+				crc.DeflateRect(m_layout->offsetX - ofx, m_layout->offsetY - ofy);
+				_CaptureRect(crc);
+			} else {
+				_CaptureRect(rcw);
+			}
+		}
 	}
 	// button response
 	{
@@ -341,7 +355,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 
 	GraphicsRoundRectPath* hiliteBackPath;
 	if (rd.Hemispherical && type!= BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style)) 
-		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - m_style.border/2 + (m_style.border % 2), rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
+		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (m_style.border%2 ? m_style.border / 2 : 0) , rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
 	else // background or current candidate background not out of window background
 		hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 
@@ -621,6 +635,29 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				ReconfigRoundInfo(rd, m_ctx.cinfo.highlighted, m_candidateCount);
 			}
 			rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
+			if (m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
+			{
+				BYTE r = GetRValue(m_style.hilited_mark_color);
+				BYTE g = GetGValue(m_style.hilited_mark_color);
+				BYTE b = GetBValue(m_style.hilited_mark_color);
+				BYTE alpha = (BYTE)((m_style.hilited_mark_color >> 24) & 255);
+				Gdiplus::Graphics g_back(dc);
+				g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
+				Gdiplus::Color mark_color = Gdiplus::Color::MakeARGB(alpha, r, g, b);
+				Gdiplus::SolidBrush mk_brush(mark_color);
+				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+				{
+					CRect mkrc{ rect.left + m_style.round_corner, rect.top, rect.right - m_style.round_corner, rect.top + m_layout->MARK_HEIGHT / 2 };
+					GraphicsRoundRectPath mk_path(mkrc, 2);
+					g_back.FillPath(&mk_brush, &mk_path);
+				}
+				else
+				{
+					CRect mkrc{ rect.left, rect.top + m_style.round_corner, rect.left + m_layout->MARK_WIDTH / 2, rect.bottom - m_style.round_corner };
+					GraphicsRoundRectPath mk_path(mkrc, 2);
+					g_back.FillPath(&mk_brush, &mk_path);
+				}
+			}
 			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_style.hilited_candidate_border_color);
 			drawn = true;
 		}

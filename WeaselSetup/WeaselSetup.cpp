@@ -4,6 +4,7 @@
 #include "stdafx.h"
 
 #include "resource.h"
+#include <thread>
 
 #include "InstallOptionsDlg.h"
 
@@ -33,6 +34,16 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 int install(bool hant, bool silent, bool old_ime_support);
 int uninstall(bool silent);
 bool has_installed();
+
+static std::wstring install_dir()
+{
+	WCHAR exe_path[MAX_PATH] = { 0 };
+	GetModuleFileNameW(GetModuleHandle(NULL), exe_path, _countof(exe_path));
+	std::wstring dir(exe_path);
+	size_t pos = dir.find_last_of(L"\\");
+	dir.resize(pos);
+	return dir;
+}
 
 static int CustomInstall(bool installing)
 {
@@ -65,11 +76,11 @@ static int CustomInstall(bool installing)
 		}
 		RegCloseKey(hKey);
 	}
-
+	bool _has_installed = has_installed();
 	if (!silent)
 	{
 		InstallOptionsDialog dlg;
-		dlg.installed = has_installed();
+		dlg.installed = _has_installed;
 		dlg.hant = hant;
 		dlg.user_dir = user_dir;
 		if (IDOK != dlg.DoModal()) {
@@ -80,10 +91,12 @@ static int CustomInstall(bool installing)
 			hant = dlg.hant;
 			user_dir = dlg.user_dir;
 			old_ime_support = dlg.old_ime_support;
+			_has_installed = dlg.installed;
 		}
 	}
-	if (0 != install(hant, silent, old_ime_support))
-		return 1;
+	if(!_has_installed)
+		if (0 != install(hant, silent, old_ime_support))
+			return 1;
 
 	ret = RegCreateKeyEx(HKEY_CURRENT_USER, KEY,
 		0, NULL, 0, KEY_ALL_ACCESS, 0, &hKey, NULL);
@@ -108,6 +121,19 @@ static int CustomInstall(bool installing)
 	{
 		MessageBox(NULL, L"無法寫入 Hant", L"安裝失敗", MB_ICONERROR | MB_OK);
 		return 1;
+	}
+	if (_has_installed)
+	{
+		std::wstring dir(install_dir());
+		std::thread th([dir]() {
+			ShellExecuteW(NULL, NULL, (dir + L"\\WeaselServer.exe").c_str(), L"/q", NULL, SW_SHOWNORMAL);
+			Sleep(500);
+			ShellExecuteW(NULL, NULL, (dir + L"\\WeaselServer.exe").c_str(), L"", NULL, SW_SHOWNORMAL);
+			Sleep(500);
+			ShellExecuteW(NULL, NULL, (dir + L"\\WeaselDeployer.exe").c_str(), L"/deploy", NULL, SW_SHOWNORMAL);
+			});
+		th.detach();
+		MessageBox(NULL, L"修改用戶資料夾位置成功:)", L"修改成功", MB_ICONINFORMATION | MB_OK);
 	}
 
 	return 0;
