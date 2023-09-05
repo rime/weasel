@@ -283,18 +283,6 @@ void CLangBarItemButton::SetLangbarStatus(DWORD dwStatus, BOOL fSet)
 	return;
 }
 
-BOOL is_wow64()
-{
-	DWORD errorCode;
-	if (GetSystemWow64DirectoryW(NULL, 0) == 0)
-		if ((errorCode = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
-			return FALSE;
-		else
-			ExitProcess((UINT)errorCode);
-	else
-		return TRUE;
-}
-
 void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 {
 	if(wID != ID_WEASELTRAY_RERUN_SERVICE)

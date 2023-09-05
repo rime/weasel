@@ -8,15 +8,25 @@ set rime_version=1.9.0
 set download_archive=rime-a608767-Windows-msvc.7z
 set download_archive_deps=rime-deps-a608767-Windows-msvc.7z
 
+set download_archive_x64=rime-a608767-Windows-clang.7z
+set download_archive_deps_x64=rime-deps-a608767-Windows-clang.7z
+
 curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive%
 curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive_deps%
+curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive_x64%
+curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive_deps_x64%
 
 7z x %download_archive% * -olibrime\ -y
 7z x %download_archive_deps% * -olibrime\ -y
+7z x %download_archive_x64% * -olibrime_x64\ -y
+7z x %download_archive_deps_x64% * -olibrime_x64\ -y
 
 copy /Y librime\dist\include\rime_*.h include\
 copy /Y librime\dist\lib\rime.lib lib\
 copy /Y librime\dist\lib\rime.dll output\
+
+copy /Y librime_x64\dist\lib\rime.dll output\x64\
+copy /Y librime_x64\dist\lib\rime.lib lib\rimex64.lib
 
 if not exist output\data\opencc mkdir output\data\opencc
 copy /Y librime\share\opencc\*.* output\data\opencc\

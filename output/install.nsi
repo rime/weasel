@@ -204,6 +204,12 @@ program_files:
   ; images
   SetOutPath $INSTDIR\data\preview
   File "data\preview\*.png"
+  ; WeaselDeployerx64 files
+  ${If} ${RunningX64}
+	  SetOutPath $INSTDIR\x64
+	  File /nonfatal "x64\WeaselDeployer.exe"
+	  File /nonfatal "x64\rime.dll"
+  ${EndIf}
 
   SetOutPath $INSTDIR
 

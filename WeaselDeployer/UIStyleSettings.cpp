@@ -36,13 +36,6 @@ bool UIStyleSettings::GetPresetColorSchemes(std::vector<ColorSchemeInfo>* result
 	return true;
 }
 
-// check if a file exists
-static inline bool IfFileExist(std::string filename)
-{
-	DWORD dwAttrib = GetFileAttributes(string_to_wstring(filename).c_str());
-	return (INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-}
-
 // get preview image from user dir first, then shared_dir
 std::string UIStyleSettings::GetColorSchemePreview(const std::string& color_scheme_id) {
 	std::string shared_dir = rime_get_api()->get_shared_data_dir();

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "WeaselServerApp.h"
+#include "WeaselUtility.h"
 
 WeaselServerApp::WeaselServerApp()
 	: m_handler(std::make_unique<RimeWithWeaselHandler>(&m_ui))
@@ -46,10 +47,17 @@ void WeaselServerApp::SetupMenuHandlers()
 {
 	std::wstring dir(install_dir());
 	m_server.AddMenuHandler(ID_WEASELTRAY_QUIT, [this] { return m_server.Stop() == 0; });
-	m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
-	m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring()));
-	m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/dict")));
-	m_server.AddMenuHandler(ID_WEASELTRAY_SYNC, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/sync")));
+	if (is_wow64() && IfFileExistW(dir + L"\\x64\\WeaselDeployer.exe") && IfFileExistW(dir + L"\\x64\\rime.dll")) {
+		m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, std::bind(execute, dir + L"\\x64\\WeaselDeployer.exe", std::wstring(L"/deploy")));
+		m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, std::bind(execute, dir + L"\\x64\\WeaselDeployer.exe", std::wstring()));
+		m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, std::bind(execute, dir + L"\\x64\\WeaselDeployer.exe", std::wstring(L"/dict")));
+		m_server.AddMenuHandler(ID_WEASELTRAY_SYNC, std::bind(execute, dir + L"\\x64\\WeaselDeployer.exe", std::wstring(L"/sync")));
+	} else {
+		m_server.AddMenuHandler(ID_WEASELTRAY_DEPLOY, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/deploy")));
+		m_server.AddMenuHandler(ID_WEASELTRAY_SETTINGS, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring()));
+		m_server.AddMenuHandler(ID_WEASELTRAY_DICT_MANAGEMENT, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/dict")));
+		m_server.AddMenuHandler(ID_WEASELTRAY_SYNC, std::bind(execute, dir + L"\\WeaselDeployer.exe", std::wstring(L"/sync")));
+	}
 	m_server.AddMenuHandler(ID_WEASELTRAY_WIKI, std::bind(open, L"https://rime.im/docs/"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_HOMEPAGE, std::bind(open, L"https://rime.im/"));
 	m_server.AddMenuHandler(ID_WEASELTRAY_FORUM, std::bind(open, L"https://rime.im/discuss/"));
