@@ -3,10 +3,10 @@ setlocal
 git submodule init
 git submodule update plum
 
-set rime_version=1.8.5
+set rime_version=1.9.0
 
-set download_archive=rime-08dd95f-Windows.7z
-set download_archive_deps=rime-deps-08dd95f-Windows.7z
+set download_archive=rime-a608767-Windows-msvc.7z
+set download_archive_deps=rime-deps-a608767-Windows-msvc.7z
 
 curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive%
 curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive_deps%
