@@ -17,8 +17,8 @@ jobs:
   build:
     runs-on: windows-2022
     env:
-      boost_version: 1.78.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_78_0
+      boost_version: 1.83.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
