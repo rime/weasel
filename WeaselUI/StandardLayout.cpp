@@ -40,7 +40,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;
 		hr = pDWR->GetLayoutMetrics(&textMetrics);
-		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
+		sz = D2D1::SizeF(ceil(textMetrics.widthIncludingTrailingWhitespace), ceil(textMetrics.height));
 
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
@@ -48,13 +48,13 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 		
 		if(_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
-			size_t max_width = _style.max_width == 0 ? textMetrics.width : _style.max_width;
+			size_t max_width = _style.max_width == 0 ? textMetrics.widthIncludingTrailingWhitespace : _style.max_width;
 			hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), max_width, textMetrics.height);
 		}
 		else
 		{
 			size_t max_height = _style.max_height == 0 ? textMetrics.height : _style.max_height;
-			hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), textMetrics.width, max_height);
+			hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), textMetrics.widthIncludingTrailingWhitespace, max_height);
 		}
 
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
