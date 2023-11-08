@@ -955,7 +955,8 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 			style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_x * 2);	// horizontal, if hilite_padding_x over candidate spacing, increase candidate spacing
 		}
 		// hilite_padding_x vs hilite_spacing
-		style.hilite_spacing = max(style.hilite_spacing, style.hilite_padding_x);
+		if(!style.inline_preedit)
+			style.hilite_spacing = max(style.hilite_spacing, style.hilite_padding_x);
 	}
 	else	// LAYOUT_VERTICAL_TEXT
 	{
@@ -967,7 +968,8 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 		if (style.vertical_text_with_wrap)
 			style.candidate_spacing = max(style.candidate_spacing, style.hilite_padding_y * 2);
 		// hilite_padding_y vs hilite_spacing
-		style.hilite_spacing = max(style.hilite_spacing, style.hilite_padding_y);
+		if(!style.inline_preedit)
+			style.hilite_spacing = max(style.hilite_spacing, style.hilite_padding_y);
 	}
 	// fix padding and margin settings
 	int scale = style.margin_x < 0 ? -1 : 1;
