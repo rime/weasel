@@ -118,13 +118,13 @@ public:
 
 
 	com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
-	void HandleUICallback(size_t* const sel, size_t* const hov, bool* const next);
+	void HandleUICallback(size_t* const sel, size_t* const hov, bool* const next, bool* const scroll_next);
 
 private:
 	/* ui callback functions private */
 	void _SelectCandidateOnCurrentPage(const size_t index);
 	void _HandleMouseHoverEvent(const size_t index);
-	void _HandleMousePageEvent(const bool nextPage);
+	void _HandleMousePageEvent( bool* const nextPage, bool* const scrollNextPage);
 	/* TSF Related */
 	BOOL _InitThreadMgrEventSink();
 	void _UninitThreadMgrEventSink();

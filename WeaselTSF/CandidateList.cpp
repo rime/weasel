@@ -329,7 +329,7 @@ void CCandidateList::StartUI()
 	}
 
 	if(!_ui->uiCallback())
-		_ui->SetUICallBack([this](size_t* const sel, size_t* const hov, bool* const next) { _tsf->HandleUICallback(sel, hov, next); });
+		_ui->SetUICallBack([this](size_t* const sel, size_t* const hov, bool* const next, bool* const scroll_next) { _tsf->HandleUICallback(sel, hov, next, scroll_next); });
 	pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
 	//pUIElementMgr->UpdateUIElement(uiid);
 	if (_pbShow)
@@ -426,22 +426,27 @@ void WeaselTSF::_SelectCandidateOnCurrentPage(size_t index)
 	DoEditSession(0);
 }
 
-void WeaselTSF::_HandleMousePageEvent(const bool nextPage)
+void WeaselTSF::_HandleMousePageEvent( bool* const nextPage, bool* const scrollNextPage)
 {
 	// ToDo: if feature new api comes, replace the processes bellow
 	weasel::KeyEvent ke{ 0, 0 };
-	if(_cand->style().paging_on_scroll)
-		ke.keycode = nextPage ? ibus::Page_Down : ibus::Page_Up;
-	else
-	{
-		ke.keycode = nextPage ? ibus::Down : ibus::Up;
-		if(_cand->GetIsReposition())
+	// from scrolling event
+	if ( scrollNextPage ) {
+		if(_cand->style().paging_on_scroll)
+			ke.keycode = *scrollNextPage ? ibus::Page_Down : ibus::Page_Up;
+		else
 		{
-			if(ke.keycode == ibus::Up)
-				ke.keycode = ibus::Down;
-			else if(ke.keycode == ibus::Down)
-				ke.keycode = ibus::Up;
+			ke.keycode = *scrollNextPage ? ibus::Down : ibus::Up;
+			if(_cand->GetIsReposition())
+			{
+				if(ke.keycode == ibus::Up)
+					ke.keycode = ibus::Down;
+				else if(ke.keycode == ibus::Down)
+					ke.keycode = ibus::Up;
+			}
 		}
+	} else {	// from click event
+			ke.keycode = *nextPage ? ibus::Page_Down : ibus::Page_Up;
 	}
 	m_client.ProcessKeyEvent(ke);
 	DoEditSession(0);
@@ -468,12 +473,12 @@ void WeaselTSF::_HandleMouseHoverEvent(const size_t index)
 	}
 }
 
-void WeaselTSF::HandleUICallback(size_t* const sel, size_t* const hov, bool* const next)
+void WeaselTSF::HandleUICallback(size_t* const sel, size_t* const hov, bool* const next, bool* const scroll_next)
 {
 	if (sel)
 		_SelectCandidateOnCurrentPage(*sel);
 	else if (hov)
 		_HandleMouseHoverEvent(*hov);
-	else if (next)
-		_HandleMousePageEvent(*next);
+	else if (next || scroll_next)
+		_HandleMousePageEvent(next, scroll_next);
 }

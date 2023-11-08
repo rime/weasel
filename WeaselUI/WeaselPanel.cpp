@@ -217,7 +217,7 @@ LRESULT WeaselPanel::OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	if(_UICallback && delta != 0)
 	{
 		bool nextpage = delta < 0;
-		_UICallback(NULL, NULL, &nextpage);
+		_UICallback(NULL, NULL, NULL, &nextpage);
 	}
 	bHandled = true;
 	return 0;
@@ -267,7 +267,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 				if(prc.PtInRect(point)) {
 					bool nextPage = false;
 					if(_UICallback)
-						_UICallback(NULL, NULL, &nextPage);
+						_UICallback(NULL, NULL, &nextPage, NULL);
 					bHandled = true;
 					return 0;
 				}
@@ -279,7 +279,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 				if(prc.PtInRect(point)) {
 					bool nextPage = true;
 					if(_UICallback)
-						_UICallback(NULL, NULL, &nextPage);
+						_UICallback(NULL, NULL, &nextPage, NULL);
 					bHandled = true;
 					return 0;
 				}
@@ -293,7 +293,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 			if (rect.PtInRect(point))
 			{
 				if(_UICallback)
-					_UICallback(&i, NULL, NULL);
+					_UICallback(&i, NULL, NULL, NULL);
 				break;
 			}
 		}
@@ -316,7 +316,7 @@ LRESULT WeaselPanel::OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 		if (rect.PtInRect(point) && i != m_ctx.cinfo.highlighted)
 		{
 			if (_UICallback)
-				_UICallback(NULL, &i, NULL);
+				_UICallback(NULL, &i, NULL, NULL);
 		}
 	}
 	bHandled = true;
