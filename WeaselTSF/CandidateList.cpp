@@ -423,7 +423,7 @@ void WeaselTSF::_SelectCandidateOnCurrentPage(size_t index)
 	m_client.SelectCandidateOnCurrentPage(index);
 	// fake a emptyp presskey to get data back and DoEditSession
 	m_client.ProcessKeyEvent(0);
-	DoEditSession(0);
+	_UpdateComposition(_pEditSessionContext);
 }
 
 void WeaselTSF::_HandleMousePageEvent( bool* const nextPage, bool* const scrollNextPage)
@@ -449,7 +449,7 @@ void WeaselTSF::_HandleMousePageEvent( bool* const nextPage, bool* const scrollN
 			ke.keycode = *nextPage ? ibus::Page_Down : ibus::Page_Up;
 	}
 	m_client.ProcessKeyEvent(ke);
-	DoEditSession(0);
+	_UpdateComposition(_pEditSessionContext);
 }
 
 void WeaselTSF::_HandleMouseHoverEvent(const size_t index)
@@ -468,7 +468,7 @@ void WeaselTSF::_HandleMouseHoverEvent(const size_t index)
 		{
 			_cand->SetSelection(current_select + inc);
 			m_client.ProcessKeyEvent(ke);
-			DoEditSession(0);
+			_UpdateComposition(_pEditSessionContext);
 		}
 	}
 }
