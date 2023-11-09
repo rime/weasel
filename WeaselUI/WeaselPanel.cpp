@@ -680,23 +680,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				candidate_text_color = m_style.candidate_text_color;
 				comment_text_color = m_style.comment_text_color;
 			}
-			// draw highlight mark
-			if (!m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
-			{
-				CRect rc = m_layout->GetHighlightRect();
-				if(m_istorepos) rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-				rc.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
-				int vgap = m_layout->MARK_HEIGHT ? (rc.Height() - m_layout->MARK_HEIGHT) / 2 : 0;
-				int hgap = m_layout->MARK_WIDTH ? (rc.Width() - m_layout->MARK_WIDTH) / 2 : 0;
-				CRect hlRc;
-				if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					hlRc = CRect(rc.left + hgap, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1,
-					rc.left + hgap + m_layout->MARK_WIDTH, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1 + m_layout->MARK_HEIGHT);
-				else
-					hlRc = CRect(rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
-					rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
-				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, pDWR->pTextFormat.Get());
-			}
 			// Draw label
 			std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
 			if (!label.empty()) {
@@ -719,6 +702,25 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				_TextOut(rect, comment.c_str(), comment.length(), comment_text_color, commenttxtFormat.Get());
 			}
 			drawn = true;
+		}
+		// draw highlight mark
+		{
+			if (!m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
+			{
+				CRect rc = m_layout->GetHighlightRect();
+				if(m_istorepos) rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
+				rc.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
+				int vgap = m_layout->MARK_HEIGHT ? (rc.Height() - m_layout->MARK_HEIGHT) / 2 : 0;
+				int hgap = m_layout->MARK_WIDTH ? (rc.Width() - m_layout->MARK_WIDTH) / 2 : 0;
+				CRect hlRc;
+				if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+					hlRc = CRect(rc.left + hgap, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1,
+							rc.left + hgap + m_layout->MARK_WIDTH, rc.top + m_style.hilite_padding_y + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1 + m_layout->MARK_HEIGHT);
+				else
+					hlRc = CRect(rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
+							rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
+				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, pDWR->pTextFormat.Get());
+			}
 		}
 	}
 	return drawn;
