@@ -32,10 +32,19 @@ int expand_ibus_modifier(int m)
 	return (m & 0xff) | ((m & 0xff00) << 16);
 }
 
+#define SHOWN_ASCII (1<<0)
+#define SHOWN_SHAPE (1<<1)
+#define SHOWN_ASCII_PUNCT (1<<2)
+#define SHOWN_SIMPLIFICATION (1<<3)
+#define SHOWN_SCHEMA (1<<4)
+#define SHOWN_ALWAYS    (SHOWN_ASCII|SHOWN_SHAPE|SHOWN_ASCII_PUNCT|SHOWN_SCHEMA|SHOWN_SIMPLIFICATION)
+#define SHOWN_NEVER  0x00
+
 RimeWithWeaselHandler::RimeWithWeaselHandler(UI *ui)
 	: m_ui(ui)
 	, m_active_session(0)
 	, m_disabled(true)
+	, m_show_notifications_when(SHOWN_ALWAYS)
 	, _UpdateUICallback(NULL)
 {
 	_Setup();
@@ -45,6 +54,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
 }
 
+void _UpdateShowNotificationsWhen(RimeConfig* config, UINT* show_notifications_when);
 void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string color = "");
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
@@ -96,6 +106,7 @@ void RimeWithWeaselHandler::Initialize()
 		if (m_ui)
 		{
 			_UpdateUIStyle(&config, m_ui, true);
+			_UpdateShowNotificationsWhen(&config, &m_show_notifications_when);
 			m_base_style = m_ui->style();
 		}
 		_LoadAppOptions(&config, m_app_options);
@@ -565,10 +576,17 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 	}
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();
-
-	m_ui->Update(ctx, status);
-	m_ui->ShowWithTimeout(1200 + 200 * tips.length());
-	return true;
+	if( ((m_show_notifications_when & SHOWN_ASCII) && (m_message_value == "ascii_mode" || m_message_value == "!ascii_mode"))
+			|| ((m_show_notifications_when & SHOWN_SHAPE) && (m_message_value == "full_shape" || m_message_value == "!full_shape"))
+			|| ((m_show_notifications_when & SHOWN_ASCII_PUNCT) && (m_message_value == "ascii_punct" || m_message_value == "!ascii_punct"))
+			|| ((m_show_notifications_when & SHOWN_SIMPLIFICATION) && (m_message_value == "simplification" || m_message_value == "!simplification"))
+			|| (m_message_type == "schema" && (m_show_notifications_when && SHOWN_SCHEMA))
+			|| m_message_type == "deploy") { m_ui->Update(ctx, status);
+		m_ui->ShowWithTimeout(1200 + 200 * tips.length());
+		return true;
+	} else {
+		return m_ui->IsCountingDown();
+	}
 }
 inline std::string _GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format)
 {
@@ -851,6 +869,35 @@ static void _RimeGetStringWithFunc(RimeConfig* config, const char* key, std::wst
 	else if(fallback)
 		value = *fallback;
 }
+
+void _UpdateShowNotificationsWhen(RimeConfig* config, UINT* show_notifications_when)
+{
+	char buffer[256] = { 0 };
+	// if not set, shown always as default
+	if (!RimeConfigGetString(config, "show_notifications_when", buffer, 256))
+		*show_notifications_when = SHOWN_ALWAYS;
+	else
+	{
+		std::string noti_str(buffer);
+		if (std::regex_match(noti_str, std::regex(".*always.*")) || noti_str.empty())
+			*show_notifications_when = SHOWN_ALWAYS;
+		else if (noti_str == "never")
+			*show_notifications_when = SHOWN_NEVER;
+		else {
+			*show_notifications_when = SHOWN_NEVER;
+			if (std::regex_match(noti_str, std::regex(".*ascii_punct.*")))
+				*show_notifications_when |= SHOWN_ASCII_PUNCT;
+			if (std::regex_match(noti_str, std::regex(".*ascii_mode.*")))
+				*show_notifications_when |= SHOWN_ASCII;
+			if (std::regex_match(noti_str, std::regex(".*shape.*")))
+				*show_notifications_when |= SHOWN_SHAPE;
+			if (std::regex_match(noti_str, std::regex(".*schema.*")))
+				*show_notifications_when |= SHOWN_SCHEMA;
+			if (std::regex_match(noti_str, std::regex(".*simplification.*")))
+				*show_notifications_when |= SHOWN_SIMPLIFICATION;
+		}
+	}
+}
 // update ui's style parameters, ui has been check before referenced 
 static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 {
@@ -1072,9 +1119,11 @@ void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& 
 				_LoadAppInlinePreeditSet(session_id, true);
 				_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
-				ctx.aux.str = stat.schema_name;
-				m_ui->Update(ctx, stat);
-				m_ui->ShowWithTimeout(1200);
+				if (m_show_notifications_when & SHOWN_SCHEMA) {
+					ctx.aux.str = stat.schema_name;
+					m_ui->Update(ctx, stat);
+					m_ui->ShowWithTimeout(1200);
+				}
 			}
 		}
 		else
