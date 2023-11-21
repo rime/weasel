@@ -905,6 +905,14 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 	_RimeGetBool(config, "style/vertical_text", false, style.layout_type, UIStyle::LAYOUT_VERTICAL_TEXT, style.layout_type);
 	_RimeGetBool(config, "style/vertical_text_left_to_right", false, style.vertical_text_left_to_right, true, false);
 	_RimeGetBool(config, "style/vertical_text_with_wrap", false, style.vertical_text_with_wrap, true, false);
+	const std::map<std::string, bool> _text_orientation = {
+		{std::string("horizontal"), false},
+		{std::string("vertical"), true}
+	};
+	bool _text_orientation_bool = false;
+	_RimeParseStringOptWithFallback(config, "style/text_orientation", _text_orientation_bool, _text_orientation, false);
+	if(_text_orientation_bool)
+		style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT;
 	_RimeGetStringWithFunc(config, "style/label_format", style.label_text_format);
 	_RimeGetStringWithFunc(config, "style/mark_text", style.mark_text);
 	_RimeGetIntWithFallback(config, "style/layout/min_width", &style.min_width, NULL, _abs);
