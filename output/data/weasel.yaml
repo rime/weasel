@@ -9,6 +9,11 @@ app_options:
   conhost.exe:
     ascii_mode: true
 
+# configuration: when to show notifications
+# always, never, or combination of: ascii_mode, ascii_punct, shape, simplification, schema
+# e.g., ascii_mode+shape+schema
+show_notifications_when: always
+
 style:
   antialias_mode: default
   ascii_tip_follow_cursor: false

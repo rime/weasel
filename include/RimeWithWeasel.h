@@ -55,6 +55,7 @@ private:
 	std::string m_last_schema_id;
 	std::string m_last_app_name;
 	weasel::UIStyle m_base_style;
+	UINT m_show_notifications_when;
 
 	std::function<void()> _UpdateUICallback;
 
