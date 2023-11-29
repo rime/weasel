@@ -176,7 +176,7 @@ namespace weasel
 		}
 		bool operator==(const Context& ctx)
 		{
-			if (preedit == ctx.preedit && aux == ctx.aux || cinfo == ctx.cinfo)
+			if (preedit == ctx.preedit && aux == ctx.aux && cinfo == ctx.cinfo)
 				return true;
 			return false;
 		}
