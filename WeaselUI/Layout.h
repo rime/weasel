@@ -68,6 +68,10 @@ namespace weasel
 		virtual CRect GetContentRect() = 0;
 		virtual CRect GetPrepageRect() = 0;
 		virtual CRect GetNextpageRect() = 0;
+		virtual weasel::TextRange GetPreeditRange() = 0; 
+		virtual CSize GetBeforeSize() = 0;
+		virtual CSize GetHilitedSize() = 0;
+		virtual CSize GetAfterSize() = 0;
 
 		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const = 0;
 		virtual bool IsInlinePreedit() const = 0;
