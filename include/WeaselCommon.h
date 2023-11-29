@@ -293,6 +293,7 @@ namespace weasel
 		bool inline_preedit;
 		bool display_tray_icon;
 		bool ascii_tip_follow_cursor;
+		bool click_to_capture;
 		std::wstring current_zhung_icon;
 		std::wstring current_ascii_icon;
 		std::wstring current_half_icon;
@@ -360,6 +361,7 @@ namespace weasel
 			preedit_type(COMPOSITION),
 			display_tray_icon(false),
 			ascii_tip_follow_cursor(false),
+			click_to_capture(false),
 			current_zhung_icon(),
 			current_ascii_icon(),
 			current_half_icon(),
@@ -441,6 +443,7 @@ namespace weasel
 					|| current_half_icon != st.current_half_icon
 					|| current_full_icon != st.current_full_icon
 					|| enhanced_position != st.enhanced_position
+					|| click_to_capture != st.click_to_capture
 					|| label_text_format != st.label_text_format
 					|| min_width != st.min_width
 					|| max_width != st.max_width
@@ -510,7 +513,8 @@ namespace boost {
 			ar & s.current_ascii_icon;
 			ar & s.current_half_icon;
 			ar & s.current_full_icon;
-			ar& s.enhanced_position;
+			ar & s.enhanced_position;
+			ar & s.click_to_capture;
 			ar & s.label_text_format;
 			// layout
 			ar & s.layout_type;
