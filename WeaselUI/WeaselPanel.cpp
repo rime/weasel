@@ -235,6 +235,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	point.y = GET_Y_LPARAM(lParam);
 
 	// capture
+	if(m_style.click_to_capture)
 	{
 		CRect recth = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
 		if(m_istorepos)	recth.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
