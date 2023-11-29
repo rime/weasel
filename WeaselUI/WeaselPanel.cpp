@@ -436,20 +436,15 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat.Get();
 
 	if (!t.empty()) {
-		weasel::TextRange range;
-		std::vector<weasel::TextAttribute> const& attrs = text.attributes;
-		for (size_t j = 0; j < attrs.size(); ++j)
-			if (attrs[j].type == weasel::HIGHLIGHTED)
-				range = attrs[j].range;
+		weasel::TextRange range = m_layout->GetPreeditRange();
 
 		if (range.start < range.end) {
-			CSize beforeSz, hilitedSz, afterSz;
 			std::wstring before_str = t.substr(0, range.start);
 			std::wstring hilited_str = t.substr(range.start, range.end);
 			std::wstring after_str = t.substr(range.end);
-			m_layout->GetTextSizeDW(before_str, before_str.length(), txtFormat, pDWR, &beforeSz);
-			m_layout->GetTextSizeDW(hilited_str, hilited_str.length(), txtFormat, pDWR, &hilitedSz);
-			m_layout->GetTextSizeDW(after_str, after_str.length(), txtFormat, pDWR, &afterSz);
+			CSize beforeSz = m_layout->GetBeforeSize();
+			CSize hilitedSz = m_layout->GetHilitedSize();
+			CSize afterSz = m_layout->GetAfterSize();
 
 			int x = rc.left;
 			int y = rc.top;
@@ -528,18 +523,11 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat.Get();
 
 	if (!t.empty()) {
-		weasel::TextRange range;
-		std::vector<weasel::TextAttribute> const& attrs = text.attributes;
-		for (size_t j = 0; j < attrs.size(); ++j)
-			if (attrs[j].type == weasel::HIGHLIGHTED)
-				range = attrs[j].range;
+		weasel::TextRange range = m_layout->GetPreeditRange();
 
 		if (range.start < range.end) {
-			CSize beforeSz, hilitedSz;
-			std::wstring before_str = t.substr(0, range.start);
-			std::wstring hilited_str = t.substr(range.start, range.end);
-			m_layout->GetTextSizeDW(before_str, before_str.length(), txtFormat, pDWR, &beforeSz);
-			m_layout->GetTextSizeDW(hilited_str, hilited_str.length(), txtFormat, pDWR, &hilitedSz);
+			CSize beforeSz = m_layout->GetBeforeSize();
+			CSize hilitedSz = m_layout->GetHilitedSize();
 
 			int x = rc.left;
 			int y = rc.top;

@@ -78,7 +78,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCoun
 	pDWR->ResetLayout();
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR) const
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, ComPtr<IDWriteTextFormat1> pTextFormat, PDWR pDWR)
 {
 	const std::wstring& preedit = text.str;
 	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
@@ -88,34 +88,33 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, Com
 		weasel::TextRange range;
 		for (size_t j = 0; j < attrs.size(); ++j)
 			if (attrs[j].type == weasel::HIGHLIGHTED)
-				range = attrs[j].range;
-		if(range.start < range.end)
+				_range = attrs[j].range;
+		if(_range.start < _range.end)
 		{
-			std::wstring before_str = preedit.substr(0, range.start);
-			std::wstring hilited_str = preedit.substr(range.start, range.end);
-			std::wstring after_str = preedit.substr(range.end);
-			CSize beforesz(0,0), hilitedsz(0,0), aftersz(0,0);
-			GetTextSizeDW(before_str, before_str.length(), pTextFormat, pDWR, &beforesz);
-			GetTextSizeDW(hilited_str, hilited_str.length(), pTextFormat, pDWR, &hilitedsz);
-			GetTextSizeDW(after_str, after_str.length(), pTextFormat, pDWR, &aftersz);
+			std::wstring before_str = preedit.substr(0, _range.start);
+			std::wstring hilited_str = preedit.substr(_range.start, _range.end);
+			std::wstring after_str = preedit.substr(_range.end);
+			GetTextSizeDW(before_str, before_str.length(), pTextFormat, pDWR, &_beforesz);
+			GetTextSizeDW(hilited_str, hilited_str.length(), pTextFormat, pDWR, &_hilitedsz);
+			GetTextSizeDW(after_str, after_str.length(), pTextFormat, pDWR, &_aftersz);
 			auto width_max = 0, height_max = 0;
 			if(_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 			{
-				width_max = max(width_max, beforesz.cx);
-				width_max = max(width_max, hilitedsz.cx);
-				width_max = max(width_max, aftersz.cx);
-				height_max += beforesz.cy + (beforesz.cy > 0) * _style.hilite_spacing;
-				height_max += hilitedsz.cy + (hilitedsz.cy > 0) * _style.hilite_spacing;
-				height_max += aftersz.cy; // + (aftersz.cy > 0) * _style.hilite_spacing;
+				width_max = max(width_max, _beforesz.cx);
+				width_max = max(width_max, _hilitedsz.cx);
+				width_max = max(width_max, _aftersz.cx);
+				height_max += _beforesz.cy + (_beforesz.cy > 0) * _style.hilite_spacing;
+				height_max += _hilitedsz.cy + (_hilitedsz.cy > 0) * _style.hilite_spacing;
+				height_max += _aftersz.cy; 
 			}
 			else
 			{
-				height_max = max(height_max, beforesz.cy);
-				height_max = max(height_max, hilitedsz.cy);
-				height_max = max(height_max, aftersz.cy);
-				width_max += beforesz.cx + (beforesz.cx > 0) * _style.hilite_spacing;
-				width_max += hilitedsz.cx + (hilitedsz.cx > 0) * _style.hilite_spacing;
-				width_max += aftersz.cx ;// + (aftersz.cx > 0) * _style.hilite_spacing;
+				height_max = max(height_max, _beforesz.cy);
+				height_max = max(height_max, _hilitedsz.cy);
+				height_max = max(height_max, _aftersz.cy);
+				width_max += _beforesz.cx + (_beforesz.cx > 0) * _style.hilite_spacing;
+				width_max += _hilitedsz.cx + (_hilitedsz.cx > 0) * _style.hilite_spacing;
+				width_max += _aftersz.cx ;
 			}
 			size.cx = width_max;
 			size.cy = height_max;
