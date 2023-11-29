@@ -288,6 +288,8 @@ namespace weasel
 		int font_point;
 		int label_font_point;
 		int comment_font_point;
+		int candidate_abbreviate_length;
+
 		bool inline_preedit;
 		bool display_tray_icon;
 		bool ascii_tip_follow_cursor;
@@ -351,6 +353,7 @@ namespace weasel
 			font_point(0),
 			label_font_point(0),
 			comment_font_point(0),
+			candidate_abbreviate_length(0),
 			inline_preedit(false),
 			antialias_mode(DEFAULT),
 			align_type(ALIGN_BOTTOM),
@@ -428,6 +431,7 @@ namespace weasel
 					|| font_point != st.font_point
 					|| label_font_point != st.label_font_point
 					|| comment_font_point != st.comment_font_point
+					|| candidate_abbreviate_length != st.candidate_abbreviate_length
 					|| inline_preedit != st.inline_preedit
 					|| mark_text != st.mark_text
 					|| display_tray_icon != st.display_tray_icon
@@ -494,6 +498,7 @@ namespace boost {
 			ar & s.font_point;
 			ar & s.label_font_point;
 			ar & s.comment_font_point;
+			ar & s.candidate_abbreviate_length;
 			ar & s.inline_preedit;
 			ar & s.align_type;
 			ar & s.antialias_mode;
