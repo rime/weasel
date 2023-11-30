@@ -50,16 +50,19 @@ jobs:
           .\build.bat data
           .\build.bat hant
           .\build.bat installer
+        if: ${{ success() }}
         
       - name: Compress Debug Symbols
         shell: pwsh
         run: |
           Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
+        if: ${{ success() }}
       
       - name: Extract changelog
         shell: pwsh
         run: |
           .\extract_changelog.ps1
+        if: ${{ success() }}
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -68,3 +71,4 @@ jobs:
             ./output/archives/weasel*.exe
             ./output/archives/symbols.zip
           body_path: ${{ github.workspace }}/RELEASE_CHANGELOG.md
+        if: ${{ success() }}

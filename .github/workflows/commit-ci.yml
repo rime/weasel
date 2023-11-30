@@ -55,11 +55,13 @@ jobs:
           .\build.bat data
           .\build.bat hant
           .\build.bat installer
-        
+        if: ${{ success() }}
+
       - name: Compress Debug Symbols
         shell: pwsh
         run: |
           Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
+        if: ${{ success() }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -68,3 +70,4 @@ jobs:
           path: |
             .\output\archives\weasel*.exe
             .\output\archives\symbols.zip
+        if: ${{ success() }}
