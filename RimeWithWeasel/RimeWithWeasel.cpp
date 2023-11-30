@@ -957,7 +957,7 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 		{std::string("vertical"), true}
 	};
 	bool _text_orientation_bool = false;
-	_RimeParseStringOptWithFallback(config, "style/text_orientation", _text_orientation_bool, _text_orientation, false);
+	_RimeParseStringOpt(config, "style/text_orientation", _text_orientation_bool, _text_orientation);
 	if(_text_orientation_bool)
 		style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT;
 	_RimeGetStringWithFunc(config, "style/label_format", style.label_text_format);
