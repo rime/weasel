@@ -274,17 +274,10 @@ namespace weasel
 			ALIGN_TOP
 		};
 
-		AntiAliasMode antialias_mode;
-		LayoutAlignType align_type;
-		PreeditType preedit_type;
-		LayoutType layout_type;
-		bool vertical_text_left_to_right;
-		bool vertical_text_with_wrap;
-		bool paging_on_scroll;
+		// font face and font point settings
 		std::wstring font_face;
 		std::wstring label_font_face;
 		std::wstring comment_font_face;
-		int mouse_hover_ms;
 		int font_point;
 		int label_font_point;
 		int comment_font_point;
@@ -293,16 +286,26 @@ namespace weasel
 		bool inline_preedit;
 		bool display_tray_icon;
 		bool ascii_tip_follow_cursor;
+		bool paging_on_scroll;
+		bool enhanced_position;
 		bool click_to_capture;
+		int mouse_hover_ms;
+		AntiAliasMode antialias_mode;
+		PreeditType preedit_type;
+		// custom icon settings
 		std::wstring current_zhung_icon;
 		std::wstring current_ascii_icon;
 		std::wstring current_half_icon;
 		std::wstring current_full_icon;
-		bool enhanced_position;
-
+		// label format and mark_text
 		std::wstring label_text_format;
 		std::wstring mark_text;
-		// layout
+		// layout relative parameters
+		LayoutType layout_type;
+		LayoutAlignType align_type;
+		bool vertical_text_left_to_right;
+		bool vertical_text_with_wrap;
+		// layout, with key name like style/layout/...
 		int min_width;
 		int max_width;
 		int min_height;
@@ -350,30 +353,29 @@ namespace weasel
 		UIStyle() : font_face(),
 			label_font_face(),
 			comment_font_face(),
-			mouse_hover_ms(0),
 			font_point(0),
 			label_font_point(0),
 			comment_font_point(0),
 			candidate_abbreviate_length(0),
 			inline_preedit(false),
-			antialias_mode(DEFAULT),
-			align_type(ALIGN_BOTTOM),
-			preedit_type(COMPOSITION),
 			display_tray_icon(false),
 			ascii_tip_follow_cursor(false),
+			paging_on_scroll(false),
+			enhanced_position(false),
 			click_to_capture(false),
+			mouse_hover_ms(0),
+			antialias_mode(DEFAULT),
+			preedit_type(COMPOSITION),
 			current_zhung_icon(),
 			current_ascii_icon(),
 			current_half_icon(),
 			current_full_icon(),
-			enhanced_position(false),
-
 			label_text_format(L"%s."),
 			mark_text(),
 			layout_type(LAYOUT_VERTICAL),
+			align_type(ALIGN_BOTTOM),
 			vertical_text_left_to_right(false),
 			vertical_text_with_wrap(false),
-			paging_on_scroll(false),
 			min_width(0),
 			max_width(0),
 			min_height(0),
