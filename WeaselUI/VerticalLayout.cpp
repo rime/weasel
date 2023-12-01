@@ -20,7 +20,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_WIDTH + 4;
 	}
-	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
+	int base_offset =  ((_style.hilited_mark_color & 0xff000000)) ? MARK_GAP : 0;
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
