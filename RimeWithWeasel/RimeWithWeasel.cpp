@@ -515,6 +515,7 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(UINT session_id, bool ignor
 		else
 		{
 load_schema_inline:
+			m_ui->style().inline_preedit = m_base_style.inline_preedit;
 			RIME_STRUCT(RimeStatus, status);
 			if (RimeGetStatus(session_id, &status))
 			{
