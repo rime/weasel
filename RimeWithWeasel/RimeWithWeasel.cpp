@@ -491,20 +491,22 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(UINT session_id, bool ignor
 	if(!ignore_app_name && m_last_app_name == app_name)
 		return;
 	m_last_app_name = app_name;
+	bool inline_preedit = m_ui->style().inline_preedit;
 	if (!app_name.empty())
 	{
 		if (m_app_options.find(app_name) != m_app_options.end())
 		{
 			AppOptions& options(m_app_options[app_name]);
 			auto pfind = std::make_shared<bool>(false);
-			std::for_each(options.begin(), options.end(), [session_id, app_name, pfind, this](std::pair<const std::string, bool> &pair)
+			std::for_each(options.begin(), options.end(), [session_id, app_name, pfind, inline_preedit, this](std::pair<const std::string, bool> &pair)
 			{
 			if(pair.first == "inline_preedit")
 			{
 				*pfind = true;
 				RimeSetOption(session_id, pair.first.c_str(), Bool(pair.second));
 				m_ui->style().inline_preedit = Bool(pair.second);
-				_UpdateInlinePreeditStatus(session_id);
+				if(m_ui->style().inline_preedit != inline_preedit)
+					_UpdateInlinePreeditStatus(session_id);
 			}
 			});
 			if (!(*pfind))
@@ -515,6 +517,7 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(UINT session_id, bool ignor
 		else
 		{
 load_schema_inline:
+			m_ui->style().inline_preedit = m_base_style.inline_preedit;
 			RIME_STRUCT(RimeStatus, status);
 			if (RimeGetStatus(session_id, &status))
 			{
@@ -526,7 +529,8 @@ load_schema_inline:
 					m_ui->style().inline_preedit = !!inline_preedit;
 				RimeConfigClose(&config);
 				RimeFreeStatus(&status);
-				_UpdateInlinePreeditStatus(session_id);
+				if(m_ui->style().inline_preedit != inline_preedit)
+					_UpdateInlinePreeditStatus(session_id);
 			}
 		}
 	}
@@ -1123,9 +1127,11 @@ void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& 
 			m_last_schema_id = schema_id;
 			if(schema_id != ".default") {						// don't load for schema select menu
 				RimeSetOption(session_id, "__synced", false); // Sync new schema options with front end
+				bool inline_preedit = m_ui->style().inline_preedit;
 				_LoadSchemaSpecificSettings(schema_id);
 				_LoadAppInlinePreeditSet(session_id, true);
-				_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
+				if(m_ui->style().inline_preedit != inline_preedit)
+					_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
 				if (m_show_notifications_when & SHOWN_SCHEMA) {
 					ctx.aux.str = stat.schema_name;
