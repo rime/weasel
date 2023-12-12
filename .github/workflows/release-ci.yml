@@ -2,8 +2,11 @@ name: Release CI
 
 on:
   push:
+    branches:
+      - master
     tags:
       - '[0-9]+.*'
+  workflow_dispatch:
 
 jobs:
   build-and-release:
@@ -13,7 +16,6 @@ jobs:
     env:
       boost_version: 1.83.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
-      RIME_PLUGINS: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
@@ -62,13 +64,26 @@ jobs:
         shell: pwsh
         run: |
           .\extract_changelog.ps1
-        if: ${{ success() }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && success() }}
 
+      - name: Create Nightly release
+        if: ${{ github.ref == 'refs/heads/master' && success() }}
+        uses: 'marvinpinto/action-automatic-releases@latest'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest
+          prerelease: true
+          title: "Nightly Build"
+          files: |
+            ./output/archives/weasel*.exe
+            ./output/archives/symbols.zip
+        
       - name: Release
         uses: softprops/action-gh-release@v1
+        if:  ${{ startsWith(github.ref, 'refs/tags/') && success() }}
         with:
           files: |
             ./output/archives/weasel*.exe
             ./output/archives/symbols.zip
           body_path: ${{ github.workspace }}/RELEASE_CHANGELOG.md
-        if: ${{ success() }}
+        
