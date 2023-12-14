@@ -179,6 +179,9 @@ namespace ibus
 	enum Keycode
 	{
 		Escape = 0xFF1B,
+		XK_bracketleft = 0x005b,  /* U+005B LEFT SQUARE BRACKET */
+		XK_c = 0x0063,            /* U+0063 LATIN SMALL LETTER C */
+		XK_C = 0x0043,            /* U+0043 LATIN CAPITAL LETTER C */
 	};
 }
 
@@ -188,6 +191,17 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, 
 		 << ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
 	Bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
+	if(!handled) {
+		bool isVimBackInCommandMode = (keyEvent.keycode == ibus::Keycode::Escape) || 
+			((keyEvent.mask & (1 << 2)) && (keyEvent.keycode == ibus::Keycode::XK_c ||
+				keyEvent.keycode == ibus::Keycode::XK_c || 
+				keyEvent.keycode == ibus::Keycode::XK_bracketleft));
+		if (isVimBackInCommandMode 
+				&& RimeGetOption(session_id, "vim_mode")
+				&& !RimeGetOption(session_id, "ascii_mode")) {
+			RimeSetOption(session_id, "ascii_mode", True);
+		}
+	}
 	_Respond(session_id, eat);
 	_UpdateUI(session_id);
 	m_active_session = session_id;
