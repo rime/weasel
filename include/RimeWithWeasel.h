@@ -6,8 +6,19 @@
 
 #include <rime_api.h>
 
+struct CaseInsensitiveCompare {
+	bool operator()(const std::string& str1, const std::string& str2) const {
+		std::string str1Lower, str2Lower;
+		std::transform(str1.begin(), str1.end(), std::back_inserter(str1Lower),
+				[](char c) { return std::tolower(c); });
+		std::transform(str2.begin(), str2.end(), std::back_inserter(str2Lower),
+				[](char c) { return std::tolower(c); });
+		return str1Lower < str2Lower;
+	}
+};
+
 typedef std::map<std::string, bool> AppOptions;
-typedef std::map<std::string, AppOptions> AppOptionsByAppName;
+typedef std::map<std::string, AppOptions, CaseInsensitiveCompare> AppOptionsByAppName;
 class RimeWithWeaselHandler :
 	public weasel::RequestHandler
 {
