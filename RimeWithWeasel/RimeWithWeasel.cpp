@@ -310,9 +310,10 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 	{
 		RimeSetProperty(session_id, "client_app", app_name.c_str());
 
-		if (m_app_options.find(app_name) != m_app_options.end())
+		auto it = m_app_options.find(app_name);
+		if (it != m_app_options.end())
 		{
-			AppOptions& options(m_app_options[app_name]);
+			AppOptions& options(m_app_options[it->first]);
 			std::for_each(options.begin(), options.end(), [session_id](std::pair<const std::string, bool> &pair)
 			{
 				DLOG(INFO) << "set app option: " << pair.first << " = " << pair.second;
@@ -508,11 +509,12 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(UINT session_id, bool ignor
 	bool inline_preedit = m_ui->style().inline_preedit;
 	if (!app_name.empty())
 	{
-		if (m_app_options.find(app_name) != m_app_options.end())
+		auto it = m_app_options.find(app_name);
+		if (it != m_app_options.end())
 		{
-			AppOptions& options(m_app_options[app_name]);
+			AppOptions& options(m_app_options[it->first]);
 			auto pfind = std::make_shared<bool>(false);
-			std::for_each(options.begin(), options.end(), [session_id, app_name, pfind, inline_preedit, this](std::pair<const std::string, bool> &pair)
+			std::for_each(options.begin(), options.end(), [session_id, pfind, inline_preedit, this](std::pair<const std::string, bool> &pair)
 			{
 			if(pair.first == "inline_preedit")
 			{
