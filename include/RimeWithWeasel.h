@@ -40,6 +40,7 @@ public:
 	virtual void StartMaintenance();
 	virtual void EndMaintenance();
 	virtual void SetOption(UINT session_id, const std::string &opt, bool val);
+	virtual void UpdateColorTheme(BOOL darkMode);
 
 	void OnUpdateUI(std::function<void()> const &cb);
 
@@ -76,4 +77,6 @@ private:
                          const char* message_value);
 	static std::string m_message_type;
 	static std::string m_message_value;
+	std::map<UINT, BOOL> m_color_sync;
+	bool m_current_dark_mode;
 };

@@ -44,6 +44,7 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(UI *ui)
 	: m_ui(ui)
 	, m_active_session(0)
 	, m_disabled(true)
+	, m_current_dark_mode(false)
 	, m_show_notifications_when(SHOWN_ALWAYS)
 	, _UpdateUICallback(NULL)
 {
@@ -107,6 +108,15 @@ void RimeWithWeaselHandler::Initialize()
 		{
 			_UpdateUIStyle(&config, m_ui, true);
 			_UpdateShowNotificationsWhen(&config, &m_show_notifications_when);
+			m_current_dark_mode = IsUserDarkMode();
+			if(m_current_dark_mode) {
+				const int BUF_SIZE = 255;
+				char buffer[BUF_SIZE + 1] = { 0 };
+				if (RimeConfigGetString(&config, "style/color_scheme_dark", buffer, BUF_SIZE)){
+					std::string color_name(buffer);
+					_UpdateUIStyleColor(&config, m_ui->style(), color_name);
+				}
+			}
 			m_base_style = m_ui->style();
 		}
 		_LoadAppOptions(&config, m_app_options);
@@ -160,6 +170,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	}
 	_UpdateUI(session_id);
 	m_active_session = session_id;
+	m_color_sync[session_id] = false;
 	return session_id;
 }
 
@@ -170,6 +181,7 @@ UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 	DLOG(INFO) << "Remove session: session_id = " << session_id;
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
+	m_color_sync.erase(session_id);
 	m_active_session = 0;
 	return 0;
 }
@@ -183,6 +195,44 @@ namespace ibus
 		XK_c = 0x0063,            /* U+0063 LATIN SMALL LETTER C */
 		XK_C = 0x0043,            /* U+0043 LATIN CAPITAL LETTER C */
 	};
+}
+
+void RimeWithWeaselHandler::UpdateColorTheme(BOOL darkMode)
+{
+	RimeConfig config = { NULL };
+	if (RimeConfigOpen("weasel", &config))
+	{
+		if (m_ui)
+		{
+			_UpdateUIStyle(&config, m_ui, true);
+			m_current_dark_mode = darkMode;
+			if(darkMode) {
+				const int BUF_SIZE = 255;
+				char buffer[BUF_SIZE + 1] = { 0 };
+				if (RimeConfigGetString(&config, "style/color_scheme_dark", buffer, BUF_SIZE)) {
+					std::string color_name(buffer);
+					_UpdateUIStyleColor(&config, m_ui->style(), color_name);
+				}
+			}
+			m_base_style = m_ui->style();
+		}
+		_LoadAppOptions(&config, m_app_options);
+		RIME_STRUCT(RimeStatus, status);
+		if (RimeGetStatus(m_active_session, &status))
+		{
+			_LoadSchemaSpecificSettings(std::string(status.schema_id));
+			_LoadAppInlinePreeditSet(m_active_session, true);
+			_UpdateInlinePreeditStatus(m_active_session);
+			RimeFreeStatus(&status);
+		}
+		RimeConfigClose(&config);
+	}
+
+	RimeSetOption(m_active_session, "__synced", false);
+	_LoadAppInlinePreeditSet(m_active_session);
+	_UpdateInlinePreeditStatus(m_active_session);
+	for(auto &pair : m_color_sync)
+		pair.second = false;
 }
 
 BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent, UINT session_id, EatLine eat)
@@ -467,7 +517,25 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 
 	// load schema color style config
 	memset(buffer, '\0', sizeof(buffer));
-	if (RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
+	if (!m_current_dark_mode && RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
+	{
+		std::string color_name(buffer);
+		RimeConfigIterator preset = {0};
+		if(RimeConfigBeginMap(&preset, &config, ("preset_color_schemes/" + color_name).c_str()))
+		{
+			_UpdateUIStyleColor(&config, m_ui->style(), color_name);
+		}
+		else
+		{
+			RimeConfig weaselconfig;
+			if (RimeConfigOpen("weasel", &weaselconfig))
+			{
+				_UpdateUIStyleColor(&weaselconfig, m_ui->style(), std::string(buffer));
+				RimeConfigClose(&weaselconfig);
+			}
+		}
+	}
+	else if (m_current_dark_mode && RimeConfigGetString(&config, "style/color_scheme_dark", buffer, BUF_SIZE))
 	{
 		std::string color_name(buffer);
 		RimeConfigIterator preset = {0};
@@ -720,14 +788,16 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 
 	// style
 	bool has_synced = RimeGetOption(session_id, "__synced");
-	if (!has_synced) {
+	if (!has_synced || !m_color_sync[session_id]) {
 		std::wstringstream ss;
 		boost::archive::text_woarchive oa(ss);
 		oa << m_ui->style();
 
 		actions.insert("style");
 		messages.push_back(std::string("style=") + wstring_to_string(ss.str().c_str(), CP_UTF8) + '\n');
-		RimeSetOption(session_id, "__synced", true);
+		if(!has_synced)
+			RimeSetOption(session_id, "__synced", true);
+		m_color_sync[session_id] = TRUE;
 	}
 
 	// summarize
