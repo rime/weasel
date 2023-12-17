@@ -170,7 +170,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	}
 	_UpdateUI(session_id);
 	m_active_session = session_id;
-	m_color_sync[session_id] = false;
+	__synced[session_id] = false;
 	return session_id;
 }
 
@@ -181,7 +181,7 @@ UINT RimeWithWeaselHandler::RemoveSession(UINT session_id)
 	DLOG(INFO) << "Remove session: session_id = " << session_id;
 	// TODO: force committing? otherwise current composition would be lost
 	RimeDestroySession(session_id);
-	m_color_sync.erase(session_id);
+	__synced.erase(session_id);
 	m_active_session = 0;
 	return 0;
 }
@@ -228,10 +228,9 @@ void RimeWithWeaselHandler::UpdateColorTheme(BOOL darkMode)
 		RimeConfigClose(&config);
 	}
 
-	RimeSetOption(m_active_session, "__synced", false);
 	_LoadAppInlinePreeditSet(m_active_session);
 	_UpdateInlinePreeditStatus(m_active_session);
-	for(auto &pair : m_color_sync)
+	for(auto &pair : __synced)
 		pair.second = false;
 }
 
@@ -787,17 +786,14 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	messages.push_back(std::string("config.inline_preedit=") + std::to_string((int)m_ui->style().inline_preedit) + '\n');
 
 	// style
-	bool has_synced = RimeGetOption(session_id, "__synced");
-	if (!has_synced || !m_color_sync[session_id]) {
+	if (!__synced[session_id]) { 
 		std::wstringstream ss;
 		boost::archive::text_woarchive oa(ss);
 		oa << m_ui->style();
 
 		actions.insert("style");
 		messages.push_back(std::string("style=") + wstring_to_string(ss.str().c_str(), CP_UTF8) + '\n');
-		if(!has_synced)
-			RimeSetOption(session_id, "__synced", true);
-		m_color_sync[session_id] = TRUE;
+		__synced[session_id] = TRUE;
 	}
 
 	// summarize
@@ -1214,7 +1210,7 @@ void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& 
 		{
 			m_last_schema_id = schema_id;
 			if(schema_id != ".default") {						// don't load for schema select menu
-				RimeSetOption(session_id, "__synced", false); // Sync new schema options with front end
+				__synced[session_id] = false;
 				bool inline_preedit = m_ui->style().inline_preedit;
 				_LoadSchemaSpecificSettings(schema_id);
 				_LoadAppInlinePreeditSet(session_id, true);

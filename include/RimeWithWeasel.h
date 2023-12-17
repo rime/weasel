@@ -77,6 +77,6 @@ private:
                          const char* message_value);
 	static std::string m_message_type;
 	static std::string m_message_value;
-	std::map<UINT, BOOL> m_color_sync;
+	std::map<UINT, BOOL> __synced;
 	bool m_current_dark_mode;
 };
