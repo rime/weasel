@@ -64,6 +64,7 @@ private:
 	void _GetCandidateInfo(weasel::CandidateInfo &cinfo, RimeContext &ctx);
 	void _GetStatus(weasel::Status &stat, UINT session_id, weasel::Context& ctx);
 	void _GetContext(weasel::Context &ctx, UINT session_id);
+	void _UpdateShowNotificationsWhen(RimeConfig* config);
 
 	bool _IsSessionTSF(UINT session_id);
 	void _UpdateInlinePreeditStatus(UINT session_id);
@@ -75,8 +76,7 @@ private:
 	std::string m_last_schema_id;
 	std::string m_last_app_name;
 	weasel::UIStyle m_base_style;
-	UINT m_show_notifications_when;
-
+	std::map<std::string, bool> m_show_notifications_when;
 	std::function<void()> _UpdateUICallback;
 
 	static void OnNotify(void* context_object,
@@ -85,6 +85,8 @@ private:
                          const char* message_value);
 	static std::string m_message_type;
 	static std::string m_message_value;
+	static std::string m_message_label;
+	static std::string m_option_name;
 	SesstionStatusMap m_session_status_map;
 	bool m_current_dark_mode;
 };

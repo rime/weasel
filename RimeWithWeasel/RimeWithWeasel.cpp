@@ -32,20 +32,11 @@ int expand_ibus_modifier(int m)
 	return (m & 0xff) | ((m & 0xff00) << 16);
 }
 
-#define SHOWN_ASCII (1<<0)
-#define SHOWN_SHAPE (1<<1)
-#define SHOWN_ASCII_PUNCT (1<<2)
-#define SHOWN_SIMPLIFICATION (1<<3)
-#define SHOWN_SCHEMA (1<<4)
-#define SHOWN_ALWAYS    (SHOWN_ASCII|SHOWN_SHAPE|SHOWN_ASCII_PUNCT|SHOWN_SCHEMA|SHOWN_SIMPLIFICATION)
-#define SHOWN_NEVER  0x00
-
 RimeWithWeaselHandler::RimeWithWeaselHandler(UI *ui)
 	: m_ui(ui)
 	, m_active_session(0)
 	, m_disabled(true)
 	, m_current_dark_mode(false)
-	, m_show_notifications_when(SHOWN_ALWAYS)
 	, _UpdateUICallback(NULL)
 {
 	_Setup();
@@ -53,9 +44,11 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(UI *ui)
 
 RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
+	m_show_notifications_when.clear();
+	m_session_status_map.clear();
+	m_app_options.clear();
 }
 
-void _UpdateShowNotificationsWhen(RimeConfig* config, UINT* show_notifications_when);
 void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string color = "");
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
@@ -107,7 +100,7 @@ void RimeWithWeaselHandler::Initialize()
 		if (m_ui)
 		{
 			_UpdateUIStyle(&config, m_ui, true);
-			_UpdateShowNotificationsWhen(&config, &m_show_notifications_when);
+			_UpdateShowNotificationsWhen(&config);
 			m_current_dark_mode = IsUserDarkMode();
 			if(m_current_dark_mode) {
 				const int BUF_SIZE = 255;
@@ -318,6 +311,8 @@ void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc, UINT session_id)
 
 std::string RimeWithWeaselHandler::m_message_type;
 std::string RimeWithWeaselHandler::m_message_value;
+std::string RimeWithWeaselHandler::m_message_label;
+std::string RimeWithWeaselHandler::m_option_name;
 
 void RimeWithWeaselHandler::OnNotify(void* context_object,
 	                                 uintptr_t session_id,
@@ -329,6 +324,18 @@ void RimeWithWeaselHandler::OnNotify(void* context_object,
 	if (!self || !message_type || !message_value) return;
 	m_message_type = message_type;
 	m_message_value = message_value;
+	RimeApi* rime = rime_get_api();
+	if (RIME_API_AVAILABLE(rime, get_state_label) &&
+		!strcmp(message_type, "option")) {
+		Bool state = message_value[0] != '!';
+		const char* option_name = message_value + !state;
+		m_option_name = option_name;
+		const char* state_label =
+			rime->get_state_label(session_id, option_name, state);
+		if (state_label) {
+			m_message_label = std::string(state_label);
+		}
+	}
 }
 
 void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
@@ -490,6 +497,8 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 
 	m_message_type.clear();
 	m_message_value.clear();
+	m_message_label.clear();
+	m_option_name.clear();
 }
 
 void _LoadIconSettingFromSchema(RimeConfig& config, char *buffer, const int& BUF_SIZE, 
@@ -651,11 +660,11 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 	else if (m_message_type == "option") {
 		if (m_message_value == "!ascii_mode")
 		{
-			show_icon = true;  
+			show_icon = true;
 		}
 		else if (m_message_value == "ascii_mode")
 		{
-			show_icon = true;  
+			show_icon = true;
 		}
 		else if (m_message_value == "!full_shape")
 			tips = L"半角";
@@ -669,15 +678,17 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 			tips = L"漢字";
 		else if (m_message_value == "simplification")
 			tips = L"汉字";
+		else
+			tips = string_to_wstring(m_message_label, CP_UTF8);
 	}
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();
-	if( ((m_show_notifications_when & SHOWN_ASCII) && (m_message_value == "ascii_mode" || m_message_value == "!ascii_mode"))
-			|| ((m_show_notifications_when & SHOWN_SHAPE) && (m_message_value == "full_shape" || m_message_value == "!full_shape"))
-			|| ((m_show_notifications_when & SHOWN_ASCII_PUNCT) && (m_message_value == "ascii_punct" || m_message_value == "!ascii_punct"))
-			|| ((m_show_notifications_when & SHOWN_SIMPLIFICATION) && (m_message_value == "simplification" || m_message_value == "!simplification"))
-			|| (m_message_type == "schema" && (m_show_notifications_when && SHOWN_SCHEMA))
-			|| m_message_type == "deploy") { m_ui->Update(ctx, status);
+	auto foption = m_show_notifications_when.find(m_option_name);
+	auto falways = m_show_notifications_when.find("always");
+	if (foption != m_show_notifications_when.end() ||
+		falways != m_show_notifications_when.end() ||
+		m_message_type == "deploy") {
+		m_ui->Update(ctx, status);
 		m_ui->ShowWithTimeout(1200 + 200 * tips.length());
 		return true;
 	} else {
@@ -963,34 +974,35 @@ static void _RimeGetStringWithFunc(RimeConfig* config, const char* key, std::wst
 		value = *fallback;
 }
 
-void _UpdateShowNotificationsWhen(RimeConfig* config, UINT* show_notifications_when)
-{
-	char buffer[256] = { 0 };
+void RimeWithWeaselHandler::_UpdateShowNotificationsWhen( RimeConfig *config) {
+	char buffer[512] = {0};
+	m_show_notifications_when.clear();
 	// if not set, shown always as default
-	if (!RimeConfigGetString(config, "show_notifications_when", buffer, 256))
-		*show_notifications_when = SHOWN_ALWAYS;
+	if (!RimeConfigGetString(config, "show_notifications_when", buffer, 512))
+		m_show_notifications_when["always"] = true;
 	else
 	{
 		std::string noti_str(buffer);
-		if (std::regex_match(noti_str, std::regex(".*always.*")) || noti_str.empty())
-			*show_notifications_when = SHOWN_ALWAYS;
-		else if (noti_str == "never")
-			*show_notifications_when = SHOWN_NEVER;
+		if (std::regex_match(noti_str, std::regex(".*always.*")) ||
+			noti_str.empty())
+			m_show_notifications_when["always"] = true;
+		else if (std::regex_match(noti_str, std::regex(".*never.*")))
+			m_show_notifications_when["never"] = true;
 		else {
-			*show_notifications_when = SHOWN_NEVER;
-			if (std::regex_match(noti_str, std::regex(".*ascii_punct.*")))
-				*show_notifications_when |= SHOWN_ASCII_PUNCT;
-			if (std::regex_match(noti_str, std::regex(".*ascii_mode.*")))
-				*show_notifications_when |= SHOWN_ASCII;
-			if (std::regex_match(noti_str, std::regex(".*shape.*")))
-				*show_notifications_when |= SHOWN_SHAPE;
-			if (std::regex_match(noti_str, std::regex(".*schema.*")))
-				*show_notifications_when |= SHOWN_SCHEMA;
-			if (std::regex_match(noti_str, std::regex(".*simplification.*")))
-				*show_notifications_when |= SHOWN_SIMPLIFICATION;
+			std::istringstream iss(noti_str);
+			std::string token;
+			std::vector<std::string> tokens;
+			while (std::getline(iss, token, '+')) {
+				tokens.push_back(token);
+			}
+
+			for (const std::string& t : tokens) {
+				m_show_notifications_when[t] = true;
+			}
 		}
 	}
 }
+
 // update ui's style parameters, ui has been check before referenced 
 static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 {
@@ -1224,7 +1236,7 @@ void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& 
 				if(m_session_status_map[session_id].style.inline_preedit != inline_preedit)
 					_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
-				if (m_show_notifications_when & SHOWN_SCHEMA) {
+				if (m_show_notifications_when.find("schema") != m_show_notifications_when.end()) {
 					ctx.aux.str = stat.schema_name;
 					m_ui->Update(ctx, stat);
 					m_ui->ShowWithTimeout(1200);
