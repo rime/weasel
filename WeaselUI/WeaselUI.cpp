@@ -23,7 +23,7 @@ public:
 	}
 	void Show();
 	void Hide();
-	void ShowWithTimeout(DWORD millisec);
+	void ShowWithTimeout(size_t millisec);
 	bool IsShown() const { return shown; }
 
 	static VOID CALLBACK OnTimer(
@@ -63,7 +63,7 @@ void UIImpl::Hide()
 	}
 }
 
-void UIImpl::ShowWithTimeout(DWORD millisec)
+void UIImpl::ShowWithTimeout(size_t millisec)
 {
 	if (!panel.IsWindow()) return;
 	DLOG(INFO) << "ShowWithTimeout: " << millisec;
@@ -148,7 +148,7 @@ void UI::Hide()
 	}
 }
 
-void UI::ShowWithTimeout(DWORD millisec)
+void UI::ShowWithTimeout(size_t millisec)
 {
 	if (pimpl_)
 	{
