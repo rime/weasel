@@ -38,6 +38,7 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(UI *ui)
 	, m_disabled(true)
 	, m_current_dark_mode(false)
 	, m_global_ascii_mode(false)
+	, m_show_notifications_time(1200)
 	, _UpdateUICallback(NULL)
 {
 	_Setup();
@@ -116,6 +117,8 @@ void RimeWithWeaselHandler::Initialize()
 		Bool global_ascii = false;
 		if (RimeConfigGetBool(&config, "global_ascii", &global_ascii))
 			m_global_ascii_mode = !!global_ascii;
+		if (!RimeConfigGetInt(&config, "show_notifications_time", &m_show_notifications_time))
+			m_show_notifications_time = 1200;
 		_LoadAppOptions(&config, m_app_options);
 		RimeConfigClose(&config);
 	}
@@ -694,6 +697,8 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 		m_message_type == "deploy") {
 		m_ui->Update(ctx, status);
 		m_ui->ShowWithTimeout(1200 + 200 * tips.length());
+		if (m_show_notifications_time)
+			m_ui->ShowWithTimeout(m_show_notifications_time);
 		return true;
 	} else {
 		return m_ui->IsCountingDown();

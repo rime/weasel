@@ -90,4 +90,5 @@ private:
 	SesstionStatusMap m_session_status_map;
 	bool m_current_dark_mode;
 	bool m_global_ascii_mode;
+	int m_show_notifications_time;
 };
