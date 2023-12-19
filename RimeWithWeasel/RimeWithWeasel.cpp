@@ -37,6 +37,7 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(UI *ui)
 	, m_active_session(0)
 	, m_disabled(true)
 	, m_current_dark_mode(false)
+	, m_global_ascii_mode(false)
 	, _UpdateUICallback(NULL)
 {
 	_Setup();
@@ -112,6 +113,9 @@ void RimeWithWeaselHandler::Initialize()
 			}
 			m_base_style = m_ui->style();
 		}
+		Bool global_ascii = false;
+		if (RimeConfigGetBool(&config, "global_ascii", &global_ascii))
+			m_global_ascii_mode = !!global_ascii;
 		_LoadAppOptions(&config, m_app_options);
 		RimeConfigClose(&config);
 	}
@@ -727,6 +731,12 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		messages.push_back(std::string("status.disabled=") + std::to_string(status.is_disabled) + '\n');
 		messages.push_back(std::string("status.full_shape=") + std::to_string(status.is_full_shape) + '\n');
 		messages.push_back(std::string("status.schema_id=") + std::string(status.schema_id) + '\n');
+		if (m_global_ascii_mode && (session_status.status.is_ascii_mode != status.is_ascii_mode)) {
+			for (auto& pair : m_session_status_map) {
+				if(pair.first != session_id)
+					RimeSetOption(pair.first, "ascii_mode", !!status.is_ascii_mode);
+			}
+		}
 		session_status.status = status;
 		RimeFreeStatus(&status);
 	}

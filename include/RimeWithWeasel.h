@@ -89,4 +89,5 @@ private:
 	static std::string m_option_name;
 	SesstionStatusMap m_session_status_map;
 	bool m_current_dark_mode;
+	bool m_global_ascii_mode;
 };
