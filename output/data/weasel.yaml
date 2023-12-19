@@ -10,9 +10,13 @@ app_options:
     ascii_mode: true
 
 # configuration: when to show notifications
-# always, never, or combination of: ascii_mode, ascii_punct, shape, simplification, schema
-# e.g., ascii_mode+shape+schema
+# always, never, or combination of: ascii_mode, ascii_punct, full_shape, simplification, schema
+# e.g., ascii_mode+full_shape+schema
 show_notifications_when: always
+# how long a period notifications shows
+show_notifications_time: 1200
+# use global ascii status
+global_ascii: false
 
 style:
   antialias_mode: default
