@@ -170,6 +170,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 		m_session_status_map[session_id].__synced = false;
 		RimeFreeStatus(&status);
 	}
+	m_ui->style() = m_session_status_map[session_id].style;
 	// show session's welcome message :-) if any
 	if (eat) {
 		_Respond(session_id, eat);
@@ -1251,6 +1252,7 @@ void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& 
 				if(m_session_status_map[session_id].style.inline_preedit != inline_preedit)
 					_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
+				m_ui->style() = m_session_status_map[session_id].style;
 				if (m_show_notifications_when.find("schema") != m_show_notifications_when.end()) {
 					ctx.aux.str = stat.schema_name;
 					m_ui->Update(ctx, stat);
