@@ -454,22 +454,25 @@ void WeaselTSF::_HandleMousePageEvent( bool* const nextPage, bool* const scrollN
 
 void WeaselTSF::_HandleMouseHoverEvent(const size_t index)
 {
-	// ToDo: if feature new api comes, replace the processes bellow
 	UINT current_select = 0;
 	_cand->GetSelection(&current_select);
-	weasel::KeyEvent ke{ 0, 0 };
-	ke.keycode = current_select < index ? ibus::Down : ibus::Up;
 
-	int inc = index > current_select ? 1 : (index < current_select ) ? -1 : 0;
-	if (_cand->GetIsReposition()) inc = -inc;
 	if(index != current_select)
 	{
-		for(auto i=0; i < abs((INT)((INT)index - (INT)current_select)); i++)
+		// simuulate change current_select in librime
+		// maybe replace with new api in the future
+		weasel::KeyEvent ke{ 0, 0 };
+		ke.keycode = current_select < index ? ibus::Down : ibus::Up;
+		int inc = index > current_select ? 1 : (index < current_select ) ? -1 : 0;
+		if (_cand->GetIsReposition()) inc = -inc;
+		UINT gap = abs((INT)((INT)index - (INT)current_select));
+		for(UINT i=0; i < gap; i++)
 		{
-			_cand->SetSelection(current_select + inc);
 			m_client.ProcessKeyEvent(ke);
-			_UpdateComposition(_pEditSessionContext);
 		}
+		// simuulate change current_select end
+		_cand->SetSelection(current_select + inc * gap);
+		_UpdateComposition(_pEditSessionContext);
 	}
 }
 
