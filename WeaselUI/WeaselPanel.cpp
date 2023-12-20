@@ -778,6 +778,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// background and candidates back, hilite back drawing start
 		if ((!m_ctx.empty() && !m_style.inline_preedit) || (m_style.inline_preedit && (m_candidateCount || !m_ctx.aux.empty() ))) {
 			CRect backrc = m_layout->GetContentRect();
+			if (!m_style.border)
+				backrc.InflateRect(1,1);
 			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, IsToRoundStruct(),  m_style.border_color);
 		}
 		if (!m_ctx.aux.str.empty())
