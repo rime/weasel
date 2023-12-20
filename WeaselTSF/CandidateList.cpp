@@ -463,7 +463,7 @@ void WeaselTSF::_HandleMouseHoverEvent(const size_t index)
 		// maybe replace with new api in the future
 		weasel::KeyEvent ke{ 0, 0 };
 		ke.keycode = current_select < index ? ibus::Down : ibus::Up;
-		int inc = index > current_select ? 1 : (index < current_select ) ? -1 : 0;
+		int inc = index > current_select ? 1 : -1;
 		if (_cand->GetIsReposition()) inc = -inc;
 		UINT gap = abs((INT)((INT)index - (INT)current_select));
 		for(UINT i=0; i < gap; i++)
