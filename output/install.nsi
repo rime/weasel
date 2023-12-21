@@ -77,6 +77,7 @@ LangString LNKFORAPPFOLDER ${LANG_TRADCHINESE} "【小狼毫】程序文件夾"
 LangString LNKFORUPDATER ${LANG_TRADCHINESE} "【小狼毫】檢查新版本"
 LangString LNKFORSETUP ${LANG_TRADCHINESE} "【小狼毫】安裝選項"
 LangString LNKFORUNINSTALL ${LANG_TRADCHINESE} "卸載小狼毫"
+LangString CONFIRMATION ${LANG_TRADCHINESE} "安裝前，我打盤先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。"
 
 !insertmacro MUI_LANGUAGE "SimpChinese"
 LangString DISPLAYNAME ${LANG_SIMPCHINESE} "小狼毫输入法"
@@ -91,20 +92,23 @@ LangString LNKFORAPPFOLDER ${LANG_SIMPCHINESE} "【小狼毫】程序文件夹"
 LangString LNKFORUPDATER ${LANG_SIMPCHINESE} "【小狼毫】检查新版本"
 LangString LNKFORSETUP ${LANG_SIMPCHINESE} "【小狼毫】安装选项"
 LangString LNKFORUNINSTALL ${LANG_SIMPCHINESE} "卸载小狼毫"
+LangString CONFIRMATION ${LANG_SIMPCHINESE} '安装前，请先卸载旧版本的小狼毫。$\n$\n点击 "确定" 移除旧版本，或点击 "取消" 放弃本次安装。'
 
 !insertmacro MUI_LANGUAGE "English"
 LangString DISPLAYNAME ${LANG_ENGLISH} "Weasel"
-LangString LNKFORMANUAL ${LANG_ENGLISH} "[Weasel] Manual"
-LangString LNKFORSETTING ${LANG_ENGLISH} "[Weasel] Settings"
-LangString LNKFORDICT ${LANG_ENGLISH} "[Weasel] Dictionary Manager"
-LangString LNKFORSYNC ${LANG_ENGLISH} "[Weasel] Sync User Profile"
-LangString LNKFORDEPLOY ${LANG_ENGLISH} "[Weasel] Deploy"
+LangString LNKFORMANUAL ${LANG_ENGLISH} "Weasel Manual"
+LangString LNKFORSETTING ${LANG_ENGLISH} "Weasel Settings"
+LangString LNKFORDICT ${LANG_ENGLISH} "Weasel Dictionary Manager"
+LangString LNKFORSYNC ${LANG_ENGLISH} "Weasel Sync User Profile"
+LangString LNKFORDEPLOY ${LANG_ENGLISH} "Weasel Deploy"
 LangString LNKFORSERVER ${LANG_ENGLISH} "Weasel Server"
-LangString LNKFORUSERFOLDER ${LANG_ENGLISH} "[Weasel] User Folder"
-LangString LNKFORAPPFOLDER ${LANG_ENGLISH} "[Weasel] App Folder"
-LangString LNKFORUPDATER ${LANG_ENGLISH} "[Weasel] Check for Updates"
-LangString LNKFORSETUP ${LANG_ENGLISH} "[Weasel] Installation Preference"
+LangString LNKFORUSERFOLDER ${LANG_ENGLISH} "Weasel User Folder"
+LangString LNKFORAPPFOLDER ${LANG_ENGLISH} "Weasel App Folder"
+LangString LNKFORUPDATER ${LANG_ENGLISH} "Weasel Check for Updates"
+LangString LNKFORSETUP ${LANG_ENGLISH} "Weasel Installation Preference"
 LangString LNKFORUNINSTALL ${LANG_ENGLISH} "Uninstall Weasel"
+LangString CONFIRMATION ${LANG_ENGLISH} "Before installation, please uninstall the old version of Weasel.$\n$\nPress 'OK' to remove the old version, or 'Cancel' to abort installation."
+
 ;--------------------------------
 
 Function .onInit
@@ -115,9 +119,7 @@ Function .onInit
 
   StrCpy $0 "Upgrade"
   IfSilent uninst 0
-  MessageBox MB_OKCANCEL|MB_ICONINFORMATION \
-  "安裝前，我打盤先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。" \
-  IDOK uninst
+  MessageBox MB_OKCANCEL|MB_ICONINFORMATION "$(CONFIRMATION)" IDOK uninst
   Abort
 
 uninst:
@@ -208,7 +210,7 @@ program_files:
   SetOutPath $INSTDIR
 
   ; test /T flag for zh_TW locale
-  StrCpy $R2  "/i"
+  StrCpy $R2 "/i"
   ${GetParameters} $R0
   ClearErrors
   ${GetOptions} $R0 "/S" $R1
@@ -232,7 +234,13 @@ program_files:
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
   ; run as user...
-  ExecWait "$INSTDIR\WeaselDeployer.exe /install"
+  IfSilent +2
+    ExecWait "$INSTDIR\WeaselDeployer.exe /install"
+    Goto deploy_done
+
+  ExecWait "$INSTDIR\WeaselDeployer.exe /deploy"
+  deploy_done:
+  ; ...
 
   ; Write autorun key
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer" "$INSTDIR\WeaselServer.exe"
