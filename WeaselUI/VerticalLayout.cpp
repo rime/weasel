@@ -18,7 +18,9 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
-		MARK_GAP = MARK_WIDTH + 4;
+		if(_style.mark_text.empty())
+			MARK_WIDTH /= 2;
+		MARK_GAP = (_style.mark_text.empty()) ? MARK_WIDTH : MARK_WIDTH + _style.hilite_spacing;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000)) ? MARK_GAP : 0;
 

@@ -28,7 +28,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 	int step = 32;
 	do {
 		m_layout->DoLayout(dc, pDWR);
-		if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
+		if ((_style.hilited_mark_color & 0xff000000))
 		{
 			CSize sg;
 			if(_style.mark_text.empty())
@@ -37,7 +37,9 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 				GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 			MARK_WIDTH = sg.cx;
 			MARK_HEIGHT = sg.cy;
-			MARK_GAP = MARK_WIDTH + 4;
+			if(_style.mark_text.empty())
+				MARK_WIDTH /= 2;
+			MARK_GAP = (_style.mark_text.empty()) ? MARK_WIDTH : MARK_WIDTH + _style.hilite_spacing;
 		}
 	}
 	while (AdjustFontPoint(dc, workArea, step, pDWR));
