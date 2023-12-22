@@ -46,7 +46,7 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(UI *ui)
 
 RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
-	m_show_notifications_when.clear();
+	m_show_notifications.clear();
 	m_session_status_map.clear();
 	m_app_options.clear();
 }
@@ -102,7 +102,7 @@ void RimeWithWeaselHandler::Initialize()
 		if (m_ui)
 		{
 			_UpdateUIStyle(&config, m_ui, true);
-			_UpdateShowNotificationsWhen(&config);
+			_UpdateShowNotifications(&config, true);
 			m_current_dark_mode = IsUserDarkMode();
 			if(m_current_dark_mode) {
 				const int BUF_SIZE = 255;
@@ -535,6 +535,7 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(UINT session_id, const s
 	char buffer[BUF_SIZE + 1];
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config)) return;
+	_UpdateShowNotifications(&config);
 	m_ui->style() = m_base_style;
 	_UpdateUIStyle(&config, m_ui, false);
 	SesstionStatus& session_status = m_session_status_map[session_id];
@@ -691,13 +692,12 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 	}
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();
-	auto foption = m_show_notifications_when.find(m_option_name);
-	auto falways = m_show_notifications_when.find("always");
-	if (foption != m_show_notifications_when.end() ||
-		falways != m_show_notifications_when.end() ||
+	auto foption = m_show_notifications.find(m_option_name);
+	auto falways = m_show_notifications.find("always");
+	if (foption != m_show_notifications.end() ||
+		falways != m_show_notifications.end() ||
 		m_message_type == "deploy") {
 		m_ui->Update(ctx, status);
-		m_ui->ShowWithTimeout(1200 + 200 * tips.length());
 		if (m_show_notifications_time)
 			m_ui->ShowWithTimeout(m_show_notifications_time);
 		return true;
@@ -990,32 +990,35 @@ static void _RimeGetStringWithFunc(RimeConfig* config, const char* key, std::wst
 		value = *fallback;
 }
 
-void RimeWithWeaselHandler::_UpdateShowNotificationsWhen( RimeConfig *config) {
-	char buffer[512] = {0};
-	m_show_notifications_when.clear();
-	// if not set, shown always as default
-	if (!RimeConfigGetString(config, "show_notifications_when", buffer, 512))
-		m_show_notifications_when["always"] = true;
-	else
-	{
-		std::string noti_str(buffer);
-		if (std::regex_match(noti_str, std::regex(".*always.*")) ||
-			noti_str.empty())
-			m_show_notifications_when["always"] = true;
-		else if (std::regex_match(noti_str, std::regex(".*never.*")))
-			m_show_notifications_when["never"] = true;
-		else {
-			std::istringstream iss(noti_str);
-			std::string token;
-			std::vector<std::string> tokens;
-			while (std::getline(iss, token, '+')) {
-				tokens.push_back(token);
-			}
+void RimeWithWeaselHandler::_UpdateShowNotifications(RimeConfig *config, bool initialize)
+{
+	Bool show_notifications = true;
+	RimeConfigIterator iter;
+	if (initialize)
+		m_show_notifications_base.clear();
+	m_show_notifications.clear();
 
-			for (const std::string& t : tokens) {
-				m_show_notifications_when[t] = true;
-			}
+	if(RimeConfigGetBool(config, "show_notifications", &show_notifications)) {
+		// config read as bool, for gloal all on or off
+		if(show_notifications) 
+			m_show_notifications["always"] = true;
+		if (initialize)
+			m_show_notifications_base = m_show_notifications;
+	} else if (RimeConfigBeginList(&iter, config, "show_notifications")) {
+		// config read as list, list item should be option name in schema
+		// or key word 'schema' for schema switching tip
+		while(RimeConfigNext(&iter)) {
+			char buffer[256] = {0};
+			if(RimeConfigGetString(config, iter.path, buffer, 256))
+				m_show_notifications[std::string(buffer)] = true;
 		}
+		if (initialize)
+			m_show_notifications_base = m_show_notifications;
+	} else {
+		// not configured, or incorrect type
+		if (initialize)
+			m_show_notifications_base["always"] = true;
+		m_show_notifications = m_show_notifications_base;
 	}
 }
 
@@ -1253,7 +1256,7 @@ void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& 
 					_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
 				m_ui->style() = m_session_status_map[session_id].style;
-				if (m_show_notifications_when.find("schema") != m_show_notifications_when.end()) {
+				if (m_show_notifications.find("schema") != m_show_notifications.end()) {
 					ctx.aux.str = stat.schema_name;
 					m_ui->Update(ctx, stat);
 					m_ui->ShowWithTimeout(1200);

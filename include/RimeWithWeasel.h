@@ -64,7 +64,7 @@ private:
 	void _GetCandidateInfo(weasel::CandidateInfo &cinfo, RimeContext &ctx);
 	void _GetStatus(weasel::Status &stat, UINT session_id, weasel::Context& ctx);
 	void _GetContext(weasel::Context &ctx, UINT session_id);
-	void _UpdateShowNotificationsWhen(RimeConfig* config);
+	void _UpdateShowNotifications(RimeConfig* config, bool initialize = false);
 
 	bool _IsSessionTSF(UINT session_id);
 	void _UpdateInlinePreeditStatus(UINT session_id);
@@ -76,7 +76,8 @@ private:
 	std::string m_last_schema_id;
 	std::string m_last_app_name;
 	weasel::UIStyle m_base_style;
-	std::map<std::string, bool> m_show_notifications_when;
+	std::map<std::string, bool> m_show_notifications;
+	std::map<std::string, bool> m_show_notifications_base;
 	std::function<void()> _UpdateUICallback;
 
 	static void OnNotify(void* context_object,
