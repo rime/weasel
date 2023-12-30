@@ -26,7 +26,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
-		MARK_GAP = MARK_HEIGHT + 4;
+		if(_style.mark_text.empty())
+			MARK_HEIGHT /= 2;
+		MARK_GAP = (_style.mark_text.empty()) ? MARK_HEIGHT : MARK_HEIGHT + _style.hilite_spacing;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000)) ? MARK_GAP : 0;
 
@@ -235,7 +237,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
-		MARK_GAP = MARK_HEIGHT + 4;
+		if(_style.mark_text.empty())
+			MARK_HEIGHT /= 2;
+		MARK_GAP = (_style.mark_text.empty()) ? MARK_HEIGHT : MARK_HEIGHT + _style.hilite_spacing;
 	}
 	int base_offset =  ((_style.hilited_mark_color & 0xff000000)) ? MARK_GAP : 0;
 
