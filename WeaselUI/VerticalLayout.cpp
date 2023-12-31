@@ -92,7 +92,9 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 		max_candidate_width = max(max_candidate_width, candidate_width);
 
 		/* Comment */
-		if (!comments.at(i).str.empty() && cmtFontValid)
+		bool cmtFontNotTrans = (i == id && (_style.hilited_comment_text_color & 0xff000000)) ||
+			(i != id && (_style.comment_text_color & 0xff000000));
+		if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans)
 		{
 			w += space;
 			comment_shift_width = max(comment_shift_width, w);
