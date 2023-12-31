@@ -696,7 +696,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			}
 			// Draw comment
 			std::wstring comment = comments.at(i).str;
-			if (!comment.empty()) {
+			if (!comment.empty() && COLORNOTTRANSPARENT(comment_text_color)) {
 				rect = m_layout->GetCandidateCommentRect((int)i);
 				if(m_istorepos) rect.OffsetRect(0, m_offsetys[i]);
 				_TextOut(rect, comment.c_str(), comment.length(), comment_text_color, commenttxtFormat.Get());

@@ -91,7 +91,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 			wid = max(wid, size.cx);
 
 			/* Comment */
-			if (!comments.at(i).str.empty() && cmtFontValid)
+			bool cmtFontNotTrans = (i == id && (_style.hilited_comment_text_color & 0xff000000)) ||
+				(i != id && (_style.comment_text_color & 0xff000000));
+			if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans)
 			{
 				h += _style.hilite_spacing;
 				const std::wstring& comment = comments.at(i).str;
@@ -303,7 +305,9 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 			current_cand_height += (size.cy + _style.hilite_spacing) * textFontValid;
 
 			/* Comment */
-			if (!comments.at(i).str.empty() && cmtFontValid )
+			bool cmtFontNotTrans = (i == id && (_style.hilited_comment_text_color & 0xff000000)) ||
+				(i != id && (_style.comment_text_color & 0xff000000));
+			if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans)
 			{
 				const std::wstring& comment = comments.at(i).str;
 				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
