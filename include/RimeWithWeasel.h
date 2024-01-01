@@ -19,6 +19,14 @@ struct CaseInsensitiveCompare {
 
 typedef std::map<std::string, bool> AppOptions;
 typedef std::map<std::string, AppOptions, CaseInsensitiveCompare> AppOptionsByAppName;
+struct SesstionStatus
+{
+	SesstionStatus() : style(weasel::UIStyle()), __synced(false) { RIME_STRUCT(RimeStatus, status); }
+	weasel::UIStyle style;
+	RimeStatus status;
+	bool __synced;
+};
+typedef std::map<UINT, SesstionStatus> SesstionStatusMap;
 class RimeWithWeaselHandler :
 	public weasel::RequestHandler
 {
@@ -48,7 +56,7 @@ private:
 	void _Setup();
 	bool _IsDeployerRunning();
 	void _UpdateUI(UINT session_id);
-	void _LoadSchemaSpecificSettings(const std::string& schema_id);
+	void _LoadSchemaSpecificSettings(UINT session_id, const std::string& schema_id);
 	void _LoadAppInlinePreeditSet(UINT session_id, bool ignore_app_name = false);
 	bool _ShowMessage(weasel::Context& ctx, weasel::Status& status);
 	bool _Respond(UINT session_id, EatLine eat);
@@ -56,6 +64,7 @@ private:
 	void _GetCandidateInfo(weasel::CandidateInfo &cinfo, RimeContext &ctx);
 	void _GetStatus(weasel::Status &stat, UINT session_id, weasel::Context& ctx);
 	void _GetContext(weasel::Context &ctx, UINT session_id);
+	void _UpdateShowNotifications(RimeConfig* config, bool initialize = false);
 
 	bool _IsSessionTSF(UINT session_id);
 	void _UpdateInlinePreeditStatus(UINT session_id);
@@ -67,8 +76,8 @@ private:
 	std::string m_last_schema_id;
 	std::string m_last_app_name;
 	weasel::UIStyle m_base_style;
-	UINT m_show_notifications_when;
-
+	std::map<std::string, bool> m_show_notifications;
+	std::map<std::string, bool> m_show_notifications_base;
 	std::function<void()> _UpdateUICallback;
 
 	static void OnNotify(void* context_object,
@@ -77,6 +86,10 @@ private:
                          const char* message_value);
 	static std::string m_message_type;
 	static std::string m_message_value;
-	std::map<UINT, BOOL> __synced;
+	static std::string m_message_label;
+	static std::string m_option_name;
+	SesstionStatusMap m_session_status_map;
 	bool m_current_dark_mode;
+	bool m_global_ascii_mode;
+	int m_show_notifications_time;
 };

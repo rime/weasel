@@ -61,7 +61,7 @@ namespace weasel
 		// 界面显隐
 		void Show();
 		void Hide();
-		void ShowWithTimeout(DWORD millisec);
+		void ShowWithTimeout(size_t millisec);
 		bool IsCountingDown() const;
 		bool IsShown() const;
 		
