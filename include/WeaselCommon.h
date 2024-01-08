@@ -200,11 +200,15 @@ namespace weasel
 		Text aux;
 		CandidateInfo cinfo;
 	};
-
+	// for icon type in tip
+	enum IconType{
+		SCHEMA,
+		FULL_SHAPE
+	} ;
 	// 由ime管理
 	struct Status
 	{
-		Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false) {}
+		Status() : type(SCHEMA), ascii_mode(false), composing(false), disabled(false), full_shape(false) {}
 		void reset()
 		{
 			schema_name.clear();
@@ -213,6 +217,7 @@ namespace weasel
 			composing = false;
 			disabled = false;
 			full_shape = false;
+			type = SCHEMA;
 		}
 		// 輸入方案
 		std::wstring schema_name;
@@ -226,6 +231,8 @@ namespace weasel
 		bool disabled;
 		// 全角状态
 		bool full_shape;
+		// 图标类型, schema/full_shape
+		IconType type;
 	};
 
 	// 用於向前端告知設置信息
