@@ -667,6 +667,7 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 		tips = /*L"【" + */status.schema_name/* + L"】"*/;
 	}
 	else if (m_message_type == "option") {
+		status.type = SCHEMA;
 		if (m_message_value == "!ascii_mode")
 		{
 			show_icon = true;
@@ -675,20 +676,11 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 		{
 			show_icon = true;
 		}
-		else if (m_message_value == "!full_shape")
-			tips = L"半角";
-		else if (m_message_value == "full_shape")
-			tips = L"全角";
-		else if (m_message_value == "!ascii_punct")
-			tips = L"，。";
-		else if (m_message_value == "ascii_punct")
-			tips = L"，．";
-		else if (m_message_value == "!simplification")
-			tips = L"漢字";
-		else if (m_message_value == "simplification")
-			tips = L"汉字";
 		else
 			tips = string_to_wstring(m_message_label, CP_UTF8);
+
+		if (m_message_value == "full_shape" || m_message_value == "!full_shape")
+			status.type = FULL_SHAPE;
 	}
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();

@@ -834,7 +834,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 				iconRect.OffsetRect(0, m_offsety_preedit);
 
 			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha :
-				((m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled : (m_status.full_shape ? m_iconFull : m_iconHalf)) );
+				(m_status.type == SCHEMA ? m_iconEnabled : (m_status.full_shape ? m_iconFull : m_iconHalf)) );
 			memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 			drawn = true;
 		}
