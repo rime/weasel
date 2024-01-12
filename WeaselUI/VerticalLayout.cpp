@@ -209,9 +209,5 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 	_PrepareRoundInfo(dc);
 
 	// truely draw content size calculation
-	int deflatex = offsetX - _style.border / 2;
-	int deflatey = offsetY - _style.border / 2;
-	_contentRect.DeflateRect(deflatex, deflatey);
-	// eliminate the 1 pixel gap when border width odd and padding equal to margin
-	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
+	_contentRect.DeflateRect(offsetX, offsetY);
 }
