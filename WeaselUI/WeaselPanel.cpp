@@ -896,7 +896,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		_RepositionWindow(true);
 		RedrawWindow();
 	} else if (!(rc.left == m_inputPos.left && rc.bottom != m_inputPos.bottom 
-				&& abs(rc.bottom - m_inputPos.bottom) < 6)) {
+				&& abs(rc.bottom - m_inputPos.bottom) < 6) || m_layout->ShouldDisplayStatusIcon()) {
 		// in some apps like word 2021, with inline_preedit set,
 		// bottom of rc would flicker 1 px or 2, make the candidate flickering
 		m_inputPos = rc;
@@ -907,8 +907,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		_RepositionWindow(true);
 		// m_istorepos status changed by _RepositionWindow, or tips to show,
 		// redrawing is required
-		if(m_istorepos != m_istorepos_buf || !m_ctx.aux.empty() 
-				|| (m_ctx.empty() && m_layout->ShouldDisplayStatusIcon()))
+		if(m_istorepos != m_istorepos_buf || !m_ctx.aux.empty() || m_layout->ShouldDisplayStatusIcon())
 			RedrawWindow();
 	}
 }
