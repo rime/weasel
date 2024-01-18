@@ -51,6 +51,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 	m_app_options.clear();
 }
 
+bool addsession = false;
 void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string color = "");
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
@@ -175,7 +176,9 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	if (eat) {
 		_Respond(session_id, eat);
 	}
+	addsession = true;
 	_UpdateUI(session_id);
+	addsession = false;
 	m_active_session = session_id;
 	return session_id;
 }
@@ -686,8 +689,8 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 		return m_ui->IsCountingDown();
 	auto foption = m_show_notifications.find(m_option_name);
 	auto falways = m_show_notifications.find("always");
-	if (foption != m_show_notifications.end() ||
-		falways != m_show_notifications.end() ||
+	if ((!addsession && (foption != m_show_notifications.end() ||
+		falways != m_show_notifications.end())) ||
 		m_message_type == "deploy") {
 		m_ui->Update(ctx, status);
 		if (m_show_notifications_time)
@@ -1248,10 +1251,10 @@ void RimeWithWeaselHandler::_GetStatus(Status & stat, UINT session_id, Context& 
 					_UpdateInlinePreeditStatus(session_id);			// in case of inline_preedit set in schema
 				_RefreshTrayIcon(session_id, _UpdateUICallback);	// refresh icon after schema changed
 				m_ui->style() = m_session_status_map[session_id].style;
-				if (m_show_notifications.find("schema") != m_show_notifications.end()) {
+				if (m_show_notifications.find("schema") != m_show_notifications.end() && m_show_notifications_time > 0) {
 					ctx.aux.str = stat.schema_name;
 					m_ui->Update(ctx, stat);
-					m_ui->ShowWithTimeout(1200);
+					m_ui->ShowWithTimeout(m_show_notifications_time);
 				}
 			}
 		}
