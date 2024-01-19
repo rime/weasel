@@ -28,11 +28,7 @@ const char* weasel_shared_data_dir() {
 	GetModuleFileNameA(NULL, path, _countof(path));
 	std::string str_path(path);
 	size_t k = str_path.find_last_of("/\\");
-#ifdef _WIN64
-		strcpy_s(path + k - 3 , _countof(path) - (k + 3), "data");
-#else
-		strcpy_s(path + k + 1, _countof(path) - (k + 1), "data");
-#endif
+	strcpy_s(path + k + 1, _countof(path) - (k + 1), "data");
 	return path;
 }
 
