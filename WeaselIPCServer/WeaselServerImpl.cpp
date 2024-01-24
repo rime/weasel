@@ -60,11 +60,9 @@ void ServerImpl::_Finailize()
 
 LRESULT ServerImpl::OnColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	if (uMsg == WM_SETTINGCHANGE && (std::wstring((wchar_t*)lParam) == L"ImmersiveColorSet") || uMsg == WM_DWMCOLORIZATIONCOLORCHANGED) {
-		if (IsUserDarkMode() != m_darkMode) {
-			m_darkMode = IsUserDarkMode();
-			m_pRequestHandler->UpdateColorTheme(m_darkMode);
-		}
+	if (IsUserDarkMode() != m_darkMode) {
+		m_darkMode = IsUserDarkMode();
+		m_pRequestHandler->UpdateColorTheme(m_darkMode);
 	}
 	return 0;
 }
