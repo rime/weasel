@@ -156,6 +156,14 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 		if (m_disabled) return 0;
 	}
 	UINT session_id = (UINT)RimeCreateSession();
+	if(m_global_ascii_mode) {
+		for (const auto& pair : m_session_status_map) {
+			if(pair.first) {
+				RimeSetOption(session_id, "ascii_mode", !!pair.second.status.is_ascii_mode);
+				break;
+			}
+		}
+	}
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 
