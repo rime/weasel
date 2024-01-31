@@ -280,6 +280,11 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 	if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_OPENCLOSE))
 	{
 		BOOL isOpen = _IsKeyboardOpen();
+		// clear composition when close keyboard
+		if (!isOpen && _pEditSessionContext) {
+			m_client.ClearComposition();
+			_EndComposition(_pEditSessionContext, true);
+		}
 		_EnableLanguageBar(isOpen);
 	}
 	else if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION))
