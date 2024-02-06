@@ -70,8 +70,10 @@ void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _Update
 void RimeWithWeaselHandler::_Setup()
 {
 	RIME_STRUCT(RimeTraits, weasel_traits);
-	weasel_traits.shared_data_dir = weasel_shared_data_dir();
-	weasel_traits.user_data_dir = weasel_user_data_dir();
+	std::string shared_dir = weasel_shared_data_dir();
+	std::string user_dir = weasel_user_data_dir();
+	weasel_traits.shared_data_dir = shared_dir.c_str();
+	weasel_traits.user_data_dir = user_dir.c_str();
 	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
 	std::string distribution_name(wstring_to_string(WEASEL_IME_NAME, CP_UTF8));
 	weasel_traits.distribution_name = distribution_name.c_str();

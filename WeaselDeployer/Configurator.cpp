@@ -36,8 +36,10 @@ Configurator::Configurator()
 void Configurator::Initialize()
 {
 	RIME_STRUCT(RimeTraits, weasel_traits);
-	weasel_traits.shared_data_dir = weasel_shared_data_dir();
-	weasel_traits.user_data_dir = weasel_user_data_dir();
+	std::string shared_dir = weasel_shared_data_dir();
+	std::string user_dir = weasel_user_data_dir();
+	weasel_traits.shared_data_dir = shared_dir.c_str();
+	weasel_traits.user_data_dir = user_dir.c_str();
 	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
 	const int len = 20;
 	char utf8_str[len];

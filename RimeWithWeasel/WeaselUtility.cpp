@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <string>
+#include <WeaselUtility.h>
 
 std::wstring WeaselUserDataPath() {
 	WCHAR path[MAX_PATH] = {0};
@@ -23,20 +24,18 @@ std::wstring WeaselUserDataPath() {
 	return path;
 }
 
-const char* weasel_shared_data_dir() {
-	static char path[MAX_PATH] = {0};
-	GetModuleFileNameA(NULL, path, _countof(path));
-	std::string str_path(path);
-	size_t k = str_path.find_last_of("/\\");
-	strcpy_s(path + k + 1, _countof(path) - (k + 1), "data");
-	return path;
+std::string weasel_shared_data_dir() {
+	wchar_t _path[MAX_PATH] = {0};
+	GetModuleFileNameW(NULL, _path, _countof(_path));
+	std::wstring _pathw(_path);
+	return wstring_to_string(_pathw, CP_UTF8);
 }
 
-const char* weasel_user_data_dir() {
-	static char path[MAX_PATH] = {0};
+std::string weasel_user_data_dir() {
+	char path[MAX_PATH] = {0};
 	// Windows wants multi-byte file paths in native encoding
-	WideCharToMultiByte(CP_ACP, 0, WeaselUserDataPath().c_str(), -1, path, _countof(path) - 1, NULL, NULL);
-	return path;
+	WideCharToMultiByte(CP_UTF8, 0, WeaselUserDataPath().c_str(), -1, path, _countof(path) - 1, NULL, NULL);
+	return std::string(path);
 }
 
 std::string GetCustomResource(const char *name, const char *type)

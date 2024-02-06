@@ -28,9 +28,8 @@ inline std::wstring getUsername() {
 
 // data directories
 std::wstring WeaselUserDataPath();
-
-const char* weasel_shared_data_dir();
-const char* weasel_user_data_dir();
+std::string weasel_shared_data_dir();
+std::string weasel_user_data_dir();
 
 inline BOOL IsUserDarkMode()
 {

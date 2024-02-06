@@ -23,7 +23,7 @@ jobs:
       - name: Checkout last commit
         uses: actions/checkout@v3
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Configure build environment
         run: |
@@ -46,12 +46,22 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1.3
 
-      - name: Copy Rime files
-        run: .\github.install.bat
+      - name: build librime
+        if: ${{ success() }}
+        run: | 
+          # load plugins
+          pushd librime\plugins\
+          git clone -v --depth=1 https://github.com/hchunhui/librime-lua.git
+          git clone -v --depth=1 -b thirdparty https://github.com/hchunhui/librime-lua.git librime-lua\thirdparty
+          git clone -v --depth=1 https://github.com/rime/librime-predict.git
+          git clone -v --depth=1 https://github.com/lotem/librime-octagram.git
+          popd
+          .\build.bat librime
 
       - name: Build Weasel
         id: build_weasel
         run: |
+          .\build.bat opencc
           .\build.bat data
           .\build.bat hant
           .\build.bat installer
