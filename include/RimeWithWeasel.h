@@ -19,14 +19,14 @@ struct CaseInsensitiveCompare {
 
 typedef std::map<std::string, bool> AppOptions;
 typedef std::map<std::string, AppOptions, CaseInsensitiveCompare> AppOptionsByAppName;
-struct SesstionStatus
+struct SessionStatus
 {
-	SesstionStatus() : style(weasel::UIStyle()), __synced(false) { RIME_STRUCT(RimeStatus, status); }
+	SessionStatus() : style(weasel::UIStyle()), __synced(false) { RIME_STRUCT(RimeStatus, status); }
 	weasel::UIStyle style;
 	RimeStatus status;
 	bool __synced;
 };
-typedef std::map<UINT, SesstionStatus> SesstionStatusMap;
+typedef std::map<UINT, SessionStatus> SessionStatusMap;
 class RimeWithWeaselHandler :
 	public weasel::RequestHandler
 {
@@ -88,7 +88,7 @@ private:
 	static std::string m_message_value;
 	static std::string m_message_label;
 	static std::string m_option_name;
-	SesstionStatusMap m_session_status_map;
+	SessionStatusMap m_session_status_map;
 	bool m_current_dark_mode;
 	bool m_global_ascii_mode;
 	int m_show_notifications_time;

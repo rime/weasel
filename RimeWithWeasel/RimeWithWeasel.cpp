@@ -4,9 +4,11 @@
 #include <StringAlgorithm.hpp>
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
+
+#include <boost/filesystem.hpp>
+#include <map>
 #include <regex>
 #include <rime_api.h>
-#include <map>
 
 #define TRANSPARENT_COLOR	0x00000000
 #define ARGB2ABGR(value)	((value & 0xff000000) | ((value & 0x000000ff) << 16) | (value & 0x0000ff00) | ((value & 0x00ff0000) >> 16)) 
@@ -70,10 +72,12 @@ void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _Update
 void RimeWithWeaselHandler::_Setup()
 {
 	RIME_STRUCT(RimeTraits, weasel_traits);
-	weasel_traits.shared_data_dir = weasel_shared_data_dir();
-	weasel_traits.user_data_dir = weasel_user_data_dir();
+	std::string shared_dir = wstring_to_string(WeaselSharedDataPath().wstring(), CP_UTF8);
+	std::string user_dir = wstring_to_string(WeaselUserDataPath().wstring(), CP_UTF8);
+	weasel_traits.shared_data_dir = shared_dir.c_str();
+	weasel_traits.user_data_dir = user_dir.c_str();
 	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
-	std::string distribution_name(wstring_to_string(WEASEL_IME_NAME, CP_UTF8));
+	std::string distribution_name = wstring_to_string(WEASEL_IME_NAME, CP_UTF8);
 	weasel_traits.distribution_name = distribution_name.c_str();
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
@@ -155,7 +159,7 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	DLOG(INFO) << "Add session: created session_id = " << session_id;
 	_ReadClientInfo(session_id, buffer);
 
-	m_session_status_map[session_id] = SesstionStatus();
+	m_session_status_map[session_id] = SessionStatus();
 	m_session_status_map[session_id].style = m_base_style;
 
 	RIME_STRUCT(RimeStatus, status);
@@ -512,39 +516,42 @@ void RimeWithWeaselHandler::_UpdateUI(UINT session_id)
 	m_option_name.clear();
 }
 
-void _LoadIconSettingFromSchema(RimeConfig& config, char *buffer, const int& BUF_SIZE, 
-		const char* key1, const char* key2, const std::wstring& user_dir, const std::wstring& shared_dir, std::wstring& value)
+std::wstring _LoadIconSettingFromSchema(RimeConfig& config,
+                                        const char* key1,
+                                        const char* key2,
+                                        const boost::filesystem::path& user_dir,
+                                        const boost::filesystem::path& shared_dir)
 {
-	memset(buffer, '\0', (BUF_SIZE+1));
-	if (RimeConfigGetString(&config, key1, buffer, BUF_SIZE) || (key2 != NULL && RimeConfigGetString(&config, key2, buffer, BUF_SIZE))) {
-		std::wstring tmp = string_to_wstring(buffer, CP_UTF8);
-		DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
-		if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))) {
-			dwAttrib = GetFileAttributes((shared_dir + L"\\" + tmp).c_str());
-			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
-				value = L"";
-			else
-				value = (shared_dir + L"\\" + tmp);
+	const int BUF_SIZE = 255;
+	char buffer[BUF_SIZE + 1] = {0};
+	if (RimeConfigGetString(&config, key1, buffer, BUF_SIZE) ||
+		(key2 != NULL && RimeConfigGetString(&config, key2, buffer, BUF_SIZE))) {
+		std::wstring resource = string_to_wstring(buffer, CP_UTF8);
+		DWORD dwAttrib = GetFileAttributes((user_dir / resource).c_str());
+		if (INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)) {
+			return (user_dir / resource).wstring();
 		}
-		else value = user_dir + L"\\" + tmp;
+		dwAttrib = GetFileAttributes((shared_dir / resource).c_str());
+		if (INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)) {
+			return (shared_dir / resource).wstring();
+		}
 	}
-	else value = L"";
+	return L"";
 }
 
 void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(UINT session_id, const std::string& schema_id)
 {
 	if (!m_ui) return;
-	const int BUF_SIZE = 255;
-	char buffer[BUF_SIZE + 1];
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config)) return;
 	_UpdateShowNotifications(&config);
 	m_ui->style() = m_base_style;
 	_UpdateUIStyle(&config, m_ui, false);
-	SesstionStatus& session_status = m_session_status_map[session_id];
+	SessionStatus& session_status = m_session_status_map[session_id];
 	session_status.style = m_ui->style();
 	// load schema color style config
-	memset(buffer, '\0', sizeof(buffer));
+	const int BUF_SIZE = 255;
+	char buffer[BUF_SIZE + 1] = {0};
 	if (!m_current_dark_mode && RimeConfigGetString(&config, "style/color_scheme", buffer, BUF_SIZE))
 	{
 		std::string color_name(buffer);
@@ -558,7 +565,7 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(UINT session_id, const s
 			RimeConfig weaselconfig;
 			if (RimeConfigOpen("weasel", &weaselconfig))
 			{
-				_UpdateUIStyleColor(&weaselconfig, session_status.style, std::string(buffer));
+				_UpdateUIStyleColor(&weaselconfig, session_status.style, color_name);
 				RimeConfigClose(&weaselconfig);
 			}
 		}
@@ -576,19 +583,19 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(UINT session_id, const s
 			RimeConfig weaselconfig;
 			if (RimeConfigOpen("weasel", &weaselconfig))
 			{
-				_UpdateUIStyleColor(&weaselconfig, session_status.style, std::string(buffer));
+				_UpdateUIStyleColor(&weaselconfig, session_status.style, color_name);
 				RimeConfigClose(&weaselconfig);
 			}
 		}
 	}
 	// load schema icon start
 	{
-		std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
-		std::wstring shared_dir = string_to_wstring(weasel_shared_data_dir());
-		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/icon", "schema/zhung_icon", user_dir, shared_dir, session_status.style.current_zhung_icon);
-		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/ascii_icon", NULL, user_dir, shared_dir, session_status.style.current_ascii_icon);
-		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/full_icon", NULL, user_dir, shared_dir, session_status.style.current_full_icon);
-		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/half_icon", NULL, user_dir, shared_dir, session_status.style.current_half_icon);
+		auto user_dir = WeaselUserDataPath();
+		auto shared_dir = WeaselSharedDataPath();
+		session_status.style.current_zhung_icon = _LoadIconSettingFromSchema(config, "schema/icon", "schema/zhung_icon", user_dir, shared_dir);
+		session_status.style.current_ascii_icon = _LoadIconSettingFromSchema(config, "schema/ascii_icon", NULL, user_dir, shared_dir);
+		session_status.style.current_full_icon = _LoadIconSettingFromSchema(config, "schema/full_icon", NULL, user_dir, shared_dir);
+		session_status.style.current_half_icon = _LoadIconSettingFromSchema(config, "schema/half_icon", NULL, user_dir, shared_dir);
 	}
 	// load schema icon end
 	RimeConfigClose(&config);
@@ -602,7 +609,7 @@ void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(UINT session_id, bool ignor
 	if(!ignore_app_name && m_last_app_name == app_name)
 		return;
 	m_last_app_name = app_name;
-	SesstionStatus& session_status = m_session_status_map[session_id];
+	SessionStatus& session_status = m_session_status_map[session_id];
 	bool inline_preedit = session_status.style.inline_preedit;
 	if (!app_name.empty())
 	{
@@ -712,7 +719,7 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	std::set<std::string> actions;
 	std::list<std::string> messages;
 
-	SesstionStatus& session_status = m_session_status_map[session_id];
+	SessionStatus& session_status = m_session_status_map[session_id];
 	RIME_STRUCT(RimeCommit, commit);
 	if (RimeGetCommit(session_id, &commit))
 	{
@@ -1021,8 +1028,6 @@ void RimeWithWeaselHandler::_UpdateShowNotifications(RimeConfig *config, bool in
 static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 {
 	UIStyle &style(ui->style());
-	const int BUF_SIZE = 255;
-	char buffer[BUF_SIZE + 1] = { 0 };
 	// get font faces
 	_RimeGetStringWithFunc(config, "style/font_face", style.font_face, NULL, _RemoveSpaceAroundSep);
 	std::wstring* const pFallbackFontFace = initialize ? &style.font_face : NULL;
@@ -1155,6 +1160,8 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 	// get enhanced_position
 	_RimeGetBool(config, "style/enhanced_position", initialize, style.enhanced_position, true, false);
 	// get color scheme
+	const int BUF_SIZE = 255;
+	char buffer[BUF_SIZE + 1] = { 0 };
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
 		_UpdateUIStyleColor(config, style);
 }
@@ -1162,8 +1169,7 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 static bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string color)
 {
 	const int BUF_SIZE = 255;
-	char buffer[BUF_SIZE + 1];
-	memset(buffer, '\0', sizeof(buffer));
+	char buffer[BUF_SIZE + 1] = {0};
 	std::string color_mark = "style/color_scheme";
 	// color scheme
 	if(RimeConfigGetString(config, color_mark.c_str(), buffer, BUF_SIZE) || !color.empty())

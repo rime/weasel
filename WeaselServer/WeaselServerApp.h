@@ -5,25 +5,29 @@
 #include <WeaselUI.h>
 #include <RimeWithWeasel.h>
 #include <WeaselUtility.h>
-#include <winsparkle.h>
+#include <boost/filesystem.hpp>
 #include <functional>
 #include <memory>
+#include <winsparkle.h>
 
 #include "WeaselTrayIcon.h"
 
+namespace fs = boost::filesystem;
+
 class WeaselServerApp {
 public:
-	static bool execute(const std::wstring &cmd, const std::wstring &args)
+	static bool execute(const fs::path &cmd, const std::wstring &args)
 	{
 		return (int)ShellExecuteW(NULL, NULL, cmd.c_str(), args.c_str(), NULL, SW_SHOWNORMAL) > 32;
 	}
 
-	static bool explore(const std::wstring &path)
+	static bool explore(const fs::path &path)
 	{
-		return (int)ShellExecuteW(NULL, L"open", L"explorer",  (L"\"" + path + L"\"").c_str(), NULL, SW_SHOWNORMAL) > 32;
+		std::wstring quoted_path(L"\"" + path.wstring() + L"\"");
+		return (int)ShellExecuteW(NULL, L"open", L"explorer",  quoted_path.c_str(), NULL, SW_SHOWNORMAL) > 32;
 	}
 
-	static bool open(const std::wstring &path)
+	static bool open(const fs::path &path)
 	{
 		return (int)ShellExecuteW(NULL, L"open", path.c_str(), NULL, NULL, SW_SHOWNORMAL) > 32;
 	}
@@ -40,14 +44,11 @@ public:
 		return true;
 	}
 
-	static std::wstring install_dir()
+	static fs::path install_dir()
 	{
 		WCHAR exe_path[MAX_PATH] = { 0 };
 		GetModuleFileNameW(GetModuleHandle(NULL), exe_path, _countof(exe_path));
-		std::wstring dir(exe_path);
-		size_t pos = dir.find_last_of(L"\\");
-		dir.resize(pos);
-		return dir;
+		return fs::path(exe_path).remove_filename();
 	}
 
 public:

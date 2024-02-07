@@ -13,17 +13,17 @@
 #include <rime_api.h>
 #include <rime_levers_api.h>
 #pragma warning(default: 4005)
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include "WeaselDeployer.h"
 
 static void CreateFileIfNotExist(std::string filename)
 {
-	std::string user_data_dir = weasel_user_data_dir();
-	std::wstring filepathw = string_to_wstring(user_data_dir) + L"\\" + string_to_wstring(filename);
-	DWORD dwAttrib = GetFileAttributes(filepathw.c_str());
+	boost::filesystem::path file_path = WeaselUserDataPath() / string_to_wstring(filename, CP_UTF8);
+	DWORD dwAttrib = GetFileAttributes(file_path.c_str());
 	if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 	{
-		std::wofstream o(filepathw, std::ios::app);
+		std::wofstream o(file_path.c_str(), std::ios::app);
 		o.close();
 	}
 }
@@ -36,14 +36,13 @@ Configurator::Configurator()
 void Configurator::Initialize()
 {
 	RIME_STRUCT(RimeTraits, weasel_traits);
-	weasel_traits.shared_data_dir = weasel_shared_data_dir();
-	weasel_traits.user_data_dir = weasel_user_data_dir();
+	std::string shared_dir = wstring_to_string(WeaselSharedDataPath().wstring(), CP_UTF8);
+	std::string user_dir = wstring_to_string(WeaselUserDataPath().wstring(), CP_UTF8);
+	weasel_traits.shared_data_dir = shared_dir.c_str();
+	weasel_traits.user_data_dir = user_dir.c_str();
 	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
-	const int len = 20;
-	char utf8_str[len];
-	memset(utf8_str, 0, sizeof(utf8_str));
-	WideCharToMultiByte(CP_UTF8, 0, WEASEL_IME_NAME, -1, utf8_str, len - 1, NULL, NULL);
-	weasel_traits.distribution_name = utf8_str;
+	std::string distribution_name = wstring_to_string(WEASEL_IME_NAME, CP_UTF8);
+	weasel_traits.distribution_name = distribution_name.c_str();
 	weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
 	weasel_traits.distribution_version = WEASEL_VERSION;
 	weasel_traits.app_name = "rime.weasel";

@@ -1,4 +1,5 @@
 #pragma once
+#include <boost/filesystem.hpp>
 #include <string>
 
 inline int utf8towcslen(const char* utf8_str, int utf8_len)
@@ -27,10 +28,8 @@ inline std::wstring getUsername() {
 }
 
 // data directories
-std::wstring WeaselUserDataPath();
-
-const char* weasel_shared_data_dir();
-const char* weasel_user_data_dir();
+boost::filesystem::path WeaselSharedDataPath();
+boost::filesystem::path WeaselUserDataPath();
 
 inline BOOL IsUserDarkMode()
 {
