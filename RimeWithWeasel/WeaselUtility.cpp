@@ -28,7 +28,7 @@ std::string weasel_shared_data_dir() {
 	wchar_t _path[MAX_PATH] = {0};
 	GetModuleFileNameW(NULL, _path, _countof(_path));
 	std::wstring _pathw(_path);
-	return wstring_to_string(_pathw, CP_UTF8);
+	return wstring_to_string(_pathw, CP_UTF8) + "\\data";
 }
 
 std::string weasel_user_data_dir() {

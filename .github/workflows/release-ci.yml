@@ -63,7 +63,6 @@ jobs:
       - name: Build Weasel
         id: build_weasel
         run: |
-          #.\build.bat opencc
           .\build.bat data
           .\build.bat hant
           .\build.bat installer
