@@ -25,10 +25,13 @@ std::wstring WeaselUserDataPath() {
 }
 
 std::string weasel_shared_data_dir() {
-	wchar_t _path[MAX_PATH] = {0};
-	GetModuleFileNameW(NULL, _path, _countof(_path));
-	std::wstring _pathw(_path);
-	return wstring_to_string(_pathw, CP_UTF8) + "\\data";
+	char path[MAX_PATH] = {0};
+	GetModuleFileNameA(NULL, path, _countof(path));
+	std::string str_path(path);
+	size_t k = str_path.find_last_of("/\\");
+	strcpy_s(path + k + 1, _countof(path) - (k + 1), "data");
+	std::string _path = wstring_to_string(string_to_wstring(path), CP_UTF8);
+	return _path;
 }
 
 std::string weasel_user_data_dir() {
