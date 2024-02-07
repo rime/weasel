@@ -48,13 +48,12 @@ jobs:
 
       - name: build librime
         if: ${{ success() }}
+        env:  
+          rime_plugins: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
         run: | 
           # load plugins
-          pushd librime\plugins\
-          git clone -v --depth=1 https://github.com/hchunhui/librime-lua.git
-          git clone -v --depth=1 -b thirdparty https://github.com/hchunhui/librime-lua.git librime-lua\thirdparty
-          git clone -v --depth=1 https://github.com/rime/librime-predict.git
-          git clone -v --depth=1 https://github.com/lotem/librime-octagram.git
+          pushd librime
+          .\action-install-plugins-windows.bat
           popd
           .\build.bat librime
 
