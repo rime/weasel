@@ -585,8 +585,8 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(UINT session_id, const s
 	}
 	// load schema icon start
 	{
-		std::wstring user_dir = string_to_wstring(weasel_user_data_dir());
-		std::wstring shared_dir = string_to_wstring(weasel_shared_data_dir());
+		std::wstring user_dir = string_to_wstring(weasel_user_data_dir(), CP_UTF8);
+		std::wstring shared_dir = string_to_wstring(weasel_shared_data_dir(), CP_UTF8);
 		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/icon", "schema/zhung_icon", user_dir, shared_dir, session_status.style.current_zhung_icon);
 		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/ascii_icon", NULL, user_dir, shared_dir, session_status.style.current_ascii_icon);
 		_LoadIconSettingFromSchema(config, buffer, BUF_SIZE, "schema/full_icon", NULL, user_dir, shared_dir, session_status.style.current_full_icon);
