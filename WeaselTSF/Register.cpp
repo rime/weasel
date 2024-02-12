@@ -220,6 +220,22 @@ BOOL RegisterServer()
 		{
 			dw = GetModuleFileNameA(g_hInst, achFileName, ARRAYSIZE(achFileName));
 
+#ifdef _M_ARM64
+			{
+				// On ARM64 we use ARM64X redirection DLL.
+				// When loaded, weasel.dll will be redirected to weaselARM64.dll on ARM64 processes,
+				// and weaselx64.dll on x64 processes.
+				//
+				// But GetModuleFileNameA will return the actual loaded DLL name aka weaselARM64.dll
+				// Rewrite the path to point to the redirector.
+
+				char wrapperPath[MAX_PATH];
+				StringCbCatA(achFileName, MAX_PATH, "\\..\\weasel.dll");
+				GetFullPathNameA(achFileName, MAX_PATH, wrapperPath, NULL);
+				memcpy(achFileName, wrapperPath, MAX_PATH);
+			}
+#endif
+
 			fRet &= RegSetValueExA(hSubKey, NULL, 0, REG_SZ, (BYTE *)achFileName, (strlen(achFileName) + 1) * sizeof(char)) == ERROR_SUCCESS;
 			fRet &= RegSetValueExA(hSubKey, c_szModelName, 0, REG_SZ, (BYTE *)TEXTSERVICE_MODEL, sizeof TEXTSERVICE_MODEL) == ERROR_SUCCESS;
 			RegCloseKey(hSubKey);
