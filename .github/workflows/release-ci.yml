@@ -19,7 +19,7 @@ jobs:
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -31,7 +31,7 @@ jobs:
 
       - name: Cache Boost
         id: cache-boost
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ${{ env.BOOST_ROOT }}
@@ -42,7 +42,7 @@ jobs:
         run: .\install_boost.bat
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1.3
+        uses: microsoft/setup-msbuild@v2
 
       - name: Copy Rime files
         if: env.librime_build == 'stable'
