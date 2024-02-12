@@ -152,6 +152,20 @@ if not exist weasel.props (
 
 del msbuild*.log
 
+if %build_arm64% == 1 (
+  if %build_hant% == 1 (
+    msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="ARM" /fl8
+    if errorlevel 1 goto error
+    msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="ARM64" /fl7
+    if errorlevel 1 goto error
+  )
+
+  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="ARM" /fl6
+  if errorlevel 1 goto error
+  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="ARM64" /fl5
+  if errorlevel 1 goto error
+)
+
 if %build_hant% == 1 (
   msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
   if errorlevel 1 goto error
