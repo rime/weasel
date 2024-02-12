@@ -47,6 +47,7 @@ set build_rime=0
 set rime_build_variant=release
 set build_weasel=0
 set build_installer=0
+set build_arm64=0
 
 :parse_cmdline_options
 if "%1" == "" goto end_parsing_cmdline_options
@@ -69,6 +70,7 @@ if "%1" == "rime" set build_rime=1
 if "%1" == "librime" set build_rime=1
 if "%1" == "weasel" set build_weasel=1
 if "%1" == "installer" set build_installer=1
+if "%1" == "arm64" set build_arm64=1
 if "%1" == "all" (
   set build_boost=1
   set build_data=1
@@ -77,6 +79,7 @@ if "%1" == "all" (
   set build_rime=1
   set build_weasel=1
   set build_installer=1
+  set build_arm64=1
 )
 shift
 goto parse_cmdline_options
@@ -195,6 +198,16 @@ set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
  architecture=x86^
  address-model=64
 
+set BJAM_OPTIONS_ARM32=%BJAM_OPTIONS_COMMON%^
+ define=BOOST_USE_WINAPI_VERSION=0x0A00^
+ architecture=arm^
+ address-model=32
+
+set BJAM_OPTIONS_ARM64=%BJAM_OPTIONS_COMMON%^
+ define=BOOST_USE_WINAPI_VERSION=0x0A00^
+ architecture=arm^
+ address-model=64
+
 cd /d %BOOST_ROOT%
 if not exist b2.exe call bootstrap.bat
 if errorlevel 1 goto error
@@ -202,6 +215,13 @@ b2 %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
 if errorlevel 1 goto error
 b2 %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
 if errorlevel 1 goto error
+
+if %build_arm64% == 1 (
+  b2 %BJAM_OPTIONS_ARM32% stage %BOOST_COMPILED_LIBS%
+  if errorlevel 1 goto error
+  b2 %BJAM_OPTIONS_ARM64% stage %BOOST_COMPILED_LIBS%
+  if errorlevel 1 goto error
+)
 exit /b
 
 :build_data
