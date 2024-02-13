@@ -71,8 +71,7 @@ jobs:
         shell: bash
         run: |
           ./build.bat data
-          ./build.bat hant
-          ./build.bat arm64
+          ./build.bat hant arm64
           ./build.bat installer
 
       - name: Compress Debug Symbols
