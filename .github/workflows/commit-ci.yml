@@ -18,8 +18,8 @@ jobs:
     runs-on: windows-2022
     env:
       librime_build: 'submodule'
-      boost_version: 1.83.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
+      boost_version: 1.84.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
@@ -45,7 +45,10 @@ jobs:
       # install boost if not cached
       - name: Install Boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: .\install_boost.bat
+        shell: bash
+        run: |
+          ./install_boost.bat
+          ./build.bat boost arm64
 
       # add msbuild to PATH
       - name: Add msbuild to PATH
@@ -89,6 +92,7 @@ jobs:
         run: |
           ./build.bat data
           ./build.bat hant
+          ./build.bat arm64
           ./build.bat installer
 
       - name: Compress Debug Symbols
