@@ -26,6 +26,13 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install llvm
+        run: choco install llvm --version=17.0.6
+
+      - name: Code style lint
+        shell: bash
+        run: ./clang-format.sh -i
+
       - name: Configure build environment
         shell: bash
         run: |
