@@ -37,10 +37,10 @@ Configurator::Configurator()
 void Configurator::Initialize()
 {
 	RIME_STRUCT(RimeTraits, weasel_traits);
-#ifdef _WIN64
+#ifndef _WIN64
 	std::string shared_dir = wstring_to_string(WeaselSharedDataPath().wstring(), CP_UTF8);
 #else
-	std::string shared_dir = wstring_to_string((WeaselSharedDataPath().parent_path().append("data")).wstring(), CP_UTF8);
+	std::string shared_dir = wstring_to_string((WeaselSharedDataPath().parent_path().parent_path().append("data")).wstring(), CP_UTF8);
 #endif
 	std::string user_dir = wstring_to_string(WeaselUserDataPath().wstring(), CP_UTF8);
 	weasel_traits.shared_data_dir = shared_dir.c_str();
