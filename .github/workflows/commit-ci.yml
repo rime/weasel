@@ -51,9 +51,10 @@ jobs:
         if: env.librime_build == 'stable'
         run: .\github.install.bat
 
-      - name: Build librime
+      - name: Build librime 64 bit
         if: env.librime_build == 'submodule'
         env:
+          ARCH: x64
           RIME_PLUGINS: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
         shell: bash
         run: |
@@ -61,6 +62,36 @@ jobs:
           pushd librime
           ./action-install-plugins-windows.bat
           popd
+          # build librime
+          ./build.bat librime
+          # copy x64 files to weasel and rename
+          echo " ./lib/rimex64.dll"
+          cp ./librime/dist/lib/rime.dll ./lib/rimex64.dll
+          echo " ./lib/rimex64.lib"
+          cp ./librime/dist/lib/rime.lib ./lib/rimex64.lib
+          echo " ./output/x64/rime.dll"
+          cp ./librime/dist/lib/rime.dll ./output/x64/rime.dll
+
+      - name: Build librime
+        if: env.librime_build == 'submodule'
+        env:
+          ARCH: Win32
+          RIME_PLUGINS: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
+        shell: bash
+        run: |
+          # clean x64
+          rm -rf ./librime/deps/opencc/build/
+          rm -rf ./librime/deps/glog/build/
+          rm -rf ./librime/deps/googletest/build/
+          rm -rf ./librime/deps/leveldb/build/
+          rm -rf ./librime/deps/marisa-trie/build/
+          rm -rf ./librime/deps/yaml-cpp/build/
+          rm -rf ./librime/build/
+          rm -rf ./librime/lib/*.lib
+          rm -rf ./librime/lib/cmake
+          rm -rf ./librime/lib/pkgconfig
+          rm -rf ./librime/dist
+          # build librime
           ./build.bat librime
 
       - name: Build Weasel
