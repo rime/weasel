@@ -20,9 +20,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
-		MARK_GAP = MARK_WIDTH + 4;
+		if(_style.mark_text.empty())
+			MARK_WIDTH /= 2;
+		MARK_GAP = (_style.mark_text.empty()) ? MARK_WIDTH : MARK_WIDTH + _style.hilite_spacing;
 	}
-	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
+	int base_offset =  ((_style.hilited_mark_color & 0xff000000)) ? MARK_GAP : 0;
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
@@ -86,7 +88,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 			current_cand_width += (size.cx + _style.hilite_spacing) * textFontValid;
 
 			/* Comment */
-			if (!comments.at(i).str.empty() && cmtFontValid )
+			bool cmtFontNotTrans = (i == id && (_style.hilited_comment_text_color & 0xff000000)) ||
+				(i != id && (_style.comment_text_color & 0xff000000));
+			if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans)
 			{
 				const std::wstring& comment = comments.at(i).str;
 				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
@@ -219,9 +223,5 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 		}
 	}
 	// truely draw content size calculation
-	int deflatex = offsetX - _style.border / 2;
-	int deflatey = offsetY - _style.border / 2;
-	_contentRect.DeflateRect(deflatex, deflatey);
-	// eliminate the 1 pixel gap when border width odd and padding equal to margin
-	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
+	_contentRect.DeflateRect(offsetX, offsetY);
 }

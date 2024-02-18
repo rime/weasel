@@ -9,10 +9,11 @@ app_options:
   conhost.exe:
     ascii_mode: true
 
-# configuration: when to show notifications
-# always, never, or combination of: ascii_mode, ascii_punct, shape, simplification, schema
-# e.g., ascii_mode+shape+schema
-show_notifications_when: always
+show_notifications: true
+# how long a period notifications shows
+show_notifications_time: 1200
+# use global ascii status
+global_ascii: false
 
 style:
   antialias_mode: default
@@ -24,6 +25,8 @@ style:
   font_point: 14
   label_font_point: 14
   comment_font_point: 14
+  candidate_abbreviate_length: 0
+  click_to_capture: false
   horizontal: false
   fullscreen: false
   inline_preedit: false

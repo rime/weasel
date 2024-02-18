@@ -56,17 +56,21 @@ public:
 	bool GetIsReposition(){ return m_istorepos; }
 
 private:
-	void _InitFontRes(void);
+	void _InitFontRes(bool forced = false);
 	void _CaptureRect(CRect& rect);
 	bool m_mouse_entry = false;
 	void _CreateLayout();
 	void _ResizeWindow();
-	void _RepositionWindow(bool adj = false);
-	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
-	bool _DrawPreeditBack(weasel::Text const& text, CDCHandle dc, CRect const& rc);
+	void _RepositionWindow(const bool& adj = false);
+	bool _DrawPreedit(const Text& text, CDCHandle dc,  const CRect& rc);
+	bool _DrawPreeditBack(const Text& text, CDCHandle dc,  const CRect& rc);
 	bool _DrawCandidates(CDCHandle &dc, bool back = false);
-	void _HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type, IsToRoundStruct rd, COLORREF bordercolor);
-	void _TextOut(CRect const& rc, std::wstring psz, size_t cch, int inColor, IDWriteTextFormat1* pTextFormat = NULL);
+	void _HighlightText(CDCHandle &dc, const CRect& rc, const COLORREF& color,
+			const COLORREF& shadowColor, const int& radius,
+			const BackType& type, const IsToRoundStruct& rd,
+			const COLORREF& bordercolor);
+	void _TextOut(const CRect& rc, const std::wstring& psz, const size_t& cch,
+			const int& inColor, IDWriteTextFormat1* const pTextFormat = NULL);
 
 	void _LayerUpdate(const CRect& rc, CDCHandle dc);
 
@@ -78,13 +82,10 @@ private:
 	weasel::UIStyle &m_ostyle;
 
 	CRect m_inputPos;
-	CRect m_oinputPos;
 	int  m_offsetys[MAX_CANDIDATES_COUNT];	// offset y for candidates when vertical layout over bottom
 	int  m_offsety_preedit;
 	int  m_offsety_aux;
 	bool m_istorepos;
-	CSize m_size;
-	CSize m_osize;
 
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;

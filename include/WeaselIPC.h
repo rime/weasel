@@ -84,6 +84,7 @@ namespace weasel
 		virtual void StartMaintenance() {}
 		virtual void EndMaintenance() {}
 		virtual void SetOption(UINT session_id, const std::string &opt, bool val) {}
+		virtual void UpdateColorTheme(BOOL darkMode) {}
 	};
 	
 	// 處理server端回應之物件

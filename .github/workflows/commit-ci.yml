@@ -17,13 +17,14 @@ jobs:
   build:
     runs-on: windows-2022
     env:
+      librime_build: 'submodule'
       boost_version: 1.83.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Configure build environment
         run: |
@@ -47,21 +48,33 @@ jobs:
         uses: microsoft/setup-msbuild@v1.1.3
 
       - name: Copy Rime files
+        if: env.librime_build == 'stable'
         run: .\github.install.bat
+
+      - name: Build librime
+        if: env.librime_build == 'submodule'
+        env:
+          RIME_PLUGINS: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
+        shell: bash
+        run: |
+          # load plugins
+          pushd librime
+          ./action-install-plugins-windows.bat
+          popd
+          ./build.bat librime
 
       - name: Build Weasel
         id: build_weasel
+        shell: bash
         run: |
-          .\build.bat data
-          .\build.bat hant
-          .\build.bat installer
-        if: ${{ success() }}
+          ./build.bat data
+          ./build.bat hant
+          ./build.bat installer
 
       - name: Compress Debug Symbols
         shell: pwsh
         run: |
           Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
-        if: ${{ success() }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -70,4 +83,3 @@ jobs:
           path: |
             .\output\archives\weasel*.exe
             .\output\archives\symbols.zip
-        if: ${{ success() }}

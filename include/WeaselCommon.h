@@ -200,11 +200,15 @@ namespace weasel
 		Text aux;
 		CandidateInfo cinfo;
 	};
-
+	// for icon type in tip
+	enum IconType{
+		SCHEMA,
+		FULL_SHAPE
+	} ;
 	// 由ime管理
 	struct Status
 	{
-		Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false) {}
+		Status() : type(SCHEMA), ascii_mode(false), composing(false), disabled(false), full_shape(false) {}
 		void reset()
 		{
 			schema_name.clear();
@@ -213,6 +217,7 @@ namespace weasel
 			composing = false;
 			disabled = false;
 			full_shape = false;
+			type = SCHEMA;
 		}
 		// 輸入方案
 		std::wstring schema_name;
@@ -226,6 +231,8 @@ namespace weasel
 		bool disabled;
 		// 全角状态
 		bool full_shape;
+		// 图标类型, schema/full_shape
+		IconType type;
 	};
 
 	// 用於向前端告知設置信息
@@ -274,32 +281,38 @@ namespace weasel
 			ALIGN_TOP
 		};
 
-		AntiAliasMode antialias_mode;
-		LayoutAlignType align_type;
-		PreeditType preedit_type;
-		LayoutType layout_type;
-		bool vertical_text_left_to_right;
-		bool vertical_text_with_wrap;
-		bool paging_on_scroll;
+		// font face and font point settings
 		std::wstring font_face;
 		std::wstring label_font_face;
 		std::wstring comment_font_face;
-		int mouse_hover_ms;
 		int font_point;
 		int label_font_point;
 		int comment_font_point;
+		int candidate_abbreviate_length;
+
 		bool inline_preedit;
 		bool display_tray_icon;
 		bool ascii_tip_follow_cursor;
+		bool paging_on_scroll;
+		bool enhanced_position;
+		bool click_to_capture;
+		int mouse_hover_ms;
+		AntiAliasMode antialias_mode;
+		PreeditType preedit_type;
+		// custom icon settings
 		std::wstring current_zhung_icon;
 		std::wstring current_ascii_icon;
 		std::wstring current_half_icon;
 		std::wstring current_full_icon;
-		bool enhanced_position;
-
+		// label format and mark_text
 		std::wstring label_text_format;
 		std::wstring mark_text;
-		// layout
+		// layout relative parameters
+		LayoutType layout_type;
+		LayoutAlignType align_type;
+		bool vertical_text_left_to_right;
+		bool vertical_text_with_wrap;
+		// layout, with key name like style/layout/...
 		int min_width;
 		int max_width;
 		int min_height;
@@ -347,28 +360,29 @@ namespace weasel
 		UIStyle() : font_face(),
 			label_font_face(),
 			comment_font_face(),
-			mouse_hover_ms(0),
 			font_point(0),
 			label_font_point(0),
 			comment_font_point(0),
+			candidate_abbreviate_length(0),
 			inline_preedit(false),
-			antialias_mode(DEFAULT),
-			align_type(ALIGN_BOTTOM),
-			preedit_type(COMPOSITION),
 			display_tray_icon(false),
 			ascii_tip_follow_cursor(false),
+			paging_on_scroll(false),
+			enhanced_position(false),
+			click_to_capture(false),
+			mouse_hover_ms(0),
+			antialias_mode(DEFAULT),
+			preedit_type(COMPOSITION),
 			current_zhung_icon(),
 			current_ascii_icon(),
 			current_half_icon(),
 			current_full_icon(),
-			enhanced_position(false),
-
 			label_text_format(L"%s."),
 			mark_text(),
 			layout_type(LAYOUT_VERTICAL),
+			align_type(ALIGN_BOTTOM),
 			vertical_text_left_to_right(false),
 			vertical_text_with_wrap(false),
-			paging_on_scroll(false),
 			min_width(0),
 			max_width(0),
 			min_height(0),
@@ -428,6 +442,7 @@ namespace weasel
 					|| font_point != st.font_point
 					|| label_font_point != st.label_font_point
 					|| comment_font_point != st.comment_font_point
+					|| candidate_abbreviate_length != st.candidate_abbreviate_length
 					|| inline_preedit != st.inline_preedit
 					|| mark_text != st.mark_text
 					|| display_tray_icon != st.display_tray_icon
@@ -437,6 +452,7 @@ namespace weasel
 					|| current_half_icon != st.current_half_icon
 					|| current_full_icon != st.current_full_icon
 					|| enhanced_position != st.enhanced_position
+					|| click_to_capture != st.click_to_capture
 					|| label_text_format != st.label_text_format
 					|| min_width != st.min_width
 					|| max_width != st.max_width
@@ -494,6 +510,7 @@ namespace boost {
 			ar & s.font_point;
 			ar & s.label_font_point;
 			ar & s.comment_font_point;
+			ar & s.candidate_abbreviate_length;
 			ar & s.inline_preedit;
 			ar & s.align_type;
 			ar & s.antialias_mode;
@@ -505,7 +522,8 @@ namespace boost {
 			ar & s.current_ascii_icon;
 			ar & s.current_half_icon;
 			ar & s.current_full_icon;
-			ar& s.enhanced_position;
+			ar & s.enhanced_position;
+			ar & s.click_to_capture;
 			ar & s.label_text_format;
 			// layout
 			ar & s.layout_type;

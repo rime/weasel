@@ -27,9 +27,12 @@ namespace weasel
 			MESSAGE_HANDLER(WM_CLOSE, OnClose)
 			MESSAGE_HANDLER(WM_QUERYENDSESSION, OnQueryEndSystemSession)
 			MESSAGE_HANDLER(WM_ENDSESSION, OnEndSystemSession)
+			MESSAGE_HANDLER(WM_DWMCOLORIZATIONCOLORCHANGED, OnColorChange)
+			MESSAGE_HANDLER(WM_SETTINGCHANGE, OnColorChange)
 			MESSAGE_HANDLER(WM_COMMAND, OnCommand)
 		END_MSG_MAP()
 
+		LRESULT OnColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -79,6 +82,7 @@ namespace weasel
 		std::map<UINT, CommandHandler> m_MenuHandlers;
 		HMODULE m_hUser32Module;
 		SecurityAttribute sa;
+		BOOL m_darkMode;
 	};
 
 

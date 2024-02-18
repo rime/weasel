@@ -2,6 +2,7 @@
 #include "WeaselServerImpl.h"
 #include <Windows.h>
 #include <resource.h>
+#include <WeaselUtility.h>
 
 namespace weasel {
 	class PipeServer : public PipeChannel<DWORD, PipeMessage>
@@ -29,6 +30,7 @@ extern CAppModule _Module;
 
 ServerImpl::ServerImpl()
 	: m_pRequestHandler(NULL),
+	m_darkMode(IsUserDarkMode()),
 	channel(std::make_unique<PipeServer>(GetPipeName(), sa.get_attr()))
 {
 	m_hUser32Module = GetModuleHandle(_T("user32.dll"));
@@ -54,6 +56,15 @@ void ServerImpl::_Finailize()
 	{
 		DestroyWindow();
 	}
+}
+
+LRESULT ServerImpl::OnColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (IsUserDarkMode() != m_darkMode) {
+		m_darkMode = IsUserDarkMode();
+		m_pRequestHandler->UpdateColorTheme(m_darkMode);
+	}
+	return 0;
 }
 
 LRESULT ServerImpl::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

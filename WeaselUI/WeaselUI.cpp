@@ -23,7 +23,7 @@ public:
 	}
 	void Show();
 	void Hide();
-	void ShowWithTimeout(DWORD millisec);
+	void ShowWithTimeout(size_t millisec);
 	bool IsShown() const { return shown; }
 
 	static VOID CALLBACK OnTimer(
@@ -63,7 +63,7 @@ void UIImpl::Hide()
 	}
 }
 
-void UIImpl::ShowWithTimeout(DWORD millisec)
+void UIImpl::ShowWithTimeout(size_t millisec)
 {
 	if (!panel.IsWindow()) return;
 	DLOG(INFO) << "ShowWithTimeout: " << millisec;
@@ -94,7 +94,7 @@ bool UI::Create(HWND parent)
 {
 	if (pimpl_)
 	{
-		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_LAYERED | WS_EX_TRANSPARENT, 0U, 0);
+		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
 		return true;
 	}
 
@@ -102,7 +102,7 @@ bool UI::Create(HWND parent)
 	if (!pimpl_)
 		return false;
 
-	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_LAYERED | WS_EX_TRANSPARENT, 0U, 0);
+	pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT, 0U, 0);
 	return true;
 }
 
@@ -148,7 +148,7 @@ void UI::Hide()
 	}
 }
 
-void UI::ShowWithTimeout(DWORD millisec)
+void UI::ShowWithTimeout(size_t millisec)
 {
 	if (pimpl_)
 	{
@@ -186,5 +186,12 @@ void UI::Update(const Context &ctx, const Status &status)
 {
 	ctx_ = ctx;
 	status_ = status;
+	if(style_.candidate_abbreviate_length > 0) {
+		for (auto& c : ctx_.cinfo.candies) {
+			if (c.str.length() > style_.candidate_abbreviate_length) {
+				c.str = c.str.substr(0, style_.candidate_abbreviate_length - 1) + L"..." + c.str.substr(c.str.length() - 1);
+			}
+		}
+	}
 	Refresh();
 }

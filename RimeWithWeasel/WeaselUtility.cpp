@@ -1,42 +1,36 @@
 #include "stdafx.h"
+#include <boost/filesystem.hpp>
 #include <string>
+#include <WeaselUtility.h>
 
-std::wstring WeaselUserDataPath() {
-	WCHAR path[MAX_PATH] = {0};
+namespace fs = boost::filesystem;
+
+fs::path WeaselUserDataPath() {
+	WCHAR _path[MAX_PATH] = {0};
 	const WCHAR KEY[] = L"Software\\Rime\\Weasel";
 	HKEY hKey;
 	LSTATUS ret = RegOpenKey(HKEY_CURRENT_USER, KEY, &hKey);
 	if (ret == ERROR_SUCCESS)
 	{
-		DWORD len = sizeof(path);
+		DWORD len = sizeof(_path);
 		DWORD type = 0;
 		DWORD data = 0;
-		ret = RegQueryValueEx(hKey, L"RimeUserDir", NULL, &type, (LPBYTE)path, &len);
+		ret = RegQueryValueEx(hKey, L"RimeUserDir", NULL, &type, (LPBYTE)_path, &len);
 		RegCloseKey(hKey);
-		if (ret == ERROR_SUCCESS && type == REG_SZ && path[0])
+		if (ret == ERROR_SUCCESS && type == REG_SZ && _path[0])
 		{
-			return path;
+			return fs::path(_path);
 		}
 	}
 	// default location
-	ExpandEnvironmentStringsW(L"%AppData%\\Rime", path, _countof(path));
-	return path;
+	ExpandEnvironmentStringsW(L"%AppData%\\Rime", _path, _countof(_path));
+	return fs::path(_path);
 }
 
-const char* weasel_shared_data_dir() {
-	static char path[MAX_PATH] = {0};
-	GetModuleFileNameA(NULL, path, _countof(path));
-	std::string str_path(path);
-	size_t k = str_path.find_last_of("/\\");
-	strcpy_s(path + k + 1, _countof(path) - (k + 1), "data");
-	return path;
-}
-
-const char* weasel_user_data_dir() {
-	static char path[MAX_PATH] = {0};
-	// Windows wants multi-byte file paths in native encoding
-	WideCharToMultiByte(CP_ACP, 0, WeaselUserDataPath().c_str(), -1, path, _countof(path) - 1, NULL, NULL);
-	return path;
+fs::path WeaselSharedDataPath() {
+	wchar_t _path[MAX_PATH] = {0};
+	GetModuleFileNameW(NULL, _path, _countof(_path));
+	return fs::path(_path).remove_filename().append("data");
 }
 
 std::string GetCustomResource(const char *name, const char *type)
