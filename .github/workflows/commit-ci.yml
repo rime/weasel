@@ -27,10 +27,12 @@ jobs:
           submodules: recursive
 
       - name: Configure build environment
+        shell: bash
         run: |
-          copy env.vs2022.bat env.bat
-          $git_ref_name = git describe --always
-          echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
+          cp env.vs2022.bat env.bat
+          librime_id=$(git submodule foreach --quiet 'if [ $name == "librime" ]; then echo `git rev-parse HEAD`; fi')
+          echo "librime_id is $librime_id"
+          echo "librime_id=$librime_id" >> $GITHUB_ENV
 
       - name: Cache Boost
         id: cache-boost
@@ -40,19 +42,28 @@ jobs:
             ${{ env.BOOST_ROOT }}
           key: ${{ runner.os }}-boost-${{ env.boost_version }}
 
+      # install boost if not cached
       - name: Install Boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: .\install_boost.bat
 
+      # add msbuild to PATH
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1.3
 
-      - name: Copy Rime files
-        if: env.librime_build == 'stable'
-        run: .\github.install.bat
-
-      - name: Build librime
+      # cache librime
+      - name: Cache librime
         if: env.librime_build == 'submodule'
+        id: cache-librime
+        uses: actions/cache@v3
+        with:
+          path: |
+            librime
+          key: ${{ runner.os }}-librime-${{ env.librime_id }}
+
+      # build librime if not cached
+      - name: Build librime
+        if: ${{ env.librime_build == 'submodule' && steps.cache-librime.outputs.cache-hit != 'true' }}
         env:
           RIME_PLUGINS: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
         shell: bash
@@ -62,6 +73,15 @@ jobs:
           ./action-install-plugins-windows.bat
           popd
           ./build.bat librime
+
+      # build librime if cached
+      - name: Copy librime built files cached
+        if: ${{ env.librime_build == 'submodule' && steps.cache-librime.outputs.cache-hit == 'true' }}
+        shell: bash
+        run: |
+          cp ./librime/dist/lib/rime* ./lib/
+          cp ./librime/dist/lib/rime.dll ./output/
+          cp ./librime/dist/include/*.h ./include/
 
       - name: Build Weasel
         id: build_weasel
