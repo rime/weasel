@@ -22,7 +22,7 @@ jobs:
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -36,7 +36,7 @@ jobs:
 
       - name: Cache Boost
         id: cache-boost
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ${{ env.BOOST_ROOT }}
@@ -49,13 +49,13 @@ jobs:
 
       # add msbuild to PATH
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1.3
+        uses: microsoft/setup-msbuild@v2
 
       # cache librime
       - name: Cache librime
         if: env.librime_build == 'submodule'
         id: cache-librime
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             librime
@@ -97,7 +97,7 @@ jobs:
           Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           path: |
