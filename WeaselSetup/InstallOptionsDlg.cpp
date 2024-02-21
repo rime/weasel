@@ -87,6 +87,13 @@ LRESULT InstallOptionsDialog::OnUseDefaultDir(WORD, WORD code, HWND, BOOL&) {
 }
 
 LRESULT InstallOptionsDialog::OnUseCustomDir(WORD, WORD code, HWND, BOOL&) {
+	CFolderDialog dlg;
+	CStringW text;
+	dir_.GetWindowTextW(text);
+	if(!text.IsEmpty())
+		dlg.SetInitialFolder(text, false);
+	if (dlg.DoModal() == IDOK)
+		dir_.SetWindowTextW(dlg.m_szFolderPath);
 	dir_.EnableWindow(TRUE);
 	dir_.SetFocus();
 	return 0;
