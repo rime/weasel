@@ -455,7 +455,19 @@ void RimeWithWeaselHandler::EndMaintenance()
 
 void RimeWithWeaselHandler::SetOption(UINT session_id, const std::string & opt, bool val)
 {
-	RimeSetOption(session_id, opt.c_str(), val);
+	// from no-session client, not actual typing session
+	if (!session_id)
+	{
+		if (m_global_ascii_mode && opt == "ascii_mode")
+		{
+			for (auto& pair : m_session_status_map)
+				RimeSetOption(pair.first, "ascii_mode", val);
+		}
+		else
+			RimeSetOption(m_active_session, opt.c_str(), val);
+	}
+	else
+		RimeSetOption(session_id, opt.c_str(), val);
 }
 
 void RimeWithWeaselHandler::OnUpdateUI(std::function<void()> const &cb)

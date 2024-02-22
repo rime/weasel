@@ -75,6 +75,19 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		WeaselServerApp::explore(WeaselServerApp::install_dir());
 		return 0;
 	}
+	if (!wcscmp(L"/ascii", lpstrCmdLine) || !wcscmp(L"/nascii", lpstrCmdLine))
+	{
+		weasel::Client client;
+		bool ascii = !wcscmp(L"/ascii", lpstrCmdLine);
+		if (client.Connect())  // try to connect to running server
+		{
+			if (ascii)
+				client.TrayCommand(ID_WEASELTRAY_ENABLE_ASCII);
+			else
+				client.TrayCommand(ID_WEASELTRAY_DISABLE_ASCII);
+		}
+		return 0;
+	}
 
 	// command line option /q stops the running server
 	bool quit = !wcscmp(L"/q", lpstrCmdLine) || !wcscmp(L"/quit", lpstrCmdLine);
