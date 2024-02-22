@@ -32,6 +32,9 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	remove_.EnableWindow(installed);
 	dir_.EnableWindow(user_dir.empty() ? FALSE : TRUE);
 
+	button_custom_dir_.Attach(GetDlgItem(IDC_BUTTON_CUSTOM_DIR));
+	button_custom_dir_.EnableWindow(user_dir.empty() ? FALSE : TRUE);
+
 	ok_.Attach(GetDlgItem(IDOK));
 	if (installed) {
 		CString str;
@@ -83,6 +86,7 @@ LRESULT InstallOptionsDialog::OnRemove(WORD, WORD code, HWND, BOOL&) {
 
 LRESULT InstallOptionsDialog::OnUseDefaultDir(WORD, WORD code, HWND, BOOL&) {
 	dir_.EnableWindow(FALSE);
+	button_custom_dir_.EnableWindow(FALSE);
 	return 0;
 }
 
@@ -94,7 +98,21 @@ LRESULT InstallOptionsDialog::OnUseCustomDir(WORD, WORD code, HWND, BOOL&) {
 		dlg.SetInitialFolder(text, false);
 	if (dlg.DoModal() == IDOK)
 		dir_.SetWindowTextW(dlg.m_szFolderPath);
+	button_custom_dir_.EnableWindow(TRUE);
 	dir_.EnableWindow(TRUE);
 	dir_.SetFocus();
+	return 0;
+}
+
+LRESULT InstallOptionsDialog::OnBtnCustomDir(WORD, WORD code, HWND, BOOL&)
+{
+	CFolderDialog dlg;
+	CStringW text;
+	dir_.GetWindowTextW(text);
+	if(!text.IsEmpty())
+		dlg.SetInitialFolder(text, false);
+	if (dlg.DoModal() == IDOK)
+		dir_.SetWindowTextW(dlg.m_szFolderPath);
+	ok_.SetFocus();
 	return 0;
 }
