@@ -315,8 +315,6 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID)
 		{
 			std::wstring dir(szValue);
 			std::thread th([dir]() {
-				ShellExecuteW(NULL, L"open", (dir + L"\\stop_service.bat").c_str(), NULL, dir.c_str(), SW_HIDE);
-				Sleep(100);
 				ShellExecuteW(NULL, L"open", (dir + L"\\start_service.bat").c_str(), NULL, dir.c_str(), SW_HIDE);
 				});
 			th.detach();
