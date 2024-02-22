@@ -86,6 +86,7 @@ LRESULT InstallOptionsDialog::OnRemove(WORD, WORD code, HWND, BOOL&) {
 
 LRESULT InstallOptionsDialog::OnUseDefaultDir(WORD, WORD code, HWND, BOOL&) {
 	dir_.EnableWindow(FALSE);
+	dir_.SetWindowTextW(L"");
 	button_custom_dir_.EnableWindow(FALSE);
 	return 0;
 }
