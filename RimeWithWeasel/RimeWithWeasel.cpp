@@ -296,6 +296,30 @@ void RimeWithWeaselHandler::SelectCandidateOnCurrentPage(size_t index, UINT sess
 	api->select_candidate_on_current_page(session_id, index);
 }
 
+bool RimeWithWeaselHandler::HighlightCandidateOnCurrentPage(size_t index, UINT session_id, EatLine eat)
+{
+	DLOG(INFO) << "highlight candidate on current page, session_id = " << session_id << ", index = " << index;
+	RimeApi* api = rime_get_api();
+	if(!api)
+		return false;
+	bool res = api->highlight_candidate_on_current_page(session_id, index);
+	_Respond(session_id, eat);
+	_UpdateUI(session_id);
+	return res;
+}
+
+bool RimeWithWeaselHandler::ChangePage(bool backward, UINT session_id, EatLine eat)
+{
+	DLOG(INFO) << "change page, session_id = " << session_id << (backward? "backward" : "foreward");
+	RimeApi* api = rime_get_api();
+	if(!api)
+		return false;
+	bool res = api->change_page(session_id, backward);
+	_Respond(session_id, eat);
+	_UpdateUI(session_id);
+	return res;
+}
+
 void RimeWithWeaselHandler::FocusIn(DWORD client_caps, UINT session_id)
 {
 	DLOG(INFO) << "Focus in: session_id = " << session_id << ", client_caps = " << client_caps;

@@ -27,8 +27,10 @@ enum WEASEL_IPC_COMMAND
 	WEASEL_IPC_END_MAINTENANCE,
 	WEASEL_IPC_COMMIT_COMPOSITION,
 	WEASEL_IPC_CLEAR_COMPOSITION,
-	WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE,
 	WEASEL_IPC_TRAY_COMMAND,
+	WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE,
+	WEASEL_IPC_HIGHLIGHT_CANDIDATE_ON_CURRENT_PAGE,
+	WEASEL_IPC_CHANGE_PAGE,
 	WEASEL_IPC_LAST_COMMAND
 };
 
@@ -78,6 +80,8 @@ namespace weasel
 		virtual void CommitComposition(UINT session_id) {}
 		virtual void ClearComposition(UINT session_id) {}
 		virtual void SelectCandidateOnCurrentPage(size_t index, UINT session_id) {}
+		virtual bool HighlightCandidateOnCurrentPage(size_t index, UINT session_id, EatLine eat) {return false;}
+		virtual bool ChangePage(bool backward, UINT session_id, EatLine eat) {return false;}
 		virtual void FocusIn(DWORD param, UINT session_id) {}
 		virtual void FocusOut(DWORD param, UINT session_id) {}
 		virtual void UpdateInputPosition(RECT const& rc, UINT session_id) {}
@@ -135,6 +139,10 @@ namespace weasel
 		bool ClearComposition();
 		// 选择当前页面编号为index的候选
 		bool SelectCandidateOnCurrentPage(size_t index);
+		// 高亮当前页面编号为index的候选
+		bool HighlightCandidateOnCurrentPage(size_t index);
+		// 翻页，backward = true 向前翻，false向后翻
+		bool ChangePage(bool backward);
 		// 更新输入位置
 		void UpdateInputPosition(RECT const& rc);
 		// 输入窗口获得焦点

@@ -42,6 +42,8 @@ public:
 	virtual void CommitComposition(UINT session_id);
 	virtual void ClearComposition(UINT session_id);
 	virtual void SelectCandidateOnCurrentPage(size_t index, UINT session_id);
+	virtual bool HighlightCandidateOnCurrentPage(size_t index, UINT session_id, EatLine eat);
+	virtual bool ChangePage(bool backward, UINT session_id, EatLine eat);
 	virtual void FocusIn(DWORD param, UINT session_id);
 	virtual void FocusOut(DWORD param, UINT session_id);
 	virtual void UpdateInputPosition(RECT const& rc, UINT session_id);

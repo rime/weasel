@@ -422,39 +422,41 @@ void WeaselTSF::_SelectCandidateOnCurrentPage(size_t index)
 {
 	m_client.SelectCandidateOnCurrentPage(index);
 	// simulate a VK_SELECT presskey to get data back and DoEditSession
-  // the simulated keycode must be the one make TranslateKeycode Non-Zero return
-  // fix me: are there any better ways?
-  INPUT inputs[2];
-  inputs[0].type = INPUT_KEYBOARD;
-  inputs[0].ki = {VK_SELECT, 0,0,0,0};
-  inputs[1].type = INPUT_KEYBOARD;
-  inputs[1].ki = {VK_SELECT, 0,KEYEVENTF_KEYUP,0,0};
-  ::SendInput(sizeof(inputs) / sizeof(INPUT), inputs, sizeof(INPUT));
+	// the simulated keycode must be the one make TranslateKeycode Non-Zero return
+	// fix me: are there any better ways?
+	INPUT inputs[2];
+	inputs[0].type = INPUT_KEYBOARD;
+	inputs[0].ki = {VK_SELECT, 0,0,0,0};
+	inputs[1].type = INPUT_KEYBOARD;
+	inputs[1].ki = {VK_SELECT, 0,KEYEVENTF_KEYUP,0,0};
+	::SendInput(sizeof(inputs) / sizeof(INPUT), inputs, sizeof(INPUT));
 }
 
 void WeaselTSF::_HandleMousePageEvent( bool* const nextPage, bool* const scrollNextPage)
 {
-	// ToDo: if feature new api comes, replace the processes bellow
-	weasel::KeyEvent ke{ 0, 0 };
 	// from scrolling event
 	if ( scrollNextPage ) {
 		if(_cand->style().paging_on_scroll)
-			ke.keycode = *scrollNextPage ? ibus::Page_Down : ibus::Page_Up;
-		else
-		{
-			ke.keycode = *scrollNextPage ? ibus::Down : ibus::Up;
-			if(_cand->GetIsReposition())
-			{
-				if(ke.keycode == ibus::Up)
-					ke.keycode = ibus::Down;
-				else if(ke.keycode == ibus::Down)
-					ke.keycode = ibus::Up;
+			m_client.ChangePage(!(*scrollNextPage));
+		else {
+			UINT current_select = 0, cand_count = 0;
+			_cand->GetSelection(&current_select);
+			_cand->GetCount(&cand_count);
+			bool is_reposition = _cand->GetIsReposition();
+			int offset = *scrollNextPage ? 1 : -1;
+			offset = offset * (is_reposition ? -1 : 1);
+			int index = (int)current_select + offset;
+			if (index >= 0 && index < cand_count)
+				m_client.HighlightCandidateOnCurrentPage((size_t)index);
+			else {
+				KeyEvent ke{0, 0};
+				ke.keycode = (index < 0) ? ibus::Up : ibus::Down;
+				m_client.ProcessKeyEvent(ke);
 			}
 		}
 	} else {	// from click event
-			ke.keycode = *nextPage ? ibus::Page_Down : ibus::Page_Up;
+		m_client.ChangePage(!(*nextPage));
 	}
-	m_client.ProcessKeyEvent(ke);
 	_UpdateComposition(_pEditSessionContext);
 }
 
@@ -465,19 +467,7 @@ void WeaselTSF::_HandleMouseHoverEvent(const size_t index)
 
 	if(index != current_select)
 	{
-		// simuulate change current_select in librime
-		// maybe replace with new api in the future
-		weasel::KeyEvent ke{ 0, 0 };
-		ke.keycode = current_select < index ? ibus::Down : ibus::Up;
-		int inc = index > current_select ? 1 : -1;
-		if (_cand->GetIsReposition()) inc = -inc;
-		UINT gap = abs((INT)((INT)index - (INT)current_select));
-		for(UINT i=0; i < gap; i++)
-		{
-			m_client.ProcessKeyEvent(ke);
-		}
-		// simuulate change current_select end
-		_cand->SetSelection(current_select + inc * gap);
+		m_client.HighlightCandidateOnCurrentPage(index);
 		_UpdateComposition(_pEditSessionContext);
 	}
 }
