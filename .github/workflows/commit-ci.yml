@@ -69,7 +69,7 @@ jobs:
         with:
           path: |
             librime
-          key: ${{ runner.os }}-librime-${{ env.librime_id }}
+          key: ${{ runner.os }}-librime-${{ env.librime_id }}-dual
 
       # build librime if not cached
       - name: Build librime
@@ -89,9 +89,11 @@ jobs:
         if: ${{ env.librime_build == 'submodule' && steps.cache-librime.outputs.cache-hit == 'true' }}
         shell: bash
         run: |
-          cp ./librime/dist/lib/rime* ./lib/
-          cp ./librime/dist/lib/rime.dll ./output/
-          cp ./librime/dist/include/*.h ./include/
+          cp ./librime/dist_x64/lib/rime* ./lib64/
+          cp ./librime/dist_x64/lib/rime.dll ./output/
+          cp ./librime/dist_x64/include/*.h ./include/
+          cp ./librime/dist_Win32/lib/rime* ./lib/
+          cp ./librime/dist_Win32/lib/rime.dll ./output/Win32/
 
       - name: Build Weasel
         id: build_weasel
