@@ -6,7 +6,7 @@
     with components *ATL*, *MFC* and *Windows XP support*.
     Visual Studio 2015 or later versions may work with additional configuration.
 
-  - Install dev tools: `git`, `cmake`
+  - Install dev tools: `git`, `cmake`， `clang-format(>=17.0.6)`
 
   - Download third-party libraries: `boost(>=1.60.0)`
 
