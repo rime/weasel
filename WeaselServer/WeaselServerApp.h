@@ -17,19 +17,20 @@ namespace fs = boost::filesystem;
 class WeaselServerApp {
  public:
   static bool execute(const fs::path& cmd, const std::wstring& args) {
-    return (int)ShellExecuteW(NULL, NULL, cmd.c_str(), args.c_str(), NULL,
-                              SW_SHOWNORMAL) > 32;
+    return (uintptr_t)ShellExecuteW(NULL, NULL, cmd.c_str(), args.c_str(), NULL,
+                                    SW_SHOWNORMAL) > 32;
   }
 
   static bool explore(const fs::path& path) {
     std::wstring quoted_path(L"\"" + path.wstring() + L"\"");
-    return (int)ShellExecuteW(NULL, L"open", L"explorer", quoted_path.c_str(),
-                              NULL, SW_SHOWNORMAL) > 32;
+    return (uintptr_t)ShellExecuteW(NULL, L"open", L"explorer",
+                                    quoted_path.c_str(), NULL,
+                                    SW_SHOWNORMAL) > 32;
   }
 
   static bool open(const fs::path& path) {
-    return (int)ShellExecuteW(NULL, L"open", path.c_str(), NULL, NULL,
-                              SW_SHOWNORMAL) > 32;
+    return (uintptr_t)ShellExecuteW(NULL, L"open", path.c_str(), NULL, NULL,
+                                    SW_SHOWNORMAL) > 32;
   }
 
   static bool check_update() {

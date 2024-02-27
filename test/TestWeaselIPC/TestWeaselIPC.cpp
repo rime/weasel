@@ -111,7 +111,7 @@ int client_main() {
     std::cerr << "failed to login." << std::endl;
     return -3;
   }
-  bool eaten = client.ProcessKeyEvent(weasel::KeyEvent(L'A', 0));
+  bool eaten = client.ProcessKeyEvent(weasel::KeyEvent(L'a', 0));
   std::cout << "server replies: " << eaten << std::endl;
   if (eaten) {
     WCHAR response[WEASEL_IPC_BUFFER_LENGTH];
