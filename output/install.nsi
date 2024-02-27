@@ -3,6 +3,7 @@
 !include LogicLib.nsh
 !include MUI2.nsh
 !include x64.nsh
+!include winVer.nsh
 
 Unicode true
 
@@ -207,11 +208,40 @@ program_files:
     File /nonfatal "weaseltARM.ime"
     File /nonfatal "weaseltARM64.ime"
   ${EndIf}
-  File "WeaselDeployer.exe"
-  File "WeaselServer.exe"
+  ; install x64 build for NativeARM64_WINDOWS11 and NativeAMD64_WINDOWS11
+  ${If} ${AtLeastWin11} ; Windows 11 and above
+    ${If} ${IsNativeARM64}
+      File "WeaselDeployer.exe"
+      File "WeaselServer.exe"
+      File "rime.dll"
+      File "WinSparkle.dll"
+    ${ElseIf} ${IsNativeAMD64}
+      File "WeaselDeployer.exe"
+      File "WeaselServer.exe"
+      File "rime.dll"
+      File "WinSparkle.dll"
+    ${Else}
+      File "Win32\WeaselDeployer.exe"
+      File "Win32\WeaselServer.exe"
+      File "Win32\rime.dll"
+      File "Win32\WinSparkle.dll"
+    ${Endif}
+  ; install x64 build for NativeAMD64_BELLOW_WINDOWS11
+  ${Else} ; Windows 10 or bellow
+    ${If} ${IsNativeAMD64}
+      File "WeaselDeployer.exe"
+      File "WeaselServer.exe"
+      File "rime.dll"
+      File "WinSparkle.dll"
+    ${Else}
+      File "Win32\WeaselDeployer.exe"
+      File "Win32\WeaselServer.exe"
+      File "Win32\rime.dll"
+      File "Win32\WinSparkle.dll"
+    ${Endif}
+  ${Endif}
+
   File "WeaselSetup.exe"
-  File "rime.dll"
-  File "WinSparkle.dll"
   ; shared data files
   SetOutPath $INSTDIR\data
   File "data\*.yaml"
