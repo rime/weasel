@@ -8,6 +8,8 @@ app_options:
     ascii_mode: true
   conhost.exe:
     ascii_mode: true
+  firefox.exe:
+    inline_preedit: true # workaround for #946
 
 show_notifications: true
 # how long a period notifications shows
