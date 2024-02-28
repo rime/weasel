@@ -34,7 +34,7 @@
 
 選取輸入法指示器菜單裏的【中】字樣圖標，開始用小狼毫寫字。
 
-可通過快捷鍵 <code>Ctrl+`</code> 或 <code>F4</code> 呼出方案選單、切換輸入方式。
+可通過快捷鍵 <kbd>Ctrl+`</kbd> 或 <kbd>F4</kbd> 呼出方案選單、切換輸入方式。
 
 定製輸入法
 ----------
@@ -45,7 +45,7 @@
 
 修改詞庫、配置文件後，須「重新部署」方可生效。
 
-定製 Rime 的方法，請參考 Wiki [《定製指南》](https://github.com/rime/home/wiki/CustomizationGuide)
+定製 Rime 的方法，請參考 Wiki [《定製指南》](https://github.com/rime/home/wiki/CustomizationGuide)。如需定製 Weasel 獨有的樣式和行為，請參考本倉庫 [Wiki 頁面](https://github.com/rime/weasel/wiki)。
 
 致謝
 ----
@@ -112,10 +112,6 @@ Rime 輸入法（不限於 Windows 平臺）功能、使用方法與配置相關
 聯繫方式
 --------
 
-加入聊天室，提出疑問，發表建議或感想
-[![Join the chat at https://gitter.im/rime/home](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rime/home?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-其他技術交流請寄 Rime 開發者 <rimeime@gmail.com>
+技術交流，歡迎光臨 [Rime 代碼之家](https://github.com/rime/home)，或致信 Rime 開發者 <rimeime@gmail.com>
 
 謝謝！
-
