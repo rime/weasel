@@ -714,6 +714,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
                          rect.Height() - m_style.round_corner * 2);
         int width = min(rect.Width() - m_style.hilite_padding_x * 2,
                         rect.Width() - m_style.round_corner * 2);
+        width = min(width, rect.Width() * 0.618);
+        height = min(height, rect.Height() * 0.618);
         Gdiplus::Graphics g_back(dc);
         g_back.SetSmoothingMode(
             Gdiplus::SmoothingMode::SmoothingModeHighQuality);
