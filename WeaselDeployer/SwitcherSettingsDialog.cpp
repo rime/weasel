@@ -79,7 +79,10 @@ LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
   schema_list_.SubclassWindow(GetDlgItem(IDC_SCHEMA_LIST));
   schema_list_.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT,
                                         LVS_EX_FULLROWSELECT);
-  schema_list_.AddColumn(L"方案名稱", 0);
+
+  CString schemaname;
+  schemaname.LoadStringW(IDS_STR_SCHEMA_NAME);
+  schema_list_.AddColumn(schemaname, 0);
   CRect rc;
   schema_list_.GetClientRect(&rc);
   schema_list_.SetColumnWidth(0, rc.Width() - 20);
