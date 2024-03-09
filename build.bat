@@ -6,11 +6,43 @@ if not exist env.bat copy env.bat.template env.bat
 
 if exist env.bat call env.bat
 
-if not defined WEASEL_VERSION set WEASEL_VERSION=0.15.0
 if not defined WEASEL_BUILD set WEASEL_BUILD=0
 if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
 
+if not defined VERSION_MAJOR set VERSION_MAJOR=0
+if not defined VERSION_MINOR set VERSION_MINOR=15
+if not defined VERSION_PATCH set VERSION_PATCH=0
+if not defined WEASEL_VERSION set WEASEL_VERSION=%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%
+
+rem check if git is installed and available, then get the short commit id of head
+git --version >nul 2>&1
+if not errorlevel 1 (
+  rem get short commmit id of head
+  for /F %%i in ('git rev-parse --short HEAD') do (set commitid=%%i)
+)
+
+if not defined RELEASE_BUILD (
+  if defined commitid (
+    rem if git is available and RELEASE_BUILD is not defined, then use commitid in the PROCDUCT_VERSION
+    rem for local build with git installed, when RELASE_BUILD usually not defined during local build
+    rem or github action nightly build/commit ci build, when RELEASE_BUILD is not defined, and git installed
+	  if not defined PRODUCT_VERSION set PRODUCT_VERSION="%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%-%commitid%"
+  ) else (
+    rem if git is not available, then use pure number in the PRODUCT_VERSION
+    rem for local build without git, when RELEASE_BUILD usually not defined during local build
+    if not defined PRODUCT_VERSION set PRODUCT_VERSION="%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%.%WEASEL_BUILD%"
+  )
+) else (
+  rem if RELEASE_BUILD is defined, then use pure number in the PRODUCT_VERSION
+  rem this usually happens in github action release build
+	if not defined PRODUCT_VERSION set PRODUCT_VERSION="%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%.WEASEL_BUILD"
+)
+rem set FILE_VERSION always to the same as PRODUCT_VERSION when RELEASE_BUILD 
+if not defined FILE_VERSION set FILE_VERSION=%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%.%WEASEL_BUILD%
+
 echo WEASEL_VERSION=%WEASEL_VERSION%
+echo FILE_VERSION=%FILE_VERSION%
+echo PRODUCT_VERSION=%PRODUCT_VERSION%
 echo WEASEL_BUILD=%WEASEL_BUILD%
 echo WEASEL_ROOT=%WEASEL_ROOT%
 echo WEASEL_BUNDLED_RECIPES=%WEASEL_BUNDLED_RECIPES%
@@ -21,6 +53,7 @@ if defined BOOST_ROOT (
 )
 echo Error: Boost not found! Please set BOOST_ROOT in env.bat.
 exit /b 1
+
 :boost_found
 echo BOOST_ROOT=%BOOST_ROOT%
 echo.
@@ -49,40 +82,41 @@ set build_weasel=0
 set build_installer=0
 set build_arm64=0
 
+rem parse the command line options
 :parse_cmdline_options
-if "%1" == "" goto end_parsing_cmdline_options
-if "%1" == "debug" (
-  set build_config=Debug
-  set boost_build_variant=debug
-  set rime_build_variant=debug
-)
-if "%1" == "release" (
-  set build_config=Release
-  set boost_build_variant=release
-  set rime_build_variant=release
-)
-if "%1" == "rebuild" set build_option=/t:Rebuild
-if "%1" == "boost" set build_boost=1
-if "%1" == "data" set build_data=1
-if "%1" == "opencc" set build_opencc=1
-if "%1" == "hant" set build_hant=1
-if "%1" == "rime" set build_rime=1
-if "%1" == "librime" set build_rime=1
-if "%1" == "weasel" set build_weasel=1
-if "%1" == "installer" set build_installer=1
-if "%1" == "arm64" set build_arm64=1
-if "%1" == "all" (
-  set build_boost=1
-  set build_data=1
-  set build_opencc=1
-  set build_hant=1
-  set build_rime=1
-  set build_weasel=1
-  set build_installer=1
-  set build_arm64=1
-)
-shift
-goto parse_cmdline_options
+  if "%1" == "" goto end_parsing_cmdline_options
+  if "%1" == "debug" (
+    set build_config=Debug
+    set boost_build_variant=debug
+    set rime_build_variant=debug
+  )
+  if "%1" == "release" (
+    set build_config=Release
+    set boost_build_variant=release
+    set rime_build_variant=release
+  )
+  if "%1" == "rebuild" set build_option=/t:Rebuild
+  if "%1" == "boost" set build_boost=1
+  if "%1" == "data" set build_data=1
+  if "%1" == "opencc" set build_opencc=1
+  if "%1" == "hant" set build_hant=1
+  if "%1" == "rime" set build_rime=1
+  if "%1" == "librime" set build_rime=1
+  if "%1" == "weasel" set build_weasel=1
+  if "%1" == "installer" set build_installer=1
+  if "%1" == "arm64" set build_arm64=1
+  if "%1" == "all" (
+    set build_boost=1
+    set build_data=1
+    set build_opencc=1
+    set build_hant=1
+    set build_rime=1
+    set build_weasel=1
+    set build_installer=1
+    set build_arm64=1
+  )
+  shift
+  goto parse_cmdline_options
 :end_parsing_cmdline_options
 
 if %build_weasel% == 0 (
@@ -202,6 +236,9 @@ if %build_installer% == 1 (
   /DWEASEL_VERSION=%WEASEL_VERSION% ^
   /DWEASEL_BUILD=%WEASEL_BUILD% ^
   output\install.nsi
+  if defined commitid (
+    move output\archives\weasel-%WEASEL_VERSION%.%WEASEL_BUILD%-installer.exe output\archives\weasel-%WEASEL_VERSION%-%commitid%-installer.exe
+  )
   if errorlevel 1 goto error
 )
 
