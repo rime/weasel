@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <bitset>
 
 template<typename I>
 using com_ptr = CComPtr<I>;

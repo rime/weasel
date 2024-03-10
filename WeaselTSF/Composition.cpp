@@ -378,8 +378,11 @@ void WeaselTSF::_UpdateComposition(com_ptr<ITfContext> pContext) {
 
   _pEditSessionContext = pContext;
 
+  ResetBit(WeaselFlag::ASYNC_EDIT);
   _pEditSessionContext->RequestEditSession(
       _tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+  if (hr == TF_S_ASYNC)
+      SetBit(WeaselFlag::ASYNC_EDIT);
   _UpdateCompositionWindow(pContext);
 }
 
