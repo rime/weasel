@@ -154,7 +154,9 @@ class WeaselTSF : public ITfTextInputProcessorEx,
                         bool* const scroll_next);
 
   void SetBit(WeaselFlag flag) { _bitset.set(static_cast<int>(flag)); }
-  void SetBit(WeaselFlag flag, bool value) { _bitset.set(static_cast<int>(flag), value); }
+  void SetBit(WeaselFlag flag, bool value) {
+    _bitset.set(static_cast<int>(flag), value);
+  }
   void ResetBit(WeaselFlag flag) { _bitset.reset(static_cast<int>(flag)); }
   bool GetBit(WeaselFlag flag) const { return _bitset[static_cast<int>(flag)]; }
   void Flip(WeaselFlag flag) { _bitset.flip(static_cast<size_t>(flag)); }
