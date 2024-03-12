@@ -76,7 +76,11 @@ void WeaselTrayIcon::Refresh() {
       SetIcon(mode_icon[mode]);
 
     if (mode_label[mode] && m_disabled == false) {
-      ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
+      if (GetThreadUILanguage() ==
+          MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL))
+        ShowBalloon(mode_label[mode], WEASEL_IME_NAME);
+      else
+        ShowBalloon(L"维护中", WEASEL_IME_NAME);
       m_disabled = true;
     }
     if (m_mode != DISABLED)
