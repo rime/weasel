@@ -191,10 +191,8 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc) {
     _textRoundInfo.Hemispherical = textHemispherical;
     if (_style.vertical_text_left_to_right &&
         _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
-      _textRoundInfo.IsTopLeftNeedToRound =
-          !_textRoundInfo.IsTopLeftNeedToRound;
-      _textRoundInfo.IsTopRightNeedToRound =
-          !_textRoundInfo.IsTopRightNeedToRound;
+      std::swap(_textRoundInfo.IsTopLeftNeedToRound,
+                _textRoundInfo.IsTopRightNeedToRound);
     }
   }
 
