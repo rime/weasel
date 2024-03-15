@@ -203,7 +203,7 @@ struct UIStyle {
   };
 
   enum PreeditType { COMPOSITION, PREVIEW, PREVIEW_ALL };
-
+  enum HoverType { NONE, SEMI_HILITE, HILITE };
   enum LayoutType {
     LAYOUT_VERTICAL = 0,
     LAYOUT_HORIZONTAL,
@@ -230,7 +230,7 @@ struct UIStyle {
   bool paging_on_scroll;
   bool enhanced_position;
   bool click_to_capture;
-  int mouse_hover_ms;
+  HoverType hover_type;
   AntiAliasMode antialias_mode;
   PreeditType preedit_type;
   // custom icon settings
@@ -307,7 +307,7 @@ struct UIStyle {
         paging_on_scroll(false),
         enhanced_position(false),
         click_to_capture(false),
-        mouse_hover_ms(0),
+        hover_type(NONE),
         antialias_mode(DEFAULT),
         preedit_type(COMPOSITION),
         current_zhung_icon(),
@@ -372,7 +372,7 @@ struct UIStyle {
         paging_on_scroll != st.paging_on_scroll || font_face != st.font_face ||
         label_font_face != st.label_font_face ||
         comment_font_face != st.comment_font_face ||
-        mouse_hover_ms != st.mouse_hover_ms || font_point != st.font_point ||
+        hover_type != st.hover_type || font_point != st.font_point ||
         label_font_point != st.label_font_point ||
         comment_font_point != st.comment_font_point ||
         candidate_abbreviate_length != st.candidate_abbreviate_length ||
@@ -432,7 +432,7 @@ void serialize(Archive& ar, weasel::UIStyle& s, const unsigned int version) {
   ar & s.font_face;
   ar & s.label_font_face;
   ar & s.comment_font_face;
-  ar & s.mouse_hover_ms;
+  ar & s.hover_type;
   ar & s.font_point;
   ar & s.label_font_point;
   ar & s.comment_font_point;

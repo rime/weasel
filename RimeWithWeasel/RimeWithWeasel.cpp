@@ -1161,8 +1161,6 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
                           &style.label_font_point, "style/font_point", _abs);
   _RimeGetIntWithFallback(config, "style/comment_font_point",
                           &style.comment_font_point, "style/font_point", _abs);
-  _RimeGetIntWithFallback(config, "style/mouse_hover_ms", &style.mouse_hover_ms,
-                          NULL, _abs);
   _RimeGetIntWithFallback(config, "style/candidate_abbreviate_length",
                           &style.candidate_abbreviate_length, NULL, _abs);
   _RimeGetBool(config, "style/inline_preedit", initialize, style.inline_preedit,
@@ -1185,6 +1183,12 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   _RimeParseStringOptWithFallback(config, "style/antialias_mode",
                                   style.antialias_mode, _aliasModeMap,
                                   style.antialias_mode);
+  const std::map<std::string, UIStyle::HoverType> _hoverTypeMap = {
+      {std::string("none"), UIStyle::HoverType::NONE},
+      {std::string("semi_hilite"), UIStyle::HoverType::SEMI_HILITE},
+      {std::string("hilite"), UIStyle::HoverType::HILITE}};
+  _RimeParseStringOptWithFallback(config, "style/hover_type", style.hover_type,
+                                  _hoverTypeMap, style.hover_type);
   const std::map<std::string, UIStyle::LayoutAlignType> _alignType = {
       {std::string("top"), UIStyle::ALIGN_TOP},
       {std::string("center"), UIStyle::ALIGN_CENTER},
