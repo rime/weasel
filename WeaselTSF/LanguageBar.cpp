@@ -33,6 +33,17 @@ static void HMENU2ITfMenu(HMENU hMenu, ITfMenu* pTfMenu) {
   }
 }
 
+static bool open(const std::wstring& path) {
+  return (uintptr_t)ShellExecuteW(NULL, L"open", path.c_str(), NULL, NULL,
+                                  SW_SHOWNORMAL) > 32;
+}
+
+static bool explore(const std::wstring& path) {
+  std::wstring quoted_path = L"\"" + path + L"\"";
+  return (uintptr_t)ShellExecuteW(NULL, L"explore", quoted_path.c_str(), NULL,
+                                  NULL, SW_SHOWNORMAL) > 32;
+}
+
 CLangBarItemButton::CLangBarItemButton(com_ptr<WeaselTSF> pTextService,
                                        REFGUID guid,
                                        weasel::UIStyle& style)
@@ -260,9 +271,7 @@ BOOL is_wow64() {
 }
 
 void WeaselTSF::_HandleLangBarMenuSelect(UINT wID) {
-  if (wID != ID_WEASELTRAY_RERUN_SERVICE)
-    m_client.TrayCommand(wID);
-  else {
+  if (wID == ID_WEASELTRAY_RERUN_SERVICE) {
     std::wstring WEASEL_REG_NAME_;
     if (is_wow64())
       WEASEL_REG_NAME_ = L"Software\\WOW6432Node\\Rime\\Weasel";
@@ -283,6 +292,50 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID) {
       });
       th.detach();
     }
+    m_client.TrayCommand(wID);
+  } else if (wID == ID_WEASELTRAY_INSTALLDIR) {
+    std::wstring WEASEL_REG_NAME_;
+    if (is_wow64())
+      WEASEL_REG_NAME_ = L"Software\\WOW6432Node\\Rime\\Weasel";
+    else
+      WEASEL_REG_NAME_ = L"Software\\Rime\\Weasel";
+
+    TCHAR szValue[MAX_PATH];
+    DWORD dwBufLen = MAX_PATH;
+
+    LONG lRes =
+        RegGetValue(HKEY_LOCAL_MACHINE, WEASEL_REG_NAME_.c_str(), L"WeaselRoot",
+                    RRF_RT_REG_SZ, NULL, szValue, &dwBufLen);
+    if (lRes == ERROR_SUCCESS) {
+      std::wstring dir(szValue);
+      explore(dir);
+    }
+  } else if (wID == ID_WEASELTRAY_USERCONFIG) {
+    std::wstring WEASEL_REG_NAME_ = L"Software\\Rime\\Weasel";
+
+    TCHAR szValue[MAX_PATH];
+    DWORD dwBufLen = MAX_PATH;
+
+    LONG lRes =
+        RegGetValue(HKEY_CURRENT_USER, WEASEL_REG_NAME_.c_str(), L"RimeUserDir",
+                    RRF_RT_REG_SZ, NULL, szValue, &dwBufLen);
+    if (lRes == ERROR_SUCCESS) {
+      std::wstring dir(szValue);
+      if (dir.empty()) {
+        TCHAR _path[MAX_PATH];
+        ExpandEnvironmentStringsW(L"%AppData%\\Rime", _path, _countof(_path));
+        dir = std::wstring(_path);
+      }
+      explore(dir);
+    }
+  } else if (wID == ID_WEASELTRAY_WIKI) {
+    open(L"https://rime.im/docs/");
+  } else if (wID == ID_WEASELTRAY_HOMEPAGE) {
+    open(L"https://rime.im/");
+  } else if (wID == ID_WEASELTRAY_FORUM) {
+    open(L"https://rime.im/discuss/");
+  } else {
+    m_client.TrayCommand(wID);
   }
 }
 
