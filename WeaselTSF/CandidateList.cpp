@@ -372,6 +372,7 @@ void WeaselTSF::_SelectCandidateOnCurrentPage(size_t index) {
   // simulate a VK_SELECT presskey to get data back and DoEditSession
   // the simulated keycode must be the one make TranslateKeycode Non-Zero return
   // fix me: are there any better ways?
+  _hrSession &= (~TF_S_ASYNC);
   INPUT inputs[2];
   inputs[0].type = INPUT_KEYBOARD;
   inputs[0].ki = {VK_SELECT, 0, 0, 0, 0};

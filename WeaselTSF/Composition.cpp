@@ -72,14 +72,15 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
 
 void WeaselTSF::_StartComposition(com_ptr<ITfContext> pContext,
                                   BOOL fCUASWorkaroundEnabled) {
+  _hrSession &= (~TF_S_ASYNC);
   com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
   pStartCompositionEditSession.Attach(new CStartCompositionEditSession(
       this, pContext, fCUASWorkaroundEnabled, _cand->style().inline_preedit));
   _cand->StartUI();
   if (pStartCompositionEditSession != nullptr) {
-    HRESULT hr;
     pContext->RequestEditSession(_tfClientId, pStartCompositionEditSession,
-                                 TF_ES_SYNC | TF_ES_READWRITE, &hr);
+                                 TF_ES_ASYNCDONTCARE | TF_ES_READWRITE,
+                                 &_hrSession);
   }
 }
 
@@ -120,13 +121,14 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec) {
 
 void WeaselTSF::_EndComposition(com_ptr<ITfContext> pContext, BOOL clear) {
   CEndCompositionEditSession* pEditSession;
-  HRESULT hr;
 
+  _hrSession &= (~TF_S_ASYNC);
   _cand->EndUI();
   if ((pEditSession = new CEndCompositionEditSession(
            this, pContext, _pComposition, clear)) != NULL) {
     pContext->RequestEditSession(_tfClientId, pEditSession,
-                                 TF_ES_SYNC | TF_ES_READWRITE, &hr);
+                                 TF_ES_ASYNCDONTCARE | TF_ES_READWRITE,
+                                 &_hrSession);
     pEditSession->Release();
   }
 }
@@ -210,6 +212,7 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec) {
 
 /* Composition Window Handling */
 BOOL WeaselTSF::_UpdateCompositionWindow(com_ptr<ITfContext> pContext) {
+  _hrSession &= (~TF_S_ASYNC);
   com_ptr<ITfContextView> pContextView;
   if (pContext->GetActiveView(&pContextView) != S_OK)
     return FALSE;
@@ -220,13 +223,13 @@ BOOL WeaselTSF::_UpdateCompositionWindow(com_ptr<ITfContext> pContext) {
   if (pEditSession == NULL) {
     return FALSE;
   }
-  HRESULT hr;
   pContext->RequestEditSession(_tfClientId, pEditSession,
-                               TF_ES_SYNC | TF_ES_READ, &hr);
-  return SUCCEEDED(hr);
+                               TF_ES_ASYNCDONTCARE | TF_ES_READ, &_hrSession);
+  return SUCCEEDED(_hrSession);
 }
 
 void WeaselTSF::_SetCompositionPosition(const RECT& rc) {
+  _hrSession &= (~TF_S_ASYNC);
   /* Test if rect is valid.
    * If it is invalid during CUAS test, we need to apply CUAS workaround */
   if (!_fCUASWorkaroundTested) {
@@ -305,13 +308,14 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec) {
 BOOL WeaselTSF::_ShowInlinePreedit(
     com_ptr<ITfContext> pContext,
     const std::shared_ptr<weasel::Context> context) {
+  _hrSession &= (~TF_S_ASYNC);
   com_ptr<CInlinePreeditEditSession> pEditSession;
   pEditSession.Attach(
       new CInlinePreeditEditSession(this, pContext, _pComposition, context));
   if (pEditSession != NULL) {
-    HRESULT hr;
     pContext->RequestEditSession(_tfClientId, pEditSession,
-                                 TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+                                 TF_ES_ASYNCDONTCARE | TF_ES_READWRITE,
+                                 &_hrSession);
   }
   return TRUE;
 }
@@ -361,12 +365,13 @@ STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec) {
 BOOL WeaselTSF::_InsertText(com_ptr<ITfContext> pContext,
                             const std::wstring& text) {
   CInsertTextEditSession* pEditSession;
-  HRESULT hr;
 
+  _hrSession &= (~TF_S_ASYNC);
   if ((pEditSession = new CInsertTextEditSession(this, pContext, _pComposition,
                                                  text)) != NULL) {
     pContext->RequestEditSession(_tfClientId, pEditSession,
-                                 TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+                                 TF_ES_ASYNCDONTCARE | TF_ES_READWRITE,
+                                 &_hrSession);
     pEditSession->Release();
   }
 
@@ -374,13 +379,11 @@ BOOL WeaselTSF::_InsertText(com_ptr<ITfContext> pContext,
 }
 
 void WeaselTSF::_UpdateComposition(com_ptr<ITfContext> pContext) {
-  HRESULT hr;
-
   _pEditSessionContext = pContext;
 
+  _hrSession &= (~TF_S_ASYNC);
   _pEditSessionContext->RequestEditSession(
-      _tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
-  _UpdateCompositionWindow(pContext);
+      _tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &_hrSession);
 }
 
 /* Composition State */
@@ -395,6 +398,7 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite,
 }
 
 void WeaselTSF::_AbortComposition(bool clear) {
+  _hrSession &= (~TF_S_ASYNC);
   m_client.ClearComposition();
   if (_IsComposing()) {
     _EndComposition(_pEditSessionContext, clear);
@@ -403,10 +407,12 @@ void WeaselTSF::_AbortComposition(bool clear) {
 }
 
 void WeaselTSF::_FinalizeComposition() {
+  _hrSession &= (~TF_S_ASYNC);
   _pComposition = nullptr;
 }
 
 void WeaselTSF::_SetComposition(com_ptr<ITfComposition> pComposition) {
+  _hrSession &= (~TF_S_ASYNC);
   _pComposition = pComposition;
 }
 
