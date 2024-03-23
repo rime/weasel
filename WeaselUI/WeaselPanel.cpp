@@ -239,10 +239,43 @@ LRESULT WeaselPanel::OnMouseWheel(UINT uMsg,
   return 0;
 }
 
-LRESULT WeaselPanel::OnLeftClicked(UINT uMsg,
-                                   WPARAM wParam,
-                                   LPARAM lParam,
-                                   BOOL& bHandled) {
+LRESULT WeaselPanel::OnLeftClickedUp(UINT uMsg,
+                                     WPARAM wParam,
+                                     LPARAM lParam,
+                                     BOOL& bHandled) {
+  if (hide_candidates) {
+    bHandled = true;
+    return 0;
+  }
+  CPoint point;
+  point.x = GET_X_LPARAM(lParam);
+  point.y = GET_Y_LPARAM(lParam);
+
+  ::KillTimer(m_hWnd, AUTOREV_TIMER);
+  bar_scale_ = 1.0;
+  ptimer = 0;
+  {
+    // select by click
+    CRect rect = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
+    if (m_istorepos)
+      rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
+    rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
+    if (rect.PtInRect(point)) {
+      size_t i = m_ctx.cinfo.highlighted;
+      if (_UICallback)
+        _UICallback(&i, NULL, NULL, NULL);
+    } else {
+      RedrawWindow();
+    }
+  }
+  bHandled = true;
+  return 0;
+}
+
+LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
+                                       WPARAM wParam,
+                                       LPARAM lParam,
+                                       BOOL& bHandled) {
   if (hide_candidates) {
     bHandled = true;
     return 0;
@@ -290,7 +323,6 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg,
       }
     }
   }
-  // button response
   {
     if (!m_style.inline_preedit && m_candidateCount != 0 &&
         COLORNOTTRANSPARENT(m_style.prevpage_color) &&
@@ -329,9 +361,18 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg,
         rect.OffsetRect(0, m_offsetys[i]);
       rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
       if (rect.PtInRect(point)) {
-        if (_UICallback)
-          _UICallback(&i, NULL, NULL, NULL);
-        break;
+        if (i != m_ctx.cinfo.highlighted) {
+          bar_scale_ = 0.8;
+          if (_UICallback)
+            _UICallback(NULL, &i, NULL, NULL);
+        } else {
+          bar_scale_ = 0.8;
+          RedrawWindow();
+        }
+        ptimer = UINT_PTR(this);
+        ::SetTimer(m_hWnd, AUTOREV_TIMER, 1000, &WeaselPanel::OnTimer);
+        bHandled = true;
+        return 0;
       }
     }
   }
@@ -339,12 +380,36 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg,
   return 0;
 }
 
-LRESULT WeaselPanel::OnMouseHover(UINT uMsg,
-                                  WPARAM wParam,
-                                  LPARAM lParam,
-                                  BOOL& bHandled) {
-  if (!m_style.mouse_hover_ms)
+UINT_PTR WeaselPanel::ptimer = 0;
+VOID CALLBACK WeaselPanel::OnTimer(_In_ HWND hwnd,
+                                   _In_ UINT uMsg,
+                                   _In_ UINT_PTR idEvent,
+                                   _In_ DWORD dwTime) {
+  ::KillTimer(hwnd, idEvent);
+  WeaselPanel* self = (WeaselPanel*)ptimer;
+  ptimer = 0;
+  if (self) {
+    self->bar_scale_ = 1.0;
+    self->RedrawWindow();
+  }
+}
+
+LRESULT WeaselPanel::OnMouseMove(UINT uMsg,
+                                 WPARAM wParam,
+                                 LPARAM lParam,
+                                 BOOL& bHandled) {
+  if (m_style.hover_type == UIStyle::NONE)
     return 0;
+  if (m_mouse_entry == false) {
+    TRACKMOUSEEVENT tme;
+    tme.cbSize = sizeof(TRACKMOUSEEVENT);
+    tme.dwFlags = TME_LEAVE;
+    tme.dwHoverTime = 20;  // unit: ms
+    tme.hwndTrack = m_hWnd;
+    TrackMouseEvent(&tme);
+  }
+  bHandled = true;
+  m_mouse_entry = true;
   CPoint point;
   point.x = GET_X_LPARAM(lParam);
   point.y = GET_Y_LPARAM(lParam);
@@ -353,26 +418,22 @@ LRESULT WeaselPanel::OnMouseHover(UINT uMsg,
     CRect rect = m_layout->GetCandidateRect((int)i);
     if (m_istorepos)
       rect.OffsetRect(0, m_offsetys[i]);
-    if (rect.PtInRect(point) && i != m_ctx.cinfo.highlighted) {
-      if (_UICallback)
-        _UICallback(NULL, &i, NULL, NULL);
+    rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
+    if (rect.PtInRect(point)) {
+      if (i != m_ctx.cinfo.highlighted) {
+        if (m_style.hover_type == UIStyle::HoverType::HILITE) {
+          if (_UICallback)
+            _UICallback(NULL, &i, NULL, NULL);
+        } else if (m_hoverIndex != i) {
+          m_hoverIndex = i;
+          InvalidateRect(&rcw, true);
+        }
+      } else if (m_style.hover_type == UIStyle::HoverType::SEMI_HILITE &&
+                 m_hoverIndex != -1) {
+        m_hoverIndex = -1;
+        InvalidateRect(&rcw, true);
+      }
     }
-  }
-  bHandled = true;
-  return 0;
-}
-
-LRESULT WeaselPanel::OnMouseMove(UINT uMsg,
-                                 WPARAM wParam,
-                                 LPARAM lParam,
-                                 BOOL& bHandled) {
-  if (m_mouse_entry == false && m_style.mouse_hover_ms) {
-    TRACKMOUSEEVENT tme;
-    tme.cbSize = sizeof(TRACKMOUSEEVENT);
-    tme.dwFlags = TME_HOVER | TME_LEAVE;
-    tme.dwHoverTime = m_style.mouse_hover_ms;  // unit: ms
-    tme.hwndTrack = m_hWnd;
-    TrackMouseEvent(&tme);
   }
   return 0;
 }
@@ -381,6 +442,8 @@ LRESULT WeaselPanel::OnMouseLeave(UINT uMsg,
                                   WPARAM wParam,
                                   LPARAM lParam,
                                   BOOL& bHandled) {
+  m_hoverIndex = -1;
+  InvalidateRect(&rcw, true);
   m_mouse_entry = false;
   return 0;
 }
@@ -675,10 +738,9 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
       }
     }
     // draw non highlighted candidates, without shadow
-    if (COLORNOTTRANSPARENT(m_style.candidate_back_color) ||
-        COLORNOTTRANSPARENT(
-            m_style.candidate_border_color))  // if transparent not to draw
-    {
+    if ((COLORNOTTRANSPARENT(m_style.candidate_back_color) ||
+         COLORNOTTRANSPARENT(m_style.candidate_border_color)) ||
+        m_style.hover_type == UIStyle::HoverType::SEMI_HILITE) {
       for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
         if (i == m_ctx.cinfo.highlighted)
           continue;
@@ -689,15 +751,28 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
           ReconfigRoundInfo(rd, i, m_candidateCount);
         }
         rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
-        _HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000,
-                       m_style.round_corner, bkType, rd,
-                       m_style.candidate_border_color);
+        if (i != m_hoverIndex)
+          _HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000,
+                         m_style.round_corner, bkType, rd,
+                         m_style.candidate_border_color);
+        else {
+          int color = ((m_style.hilited_candidate_back_color >> 25) & 0xff)
+                      << 24;
+          color = (m_style.hilited_candidate_back_color & 0x00ffffff) | color;
+          int border_color =
+              ((m_style.hilited_candidate_border_color >> 25) & 0xff) << 24;
+          border_color = (m_style.hilited_candidate_border_color & 0x00ffffff) |
+                         border_color;
+          _HighlightText(dc, rect, color, 0x00000000, m_style.round_corner,
+                         bkType, rd, border_color);
+        }
         drawn = true;
       }
     }
     // draw highlighted back ground and shadow
     {
       rect = m_layout->GetHighlightRect();
+      bool markSt = bar_scale_ == 1.0 || (!m_style.mark_text.empty());
       IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
       if (m_istorepos) {
         rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
@@ -705,7 +780,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
       }
       rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
       _HighlightText(dc, rect, m_style.hilited_candidate_back_color,
-                     m_style.hilited_candidate_shadow_color,
+                     markSt ? m_style.hilited_candidate_shadow_color : 0,
                      m_style.round_corner, bkType, rd,
                      m_style.hilited_candidate_border_color);
       if (m_style.mark_text.empty() &&
@@ -716,6 +791,10 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
                         rect.Width() - m_style.round_corner * 2);
         width = min(width, rect.Width() * 0.618);
         height = min(height, rect.Height() * 0.618);
+        if (bar_scale_ != 1.0f) {
+          width *= bar_scale_;
+          height *= bar_scale_;
+        }
         Gdiplus::Graphics g_back(dc);
         g_back.SetSmoothingMode(
             Gdiplus::SmoothingMode::SmoothingModeHighQuality);
@@ -725,13 +804,13 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
         if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
           int x = rect.left + (rect.Width() - width) / 2;
           CRect mkrc{x, rect.top, x + width, rect.top + m_layout->MARK_HEIGHT};
-          GraphicsRoundRectPath mk_path(mkrc, 2);
+          GraphicsRoundRectPath mk_path(mkrc, mkrc.Height() / 2);
           g_back.FillPath(&mk_brush, &mk_path);
         } else {
           int y = rect.top + (rect.Height() - height) / 2;
           CRect mkrc{rect.left, y, rect.left + m_layout->MARK_WIDTH,
                      y + height};
-          GraphicsRoundRectPath mk_path(mkrc, 2);
+          GraphicsRoundRectPath mk_path(mkrc, mkrc.Width() / 2);
           g_back.FillPath(&mk_brush, &mk_path);
         }
       }
@@ -743,7 +822,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
     // begin draw candidate texts
     int label_text_color, candidate_text_color, comment_text_color;
     for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-      if (i == m_ctx.cinfo.highlighted) {
+      if (i == m_ctx.cinfo.highlighted || i == m_hoverIndex) {
         label_text_color = m_style.hilited_label_text_color;
         candidate_text_color = m_style.hilited_candidate_text_color;
         comment_text_color = m_style.hilited_comment_text_color;
@@ -972,6 +1051,7 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg,
                                WPARAM wParam,
                                LPARAM lParam,
                                BOOL& bHandled) {
+  m_hoverIndex = -1;
   delete m_layout;
   m_layout = NULL;
   return 0;

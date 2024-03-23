@@ -30,9 +30,9 @@ class WeaselPanel
   MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
   MESSAGE_HANDLER(WM_DPICHANGED, OnDpiChanged)
   MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
-  MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLeftClicked)
+  MESSAGE_HANDLER(WM_LBUTTONUP, OnLeftClickedUp)
+  MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLeftClickedDown)
   MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
-  MESSAGE_HANDLER(WM_MOUSEHOVER, OnMouseHover)
   MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
   MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
   CHAIN_MSG_MAP(CDoubleBufferImpl<WeaselPanel>)
@@ -45,12 +45,15 @@ class WeaselPanel
                           WPARAM wParam,
                           LPARAM lParam,
                           BOOL& bHandled);
-  LRESULT OnLeftClicked(UINT uMsg,
-                        WPARAM wParam,
-                        LPARAM lParam,
-                        BOOL& bHandled);
+  LRESULT OnLeftClickedUp(UINT uMsg,
+                          WPARAM wParam,
+                          LPARAM lParam,
+                          BOOL& bHandled);
+  LRESULT OnLeftClickedDown(UINT uMsg,
+                            WPARAM wParam,
+                            LPARAM lParam,
+                            BOOL& bHandled);
   LRESULT OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  LRESULT OnMouseHover(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
@@ -61,6 +64,13 @@ class WeaselPanel
   void Refresh();
   void DoPaint(CDCHandle dc);
   bool GetIsReposition() { return m_istorepos; }
+
+  static VOID CALLBACK OnTimer(_In_ HWND hwnd,
+                               _In_ UINT uMsg,
+                               _In_ UINT_PTR idEvent,
+                               _In_ DWORD dwTime);
+  static const int AUTOREV_TIMER = 20240315;
+  static UINT_PTR ptimer;
 
  private:
   void _InitFontRes(bool forced = false);
@@ -125,4 +135,6 @@ class WeaselPanel
   PDWR pDWR;
   std::function<void(size_t* const, size_t* const, bool* const, bool* const)>&
       _UICallback;
+  float bar_scale_ = 1.0;
+  int m_hoverIndex = -1;
 };
