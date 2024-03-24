@@ -71,7 +71,7 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext,
   if (_fTestKeyDownPending) {
     _fTestKeyDownPending = FALSE;
     *pfEaten = TRUE;
-  } else {
+  } else if (!(_hrSession & TF_S_ASYNC)) {
     _ProcessKeyEvent(wParam, lParam, pfEaten);
     _UpdateComposition(pContext);
   }
@@ -102,7 +102,7 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext,
   if (_fTestKeyUpPending) {
     _fTestKeyUpPending = FALSE;
     *pfEaten = TRUE;
-  } else {
+  } else if (!(_hrSession & TF_S_ASYNC)) {
     _ProcessKeyEvent(wParam, lParam, pfEaten);
     _UpdateComposition(pContext);
   }

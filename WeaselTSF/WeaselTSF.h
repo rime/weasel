@@ -220,6 +220,7 @@ class WeaselTSF : public ITfTextInputProcessorEx,
 
   /* IME status */
   weasel::Status _status;
+  HRESULT _hrSession;
 
   // guidatom for the display attibute.
   TfGuidAtom _gaDisplayAttributeInput;
