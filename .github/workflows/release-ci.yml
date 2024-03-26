@@ -12,7 +12,7 @@ jobs:
   build-and-release:
     permissions:
       contents: write
-    runs-on: windows-2022
+    runs-on: windows-2019
     env:
       librime_build: submodule
       boost_version: 1.84.0
@@ -26,7 +26,7 @@ jobs:
       - name: Configure build environment
         shell: bash
         run: |
-          cp env.vs2022.bat env.bat
+          cp env.vs2019.bat env.bat
           librime_id=$(git submodule foreach --quiet 'if [ $name == "librime" ]; then echo `git rev-parse HEAD`; fi')
           echo "librime_id is $librime_id"
           echo "librime_id=$librime_id" >> $GITHUB_ENV
