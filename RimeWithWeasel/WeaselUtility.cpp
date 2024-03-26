@@ -1,9 +1,9 @@
 #include "stdafx.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <string>
 #include <WeaselUtility.h>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 fs::path WeaselUserDataPath() {
   WCHAR _path[MAX_PATH] = {0};

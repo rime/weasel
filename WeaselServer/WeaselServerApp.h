@@ -5,14 +5,14 @@
 #include <WeaselUI.h>
 #include <RimeWithWeasel.h>
 #include <WeaselUtility.h>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <winsparkle.h>
 
 #include "WeaselTrayIcon.h"
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 class WeaselServerApp {
  public:
