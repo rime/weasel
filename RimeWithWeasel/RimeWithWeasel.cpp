@@ -5,7 +5,7 @@
 #include <WeaselUtility.h>
 #include <WeaselVersion.h>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <map>
 #include <regex>
 #include <rime_api.h>
@@ -585,8 +585,8 @@ std::wstring _LoadIconSettingFromSchema(
     RimeConfig& config,
     const char* key1,
     const char* key2,
-    const boost::filesystem::path& user_dir,
-    const boost::filesystem::path& shared_dir) {
+    const std::filesystem::path& user_dir,
+    const std::filesystem::path& shared_dir) {
   const int BUF_SIZE = 255;
   char buffer[BUF_SIZE + 1] = {0};
   if (RimeConfigGetString(&config, key1, buffer, BUF_SIZE) ||
