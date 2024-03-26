@@ -37,8 +37,8 @@ enum WEASEL_IPC_COMMAND {
 namespace weasel {
 struct PipeMessage {
   WEASEL_IPC_COMMAND Msg;
-  UINT wParam;
-  UINT lParam;
+  DWORD wParam;
+  DWORD lParam;
 };
 
 struct IPCMetadata {
@@ -65,36 +65,36 @@ struct RequestHandler {
   virtual ~RequestHandler() {}
   virtual void Initialize() {}
   virtual void Finalize() {}
-  virtual UINT FindSession(UINT session_id) { return 0; }
-  virtual UINT AddSession(LPWSTR buffer, EatLine eat = 0) { return 0; }
-  virtual UINT RemoveSession(UINT session_id) { return 0; }
+  virtual DWORD FindSession(DWORD session_id) { return 0; }
+  virtual DWORD AddSession(LPWSTR buffer, EatLine eat = 0) { return 0; }
+  virtual DWORD RemoveSession(DWORD session_id) { return 0; }
   virtual BOOL ProcessKeyEvent(KeyEvent keyEvent,
-                               UINT session_id,
+                               DWORD session_id,
                                EatLine eat) {
     return FALSE;
   }
-  virtual void CommitComposition(UINT session_id) {}
-  virtual void ClearComposition(UINT session_id) {}
-  virtual void SelectCandidateOnCurrentPage(size_t index, UINT session_id) {}
+  virtual void CommitComposition(DWORD session_id) {}
+  virtual void ClearComposition(DWORD session_id) {}
+  virtual void SelectCandidateOnCurrentPage(size_t index, DWORD session_id) {}
   virtual bool HighlightCandidateOnCurrentPage(size_t index,
-                                               UINT session_id,
+                                               DWORD session_id,
                                                EatLine eat) {
     return false;
   }
-  virtual bool ChangePage(bool backward, UINT session_id, EatLine eat) {
+  virtual bool ChangePage(bool backward, DWORD session_id, EatLine eat) {
     return false;
   }
-  virtual void FocusIn(DWORD param, UINT session_id) {}
-  virtual void FocusOut(DWORD param, UINT session_id) {}
-  virtual void UpdateInputPosition(RECT const& rc, UINT session_id) {}
+  virtual void FocusIn(DWORD param, DWORD session_id) {}
+  virtual void FocusOut(DWORD param, DWORD session_id) {}
+  virtual void UpdateInputPosition(RECT const& rc, DWORD session_id) {}
   virtual void StartMaintenance() {}
   virtual void EndMaintenance() {}
-  virtual void SetOption(UINT session_id, const std::string& opt, bool val) {}
+  virtual void SetOption(DWORD session_id, const std::string& opt, bool val) {}
   virtual void UpdateColorTheme(BOOL darkMode) {}
 };
 
 // 處理server端回應之物件
-typedef std::function<bool(LPWSTR buffer, UINT length)> ResponseHandler;
+typedef std::function<bool(LPWSTR buffer, DWORD length)> ResponseHandler;
 
 // 事件處理函數
 typedef std::function<bool()> CommandHandler;

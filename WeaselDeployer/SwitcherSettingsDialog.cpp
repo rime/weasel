@@ -79,7 +79,10 @@ LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
   schema_list_.SubclassWindow(GetDlgItem(IDC_SCHEMA_LIST));
   schema_list_.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT,
                                         LVS_EX_FULLROWSELECT);
-  schema_list_.AddColumn(L"方案名稱", 0);
+
+  CString schemaname;
+  schemaname.LoadStringW(IDS_STR_SCHEMA_NAME);
+  schema_list_.AddColumn(schemaname, 0);
   CRect rc;
   schema_list_.GetClientRect(&rc);
   schema_list_.SetColumnWidth(0, rc.Width() - 20);
@@ -104,10 +107,25 @@ LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
   return 0;
 }
 
+BOOL is_wow64() {
+  DWORD errorCode;
+  if (GetSystemWow64DirectoryW(NULL, 0) == 0)
+    if ((errorCode = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
+      return FALSE;
+    else
+      ExitProcess((UINT)errorCode);
+  else
+    return TRUE;
+}
+
 LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
   HKEY hKey;
-  LSTATUS ret =
-      RegOpenKey(HKEY_LOCAL_MACHINE, _T("Software\\Rime\\Weasel"), &hKey);
+  std::wstring hPath;
+  if (is_wow64())
+    hPath = _T("Software\\WOW6432Node\\Rime\\Weasel");
+  else
+    hPath = _T("Software\\Rime\\Weasel");
+  LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, hPath.c_str(), &hKey);
   if (ret == ERROR_SUCCESS) {
     WCHAR value[MAX_PATH];
     DWORD len = sizeof(value);
