@@ -64,7 +64,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler() {
   m_app_options.clear();
 }
 
-bool addsession = false;
+bool add_session = false;
 void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config,
                          UIStyle& style,
@@ -206,9 +206,9 @@ DWORD RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat) {
   if (eat) {
     _Respond(ipc_id, eat);
   }
-  addsession = true;
+  add_session = true;
   _UpdateUI(ipc_id);
-  addsession = false;
+  add_session = false;
   m_active_session = ipc_id;
   return ipc_id;
 }
@@ -755,8 +755,8 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
     return m_ui->IsCountingDown();
   auto foption = m_show_notifications.find(m_option_name);
   auto falways = m_show_notifications.find("always");
-  if ((!addsession && (foption != m_show_notifications.end() ||
-                       falways != m_show_notifications.end())) ||
+  if ((!add_session && (foption != m_show_notifications.end() ||
+                        falways != m_show_notifications.end())) ||
       m_message_type == "deploy") {
     m_ui->Update(ctx, status);
     if (m_show_notifications_time)
