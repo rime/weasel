@@ -35,7 +35,7 @@ if not defined RELEASE_BUILD (
 ) else (
   rem if RELEASE_BUILD is defined, then use pure number in the PRODUCT_VERSION
   rem this usually happens in github action release build
-	if not defined PRODUCT_VERSION set PRODUCT_VERSION="%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%.WEASEL_BUILD"
+	if not defined PRODUCT_VERSION set PRODUCT_VERSION="%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%.%WEASEL_BUILD%"
 )
 rem set FILE_VERSION always to the same as PRODUCT_VERSION when RELEASE_BUILD 
 if not defined FILE_VERSION set FILE_VERSION=%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%.%WEASEL_BUILD%
