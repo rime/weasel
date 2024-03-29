@@ -20,6 +20,7 @@ struct CaseInsensitiveCompare {
 typedef std::map<std::string, bool> AppOptions;
 typedef std::map<std::string, AppOptions, CaseInsensitiveCompare>
     AppOptionsByAppName;
+
 struct SessionStatus {
   SessionStatus() : style(weasel::UIStyle()), __synced(false), session_id(0) {
     RIME_STRUCT(RimeStatus, status);
@@ -83,11 +84,15 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
 
   bool _IsSessionTSF(RimeSessionId session_id);
   void _UpdateInlinePreeditStatus(WeaselSessionId ipc_id);
-  RimeSessionId _s(WeaselSessionId ipc_id) {
-    return (m_session_status_map[ipc_id].session_id);
+
+  RimeSessionId to_session_id(WeaselSessionId ipc_id) {
+    return m_session_status_map[ipc_id].session_id;
   }
-  SessionStatus& _session_status(WeaselSessionId ipc_id) {
+  SessionStatus& get_session_status(WeaselSessionId ipc_id) {
     return m_session_status_map[ipc_id];
+  }
+  SessionStatus& new_session_status(WeaselSessionId ipc_id) {
+    return m_session_status_map[ipc_id] = SessionStatus();
   }
 
   AppOptionsByAppName m_app_options;
