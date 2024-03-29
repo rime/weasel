@@ -444,7 +444,7 @@ void RimeWithWeaselHandler::_ReadClientInfo(WeaselSessionId ipc_id,
           line.substr(kClientTypeKey.length()).c_str(), CP_UTF8);
     }
   }
-  RimeStatus& session_status = get_session_status(ipc_id);
+  SessionStatus& session_status = get_session_status(ipc_id);
   RimeSessionId session_id = session_status.session_id;
   // set app specific options
   if (!app_name.empty()) {
@@ -453,13 +453,10 @@ void RimeWithWeaselHandler::_ReadClientInfo(WeaselSessionId ipc_id,
     auto it = m_app_options.find(app_name);
     if (it != m_app_options.end()) {
       AppOptions& options(m_app_options[it->first]);
-      std::for_each(options.begin(), options.end(),
-                    [ipc_id, this](std::pair<const std::string, bool>& pair) {
-                      DLOG(INFO) << "set app option: " << pair.first << " = "
-                                 << pair.second;
-                      RimeSetOption(session_id, pair.first.c_str(),
-                                    Bool(pair.second));
-                    });
+      for (const auto& pair : options) {
+        DLOG(INFO) << "set app option: " << pair.first << " = " << pair.second;
+        RimeSetOption(session_id, pair.first.c_str(), Bool(pair.second));
+      }
     }
   }
   // ime | tsf
@@ -1484,7 +1481,7 @@ void RimeWithWeaselHandler::_GetStatus(Status& stat,
           _UpdateInlinePreeditStatus(
               ipc_id);  // in case of inline_preedit set in schema
         _RefreshTrayIcon(
-            _s(ipc_id),
+            session_id,
             _UpdateUICallback);  // refresh icon after schema changed
         m_ui->style() = session_status.style;
         if (m_show_notifications.find("schema") != m_show_notifications.end() &&
