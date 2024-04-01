@@ -223,4 +223,5 @@ class WeaselTSF : public ITfTextInputProcessorEx,
 
   // guidatom for the display attibute.
   TfGuidAtom _gaDisplayAttributeInput;
+  BOOL _async_edit = false;
 };
