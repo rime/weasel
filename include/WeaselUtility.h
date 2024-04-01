@@ -84,5 +84,33 @@ inline std::string wstring_to_string(const std::wstring& wstr,
   return res;
 }
 
+inline std::wstring unescape_wstring(const std::wstring& input) {
+  std::wstring res = input;
+  std::wstring search1 = L"\\\\";
+  std::wstring replace1 = L"\\";
+  std::wstring search2 = L"\\n";
+  std::wstring replace2 = L"\n";
+
+  // unescape L"\\n" to L"\n", skip L"\\\\n"
+  size_t pos = 0;
+  while ((pos = res.find(search2, pos)) != std::wstring::npos) {
+    if (pos > 0 && res[pos - 1] == L'\\') {
+      pos += search2.length();
+      continue;
+    }
+    res.replace(pos, search2.length(), replace2);
+    pos += replace2.length();
+  }
+
+  // unescape L"\\\\" to L"\\"
+  pos = 0;
+  while ((pos = res.find(search1, pos)) != std::wstring::npos) {
+    res.replace(pos, search1.length(), replace1);
+    pos += replace1.length();
+  }
+
+  return res;
+}
+
 // resource
 std::string GetCustomResource(const char* name, const char* type);

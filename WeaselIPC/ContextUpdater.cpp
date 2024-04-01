@@ -44,7 +44,7 @@ void ContextUpdater::_StoreText(Text& target,
                                 std::wstring const& value) {
   if (k.size() == 2) {
     target.clear();
-    target.str = value;
+    target.str = unescape_wstring(value);
     return;
   }
   if (k.size() == 3) {
@@ -78,6 +78,13 @@ void ContextUpdater::_StoreCand(Deserializer::KeyType k,
   boost::archive::text_wiarchive ia(ss);
 
   ia >> cinfo;
+
+  for (auto& cand : cinfo.candies)
+    cand.str = unescape_wstring(cand.str);
+  for (auto& lalel : cinfo.labels)
+    lalel.str = unescape_wstring(lalel.str);
+  for (auto& comment : cinfo.comments)
+    comment.str = unescape_wstring(comment.str);
 }
 
 // StatusUpdater
