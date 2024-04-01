@@ -5,10 +5,10 @@ git submodule update plum
 
 set rime_version=1.11.0
 
-set download_archive=rime-76a0a16c-Windows-msvc-x86.7z
-set download_archive_deps=rime-deps-76a0a16c-Windows-msvc-x86.7z
-set download_archive_x64=rime-76a0a16c-Windows-msvc-x64.7z
-set download_archive_deps_x64=rime-deps-76a0a16c-Windows-msvc-x64.7z
+set download_archive=rime-76a0a16-Windows-msvc-x86.7z
+set download_archive_deps=rime-deps-76a0a16-Windows-msvc-x86.7z
+set download_archive_x64=rime-76a0a16-Windows-msvc-x64.7z
+set download_archive_deps_x64=rime-deps-76a0a16-Windows-msvc-x64.7z
 
 curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive%
 curl -LO https://github.com/rime/librime/releases/download/%rime_version%/%download_archive_deps%
