@@ -27,9 +27,9 @@ jobs:
         shell: bash
         run: |
           cp env.vs2019.bat env.bat
-          librime_id=$(git submodule foreach --quiet 'if [ $name == "librime" ]; then echo `git rev-parse HEAD`; fi')
-          echo "librime_id is $librime_id"
-          echo "librime_id=$librime_id" >> $GITHUB_ENV
+          #librime_id=$(git submodule foreach --quiet 'if [ $name == "librime" ]; then echo `git rev-parse HEAD`; fi')
+          #echo "librime_id is $librime_id"
+          #echo "librime_id=$librime_id" >> $GITHUB_ENV
 
       # cache boost
       - name: Cache Boost
@@ -54,43 +54,42 @@ jobs:
 
       # use upper stream released librime files if stable release
       - name: Copy Rime files
-        if: ${{ startsWith(github.ref, 'refs/tags/') || env.librime_build == 'stable' }}
         run: |
           .\github.install.bat
 
       # cache librime for nightly build and not stable release
-      - name: Cache librime
-        if: ${{ github.ref == 'refs/heads/master' && env.librime_build == 'submodule' }}
-        id: cache-librime
-        uses: actions/cache@v4
-        with:
-          path: |
-            librime
-          key: ${{ runner.os }}-librime-${{ env.librime_id }}-dual
+      #- name: Cache librime
+      #  if: ${{ github.ref == 'refs/heads/master' && env.librime_build == 'submodule' }}
+      #  id: cache-librime
+      #  uses: actions/cache@v4
+      #  with:
+      #    path: |
+      #      librime
+      #    key: ${{ runner.os }}-librime-${{ env.librime_id }}-dual
 
       # build librime if not cached for nightly build and not stable release
-      - name: Build librime
-        if: ${{ github.ref == 'refs/heads/master' && env.librime_build == 'submodule' && steps.cache-librime.outputs.cache-hit != 'true' }}
-        env:
-          RIME_PLUGINS: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
-        shell: bash
-        run: |
-          # load plugins
-          pushd librime
-          ./action-install-plugins-windows.bat
-          popd
-          ./build.bat librime
+      #- name: Build librime
+      #  if: ${{ github.ref == 'refs/heads/master' && env.librime_build == 'submodule' && steps.cache-librime.outputs.cache-hit != 'true' }}
+      #  env:
+      #    RIME_PLUGINS: hchunhui/librime-lua lotem/librime-octagram rime/librime-predict
+      #  shell: bash
+      #  run: |
+      #    # load plugins
+      #    pushd librime
+      #    ./action-install-plugins-windows.bat
+      #    popd
+      #    ./build.bat librime
 
       # build librime if cached
-      - name: Copy librime built files cached
-        if: ${{ github.ref == 'refs/heads/master' && env.librime_build == 'submodule' && steps.cache-librime.outputs.cache-hit == 'true' }}
-        shell: bash
-        run: |
-          cp ./librime/dist_x64/lib/rime* ./lib64/
-          cp ./librime/dist_x64/lib/rime.dll ./output/
-          cp ./librime/dist_x64/include/*.h ./include/
-          cp ./librime/dist_Win32/lib/rime* ./lib/
-          cp ./librime/dist_Win32/lib/rime.dll ./output/Win32/
+      #- name: Copy librime built files cached
+      #  if: ${{ github.ref == 'refs/heads/master' && env.librime_build == 'submodule' && steps.cache-librime.outputs.cache-hit == 'true' }}
+      #  shell: bash
+      #  run: |
+      #    cp ./librime/dist_x64/lib/rime* ./lib64/
+      #    cp ./librime/dist_x64/lib/rime.dll ./output/
+      #    cp ./librime/dist_x64/include/*.h ./include/
+      #    cp ./librime/dist_Win32/lib/rime* ./lib/
+      #    cp ./librime/dist_Win32/lib/rime.dll ./output/Win32/
 
       - name: Build Weasel Release
         id: build_weasel
