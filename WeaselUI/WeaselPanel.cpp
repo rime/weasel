@@ -803,12 +803,12 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
         Gdiplus::SolidBrush mk_brush(mark_color);
         if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
           int x = rect.left + (rect.Width() - width) / 2;
-          CRect mkrc{x, rect.top, x + width, rect.top + m_layout->MARK_HEIGHT};
+          CRect mkrc{x, rect.top, x + width, rect.top + m_layout->mark_height};
           GraphicsRoundRectPath mk_path(mkrc, mkrc.Height() / 2);
           g_back.FillPath(&mk_brush, &mk_path);
         } else {
           int y = rect.top + (rect.Height() - height) / 2;
-          CRect mkrc{rect.left, y, rect.left + m_layout->MARK_WIDTH,
+          CRect mkrc{rect.left, y, rect.left + m_layout->mark_width,
                      y + height};
           GraphicsRoundRectPath mk_path(mkrc, mkrc.Width() / 2);
           g_back.FillPath(&mk_brush, &mk_path);
@@ -869,21 +869,21 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
         if (m_istorepos)
           rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
         rc.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
-        int vgap = m_layout->MARK_HEIGHT
-                       ? (rc.Height() - m_layout->MARK_HEIGHT) / 2
+        int vgap = m_layout->mark_height
+                       ? (rc.Height() - m_layout->mark_height) / 2
                        : 0;
         int hgap =
-            m_layout->MARK_WIDTH ? (rc.Width() - m_layout->MARK_WIDTH) / 2 : 0;
+            m_layout->mark_width ? (rc.Width() - m_layout->mark_width) / 2 : 0;
         CRect hlRc;
         if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
           hlRc =
               CRect(rc.left + hgap, rc.top + m_style.hilite_padding_y,
-                    rc.left + hgap + m_layout->MARK_WIDTH,
-                    rc.top + m_style.hilite_padding_y + m_layout->MARK_HEIGHT);
+                    rc.left + hgap + m_layout->mark_width,
+                    rc.top + m_style.hilite_padding_y + m_layout->mark_height);
         else
           hlRc =
               CRect(rc.left + m_style.hilite_padding_x, rc.top + vgap,
-                    rc.left + m_style.hilite_padding_x + m_layout->MARK_WIDTH,
+                    rc.left + m_style.hilite_padding_x + m_layout->mark_width,
                     rc.bottom - vgap);
         _TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(),
                  m_style.hilited_mark_color, pDWR->pTextFormat.Get());

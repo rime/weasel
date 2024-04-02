@@ -22,14 +22,14 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
       GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
                     pDWR->pTextFormat, pDWR, &sg);
 
-    MARK_WIDTH = sg.cx;
-    MARK_HEIGHT = sg.cy;
+    mark_width = sg.cx;
+    mark_height = sg.cy;
     if (_style.mark_text.empty())
-      MARK_HEIGHT = MARK_WIDTH / 7;
-    MARK_GAP = (_style.mark_text.empty()) ? MARK_HEIGHT
-                                          : MARK_HEIGHT + _style.hilite_spacing;
+      mark_height = mark_width / 7;
+    mark_gap = (_style.mark_text.empty()) ? mark_height
+                                          : mark_height + _style.hilite_spacing;
   }
-  int base_offset = ((_style.hilited_mark_color & 0xff000000)) ? MARK_GAP : 0;
+  int base_offset = ((_style.hilited_mark_color & 0xff000000)) ? mark_gap : 0;
 
   // calc page indicator
   CSize pgszl, pgszr;
@@ -245,14 +245,14 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR) {
       GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
                     pDWR->pTextFormat, pDWR, &sg);
 
-    MARK_WIDTH = sg.cx;
-    MARK_HEIGHT = sg.cy;
+    mark_width = sg.cx;
+    mark_height = sg.cy;
     if (_style.mark_text.empty())
-      MARK_HEIGHT = MARK_WIDTH / 7;
-    MARK_GAP = (_style.mark_text.empty()) ? MARK_HEIGHT
-                                          : MARK_HEIGHT + _style.hilite_spacing;
+      mark_height = mark_width / 7;
+    mark_gap = (_style.mark_text.empty()) ? mark_height
+                                          : mark_height + _style.hilite_spacing;
   }
-  int base_offset = ((_style.hilited_mark_color & 0xff000000)) ? MARK_GAP : 0;
+  int base_offset = ((_style.hilited_mark_color & 0xff000000)) ? mark_gap : 0;
 
   // calc page indicator
   CSize pgszl, pgszr;
