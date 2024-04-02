@@ -101,9 +101,9 @@ class Layout {
 
   int offsetX = 0;
   int offsetY = 0;
-  int MARK_WIDTH = 4;
-  int MARK_GAP = 8;
-  int MARK_HEIGHT = 0;
+  int mark_width = 4;
+  int mark_gap = 8;
+  int mark_height = 0;
 
  protected:
   const UIStyle& _style;
