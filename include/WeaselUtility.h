@@ -118,19 +118,15 @@ const wchar_t EscapeChar<wchar_t>::tab_escape = L't';
 template <typename CharT>
 inline std::basic_string<CharT> escape_string(
     const std::basic_string<CharT> input) {
-  using EscapeChar<CharT>::escape;
-  using EscapeChar<CharT>::linefeed;
-  using EscapeChar<CharT>::tab;
-  using EscapeChar<CharT>::linefeed_escape;
-  using EscapeChar<CharT>::tab_escape;
+  using Esc = EscapeChar<CharT>;
   std::basic_stringstream<CharT> res;
   for (auto p = input.begin(); p != input.end(); ++p) {
-    if (*p == escape) {
-      res << escape << escape;
-    } else if (*p == linefeed) {
-      res << escape << linefeed_escape;
-    } else if (*p == tab) {
-      res << escape << tab_escape;
+    if (*p == Esc::escape) {
+      res << Esc::escape << Esc::escape;
+    } else if (*p == Esc::linefeed) {
+      res << Esc::escape << Esc::linefeed_escape;
+    } else if (*p == Esc::tab) {
+      res << Esc::escape << Esc::tab_escape;
     } else {
       res << *p;
     }
@@ -141,20 +137,16 @@ inline std::basic_string<CharT> escape_string(
 template <typename CharT>
 inline std::basic_string<CharT> unescape_string(
     const std::basic_string<CharT>& input) {
-  using EscapeChar<CharT>::escape;
-  using EscapeChar<CharT>::linefeed;
-  using EscapeChar<CharT>::tab;
-  using EscapeChar<CharT>::linefeed_escape;
-  using EscapeChar<CharT>::tab_escape;
+  using Esc = EscapeChar<CharT>;
   std::basic_stringstream<CharT> res;
   for (auto p = input.begin(); p != input.end(); ++p) {
-    if (*p == escape) {
+    if (*p == Esc::escape) {
       if (++p == input.end()) {
         break;
-      } else if (*p == linefeed_escape) {
-        res << linefeed;
-      } else if (*p == tab_escape) {
-        res << tab;
+      } else if (*p == Esc::linefeed_escape) {
+        res << Esc::linefeed;
+      } else if (*p == Esc::tab_escape) {
+        res << Esc::tab;
       } else {  // \a => a
         res << *p;
       }
