@@ -779,8 +779,8 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
   if (RimeGetCommit(session_id, &commit)) {
     actions.insert("commit");
 
-    std::string commit_txt = escape_string(commit.text);
-    messages.push_back(std::string("commit=") + commit_txt + '\n');
+    std::string commit_text = escape_string<char>(commit.text);
+    messages.push_back(std::string("commit=") + commit_text + '\n');
     RimeFreeCommit(&commit);
   }
 
@@ -820,7 +820,7 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
           if (ctx.commit_text_preview != NULL) {
             std::string first = ctx.commit_text_preview;
             messages.push_back(std::string("ctx.preedit=") +
-                               escape_string(first) + '\n');
+                               escape_string<char>(first) + '\n');
             messages.push_back(
                 std::string("ctx.preedit.cursor=") +
                 std::to_string(utf8towcslen(first.c_str(), 0)) + ',' +
@@ -833,7 +833,8 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
           // no preview, fall back to composition
         case UIStyle::COMPOSITION:
           messages.push_back(std::string("ctx.preedit=") +
-                             escape_string(ctx.composition.preedit) + '\n');
+                             escape_string<char>(ctx.composition.preedit) +
+                             '\n');
           if (ctx.composition.sel_start <= ctx.composition.sel_end) {
             messages.push_back(
                 std::string("ctx.preedit.cursor=") +
@@ -852,7 +853,8 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
           CandidateInfo cinfo;
           _GetCandidateInfo(cinfo, ctx);
           std::string topush = std::string("ctx.preedit=") +
-                               escape_string(ctx.composition.preedit) + "  [";
+                               escape_string<char>(ctx.composition.preedit) +
+                               "  [";
           for (auto i = 0; i < ctx.menu.num_candidates; i++) {
             std::string label =
                 session_status.style.label_font_point > 0
@@ -872,7 +874,7 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
             std::string prefix =
                 (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
             topush += " " + prefix + escape_string(label) +
-                      escape_string(ctx.menu.candidates[i].text) + " " +
+                      escape_string<char>(ctx.menu.candidates[i].text) + " " +
                       escape_string(comment);
           }
           messages.push_back(topush + " ]\n");
