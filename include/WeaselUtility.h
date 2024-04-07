@@ -105,15 +105,15 @@ template <>
 const char EscapeChar<char>::tab_escape = 't';
 
 template <>
-const char EscapeChar<wchar_t>::escape = L'\\';
+const wchar_t EscapeChar<wchar_t>::escape = L'\\';
 template <>
-const char EscapeChar<wchar_t>::linefeed = L'\n';
+const wchar_t EscapeChar<wchar_t>::linefeed = L'\n';
 template <>
-const char EscapeChar<wchar_t>::tab = L'\t';
+const wchar_t EscapeChar<wchar_t>::tab = L'\t';
 template <>
-const char EscapeChar<wchar_t>::linefeed_escape = L'n';
+const wchar_t EscapeChar<wchar_t>::linefeed_escape = L'n';
 template <>
-const char EscapeChar<wchar_t>::tab_escape = L't';
+const wchar_t EscapeChar<wchar_t>::tab_escape = L't';
 
 template <typename CharT>
 inline std::basic_string<CharT> escape_string(
