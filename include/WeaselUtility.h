@@ -86,34 +86,34 @@ inline std::string wstring_to_string(const std::wstring& wstr,
 
 template <typename CharT>
 struct EscapeChar {
-  static constexpr CharT escape;
-  static constexpr CharT linefeed;
-  static constexpr CharT tab;
-  static constexpr CharT linefeed_escape;
-  static constexpr CharT tab_escape;
+  static const CharT escape;
+  static const CharT linefeed;
+  static const CharT tab;
+  static const CharT linefeed_escape;
+  static const CharT tab_escape;
 };
 
 template <>
-constexpr char EscapeChar<char>::escape = '\\';
+const char EscapeChar<char>::escape = '\\';
 template <>
-constexpr char EscapeChar<char>::linefeed = '\n';
+const char EscapeChar<char>::linefeed = '\n';
 template <>
-constexpr char EscapeChar<char>::tab = '\t';
+const char EscapeChar<char>::tab = '\t';
 template <>
-constexpr char EscapeChar<char>::linefeed_escape = 'n';
+const char EscapeChar<char>::linefeed_escape = 'n';
 template <>
-constexpr char EscapeChar<char>::tab_escape = 't';
+const char EscapeChar<char>::tab_escape = 't';
 
 template <>
-constexpr char EscapeChar<wchar_t>::escape = L'\\';
+const char EscapeChar<wchar_t>::escape = L'\\';
 template <>
-constexpr char EscapeChar<wchar_t>::linefeed = L'\n';
+const char EscapeChar<wchar_t>::linefeed = L'\n';
 template <>
-constexpr char EscapeChar<wchar_t>::tab = L'\t';
+const char EscapeChar<wchar_t>::tab = L'\t';
 template <>
-constexpr char EscapeChar<wchar_t>::linefeed_escape = L'n';
+const char EscapeChar<wchar_t>::linefeed_escape = L'n';
 template <>
-constexpr char EscapeChar<wchar_t>::tab_escape = L't';
+const char EscapeChar<wchar_t>::tab_escape = L't';
 
 template <typename CharT>
 inline std::basic_string<CharT> escape_string(
