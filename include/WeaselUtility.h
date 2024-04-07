@@ -94,26 +94,26 @@ struct Escape {
 };
 
 template <>
-struct Escape<char>::escape = '\\';
+constexpr char Escape<char>::escape = '\\';
 template <>
-struct Escape<char>::linefeed = '\n';
+constexpr char Escape<char>::linefeed = '\n';
 template <>
-struct Escape<char>::tab = '\t';
+constexpr char Escape<char>::tab = '\t';
 template <>
-struct Escape<char>::linefeed_escape = 'n';
+constexpr char Escape<char>::linefeed_escape = 'n';
 template <>
-struct Escape<char>::tab_escape = 't';
+constexpr char Escape<char>::tab_escape = 't';
 
 template <>
-struct Escape<wchar_t>::escape = L'\\';
+constexpr char Escape<wchar_t>::escape = L'\\';
 template <>
-struct Escape<wchar_t>::linefeed = L'\n';
+constexpr char Escape<wchar_t>::linefeed = L'\n';
 template <>
-struct Escape<wchar_t>::tab = L'\t';
+constexpr char Escape<wchar_t>::tab = L'\t';
 template <>
-struct Escape<wchar_t>::linefeed_escape = L'n';
+constexpr char Escape<wchar_t>::linefeed_escape = L'n';
 template <>
-struct Escape<wchar_t>::tab_escape = L't';
+constexpr char Escape<wchar_t>::tab_escape = L't';
 
 template <typename CharT>
 inline std::basic_string<CharT> escape_string(
