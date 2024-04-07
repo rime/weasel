@@ -104,7 +104,7 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext,
     *pfEaten = TRUE;
   } else {
     _ProcessKeyEvent(wParam, lParam, pfEaten);
-    if (_async_edit)
+    if (!_async_edit)
       _UpdateComposition(pContext);
   }
   return S_OK;
