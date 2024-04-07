@@ -86,11 +86,11 @@ inline std::string wstring_to_string(const std::wstring& wstr,
 
 template <typename CharT>
 struct Escape {
-  static constexpr CharT escape_char;
+  static constexpr CharT escape;
   static constexpr CharT linefeed;
   static constexpr CharT tab;
-  static constexpr CharT linefeed_escape_char;
-  static constexpr CharT tab_escape_char;
+  static constexpr CharT linefeed_escape;
+  static constexpr CharT tab_escape;
 };
 
 template <>
