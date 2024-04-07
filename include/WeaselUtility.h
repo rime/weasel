@@ -85,7 +85,7 @@ inline std::string wstring_to_string(const std::wstring& wstr,
 }
 
 template <typename CharT>
-struct Escape {
+struct EscapeChar {
   static constexpr CharT escape;
   static constexpr CharT linefeed;
   static constexpr CharT tab;
@@ -94,35 +94,35 @@ struct Escape {
 };
 
 template <>
-constexpr char Escape<char>::escape = '\\';
+constexpr char EscapeChar<char>::escape = '\\';
 template <>
-constexpr char Escape<char>::linefeed = '\n';
+constexpr char EscapeChar<char>::linefeed = '\n';
 template <>
-constexpr char Escape<char>::tab = '\t';
+constexpr char EscapeChar<char>::tab = '\t';
 template <>
-constexpr char Escape<char>::linefeed_escape = 'n';
+constexpr char EscapeChar<char>::linefeed_escape = 'n';
 template <>
-constexpr char Escape<char>::tab_escape = 't';
+constexpr char EscapeChar<char>::tab_escape = 't';
 
 template <>
-constexpr char Escape<wchar_t>::escape = L'\\';
+constexpr char EscapeChar<wchar_t>::escape = L'\\';
 template <>
-constexpr char Escape<wchar_t>::linefeed = L'\n';
+constexpr char EscapeChar<wchar_t>::linefeed = L'\n';
 template <>
-constexpr char Escape<wchar_t>::tab = L'\t';
+constexpr char EscapeChar<wchar_t>::tab = L'\t';
 template <>
-constexpr char Escape<wchar_t>::linefeed_escape = L'n';
+constexpr char EscapeChar<wchar_t>::linefeed_escape = L'n';
 template <>
-constexpr char Escape<wchar_t>::tab_escape = L't';
+constexpr char EscapeChar<wchar_t>::tab_escape = L't';
 
 template <typename CharT>
 inline std::basic_string<CharT> escape_string(
     const std::basic_string<CharT> input) {
-  using Escape<CharT>::escape;
-  using Escape<CharT>::linefeed;
-  using Escape<CharT>::tab;
-  using Escape<CharT>::linefeed_escape;
-  using Escape<CharT>::tab_escape;
+  using EscapeChar<CharT>::escape;
+  using EscapeChar<CharT>::linefeed;
+  using EscapeChar<CharT>::tab;
+  using EscapeChar<CharT>::linefeed_escape;
+  using EscapeChar<CharT>::tab_escape;
   std::basic_stringstream<CharT> res;
   for (auto p = input.begin(); p != input.end(); ++p) {
     if (*p == escape) {
@@ -141,11 +141,11 @@ inline std::basic_string<CharT> escape_string(
 template <typename CharT>
 inline std::basic_string<CharT> unescape_string(
     const std::basic_string<CharT>& input) {
-  using Escape<CharT>::escape;
-  using Escape<CharT>::linefeed;
-  using Escape<CharT>::tab;
-  using Escape<CharT>::linefeed_escape;
-  using Escape<CharT>::tab_escape;
+  using EscapeChar<CharT>::escape;
+  using EscapeChar<CharT>::linefeed;
+  using EscapeChar<CharT>::tab;
+  using EscapeChar<CharT>::linefeed_escape;
+  using EscapeChar<CharT>::tab_escape;
   std::basic_stringstream<CharT> res;
   for (auto p = input.begin(); p != input.end(); ++p) {
     if (*p == escape) {
