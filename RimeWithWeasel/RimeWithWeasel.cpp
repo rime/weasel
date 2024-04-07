@@ -28,35 +28,6 @@ typedef enum { COLOR_ABGR = 0, COLOR_ARGB, COLOR_RGBA } ColorFormat;
 #endif
 using namespace weasel;
 
-// escape wstring, L"\\" to L"\\\\", L"\n" to L"\\n"
-static std::wstring escape_string(const std::wstring& input) {
-  std::wstring res = input;
-  std::wstring search1 = L"\\";
-  std::wstring replace1 = L"\\\\";
-  std::wstring search2 = L"\n";
-  std::wstring replace2 = L"\\n";
-
-  size_t pos = 0;
-  while ((pos = res.find(search1, pos)) != std::wstring::npos) {
-    res.replace(pos, search1.length(), replace1);
-    pos += replace1.length();
-  }
-
-  pos = 0;
-  while ((pos = res.find(search2, pos)) != std::wstring::npos) {
-    res.replace(pos, search2.length(), replace2);
-    pos += replace2.length();
-  }
-  return res;
-}
-
-// escape string in UTF-8, "\\" to "\\\\", "\n" to "\\n"
-static std::string escape_string(const std::string& str) {
-  std::wstring tmp = string_to_wstring(str, CP_UTF8);
-  tmp = escape_string(tmp);
-  return wstring_to_string(tmp, CP_UTF8);
-}
-
 WeaselSessionId _GenerateNewWeaselSessionId(SessionStatusMap sm, DWORD pid) {
   if (sm.empty())
     return (WeaselSessionId)(pid + 1);

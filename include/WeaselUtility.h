@@ -84,32 +84,85 @@ inline std::string wstring_to_string(const std::wstring& wstr,
   return res;
 }
 
-inline std::wstring unescape_wstring(const std::wstring& input) {
-  std::wstring res = input;
-  std::wstring search1 = L"\\\\";
-  std::wstring replace1 = L"\\";
-  std::wstring search2 = L"\\n";
-  std::wstring replace2 = L"\n";
+template <typename CharT>
+struct Escape {
+  static constexpr CharT escape_char;
+  static constexpr CharT linefeed;
+  static constexpr CharT tab;
+  static constexpr CharT linefeed_escape_char;
+  static constexpr CharT tab_escape_char;
+};
 
-  // unescape L"\\n" to L"\n", skip L"\\\\n"
-  size_t pos = 0;
-  while ((pos = res.find(search2, pos)) != std::wstring::npos) {
-    if (pos > 0 && res[pos - 1] == L'\\') {
-      pos += search2.length();
-      continue;
+template <>
+struct Escape<char>::escape = '\\';
+template <>
+struct Escape<char>::linefeed = '\n';
+template <>
+struct Escape<char>::tab = '\t';
+template <>
+struct Escape<char>::linefeed_escape = 'n';
+template <>
+struct Escape<char>::tab_escape = 't';
+
+template <>
+struct Escape<wchar_t>::escape = L'\\';
+template <>
+struct Escape<wchar_t>::linefeed = L'\n';
+template <>
+struct Escape<wchar_t>::tab = L'\t';
+template <>
+struct Escape<wchar_t>::linefeed_escape = L'n';
+template <>
+struct Escape<wchar_t>::tab_escape = L't';
+
+template <typename CharT>
+inline std::basic_string<CharT> escape_string(
+    const std::basic_string<CharT> input) {
+  using Escape<CharT>::escape;
+  using Escape<CharT>::linefeed;
+  using Escape<CharT>::tab;
+  using Escape<CharT>::linefeed_escape;
+  using Escape<CharT>::tab_escape;
+  std::basic_stringstream<CharT> res;
+  for (auto p = input.begin(); p != input.end(); ++p) {
+    if (*p == escape) {
+      res << escape << escape;
+    } else if (*p == linefeed) {
+      res << escape << linefeed_escape;
+    } else if (*p == tab) {
+      res << escape << tab_escape;
+    } else {
+      res << *p;
     }
-    res.replace(pos, search2.length(), replace2);
-    pos += replace2.length();
   }
+  return res.str();
+}
 
-  // unescape L"\\\\" to L"\\"
-  pos = 0;
-  while ((pos = res.find(search1, pos)) != std::wstring::npos) {
-    res.replace(pos, search1.length(), replace1);
-    pos += replace1.length();
+template <typename CharT>
+inline std::basic_string<CharT> unescape_string(
+    const std::basic_string<CharT>& input) {
+  using Escape<CharT>::escape;
+  using Escape<CharT>::linefeed;
+  using Escape<CharT>::tab;
+  using Escape<CharT>::linefeed_escape;
+  using Escape<CharT>::tab_escape;
+  std::basic_stringstream<CharT> res;
+  for (auto p = input.begin(); p != input.end(); ++p) {
+    if (*p == escape) {
+      if (++p == input.end()) {
+        break;
+      } else if (*p == linefeed_escape) {
+        res << linefeed;
+      } else if (*p == tab_escape) {
+        res << tab;
+      } else {  // \a => a
+        res << *p;
+      }
+    } else {
+      res << *p;
+    }
   }
-
-  return res;
+  return res.str();
 }
 
 // resource
