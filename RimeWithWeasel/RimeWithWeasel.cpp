@@ -475,22 +475,18 @@ void RimeWithWeaselHandler::_GetCandidateInfo(CandidateInfo& cinfo,
   cinfo.comments.resize(ctx.menu.num_candidates);
   cinfo.labels.resize(ctx.menu.num_candidates);
   for (int i = 0; i < ctx.menu.num_candidates; ++i) {
-    cinfo.candies[i].str = std::regex_replace(
-        string_to_wstring(ctx.menu.candidates[i].text, CP_UTF8),
-        std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+    cinfo.candies[i].str =
+        escape_string(string_to_wstring(ctx.menu.candidates[i].text, CP_UTF8));
     if (ctx.menu.candidates[i].comment) {
-      cinfo.comments[i].str = std::regex_replace(
-          string_to_wstring(ctx.menu.candidates[i].comment, CP_UTF8),
-          std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+      cinfo.comments[i].str = escape_string(
+          string_to_wstring(ctx.menu.candidates[i].comment, CP_UTF8));
     }
     if (RIME_STRUCT_HAS_MEMBER(ctx, ctx.select_labels) && ctx.select_labels) {
       cinfo.labels[i].str =
-          std::regex_replace(string_to_wstring(ctx.select_labels[i], CP_UTF8),
-                             std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+          escape_string(string_to_wstring(ctx.select_labels[i], CP_UTF8));
     } else if (ctx.menu.select_keys) {
       cinfo.labels[i].str =
-          std::regex_replace(std::wstring(1, ctx.menu.select_keys[i]),
-                             std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+          escape_string(std::wstring(1, ctx.menu.select_keys[i]));
     } else {
       cinfo.labels[i].str = std::to_wstring((i + 1) % 10);
     }
@@ -782,7 +778,9 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
   RIME_STRUCT(RimeCommit, commit);
   if (RimeGetCommit(session_id, &commit)) {
     actions.insert("commit");
-    messages.push_back(std::string("commit=") + commit.text + '\n');
+
+    std::string commit_text = escape_string<char>(commit.text);
+    messages.push_back(std::string("commit=") + commit_text + '\n');
     RimeFreeCommit(&commit);
   }
 
@@ -821,7 +819,8 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
         case UIStyle::PREVIEW:
           if (ctx.commit_text_preview != NULL) {
             std::string first = ctx.commit_text_preview;
-            messages.push_back(std::string("ctx.preedit=") + first + '\n');
+            messages.push_back(std::string("ctx.preedit=") +
+                               escape_string<char>(first) + '\n');
             messages.push_back(
                 std::string("ctx.preedit.cursor=") +
                 std::to_string(utf8towcslen(first.c_str(), 0)) + ',' +
@@ -834,7 +833,8 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
           // no preview, fall back to composition
         case UIStyle::COMPOSITION:
           messages.push_back(std::string("ctx.preedit=") +
-                             ctx.composition.preedit + '\n');
+                             escape_string<char>(ctx.composition.preedit) +
+                             '\n');
           if (ctx.composition.sel_start <= ctx.composition.sel_end) {
             messages.push_back(
                 std::string("ctx.preedit.cursor=") +
@@ -852,8 +852,9 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
         case UIStyle::PREVIEW_ALL:
           CandidateInfo cinfo;
           _GetCandidateInfo(cinfo, ctx);
-          std::string topush =
-              std::string("ctx.preedit=") + ctx.composition.preedit + "  [";
+          std::string topush = std::string("ctx.preedit=") +
+                               escape_string<char>(ctx.composition.preedit) +
+                               "  [";
           for (auto i = 0; i < ctx.menu.num_candidates; i++) {
             std::string label =
                 session_status.style.label_font_point > 0
@@ -872,12 +873,11 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
                                         CP_UTF8);
             std::string prefix =
                 (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
-            topush += " " + prefix + label +
-                      std::string(ctx.menu.candidates[i].text) + " " + comment;
+            topush += " " + prefix + escape_string(label) +
+                      escape_string<char>(ctx.menu.candidates[i].text) + " " +
+                      escape_string(comment);
           }
           messages.push_back(topush + " ]\n");
-          // messages.push_back(std::string("ctx.preedit=") +
-          // ctx.composition.preedit + '\n');
           if (ctx.composition.sel_start <= ctx.composition.sel_end) {
             messages.push_back(
                 std::string("ctx.preedit.cursor=") +

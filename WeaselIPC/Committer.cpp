@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Deserializer.h"
 #include "Committer.h"
+#include <WeaselUtility.h>
 
 using namespace weasel;
 
@@ -16,6 +17,7 @@ void Committer::Store(Deserializer::KeyType const& key,
                       std::wstring const& value) {
   if (!m_pTarget->p_commit)
     return;
-  if (key.size() == 1)
-    *m_pTarget->p_commit = value;
+  if (key.size() == 1) {
+    *m_pTarget->p_commit = unescape_string(value);
+  }
 }

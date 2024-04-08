@@ -84,5 +84,78 @@ inline std::string wstring_to_string(const std::wstring& wstr,
   return res;
 }
 
+template <typename CharT>
+struct EscapeChar {
+  static const CharT escape;
+  static const CharT linefeed;
+  static const CharT tab;
+  static const CharT linefeed_escape;
+  static const CharT tab_escape;
+};
+
+template <>
+const char EscapeChar<char>::escape = '\\';
+template <>
+const char EscapeChar<char>::linefeed = '\n';
+template <>
+const char EscapeChar<char>::tab = '\t';
+template <>
+const char EscapeChar<char>::linefeed_escape = 'n';
+template <>
+const char EscapeChar<char>::tab_escape = 't';
+
+template <>
+const wchar_t EscapeChar<wchar_t>::escape = L'\\';
+template <>
+const wchar_t EscapeChar<wchar_t>::linefeed = L'\n';
+template <>
+const wchar_t EscapeChar<wchar_t>::tab = L'\t';
+template <>
+const wchar_t EscapeChar<wchar_t>::linefeed_escape = L'n';
+template <>
+const wchar_t EscapeChar<wchar_t>::tab_escape = L't';
+
+template <typename CharT>
+inline std::basic_string<CharT> escape_string(
+    const std::basic_string<CharT> input) {
+  using Esc = EscapeChar<CharT>;
+  std::basic_stringstream<CharT> res;
+  for (auto p = input.begin(); p != input.end(); ++p) {
+    if (*p == Esc::escape) {
+      res << Esc::escape << Esc::escape;
+    } else if (*p == Esc::linefeed) {
+      res << Esc::escape << Esc::linefeed_escape;
+    } else if (*p == Esc::tab) {
+      res << Esc::escape << Esc::tab_escape;
+    } else {
+      res << *p;
+    }
+  }
+  return res.str();
+}
+
+template <typename CharT>
+inline std::basic_string<CharT> unescape_string(
+    const std::basic_string<CharT>& input) {
+  using Esc = EscapeChar<CharT>;
+  std::basic_stringstream<CharT> res;
+  for (auto p = input.begin(); p != input.end(); ++p) {
+    if (*p == Esc::escape) {
+      if (++p == input.end()) {
+        break;
+      } else if (*p == Esc::linefeed_escape) {
+        res << Esc::linefeed;
+      } else if (*p == Esc::tab_escape) {
+        res << Esc::tab;
+      } else {  // \a => a
+        res << *p;
+      }
+    } else {
+      res << *p;
+    }
+  }
+  return res.str();
+}
+
 // resource
 std::string GetCustomResource(const char* name, const char* type);
