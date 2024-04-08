@@ -60,6 +60,8 @@ style:
     shadow_radius: 0
     shadow_offset_x: 4
     shadow_offset_y: 4
+    linespacing: 0 # percentage of font point, 0 to disable
+    baseline: 0 # percentage of font point, 0 to disable
 
 preset_color_schemes:
   aqua:

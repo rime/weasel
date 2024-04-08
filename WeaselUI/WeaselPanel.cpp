@@ -1126,8 +1126,8 @@ void WeaselPanel::_TextOut(const CRect& rc,
     if (pDWR->pTextLayout != NULL) {
       pDWR->DrawTextLayoutAt({offsetx, offsety});
 #if 0
-			D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
-			pDWR->DrawRect(&rectf);
+      D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
+      pDWR->DrawRect(&rectf);
 #endif
     }
     pDWR->ResetLayout();

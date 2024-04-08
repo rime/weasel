@@ -290,6 +290,8 @@ struct UIStyle {
   int nextpage_color;
   // per client
   int client_caps;
+  int baseline;
+  int linespacing;
 
   UIStyle()
       : font_face(),
@@ -358,6 +360,8 @@ struct UIStyle {
         hilited_mark_color(0),
         prevpage_color(0),
         nextpage_color(0),
+        baseline(0),
+        linespacing(0),
         client_caps(0) {}
   bool operator!=(const UIStyle& st) {
     return (
@@ -396,6 +400,7 @@ struct UIStyle {
         shadow_offset_x != st.shadow_offset_x ||
         shadow_offset_y != st.shadow_offset_y ||
         vertical_auto_reverse != st.vertical_auto_reverse ||
+        baseline != st.baseline || linespacing != st.linespacing ||
         text_color != st.text_color ||
         candidate_text_color != st.candidate_text_color ||
         candidate_back_color != st.candidate_back_color ||
@@ -494,6 +499,8 @@ void serialize(Archive& ar, weasel::UIStyle& s, const unsigned int version) {
   ar & s.nextpage_color;
   // per client
   ar & s.client_caps;
+  ar & s.baseline;
+  ar & s.linespacing;
 }
 
 template <typename Archive>

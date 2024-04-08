@@ -1223,6 +1223,10 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
     style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT;
   _RimeGetStringWithFunc(config, "style/label_format", style.label_text_format);
   _RimeGetStringWithFunc(config, "style/mark_text", style.mark_text);
+  _RimeGetIntWithFallback(config, "style/layout/baseline", &style.baseline,
+                          NULL, _abs);
+  _RimeGetIntWithFallback(config, "style/layout/linespacing",
+                          &style.linespacing, NULL, _abs);
   _RimeGetIntWithFallback(config, "style/layout/min_width", &style.min_width,
                           NULL, _abs);
   _RimeGetIntWithFallback(config, "style/layout/max_width", &style.max_width,

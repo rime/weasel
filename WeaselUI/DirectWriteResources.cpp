@@ -122,6 +122,9 @@ HRESULT DirectWriteResources::InitResources(
   const std::wstring _mainFontFace = L"_InvalidFontName_";
   DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
   DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
+  // convert percentage to float
+  float linespacing = dpiScaleX_ * ((float)_style.linespacing / 100.0f);
+  float baseline = dpiScaleX_ * ((float)_style.baseline / 100.0f);
   // setup font weight and font style by the first unit of font_face setting
   // string
   _ParseFontFace(font_face, fontWeight, fontStyle);
@@ -143,6 +146,10 @@ HRESULT DirectWriteResources::InitResources(
     pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
     pTextFormat->SetWordWrapping(wrapping);
     _SetFontFallback(pTextFormat, fontFaceStrVector);
+    if (_style.linespacing && _style.baseline)
+      pTextFormat->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM,
+                                  font_point * linespacing,
+                                  font_point * baseline);
   }
   decltype(fontFaceStrVector)().swap(fontFaceStrVector);
 
@@ -167,6 +174,10 @@ HRESULT DirectWriteResources::InitResources(
         DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
     pPreeditTextFormat->SetWordWrapping(wrapping);
     _SetFontFallback(pPreeditTextFormat, fontFaceStrVector);
+    if (_style.linespacing && _style.baseline)
+      pPreeditTextFormat->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM,
+                                         font_point * linespacing,
+                                         font_point * baseline);
   }
   decltype(fontFaceStrVector)().swap(fontFaceStrVector);
 
@@ -192,6 +203,10 @@ HRESULT DirectWriteResources::InitResources(
     pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
     pLabelTextFormat->SetWordWrapping(wrapping);
     _SetFontFallback(pLabelTextFormat, fontFaceStrVector);
+    if (_style.linespacing && _style.baseline)
+      pLabelTextFormat->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM,
+                                       label_font_point * linespacing,
+                                       label_font_point * baseline);
   }
   decltype(fontFaceStrVector)().swap(fontFaceStrVector);
 
@@ -218,6 +233,10 @@ HRESULT DirectWriteResources::InitResources(
         DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
     pCommentTextFormat->SetWordWrapping(wrapping);
     _SetFontFallback(pCommentTextFormat, fontFaceStrVector);
+    if (_style.linespacing && _style.baseline)
+      pCommentTextFormat->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM,
+                                         comment_font_point * linespacing,
+                                         comment_font_point * baseline);
   }
   decltype(fontFaceStrVector)().swap(fontFaceStrVector);
   return hResult;
