@@ -18,6 +18,7 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr* pDocMgrFocus,
   if ((nullptr != pTfContext) &&
       SUCCEEDED(pTfContext->GetDocumentMgr(&pCandidateListDocumentMgr))) {
     if (pCandidateListDocumentMgr != pDocMgrFocus) {
+      _AbortComposition(true);
       _HideUI();
     } else {
       _ShowUI();
