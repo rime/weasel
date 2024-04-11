@@ -103,12 +103,29 @@ STDAPI CLangBarItemButton::Show(BOOL fShow) {
   return S_OK;
 }
 
+static LANGID GetActiveProfileLangId() {
+  CComPtr<ITfInputProcessorProfileMgr> pInputProcessorProfileMgr;
+  HRESULT hr = pInputProcessorProfileMgr.CoCreateInstance(
+      CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_ALL);
+  if (FAILED(hr))
+    return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+
+  TF_INPUTPROCESSORPROFILE profile;
+  hr = pInputProcessorProfileMgr->GetActiveProfile(GUID_TFCAT_TIP_KEYBOARD,
+                                                   &profile);
+  if (FAILED(hr))
+    return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+  return profile.langid;
+}
+
 STDAPI CLangBarItemButton::GetTooltipString(BSTR* pbstrToolTip) {
-#ifdef WEASEL_HANT
-  *pbstrToolTip = SysAllocString(L"左鍵切換模式，右鍵打開菜單");
-#else
-  *pbstrToolTip = SysAllocString(L"左键切换模式，右键打开菜单");
-#endif
+  LANGID langid = GetActiveProfileLangId();
+  if (langid == TEXTSERVICE_LANGID) {
+    *pbstrToolTip = SysAllocString(L"左键切换模式，右键打开菜单");
+  } else {
+    *pbstrToolTip = SysAllocString(L"左鍵切換模式，右鍵打開菜單");
+  }
+
   return (*pbstrToolTip == NULL) ? E_OUTOFMEMORY : S_OK;
 }
 
@@ -126,7 +143,12 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click,
     /* Open menu */
     HWND hwnd = _pTextService->_GetFocusedContextWindow();
     if (hwnd != NULL) {
-      HMENU menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
+      LANGID langid = GetActiveProfileLangId();
+
+      HMENU menu =
+          ((langid == TEXTSERVICE_LANGID)
+               ? LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP))
+               : LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP_HANT)));
       HMENU popupMenu = GetSubMenu(menu, 0);
       UINT wID = TrackPopupMenuEx(
           popupMenu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x,

@@ -9,38 +9,6 @@ static const char c_szTipKeyPrefix[] = "Software\\Microsft\\CTF\\TIP\\";
 static const char c_szInProcSvr32[] = "InprocServer32";
 static const char c_szModelName[] = "ThreadingModel";
 
-HKL FindIME() {
-  HKL hKL = NULL;
-  WCHAR key[9];
-  HKEY hKey;
-  LSTATUS ret =
-      RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                    L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts", 0,
-                    KEY_READ, &hKey);
-  if (ret == ERROR_SUCCESS) {
-    for (DWORD id = (0xE0200000 | TEXTSERVICE_LANGID);
-         hKL == NULL && id <= (0xE0FF0000 | TEXTSERVICE_LANGID);
-         id += 0x10000) {
-      StringCchPrintfW(key, _countof(key), L"%08X", id);
-      HKEY hSubKey;
-      ret = RegOpenKeyExW(hKey, key, 0, KEY_READ, &hSubKey);
-      if (ret == ERROR_SUCCESS) {
-        WCHAR data[32];
-        DWORD type;
-        DWORD size = sizeof data;
-        ret = RegQueryValueExW(hSubKey, L"Ime File", NULL, &type, (LPBYTE)data,
-                               &size);
-        if (ret == ERROR_SUCCESS && type == REG_SZ &&
-            _wcsicmp(data, L"weasel.ime") == 0)
-          hKL = (HKL)id;
-      }
-      RegCloseKey(hSubKey);
-    }
-  }
-  RegCloseKey(hKey);
-  return hKL;
-}
-
 BOOL RegisterProfiles() {
   WCHAR achIconFile[MAX_PATH];
   ULONG cchIconFile =
@@ -53,11 +21,29 @@ BOOL RegisterProfiles() {
         CLSID_TF_InputProcessorProfiles, NULL, CLSCTX_ALL);
     if (FAILED(hr))
       return FALSE;
+    WCHAR szProfile[100];
+    DWORD dwSize = GetEnvironmentVariable(L"TEXTSERVICE_PROFILE", szProfile,
+                                          ARRAYSIZE(szProfile));
+    BOOL hansEnable = FALSE;
+    BOOL hantEnable = FALSE;
 
+    if (dwSize > 0 && wcscmp(szProfile, L"hans") == 0)
+      hansEnable = TRUE;
     hr = pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, TEXTSERVICE_DESC,
         (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile, cchIconFile,
-        TEXTSERVICE_ICON_INDEX, FindIME(), 0, TRUE, 0);
+        TEXTSERVICE_ICON_INDEX, LoadKeyboardLayout(L"00000804", 0), 0,
+        hansEnable, 0);
+    if (FAILED(hr))
+      return FALSE;
+
+    if (dwSize > 0 && wcscmp(szProfile, L"hant") == 0)
+      hantEnable = TRUE;
+    hr = pInputProcessorProfileMgr->RegisterProfile(
+        c_clsidTextService, TEXTSERVICE_LANGID_HANT, c_guidProfile,
+        TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
+        cchIconFile, TEXTSERVICE_ICON_INDEX, LoadKeyboardLayout(L"00000404", 0),
+        0, hantEnable, 0);
     if (FAILED(hr))
       return FALSE;
   }
@@ -77,6 +63,8 @@ void UnregisterProfiles() {
 
     hr = pInputProcessorProfileMgr->UnregisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, 0);
+    hr = pInputProcessorProfileMgr->UnregisterProfile(
+        c_clsidTextService, TEXTSERVICE_LANGID_HANT, c_guidProfile, 0);
   }
 }
 
