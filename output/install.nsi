@@ -183,14 +183,6 @@ program_files:
     File /nonfatal "weaselARM64.dll"
     File /nonfatal "weaselARM64X.dll"
   ${EndIf}
-  File "weaselt.dll"
-  ${If} ${RunningX64}
-    File "weaseltx64.dll"
-  ${EndIf}
-  ${If} ${IsNativeARM64}
-    File /nonfatal "weaseltARM.dll"
-    File /nonfatal "weaseltARM64.dll"
-  ${EndIf}
   File "weasel.ime"
   ${If} ${RunningX64}
     File "weaselx64.ime"

@@ -121,7 +121,10 @@ int install_ime_file(std::wstring& srcPath,
   WCHAR path[MAX_PATH];
   GetModuleFileNameW(GetModuleHandle(NULL), path, _countof(path));
 
-  std::wstring srcFileName = (hant ? L"weaselt" : L"weasel");
+  std::wstring srcFileName = L"weasel";
+  if (ext == L"ime")
+    srcFileName = (hant ? L"weaselt" : L"weasel");
+
   srcFileName += ext;
   WCHAR drive[_MAX_DRIVE];
   WCHAR dir[_MAX_DIR];
@@ -491,6 +494,16 @@ int register_text_service(const std::wstring& tsf_path,
   }
   // if (silent)  // always silent
   { params = L" /s " + params; }
+
+  if (hant) {
+    if (!SetEnvironmentVariable(L"TEXTSERVICE_PROFILE", L"hant")) {
+      // bad luck
+    }
+  } else {
+    if (!SetEnvironmentVariable(L"TEXTSERVICE_PROFILE", L"hans")) {
+      // bad luck
+    }
+  }
 
   std::wstring app = L"regsvr32.exe";
   if (is_wowarm32) {
