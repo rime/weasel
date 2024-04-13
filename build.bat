@@ -300,7 +300,6 @@ rem ---------------------------------------------------------------------------
   copy %WEASEL_ROOT%\LICENSE.txt output\
   copy %WEASEL_ROOT%\README.md output\README.txt
   copy %WEASEL_ROOT%\plum\rime-install.bat output\
-  copy %WEASEL_ROOT%\plum\rime-install-config.bat output\
   set plum_dir=plum
   set rime_dir=output/data
   set WSLENV=plum_dir:rime_dir
