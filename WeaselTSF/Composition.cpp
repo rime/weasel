@@ -266,6 +266,8 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec) {
   std::wstring preedit = _context->preedit.str;
 
   com_ptr<ITfRange> pRangeComposition;
+  if (_pComposition == nullptr)
+    return E_FAIL;
   if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
     return E_FAIL;
 
@@ -340,6 +342,8 @@ STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec) {
   TF_SELECTION tfSelection;
   HRESULT hRet = S_OK;
 
+  if (_pComposition == nullptr)
+    return E_FAIL;
   if (FAILED(_pComposition->GetRange(&pRange)))
     return E_FAIL;
 
