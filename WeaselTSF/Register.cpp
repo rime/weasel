@@ -29,6 +29,11 @@ BOOL RegisterProfiles() {
 
     if (dwSize > 0 && wcscmp(szProfile, L"hans") == 0)
       hansEnable = TRUE;
+    if (dwSize > 0 && wcscmp(szProfile, L"hant") == 0)
+      hantEnable = TRUE;
+    if (!hantEnable && !hansEnable)
+      hansEnable = TRUE;
+
     hr = pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, TEXTSERVICE_DESC,
         (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile, cchIconFile,
@@ -37,8 +42,6 @@ BOOL RegisterProfiles() {
     if (FAILED(hr))
       return FALSE;
 
-    if (dwSize > 0 && wcscmp(szProfile, L"hant") == 0)
-      hantEnable = TRUE;
     hr = pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID_HANT, c_guidProfile,
         TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
