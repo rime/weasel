@@ -230,21 +230,15 @@ STDAPI CLangBarItemButton::UnadviseSink(DWORD dwCookie) {
 void CLangBarItemButton::UpdateWeaselStatus(weasel::Status stat) {
   if (stat.ascii_mode != ascii_mode) {
     ascii_mode = stat.ascii_mode;
-    if (_pLangBarItemSink) {
-      _pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
-    }
   }
   if (_current_schema_zhung_icon != _style.current_zhung_icon) {
     _current_schema_zhung_icon = _style.current_zhung_icon;
-    if (_pLangBarItemSink) {
-      _pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
-    }
   }
   if (_current_schema_ascii_icon != _style.current_ascii_icon) {
     _current_schema_ascii_icon = _style.current_ascii_icon;
-    if (_pLangBarItemSink) {
-      _pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
-    }
+  }
+  if (_pLangBarItemSink) {
+    _pLangBarItemSink->OnUpdate(TF_LBI_STATUS | TF_LBI_ICON);
   }
 }
 
