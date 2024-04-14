@@ -178,6 +178,7 @@ STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid,
 
   if (isActivated) {
     _ShowLanguageBar(TRUE);
+    _UpdateLanguageBar(_status);
   } else {
     _DeleteCandidateList();
     _ShowLanguageBar(FALSE);
