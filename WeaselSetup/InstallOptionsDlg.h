@@ -51,7 +51,7 @@ class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
   COMMAND_ID_HANDLER(IDC_REMOVE, OnRemove)
   COMMAND_ID_HANDLER(IDC_RADIO_DEFAULT_DIR, OnUseDefaultDir)
   COMMAND_ID_HANDLER(IDC_RADIO_CUSTOM_DIR, OnUseCustomDir)
-  COMMAND_ID_HANDLER(IDC_BUTTON_CUSTOM_DIR, OnBtnCustomDir)
+  COMMAND_ID_HANDLER(IDC_BUTTON_CUSTOM_DIR, OnUseCustomDir)
   END_MSG_MAP()
 
   LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&);
@@ -60,7 +60,6 @@ class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
   LRESULT OnRemove(WORD, WORD code, HWND, BOOL&);
   LRESULT OnUseDefaultDir(WORD, WORD code, HWND, BOOL&);
   LRESULT OnUseCustomDir(WORD, WORD code, HWND, BOOL&);
-  LRESULT OnBtnCustomDir(WORD, WORD code, HWND, BOOL&);
 
   CButton cn_;
   CButton tw_;

@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "InstallOptionsDlg.h"
 #include <atlstr.h>
+#include <ShlObj.h>
+#pragma comment(lib, "Shell32.lib")
 
 int uninstall(bool silent);
 
@@ -88,27 +90,33 @@ LRESULT InstallOptionsDialog::OnUseDefaultDir(WORD, WORD code, HWND, BOOL&) {
 }
 
 LRESULT InstallOptionsDialog::OnUseCustomDir(WORD, WORD code, HWND, BOOL&) {
-  CFolderDialog dlg;
+  CShellFileOpenDialog fileOpenDlg(
+      NULL, FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_PICKFOLDERS);
   CStringW text;
   dir_.GetWindowTextW(text);
-  if (!text.IsEmpty())
-    dlg.SetInitialFolder(text, false);
-  if (dlg.DoModal() == IDOK)
-    dir_.SetWindowTextW(dlg.m_szFolderPath);
-  button_custom_dir_.EnableWindow(TRUE);
-  dir_.EnableWindow(TRUE);
-  dir_.SetFocus();
-  return 0;
-}
-
-LRESULT InstallOptionsDialog::OnBtnCustomDir(WORD, WORD code, HWND, BOOL&) {
-  CFolderDialog dlg;
-  CStringW text;
-  dir_.GetWindowTextW(text);
-  if (!text.IsEmpty())
-    dlg.SetInitialFolder(text, false);
-  if (dlg.DoModal() == IDOK)
-    dir_.SetWindowTextW(dlg.m_szFolderPath);
+  if (!text.IsEmpty()) {
+    PIDLIST_ABSOLUTE pidl;
+    HRESULT hr = SHParseDisplayName(text, NULL, &pidl, 0, NULL);
+    if (SUCCEEDED(hr)) {
+      IShellItem* psi;
+      hr = SHCreateShellItem(NULL, NULL, pidl, &psi);
+      if (SUCCEEDED(hr)) {
+        fileOpenDlg.GetPtr()->SetFolder(psi);
+        psi->Release();
+      }
+      CoTaskMemFree(pidl);
+    }
+  }
+  if (fileOpenDlg.DoModal(m_hWnd) == IDOK) {
+    CComPtr<IShellItem> psi;
+    if (SUCCEEDED(fileOpenDlg.GetPtr()->GetResult(&psi))) {
+      LPWSTR path;
+      if (SUCCEEDED(psi->GetDisplayName(SIGDN_FILESYSPATH, &path))) {
+        dir_.SetWindowTextW(path);
+        CoTaskMemFree(path);
+      }
+    }
+  }
   ok_.SetFocus();
   return 0;
 }
