@@ -103,6 +103,7 @@ BOOL RegisterProfiles() {
       pInputProcessorProfileMgr.Release();
       return FALSE;
     }
+    pInputProcessorProfileMgr.Release();
   }
 
   return TRUE;
