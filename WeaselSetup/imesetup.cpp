@@ -5,6 +5,7 @@
 #include <WeaselCommon.h>
 #include <msctf.h>
 #include <strsafe.h>
+#include <WeaselUtility.h>
 #include "InstallOptionsDlg.h"
 
 // {A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}
@@ -48,17 +49,6 @@ BOOL delete_file(const std::wstring& file) {
     }
   }
   return ret;
-}
-
-BOOL is_wow64() {
-  DWORD errorCode;
-  if (GetSystemWow64DirectoryW(NULL, 0) == 0)
-    if ((errorCode = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
-      return FALSE;
-    else
-      ExitProcess((UINT)errorCode);
-  else
-    return TRUE;
 }
 
 typedef BOOL(WINAPI* PISWOW64P2)(HANDLE, USHORT*, USHORT*);
