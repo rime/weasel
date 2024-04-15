@@ -84,6 +84,17 @@ inline std::string wstring_to_string(const std::wstring& wstr,
   return res;
 }
 
+inline BOOL is_wow64() {
+  DWORD errorCode;
+  if (GetSystemWow64DirectoryW(NULL, 0) == 0)
+    if ((errorCode = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
+      return FALSE;
+    else
+      ExitProcess((UINT)errorCode);
+  else
+    return TRUE;
+}
+
 template <typename CharT>
 struct EscapeChar {
   static const CharT escape;
