@@ -85,7 +85,7 @@ jobs:
 
       # create nightly release
       - name: Create Nightly release
-        if: github.ref == 'refs/heads/master'
+        if: ${{ github.repository == 'rime/weasel' && github.ref == 'refs/heads/master' }}
         uses: 'marvinpinto/action-automatic-releases@latest'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
