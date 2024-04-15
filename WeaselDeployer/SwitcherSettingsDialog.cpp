@@ -107,17 +107,6 @@ LRESULT SwitcherSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
   return 0;
 }
 
-BOOL is_wow64() {
-  DWORD errorCode;
-  if (GetSystemWow64DirectoryW(NULL, 0) == 0)
-    if ((errorCode = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
-      return FALSE;
-    else
-      ExitProcess((UINT)errorCode);
-  else
-    return TRUE;
-}
-
 LRESULT SwitcherSettingsDialog::OnGetSchemata(WORD, WORD, HWND hWndCtl, BOOL&) {
   HKEY hKey;
   std::wstring hPath;

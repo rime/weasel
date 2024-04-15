@@ -5,6 +5,7 @@
 #include "WeaselTSF.h"
 #include "LanguageBar.h"
 #include "CandidateList.h"
+#include <WeaselUtility.h>
 
 static const DWORD LANGBARITEMSINK_COOKIE = 0x42424242;
 
@@ -46,17 +47,6 @@ static LONG RegGetStringValue(HKEY key,
     value = std::wstring(szValue);
   }
   return lRes;
-}
-
-static BOOL is_wow64() {
-  DWORD errorCode;
-  if (GetSystemWow64DirectoryW(NULL, 0) == 0)
-    if ((errorCode = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
-      return FALSE;
-    else
-      ExitProcess((UINT)errorCode);
-  else
-    return TRUE;
 }
 
 static LPCWSTR GetWeaselRegName() {
@@ -312,41 +302,42 @@ void CLangBarItemButton::SetLangbarStatus(DWORD dwStatus, BOOL fSet) {
 }
 
 void WeaselTSF::_HandleLangBarMenuSelect(UINT wID) {
-  if (wID == ID_WEASELTRAY_RERUN_SERVICE) {
-    std::wstring dir;
-    if (RegGetStringValue(HKEY_LOCAL_MACHINE, GetWeaselRegName(), L"WeaselRoot",
-                          dir) == ERROR_SUCCESS) {
-      std::thread th([dir]() {
-        ShellExecuteW(NULL, L"open", (dir + L"\\start_service.bat").c_str(),
-                      NULL, dir.c_str(), SW_HIDE);
-      });
-      th.detach();
-    }
-  } else if (wID == ID_WEASELTRAY_INSTALLDIR) {
-    std::wstring dir;
-    if (RegGetStringValue(HKEY_LOCAL_MACHINE, GetWeaselRegName(), L"WeaselRoot",
-                          dir) == ERROR_SUCCESS) {
-      explore(dir);
-    }
-  } else if (wID == ID_WEASELTRAY_USERCONFIG) {
-    std::wstring dir;
-    if (RegGetStringValue(HKEY_CURRENT_USER, L"Software\\Rime\\Weasel",
-                          L"RimeUserDir", dir) == ERROR_SUCCESS) {
-      if (dir.empty()) {
-        TCHAR _path[MAX_PATH];
-        ExpandEnvironmentStringsW(L"%AppData%\\Rime", _path, _countof(_path));
-        dir = std::wstring(_path);
+  std::wstring dir{};
+  switch (wID) {
+    case ID_WEASELTRAY_RERUN_SERVICE:
+    case ID_WEASELTRAY_INSTALLDIR:
+      if (RegGetStringValue(HKEY_LOCAL_MACHINE, GetWeaselRegName(),
+                            L"WeaselRoot", dir) == ERROR_SUCCESS) {
+        if (wID == ID_WEASELTRAY_RERUN_SERVICE) {
+          std::thread th([dir]() {
+            ShellExecuteW(NULL, L"open", (dir + L"\\start_service.bat").c_str(),
+                          NULL, dir.c_str(), SW_HIDE);
+          });
+          th.detach();
+        } else
+          explore(dir);
       }
-      explore(dir);
-    }
-  } else if (wID == ID_WEASELTRAY_WIKI) {
-    open(L"https://rime.im/docs/");
-  } else if (wID == ID_WEASELTRAY_HOMEPAGE) {
-    open(L"https://rime.im/");
-  } else if (wID == ID_WEASELTRAY_FORUM) {
-    open(L"https://rime.im/discuss/");
-  } else {
-    m_client.TrayCommand(wID);
+      break;
+    case ID_WEASELTRAY_USERCONFIG:
+      if (RegGetStringValue(HKEY_CURRENT_USER, L"Software\\Rime\\Weasel",
+                            L"RimeUserDir", dir) == ERROR_SUCCESS) {
+        if (dir.empty()) {
+          TCHAR _path[MAX_PATH];
+          ExpandEnvironmentStringsW(L"%AppData%\\Rime", _path, _countof(_path));
+          dir = std::wstring(_path);
+        }
+        explore(dir);
+      }
+      break;
+    case ID_WEASELTRAY_WIKI:
+      open(L"https://rime.im/docs/");
+      break;
+    case ID_WEASELTRAY_FORUM:
+      open(L"https://rime.im/discuss/");
+      break;
+    default:
+      m_client.TrayCommand(wID);
+      break;
   }
 }
 
