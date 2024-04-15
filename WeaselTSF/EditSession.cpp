@@ -32,10 +32,10 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec) {
     } else if (!_status.composing && _IsComposing()) {
       _EndComposition(_pEditSessionContext, true);
     }
-    _UpdateCompositionWindow(_pEditSessionContext);
     if (_IsComposing() && config.inline_preedit) {
       _ShowInlinePreedit(_pEditSessionContext, context);
     }
+    _UpdateCompositionWindow(_pEditSessionContext);
   }
 
   _UpdateUI(*context, _status);
