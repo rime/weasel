@@ -9,6 +9,37 @@ static const char c_szTipKeyPrefix[] = "Software\\Microsft\\CTF\\TIP\\";
 static const char c_szInProcSvr32[] = "InprocServer32";
 static const char c_szModelName[] = "ThreadingModel";
 
+HKL FindIME(LANGID langid) {
+  HKL hKL = NULL;
+  WCHAR key[9];
+  HKEY hKey;
+  LSTATUS ret =
+      RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                    L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts", 0,
+                    KEY_READ, &hKey);
+  if (ret == ERROR_SUCCESS) {
+    for (DWORD id = (0xE0200000 | langid);
+         hKL == NULL && id <= (0xE0FF0000 | langid); id += 0x10000) {
+      StringCchPrintfW(key, _countof(key), L"%08X", id);
+      HKEY hSubKey;
+      ret = RegOpenKeyExW(hKey, key, 0, KEY_READ, &hSubKey);
+      if (ret == ERROR_SUCCESS) {
+        WCHAR data[32];
+        DWORD type;
+        DWORD size = sizeof data;
+        ret = RegQueryValueExW(hSubKey, L"Ime File", NULL, &type, (LPBYTE)data,
+                               &size);
+        if (ret == ERROR_SUCCESS && type == REG_SZ &&
+            _wcsicmp(data, L"weasel.ime") == 0)
+          hKL = (HKL)id;
+      }
+      RegCloseKey(hSubKey);
+    }
+  }
+  RegCloseKey(hKey);
+  return hKL;
+}
+
 BOOL RegisterProfiles() {
   WCHAR achIconFile[MAX_PATH];
   ULONG cchIconFile =
@@ -37,18 +68,42 @@ BOOL RegisterProfiles() {
     hr = pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, TEXTSERVICE_DESC,
         (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile, cchIconFile,
-        TEXTSERVICE_ICON_INDEX, LoadKeyboardLayout(L"00000804", 0), 0,
-        hansEnable, 0);
+        TEXTSERVICE_ICON_INDEX, FindIME(TEXTSERVICE_LANGID), 0, hansEnable, 0);
     if (FAILED(hr))
-      return FALSE;
+      goto ExitError;
 
     hr = pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID_HANT, c_guidProfile,
         TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
-        cchIconFile, TEXTSERVICE_ICON_INDEX, LoadKeyboardLayout(L"00000404", 0),
+        cchIconFile, TEXTSERVICE_ICON_INDEX, FindIME(TEXTSERVICE_LANGID_HANT),
         0, hantEnable, 0);
     if (FAILED(hr))
+      goto ExitError;
+    // WeaselIME not support these languages, so HKL is NULL
+    hr = pInputProcessorProfileMgr->RegisterProfile(
+        c_clsidTextService, TEXTSERVICE_LANGID_HONGKONG, c_guidProfile,
+        TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
+        cchIconFile, TEXTSERVICE_ICON_INDEX, NULL, 0, FALSE, 0);
+    if (FAILED(hr))
+      goto ExitError;
+
+    hr = pInputProcessorProfileMgr->RegisterProfile(
+        c_clsidTextService, TEXTSERVICE_LANGID_MACAU, c_guidProfile,
+        TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
+        cchIconFile, TEXTSERVICE_ICON_INDEX, NULL, 0, FALSE, 0);
+    if (FAILED(hr))
+      goto ExitError;
+
+    hr = pInputProcessorProfileMgr->RegisterProfile(
+        c_clsidTextService, TEXTSERVICE_LANGID_SINGAPORE, c_guidProfile,
+        TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
+        cchIconFile, TEXTSERVICE_ICON_INDEX, NULL, 0, FALSE, 0);
+    if (FAILED(hr)) {
+    ExitError:
+      pInputProcessorProfileMgr.Release();
       return FALSE;
+    }
+    pInputProcessorProfileMgr.Release();
   }
 
   return TRUE;
@@ -68,6 +123,13 @@ void UnregisterProfiles() {
         c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, 0);
     hr = pInputProcessorProfileMgr->UnregisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID_HANT, c_guidProfile, 0);
+    hr = pInputProcessorProfileMgr->UnregisterProfile(
+        c_clsidTextService, TEXTSERVICE_LANGID_HONGKONG, c_guidProfile, 0);
+    hr = pInputProcessorProfileMgr->UnregisterProfile(
+        c_clsidTextService, TEXTSERVICE_LANGID_MACAU, c_guidProfile, 0);
+    hr = pInputProcessorProfileMgr->UnregisterProfile(
+        c_clsidTextService, TEXTSERVICE_LANGID_SINGAPORE, c_guidProfile, 0);
+    pInputProcessorProfileMgr.Release();
   }
 }
 
