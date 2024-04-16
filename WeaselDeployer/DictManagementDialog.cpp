@@ -8,11 +8,7 @@
 
 void static OpenFolderAndSelectItem(std::wstring filepath) {
   filepath = std::regex_replace(filepath, std::wregex(L"/"), L"\\");
-  std::wstring directory;
-  const size_t last_slash_idx = filepath.rfind('\\');
-  if (std::string::npos != last_slash_idx) {
-    directory = filepath.substr(0, last_slash_idx);
-  }
+  std::wstring directory = std::filesystem::path(filepath).parent_path();
 
   HRESULT hr;
   hr = CoInitializeEx(0, COINIT_MULTITHREADED);
@@ -29,44 +25,36 @@ void static OpenFolderAndSelectItem(std::wstring filepath) {
   ILFree(folder);
 }
 
-static wchar_t* DoFileDialog(HWND hwndOwner,
-                             BOOL bOpenFileDialog,
-                             LPCWSTR title,
-                             UINT size,
-                             COMDLG_FILTERSPEC filter[],
-                             LPCWSTR filename,
-                             LPCWSTR defExt) {
-  IFileDialog* pfd = NULL;
-  IShellItem* psi = NULL;
-  wchar_t* path = NULL;
-  HRESULT hr = NULL;
-
+template <typename T, typename U>
+inline static std::wstring DoFileDialog(HWND hwndOwner,
+                                        LPCWSTR title,
+                                        UINT filterSize,
+                                        COMDLG_FILTERSPEC filter[],
+                                        LPCWSTR filename,
+                                        LPCWSTR defExt) {
+  std::wstring path;
   CoInitialize(NULL);
-  if (bOpenFileDialog) {
-    hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER,
-                          IID_IFileOpenDialog, (void**)(&pfd));
-  } else {
-    hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_INPROC_SERVER,
-                          IID_IFileSaveDialog, (void**)(&pfd));
-  }
-  hr = pfd->SetFileTypes(size, filter);
-  hr = pfd->SetTitle(title);
-  if (filename != NULL) {
-    hr = pfd->SetFileName(filename);
-  }
-  hr = pfd->SetDefaultExtension(defExt);
-  hr = pfd->Show(hwndOwner);
-  hr = pfd->GetResult(&psi);
-  if (SUCCEEDED(hr)) {
-    hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &path);
-    if (SUCCEEDED(hr)) {
-      return path;
+  CComPtr<T> spFileDialog;
+  if (SUCCEEDED(spFileDialog.CoCreateInstance(__uuidof(U)))) {
+    spFileDialog->SetFileTypes(filterSize, filter);
+    spFileDialog->SetTitle(title);
+    if (filename)
+      spFileDialog->SetFileName(filename);
+
+    spFileDialog->SetDefaultExtension(defExt);
+    if (SUCCEEDED(spFileDialog->Show(hwndOwner))) {
+      CComPtr<IShellItem> spResult;
+      if (SUCCEEDED(spFileDialog->GetResult(&spResult))) {
+        wchar_t* name;
+        if (SUCCEEDED(spResult->GetDisplayName(SIGDN_FILESYSPATH, &name))) {
+          path = name;
+          CoTaskMemFree(name);
+        }
+      }
     }
-    psi->Release();
   }
-  pfd->Release();
   CoUninitialize();
-  return NULL;
+  return path;
 }
 
 DictManagementDialog::DictManagementDialog() {
@@ -146,30 +134,50 @@ LRESULT DictManagementDialog::OnBackup(WORD, WORD code, HWND, BOOL&) {
 }
 
 LRESULT DictManagementDialog::OnRestore(WORD, WORD code, HWND, BOOL&) {
-  COMDLG_FILTERSPEC filter[3] = {{L"詞典快照", L"*.userdb.txt"},
-                                 {L"KCSS格式詞典快照",
-                                  L"*.userdb.kct."
-                                  L"snapshot"},
-                                 {L"全部文件", L"*.*"}};
+  CString open_str, dict_snapshot_str, kcss_dict_snapshot_str, all_files_str;
+  open_str.LoadStringW(IDS_STR_OPEN);
+  dict_snapshot_str.LoadStringW(IDS_STR_DICT_SNAPSHOT);
+  kcss_dict_snapshot_str.LoadStringW(IDS_STR_KCSS_DICT_SNAPSHOT);
+  all_files_str.LoadStringW(IDS_STR_ALL_FILES);
 
-  wchar_t* selectedPath = DoFileDialog(m_hWnd, TRUE, L"導入", ARRAYSIZE(filter),
-                                       filter, NULL, L"snapshot");
-  if (selectedPath != NULL) {
+  const std::wstring dict_snapshot_name =
+      dict_snapshot_str + L" (*.userdb.txt)";
+  const std::wstring kcss_dict_snapshot_name =
+      kcss_dict_snapshot_str + L" (*.userdb.kct.snapshot)";
+  const std::wstring all_files_name = all_files_str;
+
+  COMDLG_FILTERSPEC filter[3] = {
+      {dict_snapshot_name.c_str(), L"*.userdb.txt"},
+      {kcss_dict_snapshot_name.c_str(), L"*.userdb.kct.snapshot"},
+      {all_files_name.c_str(), L"*.*"}};
+
+  std::wstring selected_path = DoFileDialog<IFileOpenDialog, FileOpenDialog>(
+      m_hWnd, open_str, ARRAYSIZE(filter), filter, NULL, L"snapshot");
+  if (!selected_path.empty()) {
     char path[MAX_PATH] = {0};
-    WideCharToMultiByte(CP_ACP, 0, selectedPath, -1, path, _countof(path), NULL,
-                        NULL);
+    WideCharToMultiByte(CP_ACP, 0, selected_path.c_str(), -1, path,
+                        _countof(path), NULL, NULL);
     if (!api_->restore_user_dict(path)) {
       MSG_BY_IDS(IDS_STR_ERR_UNKNOWN, IDS_STR_SAD, MB_OK | MB_ICONERROR);
     } else {
       MSG_BY_IDS(IDS_STR_ERR_SUCCESS, IDS_STR_HAPPY,
                  MB_OK | MB_ICONINFORMATION);
     }
-    CoTaskMemFree(selectedPath);
   }
   return 0;
 }
 
 LRESULT DictManagementDialog::OnExport(WORD, WORD code, HWND, BOOL&) {
+  CString save_as_str, exported_str, record_count_str, all_files_str,
+      txt_files_str;
+  save_as_str.LoadStringW(IDS_STR_SAVE_AS);
+  exported_str.LoadStringW(IDS_STR_EXPORTED);
+  record_count_str.LoadStringW(IDS_STR_RECORD_COUNT);
+  txt_files_str.LoadStringW(IDS_STR_TXT_FILES);
+  all_files_str.LoadStringW(IDS_STR_ALL_FILES);
+  const std::wstring txt_files_name = txt_files_str + L" (*.txt)";
+  const std::wstring all_files_name = all_files_str;
+
   int sel = user_dict_list_.GetCurSel();
   if (sel < 0 || sel >= user_dict_list_.GetCount()) {
     MSG_BY_IDS(IDS_STR_SEL_EXPORT_DICT_NAME, IDS_STR_SAD,
@@ -181,34 +189,46 @@ LRESULT DictManagementDialog::OnExport(WORD, WORD code, HWND, BOOL&) {
   std::wstring file_name(dict_name);
   file_name += L"_export.txt";
 
-  COMDLG_FILTERSPEC filter[2] = {{L"文本文檔", L"*.txt"},
-                                 {L"全部文件", L"*.*"}};
+  COMDLG_FILTERSPEC filter[2] = {{txt_files_name.c_str(), L"*.txt"},
+                                 {all_files_name.c_str(), L"*.*"}};
 
-  wchar_t* selectedPath =
-      DoFileDialog(m_hWnd, FALSE, L"導出", ARRAYSIZE(filter), filter,
-                   file_name.c_str(), L"txt");
-  if (selectedPath != NULL) {
+  OutputDebugString(filter[0].pszName);
+  std::wstring selected_path = DoFileDialog<IFileSaveDialog, FileSaveDialog>(
+      m_hWnd, save_as_str, ARRAYSIZE(filter), filter, file_name.c_str(),
+      L"txt");
+  if (!selected_path.empty()) {
     char path[MAX_PATH] = {0};
-    WideCharToMultiByte(CP_ACP, 0, selectedPath, -1, path, _countof(path), NULL,
-                        NULL);
+    WideCharToMultiByte(CP_ACP, 0, selected_path.c_str(), -1, path,
+                        _countof(path), NULL, NULL);
     std::string dict_name_str = wstring_to_string(dict_name, CP_UTF8);
     int result = api_->export_user_dict(dict_name_str.c_str(), path);
     if (result < 0) {
       MSG_BY_IDS(IDS_STR_ERR_UNKNOWN, IDS_STR_SAD, MB_OK | MB_ICONERROR);
-    } else if (_waccess(selectedPath, 0) != 0) {
+    } else if (_waccess(selected_path.c_str(), 0) != 0) {
       MSG_BY_IDS(IDS_STR_ERR_EXPORT_FILE_LOST, IDS_STR_SAD,
                  MB_OK | MB_ICONERROR);
     } else {
-      std::wstring report(L"導出了 " + std::to_wstring(result) + L" 條記錄。");
-      MSG_ID_CAP(report.c_str(), IDS_STR_SAD, MB_OK | MB_ICONINFORMATION);
-      OpenFolderAndSelectItem(selectedPath);
+      std::wstring report(std::wstring(exported_str) + L" " +
+                          std::to_wstring(result) + L" " +
+                          std::wstring(record_count_str));
+      MSG_ID_CAP(report.c_str(), IDS_STR_HAPPY, MB_OK | MB_ICONINFORMATION);
+      OpenFolderAndSelectItem(selected_path);
     }
-    CoTaskMemFree(selectedPath);
   }
   return 0;
 }
 
 LRESULT DictManagementDialog::OnImport(WORD, WORD code, HWND, BOOL&) {
+  CString open_str, imported_str, record_count_str, all_files_str,
+      txt_files_str;
+  open_str.LoadStringW(IDS_STR_OPEN);
+  imported_str.LoadStringW(IDS_STR_IMPORTED);
+  record_count_str.LoadStringW(IDS_STR_RECORD_COUNT);
+  txt_files_str.LoadStringW(IDS_STR_TXT_FILES);
+  all_files_str.LoadStringW(IDS_STR_ALL_FILES);
+  const std::wstring txt_files_name = txt_files_str + L" (*.txt)";
+  const std::wstring all_files_name = all_files_str;
+
   int sel = user_dict_list_.GetCurSel();
   if (sel < 0 || sel >= user_dict_list_.GetCount()) {
     MSG_BY_IDS(IDS_STR_SEL_IMPORT_DICT_NAME, IDS_STR_SAD,
@@ -220,24 +240,26 @@ LRESULT DictManagementDialog::OnImport(WORD, WORD code, HWND, BOOL&) {
   std::wstring file_name(dict_name);
   file_name += L"_export.txt";
 
-  COMDLG_FILTERSPEC filter[2] = {{L"文本文檔", L"*.txt"},
-                                 {L"全部文件", L"*.*"}};
+  COMDLG_FILTERSPEC filter[2] = {{txt_files_name.c_str(), L"*.txt"},
+                                 {all_files_name.c_str(), L"*.*"}};
 
-  wchar_t* selectedPath = DoFileDialog(m_hWnd, TRUE, L"導入", ARRAYSIZE(filter),
-                                       filter, file_name.c_str(), L"txt");
-  if (selectedPath != NULL) {
+  OutputDebugString(filter[0].pszName);
+  std::wstring selected_path = DoFileDialog<IFileOpenDialog, FileOpenDialog>(
+      m_hWnd, open_str, ARRAYSIZE(filter), filter, file_name.c_str(), L"txt");
+  if (!selected_path.empty()) {
     char path[MAX_PATH] = {0};
-    WideCharToMultiByte(CP_ACP, 0, selectedPath, -1, path, _countof(path), NULL,
-                        NULL);
+    WideCharToMultiByte(CP_ACP, 0, selected_path.c_str(), -1, path,
+                        _countof(path), NULL, NULL);
     int result = api_->import_user_dict(
         wstring_to_string(dict_name, CP_UTF8).c_str(), path);
     if (result < 0) {
       MSG_BY_IDS(IDS_STR_ERR_UNKNOWN, IDS_STR_SAD, MB_OK | MB_ICONERROR);
     } else {
-      std::wstring report(L"導入了 " + std::to_wstring(result) + L" 條記錄。");
-      MSG_ID_CAP(report.c_str(), IDS_STR_SAD, MB_OK | MB_ICONINFORMATION);
+      std::wstring report(std::wstring(imported_str) + L" " +
+                          std::to_wstring(result) + L" " +
+                          std::wstring(record_count_str));
+      MSG_ID_CAP(report.c_str(), IDS_STR_HAPPY, MB_OK | MB_ICONINFORMATION);
     }
-    CoTaskMemFree(selectedPath);
   }
   return 0;
 }
