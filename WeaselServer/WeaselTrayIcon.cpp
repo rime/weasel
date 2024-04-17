@@ -29,6 +29,8 @@ BOOL WeaselTrayIcon::Create(HWND hTargetWnd) {
   }
   if (!m_style.display_tray_icon) {
     RemoveIcon();
+  } else {
+    AddIcon();
   }
   return bRet;
 }
