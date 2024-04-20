@@ -36,7 +36,7 @@ style:
   display_tray_icon: false
   label_format: "%s."
   mark_text: ""
-  mouse_hover_ms: 0
+  hover_type: none # semi_light, hilite
   paging_on_scroll: false
   vertical_auto_reverse: false
   vertical_text: false
