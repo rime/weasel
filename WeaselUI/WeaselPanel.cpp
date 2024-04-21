@@ -262,8 +262,10 @@ LRESULT WeaselPanel::OnLeftClickedUp(UINT uMsg,
     rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
     if (rect.PtInRect(point)) {
       size_t i = m_ctx.cinfo.highlighted;
-      if (_UICallback)
+      if (_UICallback) {
         _UICallback(&i, NULL, NULL, NULL);
+        DestroyWindow();
+      }
     } else {
       RedrawWindow();
     }
