@@ -154,7 +154,7 @@ LRESULT DictManagementDialog::OnRestore(WORD, WORD code, HWND, BOOL&) {
       m_hWnd, open_str, ARRAYSIZE(filter), filter, NULL, L"snapshot");
   if (!selected_path.empty()) {
     char path[MAX_PATH] = {0};
-    WideCharToMultiByte(CP_ACP, 0, selected_path.c_str(), -1, path,
+    WideCharToMultiByte(CP_UTF8, 0, selected_path.c_str(), -1, path,
                         _countof(path), NULL, NULL);
     if (!api_->restore_user_dict(path)) {
       MSG_BY_IDS(IDS_STR_ERR_UNKNOWN, IDS_STR_SAD, MB_OK | MB_ICONERROR);
@@ -197,7 +197,7 @@ LRESULT DictManagementDialog::OnExport(WORD, WORD code, HWND, BOOL&) {
       L"txt");
   if (!selected_path.empty()) {
     char path[MAX_PATH] = {0};
-    WideCharToMultiByte(CP_ACP, 0, selected_path.c_str(), -1, path,
+    WideCharToMultiByte(CP_UTF8, 0, selected_path.c_str(), -1, path,
                         _countof(path), NULL, NULL);
     std::string dict_name_str = wstring_to_string(dict_name, CP_UTF8);
     int result = api_->export_user_dict(dict_name_str.c_str(), path);
@@ -247,7 +247,7 @@ LRESULT DictManagementDialog::OnImport(WORD, WORD code, HWND, BOOL&) {
       m_hWnd, open_str, ARRAYSIZE(filter), filter, file_name.c_str(), L"txt");
   if (!selected_path.empty()) {
     char path[MAX_PATH] = {0};
-    WideCharToMultiByte(CP_ACP, 0, selected_path.c_str(), -1, path,
+    WideCharToMultiByte(CP_UTF8, 0, selected_path.c_str(), -1, path,
                         _countof(path), NULL, NULL);
     int result = api_->import_user_dict(
         wstring_to_string(dict_name, CP_UTF8).c_str(), path);
