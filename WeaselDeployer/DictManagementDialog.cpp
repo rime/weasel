@@ -4,11 +4,10 @@
 #include <WeaselUtility.h>
 #include <rime_api.h>
 #include "WeaselDeployer.h"
-#include <regex>
 
 void static OpenFolderAndSelectItem(std::wstring filepath) {
-  filepath = std::regex_replace(filepath, std::wregex(L"/"), L"\\");
-  std::wstring directory = std::filesystem::path(filepath).parent_path();
+  std::wstring directory =
+      std::filesystem::path(filepath).parent_path().wstring();
 
   HRESULT hr;
   hr = CoInitializeEx(0, COINIT_MULTITHREADED);
