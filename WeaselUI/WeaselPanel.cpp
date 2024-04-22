@@ -264,7 +264,8 @@ LRESULT WeaselPanel::OnLeftClickedUp(UINT uMsg,
       size_t i = m_ctx.cinfo.highlighted;
       if (_UICallback) {
         _UICallback(&i, NULL, NULL, NULL);
-        DestroyWindow();
+        if (!m_status.composing)
+          DestroyWindow();
       }
     } else {
       RedrawWindow();
