@@ -7,6 +7,11 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <_PropertySheetDisplayName>Weasel Project Properties</_PropertySheetDisplayName>
+    <VERSION_MAJOR Condition="'$(VERSION_MAJOR)' == ''">0</VERSION_MAJOR>
+    <VERSION_MINOR Condition="'$(VERSION_MINOR)' == ''">15</VERSION_MINOR>
+    <VERSION_PATCH Condition="'$(VERSION_PATCH)' == ''">0</VERSION_PATCH>
+    <PRODUCT_VERSION Condition="'$(PRODUCT_VERSION)' == ''">0.15.0.0</PRODUCT_VERSION>
+    <FILE_VERSION Condition="'$(FILE_VERSION)' == ''">0.15.0.0</FILE_VERSION>
   </PropertyGroup>
   <ItemGroup>
     <BuildMacro Include="BOOST_ROOT">
@@ -18,9 +23,9 @@
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
   </ItemGroup>
-	<ItemDefinitionGroup>
-		<ResourceCompile>
-			<PreprocessorDefinitions>$(PreprocessorDefinitions);VERSION_MAJOR=$(VERSION_MAJOR);VERSION_MINOR=$(VERSION_MINOR);VERSION_PATCH=$(VERSION_PATCH);PRODUCT_VERSION=$(PRODUCT_VERSION);FILE_VERSION=$(FILE_VERSION);</PreprocessorDefinitions>
-		</ResourceCompile>
-	</ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ResourceCompile>
+      <PreprocessorDefinitions>$(PreprocessorDefinitions);VERSION_MAJOR=$(VERSION_MAJOR);VERSION_MINOR=$(VERSION_MINOR);VERSION_PATCH=$(VERSION_PATCH);PRODUCT_VERSION=$(PRODUCT_VERSION);FILE_VERSION=$(FILE_VERSION);</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
 </Project>
