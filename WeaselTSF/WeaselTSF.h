@@ -1,8 +1,8 @@
 #pragma once
 
-#include <WeaselCommon.h>
 #include "Globals.h"
-#include "WeaselIPC.h"
+#include <WeaselIPC.h>
+#include <WeaselIPCData.h>
 
 class CCandidateList;
 class CLangBarItemButton;

@@ -1,9 +1,11 @@
 ﻿#include "stdafx.h"
-#include <utility>
 #include "WeaselPanel.h"
-#include <WeaselCommon.h>
+
+#include <utility>
 #include <ShellScalingApi.h>
-#include "VersionHelpers.hpp"
+#include <VersionHelpers.hpp>
+#include <WeaselIPCData.h>
+
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"

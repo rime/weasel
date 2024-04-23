@@ -11,7 +11,7 @@ Unicode true
 ; General
 
 !ifndef WEASEL_VERSION
-!define WEASEL_VERSION 1.0.0
+!define WEASEL_VERSION 0.1.0
 !endif
 
 !ifndef WEASEL_BUILD

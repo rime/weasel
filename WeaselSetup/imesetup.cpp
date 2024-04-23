@@ -1,10 +1,10 @@
 ﻿#include "stdafx.h"
 #include <string>
 #include <vector>
-#include <StringAlgorithm.hpp>
-#include <WeaselCommon.h>
 #include <msctf.h>
 #include <strsafe.h>
+#include <StringAlgorithm.hpp>
+#include <WeaselConstants.h>
 #include <WeaselUtility.h>
 #include "InstallOptionsDlg.h"
 

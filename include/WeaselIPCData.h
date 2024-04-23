@@ -1,17 +1,10 @@
 ﻿#pragma once
 
-// #include <string>
-// #include <vector>
+#include <string>
+#include <vector>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
 
-#define WEASEL_IME_NAME L"小狼毫"
-#define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
-#define RIME_REG_KEY L"Software\\Rime"
-
-// #define USE_SHARP_COLOR_CODE
-
-// #define _DEBUG_
 namespace weasel {
 
 enum TextAttributeType { NONE = 0, HIGHLIGHTED, LAST_TYPE };

@@ -12,11 +12,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		include\RimeWithWeasel.h = include\RimeWithWeasel.h
 		include\StringAlgorithm.hpp = include\StringAlgorithm.hpp
 		include\VersionHelpers.hpp = include\VersionHelpers.hpp
-		include\WeaselCommon.h = include\WeaselCommon.h
+		include\WeaselConstants.h = include\WeaselConstants.h
 		include\WeaselIPC.h = include\WeaselIPC.h
+		include\WeaselIPCData.h = include\WeaselIPCData.h
 		include\WeaselUI.h = include\WeaselUI.h
 		include\WeaselUtility.h = include\WeaselUtility.h
-		include\WeaselVersion.h = include\WeaselVersion.h
 		include\winapifamily.h = include\winapifamily.h
 		include\winpackagefamily.h = include\winpackagefamily.h
 	EndProjectSection

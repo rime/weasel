@@ -1,6 +1,6 @@
 #pragma once
 
-#include <WeaselCommon.h>
+#include <WeaselIPCData.h>
 #include <WeaselUI.h>
 #include <gdiplus.h>
 

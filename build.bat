@@ -6,43 +6,34 @@ if not exist env.bat copy env.bat.template env.bat
 
 if exist env.bat call env.bat
 
-if not defined WEASEL_BUILD set WEASEL_BUILD=0
 if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
 
 if not defined VERSION_MAJOR set VERSION_MAJOR=0
 if not defined VERSION_MINOR set VERSION_MINOR=15
 if not defined VERSION_PATCH set VERSION_PATCH=0
+
 if not defined WEASEL_VERSION set WEASEL_VERSION=%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%
+if not defined WEASEL_BUILD set WEASEL_BUILD=0
 
-rem check if git is installed and available, then get the short commit id of head
-git --version >nul 2>&1
-if not errorlevel 1 (
-  rem get short commmit id of head
-  for /F %%i in ('git rev-parse --short HEAD') do (set commitid=%%i)
-)
-
-if not defined RELEASE_BUILD (
-  if defined commitid (
-    rem if git is available and RELEASE_BUILD is not defined, then use commitid in the PROCDUCT_VERSION
-    rem for local build with git installed, when RELASE_BUILD usually not defined during local build
-    rem or github action nightly build/commit ci build, when RELEASE_BUILD is not defined, and git installed
-	  if not defined PRODUCT_VERSION set PRODUCT_VERSION="%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%-%commitid%"
-  ) else (
-    rem if git is not available, then use pure number in the PRODUCT_VERSION
-    rem for local build without git, when RELEASE_BUILD usually not defined during local build
-    if not defined PRODUCT_VERSION set PRODUCT_VERSION="%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%.%WEASEL_BUILD%"
+if not defined PRODUCT_VERSION (
+  rem use numeric build version for release build
+  set PRODUCT_VERSION=%WEASEL_VERSION%.%WEASEL_BUILD%
+  rem for non-release build, try to use git commit hash as product build version
+  if not defined RELEASE_BUILD (
+    rem check if git is installed and available, then get the short commit id of head
+    git --version >nul 2>&1
+    if not errorlevel 1 (
+      rem get short commmit id of head
+      for /F %%i in ('git rev-parse --short HEAD') do (set PRODUCT_VERSION=%WEASEL_VERSION%-%%i)
+    )
   )
-) else (
-  rem if RELEASE_BUILD is defined, then use pure number in the PRODUCT_VERSION
-  rem this usually happens in github action release build
-	if not defined PRODUCT_VERSION set PRODUCT_VERSION="%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%.%WEASEL_BUILD%"
 )
-rem set FILE_VERSION always to the same as PRODUCT_VERSION when RELEASE_BUILD 
-if not defined FILE_VERSION set FILE_VERSION=%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%.%WEASEL_BUILD%
 
-echo WEASEL_VERSION=%WEASEL_VERSION%
-echo FILE_VERSION=%FILE_VERSION%
+rem FILE_VERSION is always 4 numbers; same as PRODUCT_VERSION in release build
+if not defined FILE_VERSION set FILE_VERSION=%WEASEL_VERSION%.%WEASEL_BUILD%
+
 echo PRODUCT_VERSION=%PRODUCT_VERSION%
+echo WEASEL_VERSION=%WEASEL_VERSION%
 echo WEASEL_BUILD=%WEASEL_BUILD%
 echo WEASEL_ROOT=%WEASEL_ROOT%
 echo WEASEL_BUNDLED_RECIPES=%WEASEL_BUNDLED_RECIPES%
@@ -185,11 +176,15 @@ if %build_weasel% == 0 goto end
 
 cd /d %WEASEL_ROOT%
 
-set WEASEL_PROJECT_PROPERTIES=BOOST_ROOT PLATFORM_TOOLSET
+set WEASEL_PROJECT_PROPERTIES=BOOST_ROOT^
+  PLATFORM_TOOLSET^
+  VERSION_MAJOR^
+  VERSION_MINOR^
+  VERSION_PATCH^
+  PRODUCT_VERSION^
+  FILE_VERSION
 
-if not exist weasel.props (
-  cscript.exe render.js weasel.props %WEASEL_PROJECT_PROPERTIES%
-)
+cscript.exe render.js weasel.props %WEASEL_PROJECT_PROPERTIES%
 
 del msbuild*.log
 

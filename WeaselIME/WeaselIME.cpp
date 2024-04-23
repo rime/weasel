@@ -2,12 +2,12 @@
 //
 
 #include "stdafx.h"
-#include <strsafe.h>
-#include <StringAlgorithm.hpp>
-#include <WeaselCommon.h>
-#include <ResponseParser.h>
-#include "WeaselIME.h"
 #include <algorithm>
+#include <strsafe.h>
+#include <ResponseParser.h>
+#include <StringAlgorithm.hpp>
+#include <WeaselConstants.h>
+#include "WeaselIME.h"
 
 // logging disabled
 #define EZDBGONLYLOGGERVAR(...)

@@ -2,8 +2,8 @@
 #include <logging.h>
 #include <RimeWithWeasel.h>
 #include <StringAlgorithm.hpp>
+#include <WeaselConstants.h>
 #include <WeaselUtility.h>
-#include <WeaselVersion.h>
 
 #include <filesystem>
 #include <map>
