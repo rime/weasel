@@ -292,6 +292,8 @@ program_files:
   ${Endif}
   ; Write autorun key
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer" "$INSTDIR\WeaselServer.exe"
+  ; Add autorun in HKCU
+  WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Run" "WeaselServer" "$INSTDIR\WeaselServer.exe"
   ; Start WeaselServer
   Exec "$INSTDIR\WeaselServer.exe"
 
@@ -332,6 +334,8 @@ Section "Uninstall"
   ; Remove registry keys
   DeleteRegKey HKLM SOFTWARE\Rime
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel"
+  ; Remove autorun in HKCU
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer"
   ; don't redirect on 64 bit system for auto run setting
   ${If} ${IsNativeARM64}
     SetRegView 64
