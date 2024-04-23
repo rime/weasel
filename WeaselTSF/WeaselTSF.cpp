@@ -1,7 +1,7 @@
 ﻿#include "stdafx.h"
 
+#include <WeaselIPCData.h>
 #include "WeaselTSF.h"
-#include "WeaselCommon.h"
 #include "CandidateList.h"
 #include "LanguageBar.h"
 #include "Compartment.h"

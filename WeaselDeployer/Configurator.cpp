@@ -5,10 +5,10 @@
 #include "UIStyleSettings.h"
 #include "UIStyleSettingsDialog.h"
 #include "DictManagementDialog.h"
-#include <WeaselCommon.h>
+#include <WeaselConstants.h>
 #include <WeaselIPC.h>
+#include <WeaselIPCData.h>
 #include <WeaselUtility.h>
-#include <WeaselVersion.h>
 #pragma warning(disable : 4005)
 #include <rime_api.h>
 #include <rime_levers_api.h>

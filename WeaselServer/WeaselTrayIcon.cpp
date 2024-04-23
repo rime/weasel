@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "WeaselTrayIcon.h"
+#include <WeaselConstants.h>
 
 // nasty
 #include <resource.h>

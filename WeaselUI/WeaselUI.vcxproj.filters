@@ -62,9 +62,6 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\WeaselCommon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WeaselPanel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
