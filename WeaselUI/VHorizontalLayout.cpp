@@ -207,8 +207,19 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
     width -= _style.spacing;
 
   height += real_margin_y;
-  _highlightRect = _candidateRects[id];
+
+  if (candidates_count) {
+    width = max(width, _style.min_width);
+    height = max(height, _style.min_height);
+  }
   UpdateStatusIconLayout(&width, &height);
+  // candidate rectangle always align to bottom side, margin_y to the bottom
+  // edge
+  for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+    _candidateRects[i].bottom =
+        max(_candidateRects[i].bottom, height - real_margin_y);
+
+  _highlightRect = _candidateRects[id];
   _contentSize.SetSize(width + offsetX, height + offsetY);
 
   // calc page indicator
@@ -483,10 +494,11 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR) {
 
   width += real_margin_x;
   height += real_margin_y;
-  if (!_context.preedit.str.empty() && !candidates_count) {
+  if (candidates_count) {
     width = max(width, _style.min_width);
     height = max(height, _style.min_height);
   }
+  _highlightRect = _candidateRects[id];
   UpdateStatusIconLayout(&width, &height);
   _contentSize.SetSize(width + 2 * offsetX, height + offsetY);
   _contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);

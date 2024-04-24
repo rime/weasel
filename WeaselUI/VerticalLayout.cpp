@@ -190,7 +190,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
 
   height += real_margin_y;
 
-  if (!_context.preedit.str.empty() && candidates_count) {
+  if (candidates_count) {
     width = max(width, _style.min_width);
     height = max(height, _style.min_height);
   }
