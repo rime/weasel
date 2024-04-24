@@ -1128,6 +1128,7 @@ void RimeWithWeaselHandler::_UpdateShowNotifications(RimeConfig* config,
     }
     if (initialize)
       m_show_notifications_base = m_show_notifications;
+    RimeConfigEnd(&iter);
   } else {
     // not configured, or incorrect type
     if (initialize)
