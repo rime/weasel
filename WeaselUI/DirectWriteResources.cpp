@@ -125,6 +125,8 @@ HRESULT DirectWriteResources::InitResources(
   // convert percentage to float
   float linespacing = dpiScaleX_ * ((float)_style.linespacing / 100.0f);
   float baseline = dpiScaleX_ * ((float)_style.baseline / 100.0f);
+  if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+    baseline = linespacing / 2;
   // setup font weight and font style by the first unit of font_face setting
   // string
   _ParseFontFace(font_face, fontWeight, fontStyle);
