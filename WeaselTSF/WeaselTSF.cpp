@@ -23,6 +23,7 @@ WeaselTSF::WeaselTSF() {
 
   _dwTextEditSinkCookie = TF_INVALID_COOKIE;
   _dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
+  _dwThreadFocusSinkCookie = TF_INVALID_COOKIE;
   _fTestKeyDownPending = FALSE;
   _fTestKeyUpPending = FALSE;
 
@@ -64,6 +65,8 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void** ppvObject) {
     *ppvObject = (ITfThreadFocusSink*)this;
   else if (IsEqualIID(riid, IID_ITfDisplayAttributeProvider))
     *ppvObject = (ITfDisplayAttributeProvider*)this;
+  else if (IsEqualIID(riid, IID_ITfThreadFocusSink))
+    *ppvObject = (ITfThreadFocusSink*)this;
 
   if (*ppvObject) {
     AddRef();
@@ -104,6 +107,8 @@ STDAPI WeaselTSF::Deactivate() {
   _UninitLanguageBar();
 
   _UninitCompartment();
+
+  _UninitThreadMgrEventSink();
 
   _pThreadMgr = NULL;
 
@@ -151,6 +156,8 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr,
 
   if (!_InitCompartment())
     goto ExitError;
+  if (!_InitThreadFocusSink())
+    goto ExitError;
 
   _EnsureServerConnected();
 
@@ -162,11 +169,39 @@ ExitError:
 }
 
 STDMETHODIMP WeaselTSF::OnSetThreadFocus() {
+  if (m_client.Echo()) {
+    POINT pt{};
+    ::GetCursorPos(&pt);
+    RECT rc{pt.x, pt.y, pt.x, pt.y};
+    m_client.UpdateInputPosition(rc);
+    m_client.ProcessKeyEvent(0);
+    weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
+    bool ok = m_client.GetResponseData(std::ref(parser));
+    if (ok)
+      _UpdateLanguageBar(_status);
+  }
   return S_OK;
 }
 STDMETHODIMP WeaselTSF::OnKillThreadFocus() {
   _AbortComposition();
   return S_OK;
+}
+BOOL WeaselTSF::_InitThreadFocusSink() {
+  com_ptr<ITfSource> pSource;
+  if (FAILED(_pThreadMgr->QueryInterface(&pSource)))
+    return FALSE;
+  if (FAILED(pSource->AdviseSink(IID_ITfThreadFocusSink,
+                                 (ITfThreadFocusSink*)this,
+                                 &_dwThreadFocusSinkCookie)))
+    return FALSE;
+  return TRUE;
+}
+void WeaselTSF::_UninitThreadFocusSink() {
+  com_ptr<ITfSource> pSource;
+  if (FAILED(_pThreadMgr->QueryInterface(&pSource)))
+    return;
+  if (FAILED(pSource->UnadviseSink(_dwThreadFocusSinkCookie)))
+    return;
 }
 
 STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid,
