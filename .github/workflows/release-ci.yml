@@ -14,7 +14,6 @@ jobs:
       contents: write
     runs-on: windows-2019
     env:
-      librime_build: submodule
       boost_version: 1.84.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
     steps:
