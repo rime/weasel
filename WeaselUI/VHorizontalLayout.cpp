@@ -16,11 +16,13 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
 
   if ((_style.hilited_mark_color & 0xff000000)) {
     CSize sg;
-    if (_style.mark_text.empty())
-      GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
-    else
-      GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
-                    pDWR->pTextFormat, pDWR, &sg);
+    if (candidates_count) {
+      if (_style.mark_text.empty())
+        GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
+      else
+        GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
+                      pDWR->pTextFormat, pDWR, &sg);
+    }
 
     mark_width = sg.cx;
     mark_height = sg.cy;
@@ -38,8 +40,10 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
 
   // calc page indicator
   CSize pgszl, pgszr;
-  GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
-  GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+  if (!IsInlinePreedit()) {
+    GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
+    GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+  }
   bool page_en = (_style.prevpage_color & 0xff000000) &&
                  (_style.nextpage_color & 0xff000000);
   int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing +
@@ -255,11 +259,13 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR) {
 
   if ((_style.hilited_mark_color & 0xff000000)) {
     CSize sg;
-    if (_style.mark_text.empty())
-      GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
-    else
-      GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
-                    pDWR->pTextFormat, pDWR, &sg);
+    if (candidates_count) {
+      if (_style.mark_text.empty())
+        GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
+      else
+        GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
+                      pDWR->pTextFormat, pDWR, &sg);
+    }
 
     mark_width = sg.cx;
     mark_height = sg.cy;
@@ -277,8 +283,10 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR) {
 
   // calc page indicator
   CSize pgszl, pgszr;
-  GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
-  GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+  if (!IsInlinePreedit()) {
+    GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
+    GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
+  }
   bool page_en = (_style.prevpage_color & 0xff000000) &&
                  (_style.nextpage_color & 0xff000000);
   int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing +

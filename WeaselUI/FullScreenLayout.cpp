@@ -26,11 +26,13 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
     m_layout->DoLayout(dc, pDWR);
     if ((_style.hilited_mark_color & 0xff000000)) {
       CSize sg;
-      if (_style.mark_text.empty())
-        GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
-      else
-        GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
-                      pDWR->pTextFormat, pDWR, &sg);
+      if (candidates_count) {
+        if (_style.mark_text.empty())
+          GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
+        else
+          GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
+                        pDWR->pTextFormat, pDWR, &sg);
+      }
       mark_width = sg.cx;
       mark_height = sg.cy;
       if (_style.mark_text.empty()) {
