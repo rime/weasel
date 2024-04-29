@@ -22,6 +22,17 @@ static const GUID c_guidProfile = {
     0x4781,
     {0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67}};
 
+// if in the future, option hant is extended, maybe a function to generate this
+// info is required
+#define PSZTITLE_HANS                                                     \
+  L"0804:{A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}{3D02CAB6-2B8E-4781-BA20-" \
+  L"1C9267529467}"
+#define PSZTITLE_HANT                                                     \
+  L"0404:{A3F4CDED-B1E9-41EE-9CA6-7B4D0DE6CB0A}{3D02CAB6-2B8E-4781-BA20-" \
+  L"1C9267529467}"
+#define ILOT_UNINSTALL 0x00000001
+typedef HRESULT(WINAPI* PTF_INSTALLLAYOUTORTIP)(LPCWSTR psz, DWORD dwFlags);
+
 BOOL copy_file(const std::wstring& src, const std::wstring& dest) {
   BOOL ret = CopyFile(src.c_str(), dest.c_str(), FALSE);
   if (!ret) {
@@ -581,6 +592,23 @@ int install(bool hant, bool silent, bool old_ime_support) {
   }
 
   RegCloseKey(hKey);
+  // InstallLayoutOrTip
+  // https://learn.microsoft.com/zh-cn/windows/win32/tsf/installlayoutortip
+  // example in ref page not right with "*PTF_ INSTALLLAYOUTORTIP"
+  // space inside should be removed
+  HMODULE hInputDLL = LoadLibrary(TEXT("input.dll"));
+  if (hInputDLL) {
+    PTF_INSTALLLAYOUTORTIP pfnInstallLayoutOrTip;
+    pfnInstallLayoutOrTip =
+        (PTF_INSTALLLAYOUTORTIP)GetProcAddress(hInputDLL, "InstallLayoutOrTip");
+    if (pfnInstallLayoutOrTip) {
+      if (hant)
+        (*pfnInstallLayoutOrTip)(PSZTITLE_HANT, 0);
+      else
+        (*pfnInstallLayoutOrTip)(PSZTITLE_HANS, 0);
+    }
+    FreeLibrary(hInputDLL);
+  }
 
   if (retval)
     return 1;
@@ -594,6 +622,19 @@ int install(bool hant, bool silent, bool old_ime_support) {
 int uninstall(bool silent) {
   // 注销输入法
   int retval = 0;
+
+  HMODULE hInputDLL = LoadLibrary(TEXT("input.dll"));
+  if (hInputDLL) {
+    PTF_INSTALLLAYOUTORTIP pfnInstallLayoutOrTip;
+    pfnInstallLayoutOrTip =
+        (PTF_INSTALLLAYOUTORTIP)GetProcAddress(hInputDLL, "InstallLayoutOrTip");
+    if (pfnInstallLayoutOrTip) {
+      (*pfnInstallLayoutOrTip)(PSZTITLE_HANS, ILOT_UNINSTALL);
+      (*pfnInstallLayoutOrTip)(PSZTITLE_HANT, ILOT_UNINSTALL);
+    }
+    FreeLibrary(hInputDLL);
+  }
+
   uninstall_ime_file(L".ime", silent, &register_ime);
   retval += uninstall_ime_file(L".dll", silent, &register_text_service);
 
