@@ -231,8 +231,8 @@ if %build_installer% == 1 (
   /DWEASEL_VERSION=%WEASEL_VERSION% ^
   /DWEASEL_BUILD=%WEASEL_BUILD% ^
   output\install.nsi
-  if defined commitid (
-    move output\archives\weasel-%WEASEL_VERSION%.%WEASEL_BUILD%-installer.exe output\archives\weasel-%WEASEL_VERSION%-%commitid%-installer.exe
+  if not defined RELEASE_BUILD (
+    move output\archives\weasel-%WEASEL_VERSION%.%WEASEL_BUILD%-installer.exe output\archives\weasel-%PRODUCT_VERSION%-installer.exe
   )
   if errorlevel 1 goto error
 )
