@@ -60,10 +60,6 @@ void ContextUpdater::_StoreText(Text& target,
       attr.range.start = _wtoi(vec[0].c_str());
       attr.range.end = _wtoi(vec[1].c_str());
       attr.range.cursor = _wtoi(vec[2].c_str());
-      if (attr.range.cursor < attr.range.start ||
-          attr.range.cursor > attr.range.end) {
-        attr.range.cursor = attr.range.end;
-      }
 
       target.attributes.push_back(attr);
       return;
