@@ -66,7 +66,6 @@ set build_boost=0
 set boost_build_variant=release
 set build_data=0
 set build_opencc=0
-set build_hant=0
 set build_rime=0
 set rime_build_variant=release
 set build_weasel=0
@@ -90,7 +89,6 @@ rem parse the command line options
   if "%1" == "boost" set build_boost=1
   if "%1" == "data" set build_data=1
   if "%1" == "opencc" set build_opencc=1
-  if "%1" == "hant" set build_hant=1
   if "%1" == "rime" set build_rime=1
   if "%1" == "librime" set build_rime=1
   if "%1" == "weasel" set build_weasel=1
@@ -100,7 +98,6 @@ rem parse the command line options
     set build_boost=1
     set build_data=1
     set build_opencc=1
-    set build_hant=1
     set build_rime=1
     set build_weasel=1
     set build_installer=1
@@ -189,23 +186,10 @@ cscript.exe render.js weasel.props %WEASEL_PROJECT_PROPERTIES%
 del msbuild*.log
 
 if %build_arm64% == 1 (
-  if %build_hant% == 1 (
-    msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="ARM" /fl8
-    if errorlevel 1 goto error
-    msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="ARM64" /fl7
-    if errorlevel 1 goto error
-  )
 
   msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="ARM" /fl6
   if errorlevel 1 goto error
   msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="ARM64" /fl5
-  if errorlevel 1 goto error
-)
-
-if %build_hant% == 1 (
-  msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="x64" /fl4
-  if errorlevel 1 goto error
-  msbuild.exe weasel.sln %build_option% /p:Configuration=ReleaseHant /p:Platform="Win32" /fl3
   if errorlevel 1 goto error
 )
 

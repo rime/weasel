@@ -76,7 +76,7 @@ jobs:
       - name: Build Weasel
         id: build_weasel
         run: |
-          .\build.bat hant arm64 installer
+          .\build.bat arm64 installer
 
       - name: Compress Debug Symbols
         shell: pwsh
