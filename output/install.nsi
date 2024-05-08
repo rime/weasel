@@ -194,14 +194,6 @@ program_files:
     File /nonfatal "weaselARM64.ime"
     File /nonfatal "weaselARM64X.ime"
   ${EndIf}
-  File "weaselt.ime"
-  ${If} ${RunningX64}
-    File "weaseltx64.ime"
-  ${EndIf}
-  ${If} ${IsNativeARM64}
-    File /nonfatal "weaseltARM.ime"
-    File /nonfatal "weaseltARM64.ime"
-  ${EndIf}
   ; install x64 build for NativeARM64_WINDOWS11 and NativeAMD64_WINDOWS11
   ${If} ${AtLeastWin11} ; Windows 11 and above
     ${If} ${IsNativeARM64}
