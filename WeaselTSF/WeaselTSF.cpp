@@ -114,7 +114,7 @@ STDAPI WeaselTSF::Deactivate() {
 
   _tfClientId = TF_CLIENTID_NULL;
 
-  _cand->Destroy();
+  _cand->DestroyAll();
 
   return S_OK;
 }

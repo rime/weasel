@@ -229,9 +229,14 @@ void CCandidateList::UpdateInputPosition(RECT const& rc) {
 void CCandidateList::Destroy() {
   // EndUI();
   Show(FALSE);
-  _DisposeUIWindowAll();
+  _DisposeUIWindow();
 }
 
+void CCandidateList::DestroyAll() {
+  // EndUI();
+  Show(FALSE);
+  _DisposeUIWindowAll();
+}
 UIStyle& CCandidateList::style() {
   // return _ui->style();
   return _style;
