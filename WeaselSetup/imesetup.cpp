@@ -123,8 +123,6 @@ int install_ime_file(std::wstring& srcPath,
   GetModuleFileNameW(GetModuleHandle(NULL), path, _countof(path));
 
   std::wstring srcFileName = L"weasel";
-  if (ext == L"ime")
-    srcFileName = (hant ? L"weaselt" : L"weasel");
 
   srcFileName += ext;
   WCHAR drive[_MAX_DRIVE];
