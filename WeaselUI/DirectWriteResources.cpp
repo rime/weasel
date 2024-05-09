@@ -70,7 +70,7 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style,
   pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f),
                                        pBrush.GetAddressOf());
   // get the dpi information
-  dpiScaleX_ = dpiScaleY_ = dpi;
+  dpiScaleX_ = dpiScaleY_ = (float)dpi;
   dpiScaleX_ /= 72.0f;
   dpiScaleY_ /= 72.0f;
 

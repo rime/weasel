@@ -367,12 +367,11 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
         rect.OffsetRect(0, m_offsetys[i]);
       rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
       if (rect.PtInRect(point)) {
+        bar_scale_ = 0.8f;
         if (i != m_ctx.cinfo.highlighted) {
-          bar_scale_ = 0.8;
           if (_UICallback)
             _UICallback(NULL, &i, NULL, NULL);
         } else {
-          bar_scale_ = 0.8;
           RedrawWindow();
         }
         ptimer = UINT_PTR(this);
@@ -431,7 +430,7 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg,
           if (_UICallback)
             _UICallback(NULL, &i, NULL, NULL);
         } else if (m_hoverIndex != i) {
-          m_hoverIndex = i;
+          m_hoverIndex = static_cast<int>(i);
           InvalidateRect(&rcw, true);
         }
       } else if (m_style.hover_type == UIStyle::HoverType::SEMI_HILITE &&
@@ -593,7 +592,7 @@ bool WeaselPanel::_DrawPreedit(const Text& text,
       {
         // zzz[yyy]
         std::wstring str_highlight(
-            t.substr(range.start, range.end - range.start));
+            t.substr(range.start, (size_t)range.end - range.start));
         CRect rc_hi;
 
         if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
@@ -795,11 +794,11 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
                          rect.Height() - m_style.round_corner * 2);
         int width = min(rect.Width() - m_style.hilite_padding_x * 2,
                         rect.Width() - m_style.round_corner * 2);
-        width = min(width, rect.Width() * 0.618);
-        height = min(height, rect.Height() * 0.618);
+        width = min(width, static_cast<int>(rect.Width() * 0.618));
+        height = min(height, static_cast<int>(rect.Height() * 0.618));
         if (bar_scale_ != 1.0f) {
-          width *= bar_scale_;
-          height *= bar_scale_;
+          width = static_cast<int>(width * bar_scale_);
+          height = static_cast<int>(height * bar_scale_);
         }
         Gdiplus::Graphics g_back(dc);
         g_back.SetSmoothingMode(

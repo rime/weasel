@@ -12,7 +12,7 @@ Layout::Layout(const UIStyle& style,
       comments(_context.cinfo.comments),
       labels(_context.cinfo.labels),
       id(_context.cinfo.highlighted),
-      candidates_count(candidates.size()),
+      candidates_count((int)candidates.size()),
       real_margin_x((abs(_style.margin_x) > _style.hilite_padding_x)
                         ? abs(_style.margin_x)
                         : _style.hilite_padding_x),
