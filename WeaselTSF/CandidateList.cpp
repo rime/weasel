@@ -108,7 +108,7 @@ STDMETHODIMP CCandidateList::GetDocumentMgr(ITfDocumentMgr** ppdim) {
 }
 
 STDMETHODIMP CCandidateList::GetCount(UINT* pCandidateCount) {
-  *pCandidateCount = _ui->ctx().cinfo.candies.size();
+  *pCandidateCount = static_cast<UINT>(_ui->ctx().cinfo.candies.size());
   return S_OK;
 }
 
@@ -124,7 +124,7 @@ STDMETHODIMP CCandidateList::GetString(UINT uIndex, BSTR* pbstr) {
     return E_INVALIDARG;
 
   auto& str = cinfo.candies[uIndex].str;
-  *pbstr = SysAllocStringLen(str.c_str(), str.size() + 1);
+  *pbstr = SysAllocStringLen(str.c_str(), static_cast<UINT>(str.size()) + 1);
 
   return S_OK;
 }
@@ -399,7 +399,7 @@ void WeaselTSF::_HandleMousePageEvent(bool* const nextPage,
       int offset = *scrollNextPage ? 1 : -1;
       offset = offset * (is_reposition ? -1 : 1);
       int index = (int)current_select + offset;
-      if (index >= 0 && index < cand_count)
+      if (index >= 0 && index < (int)cand_count)
         m_client.HighlightCandidateOnCurrentPage((size_t)index);
       else {
         KeyEvent ke{0, 0};
