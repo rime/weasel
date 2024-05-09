@@ -299,13 +299,14 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR) {
     size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
     size_t szx = max(size.cx, pgw), szy = pgh;
     // icon size wider then preedit text
-    int xoffset = (STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon())
-                      ? (STATUS_ICON_SIZE - szx) / 2
+    int xoffset = ((size_t)STATUS_ICON_SIZE >= szx && ShouldDisplayStatusIcon())
+                      ? (int)(STATUS_ICON_SIZE - szx) / 2
                       : 0;
     _preeditRect.SetRect(width + xoffset, h, width + xoffset + size.cx,
                          h + size.cy);
     width += size.cx + xoffset * 2 + _style.spacing;
-    height = max(height, offsetY + real_margin_y + size.cy + szy);
+    height = static_cast<int>(
+        max((size_t)height, offsetY + real_margin_y + size.cy + szy));
     if (ShouldDisplayStatusIcon())
       height += STATUS_ICON_SIZE;
   }

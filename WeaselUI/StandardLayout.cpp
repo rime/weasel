@@ -28,11 +28,11 @@ void weasel::StandardLayout::GetTextSizeDW(
   // 创建文本布局
   if (pTextFormat != NULL) {
     if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-      hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(), 0,
-                                  _style.max_height);
+      hr = pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                                  0.0f, (float)_style.max_height);
     else
-      hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(),
-                                  _style.max_width, 0);
+      hr = pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                                  (float)_style.max_width, 0);
   }
 
   if (SUCCEEDED(hr)) {
@@ -54,15 +54,15 @@ void weasel::StandardLayout::GetTextSizeDW(
     pDWR->ResetLayout();
 
     if (_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) {
-      size_t max_width = _style.max_width == 0
-                             ? textMetrics.widthIncludingTrailingWhitespace
-                             : _style.max_width;
-      hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(),
+      auto max_width = _style.max_width == 0
+                           ? textMetrics.widthIncludingTrailingWhitespace
+                           : _style.max_width;
+      hr = pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
                                   max_width, textMetrics.height);
     } else {
-      size_t max_height =
+      auto max_height =
           _style.max_height == 0 ? textMetrics.height : _style.max_height;
-      hr = pDWR->CreateTextLayout(text.c_str(), nCount, pTextFormat.Get(),
+      hr = pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
                                   textMetrics.widthIncludingTrailingWhitespace,
                                   max_height);
     }
@@ -75,13 +75,13 @@ void weasel::StandardLayout::GetTextSizeDW(
     hr = pDWR->GetLayoutOverhangMetrics(&overhangMetrics);
     {
       if (overhangMetrics.left > 0)
-        lpSize->cx += overhangMetrics.left + 1;
+        lpSize->cx += (LONG)(overhangMetrics.left + 1);
       if (overhangMetrics.right > 0)
-        lpSize->cx += overhangMetrics.right + 1;
+        lpSize->cx += (LONG)(overhangMetrics.right + 1);
       if (overhangMetrics.top > 0)
-        lpSize->cy += overhangMetrics.top + 1;
+        lpSize->cy += (LONG)(overhangMetrics.top + 1);
       if (overhangMetrics.bottom > 0)
-        lpSize->cy += overhangMetrics.bottom + 1;
+        lpSize->cy += (LONG)(overhangMetrics.bottom + 1);
     }
   }
   pDWR->ResetLayout();
