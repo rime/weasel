@@ -162,7 +162,6 @@ STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec) {
   BOOL fClipped;
   TF_SELECTION selection;
   ULONG nSelection;
-  LONG cch;
 
   if (FAILED(_pContext->QueryInterface(IID_ITfInsertAtSelection,
                                        (LPVOID*)&pInsertAtSelection)))
@@ -271,8 +270,8 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec) {
   if ((_pComposition->GetRange(&pRangeComposition)) != S_OK)
     return E_FAIL;
 
-  if ((pRangeComposition->SetText(ec, 0, preedit.c_str(), preedit.length())) !=
-      S_OK)
+  if ((pRangeComposition->SetText(ec, 0, preedit.c_str(),
+                                  static_cast<LONG>(preedit.length()))) != S_OK)
     return E_FAIL;
 
   /* TODO: Check the availability and correctness of these values */
@@ -347,7 +346,8 @@ STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec) {
   if (FAILED(_pComposition->GetRange(&pRange)))
     return E_FAIL;
 
-  if (FAILED(pRange->SetText(ec, 0, _text.c_str(), _text.length())))
+  if (FAILED(pRange->SetText(ec, 0, _text.c_str(),
+                             static_cast<LONG>(_text.length()))))
     return E_FAIL;
 
   /* update the selection to an insertion point just past the inserted text. */

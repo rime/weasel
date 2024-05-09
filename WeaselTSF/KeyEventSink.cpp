@@ -11,7 +11,7 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
   _EnsureServerConnected();
   weasel::KeyEvent ke;
   GetKeyboardState(_lpbKeyState);
-  if (!ConvertKeyEvent(wParam, lParam, _lpbKeyState, ke)) {
+  if (!ConvertKeyEvent(static_cast<UINT>(wParam), lParam, _lpbKeyState, ke)) {
     /* Unknown key event */
     *pfEaten = FALSE;
   } else {
