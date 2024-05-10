@@ -78,7 +78,7 @@ LangString LNKFORAPPFOLDER ${LANG_TRADCHINESE} "【小狼毫】程序文件夾"
 LangString LNKFORUPDATER ${LANG_TRADCHINESE} "【小狼毫】檢查新版本"
 LangString LNKFORSETUP ${LANG_TRADCHINESE} "【小狼毫】安裝選項"
 LangString LNKFORUNINSTALL ${LANG_TRADCHINESE} "卸載小狼毫"
-LangString CONFIRMATION ${LANG_TRADCHINESE} "安裝前，我打盤先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。"
+LangString CONFIRMATION ${LANG_TRADCHINESE} "安裝前，請先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。"
 
 !insertmacro MUI_LANGUAGE "SimpChinese"
 LangString DISPLAYNAME ${LANG_SIMPCHINESE} "小狼毫输入法"
