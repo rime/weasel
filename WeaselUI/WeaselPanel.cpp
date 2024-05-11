@@ -56,6 +56,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
       m_ostyle(ui.ostyle()),
       m_candidateCount(0),
       m_current_zhung_icon(),
+      m_sticky(false),
       dpi(96),
       hide_candidates(false),
       pDWR(ui.pdwr()),
@@ -1057,6 +1058,7 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg,
                                LPARAM lParam,
                                BOOL& bHandled) {
   m_hoverIndex = -1;
+  m_sticky = false;
   delete m_layout;
   m_layout = NULL;
   return 0;
@@ -1147,7 +1149,9 @@ void WeaselPanel::_RepositionWindow(const bool& adj) {
   if (x < rcWorkArea.left)
     x = rcWorkArea.left;  // over workarea left
   // show panel above the input focus if we're around the bottom
-  if (y > rcWorkArea.bottom) {
+  if (y > rcWorkArea.bottom || m_sticky) {
+    if (!m_sticky)
+      m_sticky = true;
     y = m_inputPos.top - height - 6;  // over workarea bottom
     if (m_style.shadow_radius && m_style.shadow_offset_y > 0)
       y -= m_style.shadow_offset_y;
