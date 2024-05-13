@@ -9,7 +9,7 @@ if exist env.bat call env.bat
 if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
 
 if not defined VERSION_MAJOR set VERSION_MAJOR=0
-if not defined VERSION_MINOR set VERSION_MINOR=15
+if not defined VERSION_MINOR set VERSION_MINOR=16
 if not defined VERSION_PATCH set VERSION_PATCH=0
 
 if not defined WEASEL_VERSION set WEASEL_VERSION=%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%
