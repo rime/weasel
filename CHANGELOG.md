@@ -1,5 +1,5 @@
 <a name="0.16.0"></a>
-## [0.16.0](https://github.com/rime/weasel/compare/0.16.0...0.15.0) (2024-05-14)
+## [0.16.0](https://github.com/rime/weasel/compare/0.15.0...0.16.0) (2024-05-14)
 
 
 #### 安裝須知
@@ -109,7 +109,7 @@
 
 
 <a name="0.15.0"></a>
-## [0.15.0](https://github.com/rime/weasel/compare/0.15.0...0.14.3) (2023-06-06)
+## [0.15.0](https://github.com/rime/weasel/compare/0.14.3...0.15.0) (2023-06-06)
 
 
 #### 安裝須知
