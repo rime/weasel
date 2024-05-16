@@ -11,11 +11,11 @@
 
 授權條款：GPLv3
 
-項目主葉：https://rime.im
+項目主頁：https://rime.im
 
 您可能還需要 RIME 用於其他操作系統的發行版：
 
-  * 【中州韻】用於 Linux + IBus 輸入法框架
+  * ibus-rime、fcitx5-rime 或 fcitx-rime 用於 Linux
   * 【鼠鬚管】用於 macOS （64位）
 
 安裝輸入法
