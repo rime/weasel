@@ -284,7 +284,7 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent,
         (keyEvent.keycode == ibus::Keycode::Escape) ||
         ((keyEvent.mask & (1 << 2)) &&
          (keyEvent.keycode == ibus::Keycode::XK_c ||
-          keyEvent.keycode == ibus::Keycode::XK_c ||
+          keyEvent.keycode == ibus::Keycode::XK_C ||
           keyEvent.keycode == ibus::Keycode::XK_bracketleft));
     if (isVimBackInCommandMode && RimeGetOption(session_id, "vim_mode") &&
         !RimeGetOption(session_id, "ascii_mode")) {
