@@ -63,4 +63,9 @@ void WeaselServerApp::SetupMenuHandlers() {
   m_server.AddMenuHandler(ID_WEASELTRAY_INSTALLDIR, std::bind(explore, dir));
   m_server.AddMenuHandler(ID_WEASELTRAY_USERCONFIG,
                           std::bind(explore, WeaselUserDataPath()));
+  WCHAR _logDir[MAX_PATH];
+  // in the future if log dir customizable, to be changed
+  ExpandEnvironmentStringsW(L"%TEMP%", _logDir, _countof(_logDir));
+  m_server.AddMenuHandler(ID_WEASELTRAY_LOGDIR,
+                          std::bind(explore, std::filesystem::path(_logDir)));
 }

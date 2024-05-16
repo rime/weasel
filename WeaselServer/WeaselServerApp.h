@@ -1,6 +1,7 @@
 #pragma once
 
 #include "resource.h"
+#include <resource.h>
 #include <WeaselIPC.h>
 #include <WeaselUI.h>
 #include <RimeWithWeasel.h>
