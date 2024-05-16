@@ -170,10 +170,6 @@ ExitError:
 
 STDMETHODIMP WeaselTSF::OnSetThreadFocus() {
   if (m_client.Echo()) {
-    POINT pt{};
-    ::GetCursorPos(&pt);
-    RECT rc{pt.x, pt.y, pt.x, pt.y};
-    m_client.UpdateInputPosition(rc);
     m_client.ProcessKeyEvent(0);
     weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
     bool ok = m_client.GetResponseData(std::ref(parser));
