@@ -17,3 +17,6 @@ for /f "tokens=2*" %%a in ('reg query "%key%" /v "%name%"') do set rime_dir=%%b
 
 rem Disable /plum/ bash script; use batch installer only.
 rem set use_plum=0
+
+rem set git version as 2.45.1
+set git_version=2.45.1
