@@ -81,7 +81,7 @@ jobs:
       - name: Compress Debug Symbols
         shell: pwsh
         run: |
-          Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
+          output\7z.exe a -t7z "./output/archives/debug_symbols.7z" "output/*.pdb" -r
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -89,4 +89,4 @@ jobs:
           if-no-files-found: error
           path: |
             .\output\archives\weasel*.exe
-            .\output\archives\symbols.zip
+            .\output\archives\debug_symbols.7z
