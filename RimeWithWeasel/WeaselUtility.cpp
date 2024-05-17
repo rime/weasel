@@ -3,8 +3,6 @@
 #include <string>
 #include <WeaselUtility.h>
 
-namespace fs = std::filesystem;
-
 fs::path WeaselUserDataPath() {
   WCHAR _path[MAX_PATH] = {0};
   const WCHAR KEY[] = L"Software\\Rime\\Weasel";

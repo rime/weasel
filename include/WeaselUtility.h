@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <string>
 
+namespace fs = std::filesystem;
+
 inline int utf8towcslen(const char* utf8_str, int utf8_len) {
   return MultiByteToWideChar(CP_UTF8, 0, utf8_str, utf8_len, NULL, 0);
 }
@@ -29,6 +31,16 @@ inline std::wstring getUsername() {
 // data directories
 std::filesystem::path WeaselSharedDataPath();
 std::filesystem::path WeaselUserDataPath();
+inline fs::path WeaselLogPath() {
+  WCHAR _path[MAX_PATH] = {0};
+  // default location
+  ExpandEnvironmentStringsW(L"%TEMP%\\rime.weasel", _path, _countof(_path));
+  fs::path path = fs::path(_path);
+  if (!fs::exists(path)) {
+    fs::create_directories(path);
+  }
+  return path;
+}
 
 inline BOOL IsUserDarkMode() {
   constexpr const LPCWSTR key =

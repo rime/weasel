@@ -46,6 +46,7 @@ void Configurator::Initialize() {
   weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
   weasel_traits.distribution_version = WEASEL_VERSION;
   weasel_traits.app_name = "rime.weasel";
+  weasel_traits.log_dir = WeaselLogPath().u8string().c_str();
   RimeSetup(&weasel_traits);
 
   LOG(INFO) << "WeaselDeployer reporting.";
