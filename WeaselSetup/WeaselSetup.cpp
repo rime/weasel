@@ -14,6 +14,9 @@ CAppModule _Module;
 
 static int Run(LPTSTR lpCmdLine);
 
+static void SetThreadUILanguageSC();
+static void SetThreadUILanguageTC();
+
 int WINAPI _tWinMain(HINSTANCE hInstance,
                      HINSTANCE /*hPrevInstance*/,
                      LPTSTR lpstrCmdLine,
@@ -27,17 +30,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
   hRes = _Module.Init(NULL, hInstance);
   ATLASSERT(SUCCEEDED(hRes));
 
-  LCID lcid = GetUserDefaultLCID();
-  if (lcid == 2052 || lcid == 3072 || lcid == 4100) {
-    LANGID langId = SetThreadUILanguage(
-        MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED));
-    SetThreadLocale(langId);
-  } else {
-    LANGID langId = SetThreadUILanguage(
-        MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL));
-    SetThreadLocale(langId);
-  }
-
   int nRet = Run(lpstrCmdLine);
 
   _Module.Term();
@@ -45,6 +37,19 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
 
   return nRet;
 }
+
+static void SetThreadUILanguageTC() {
+  LANGID langId = SetThreadUILanguage(
+      MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL));
+  SetThreadLocale(langId);
+}
+
+static void SetThreadUILanguageSC() {
+  LANGID langId =
+      SetThreadUILanguage(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED));
+  SetThreadLocale(langId);
+}
+
 int install(bool hant, bool silent, bool old_ime_support);
 int uninstall(bool silent);
 bool has_installed();
@@ -86,6 +91,13 @@ static int CustomInstall(bool installing) {
     }
     RegCloseKey(hKey);
   }
+
+  if (hant) {
+    SetThreadUILanguageTC();
+  } else {
+    SetThreadUILanguageSC();
+  }
+
   bool _has_installed = has_installed();
   if (!silent) {
     InstallOptionsDialog dlg;
@@ -100,6 +112,12 @@ static int CustomInstall(bool installing) {
       user_dir = dlg.user_dir;
       old_ime_support = dlg.old_ime_support;
       _has_installed = dlg.installed;
+
+      if (hant) {
+        SetThreadUILanguageTC();
+      } else {
+        SetThreadUILanguageSC();
+      }
     }
   }
   if (!_has_installed)
@@ -158,11 +176,15 @@ static int Run(LPTSTR lpCmdLine) {
     return uninstall(silent);
 
   bool hans = !wcscmp(L"/s", lpCmdLine);
-  if (hans)
+  if (hans) {
+    SetThreadUILanguageSC();
     return install(false, silent, old_ime_support);
+  }
   bool hant = !wcscmp(L"/t", lpCmdLine);
-  if (hant)
+  if (hant) {
+    SetThreadUILanguageTC();
     return install(true, silent, old_ime_support);
+  }
   bool installing = !wcscmp(L"/i", lpCmdLine);
   return CustomInstall(installing);
 }
