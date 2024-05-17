@@ -197,8 +197,7 @@ DWORD RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat) {
     _LoadSchemaSpecificSettings(ipc_id, schema_id);
     _LoadAppInlinePreeditSet(ipc_id, true);
     _UpdateInlinePreeditStatus(ipc_id);
-    if (m_base_style.display_tray_icon)
-      _RefreshTrayIcon(session_id, _UpdateUICallback);
+    _RefreshTrayIcon(session_id, _UpdateUICallback);
     session_status.status = status;
     session_status.__synced = false;
     RimeFreeStatus(&status);
@@ -542,8 +541,12 @@ bool RimeWithWeaselHandler::_IsDeployerRunning() {
 }
 
 void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
-  Status weasel_status;
-  Context weasel_context;
+  // if m_ui nullptr, _UpdateUI meaningless
+  if (!m_ui)
+    return;
+
+  Status& weasel_status = m_ui->status();
+  Context& weasel_context = m_ui->ctx();
 
   RimeSessionId session_id = to_session_id(ipc_id);
   bool is_tsf = _IsSessionTSF(session_id);
@@ -557,9 +560,6 @@ void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
     _GetContext(weasel_context, session_id);
   }
 
-  if (!m_ui)
-    return;
-
   SessionStatus& session_status = get_session_status(ipc_id);
   if (RimeGetOption(session_id, "inline_preedit"))
     session_status.style.client_caps |= INLINE_PREEDIT_CAPABLE;
@@ -567,15 +567,12 @@ void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
     session_status.style.client_caps &= ~INLINE_PREEDIT_CAPABLE;
 
   if (weasel_status.composing && !is_tsf) {
-    m_ui->Update(weasel_context, weasel_status);
     m_ui->Show();
   } else if (!_ShowMessage(weasel_context, weasel_status) && !is_tsf) {
     m_ui->Hide();
-    m_ui->Update(weasel_context, weasel_status);
   }
 
-  if (m_base_style.display_tray_icon)
-    _RefreshTrayIcon(session_id, _UpdateUICallback);
+  _RefreshTrayIcon(session_id, _UpdateUICallback);
 
   m_message_type.clear();
   m_message_value.clear();
@@ -1491,9 +1488,8 @@ void RimeWithWeaselHandler::_GetStatus(Status& stat,
         if (session_status.style.inline_preedit != inline_preedit)
           // in case of inline_preedit set in schema
           _UpdateInlinePreeditStatus(ipc_id);
-        if (m_base_style.display_tray_icon)
-          // refresh icon after schema changed
-          _RefreshTrayIcon(session_id, _UpdateUICallback);
+        // refresh icon after schema changed
+        _RefreshTrayIcon(session_id, _UpdateUICallback);
         m_ui->style() = session_status.style;
         if (m_show_notifications.find("schema") != m_show_notifications.end() &&
             m_show_notifications_time > 0) {
