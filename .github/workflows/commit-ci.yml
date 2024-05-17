@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
       - name: Cache llvm
         id: cache-llvm
         uses: actions/cache@v4
@@ -43,6 +44,7 @@ jobs:
         shell: bash
         run: |
           cp env.vs2019.bat env.bat
+          echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
 
       - name: Cache Boost
         id: cache-boost
@@ -86,6 +88,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
+          name: weasel-artifact-${{ env.git_ref_name }}
           if-no-files-found: error
           path: |
             .\output\archives\weasel*.exe
