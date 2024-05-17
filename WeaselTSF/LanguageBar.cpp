@@ -187,10 +187,14 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click,
                ? LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP))
                : LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP_HANT)));
       HMENU popupMenu = GetSubMenu(menu, 0);
+      SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
       UINT wID = TrackPopupMenuEx(
           popupMenu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x,
           pt.y, hwnd, NULL);
       DestroyMenu(menu);
+      SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
       _pTextService->_HandleLangBarMenuSelect(wID);
     }
   }
