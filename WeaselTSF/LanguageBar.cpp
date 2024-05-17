@@ -330,10 +330,7 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID) {
       }
       break;
     case ID_WEASELTRAY_LOGDIR:
-      WCHAR _logDir[MAX_PATH];
-      // in the future if log dir customizable, to be changed
-      ExpandEnvironmentStringsW(L"%TEMP%", _logDir, _countof(_logDir));
-      explore(_logDir);
+      explore(WeaselLogPath().wstring());
       break;
     case ID_WEASELTRAY_WIKI:
       open(L"https://rime.im/docs/");
