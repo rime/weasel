@@ -74,7 +74,7 @@ jobs:
       - name: Compress Debug Symbols
         shell: pwsh
         run: |
-          Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
+          output\7z.exe a -t7z "./output/archives/debug_symbols.7z" "output/*.pdb" -r
 
       - name: Extract changelog
         shell: pwsh
@@ -93,7 +93,7 @@ jobs:
           title: "Nightly Build"
           files: |
             ./output/archives/weasel*.exe
-            ./output/archives/symbols.zip
+            ./output/archives/debug_symbols.7z
         
       # create stable release
       - name: Release
@@ -102,6 +102,6 @@ jobs:
         with:
           files: |
             ./output/archives/weasel*.exe
-            ./output/archives/symbols.zip
+            ./output/archives/debug_symbols.7z
           body_path: ${{ github.workspace }}/RELEASE_CHANGELOG.md
         
