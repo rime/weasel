@@ -28,15 +28,17 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
   ATLASSERT(SUCCEEDED(hRes));
 
   LCID lcid = GetUserDefaultLCID();
+  LANGID langId;
   if (lcid == 2052 || lcid == 3072 || lcid == 4100) {
-    LANGID langId = SetThreadUILanguage(
+    langId = SetThreadUILanguage(
         MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED));
-    SetThreadLocale(langId);
-  } else {
-    LANGID langId = SetThreadUILanguage(
+  } else if (lcid == 1028 || lcid == 3076 || lcid == 5124) {
+    langId = SetThreadUILanguage(
         MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL));
-    SetThreadLocale(langId);
+  } else {
+    langId = SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
   }
+  SetThreadLocale(langId);
 
   int nRet = Run(lpstrCmdLine);
 

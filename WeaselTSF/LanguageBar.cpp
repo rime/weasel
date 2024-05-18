@@ -155,12 +155,28 @@ static LANGID GetActiveProfileLangId() {
   return profile.langid;
 }
 
-STDAPI CLangBarItemButton::GetTooltipString(BSTR* pbstrToolTip) {
-  LANGID langid = GetActiveProfileLangId();
-  if (langid == TEXTSERVICE_LANGID) {
-    *pbstrToolTip = SysAllocString(L"左键切换模式，右键打开菜单");
+static LANGID GetUserDefaultLangId() {
+  LANGID langId;
+  LCID lcid = GetUserDefaultLCID();
+  if (lcid == 2052 || lcid == 3072 || lcid == 4100) {
+    langId = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+  } else if (lcid == 1028 || lcid == 3076 || lcid == 5124) {
+    langId = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL);
   } else {
+    langId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+  }
+  return langId;
+}
+
+STDAPI CLangBarItemButton::GetTooltipString(BSTR* pbstrToolTip) {
+  LANGID langid = GetUserDefaultLangId();
+  if (langid == TEXTSERVICE_LANGID_HANS) {
+    *pbstrToolTip = SysAllocString(L"左键切换模式，右键打开菜单");
+  } else if (langid == TEXTSERVICE_LANGID_HANT) {
     *pbstrToolTip = SysAllocString(L"左鍵切換模式，右鍵打開菜單");
+  } else {
+    *pbstrToolTip = SysAllocString(
+        L"Left-click to switch modes\n\nRight-click for more options");
   }
 
   return (*pbstrToolTip == NULL) ? E_OUTOFMEMORY : S_OK;
@@ -180,12 +196,15 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click,
     /* Open menu */
     HWND hwnd = _pTextService->_GetFocusedContextWindow();
     if (hwnd != NULL) {
-      LANGID langid = GetActiveProfileLangId();
-
-      HMENU menu =
-          ((langid == TEXTSERVICE_LANGID)
-               ? LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP))
-               : LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP_HANT)));
+      LANGID langid = GetUserDefaultLangId();
+      HMENU menu;
+      if (langid == TEXTSERVICE_LANGID_HANS) {
+        menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP_HANS));
+      } else if (langid == TEXTSERVICE_LANGID_HANT) {
+        menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP_HANT));
+      } else {
+        menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
+      }
       HMENU popupMenu = GetSubMenu(menu, 0);
       UINT wID = TrackPopupMenuEx(
           popupMenu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x,

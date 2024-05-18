@@ -1,15 +1,17 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ 生成的包含文件。
-// 供 WeaselServer.rc 使用
+// Microsoft Visual C++ generated include file.
+// Used by WeaselServer.rc
 //
 #define IDI_WEASEL                      100
 #define IDI_EN                          101
 #define IDI_ZH                          102
 #define IDI_RELOAD                      103
 #define IDR_MENU_POPUP                  105
-#define IDI_FULL_SHAPE					106
-#define IDI_HALF_SHAPE					107
-
+#define IDI_FULL_SHAPE                  106
+#define IDI_HALF_SHAPE                  107
+#define IDS_STR_SYSTEM_VERSION_WARNING_CAPTION 300
+#define IDS_STR_SYSTEM_VERSION_WARNING  301
+#define IDS_STR_UNDER_MAINTENANCE       302
 #define ID_WEASELTRAY_QUIT              40001
 #define ID_WEASELTRAY_DEPLOY            40002
 #define ID_WEASELTRAY_CHECKUPDATE       40003
@@ -23,6 +25,8 @@
 #define ID_WEASELTRAY_SYNC              40012
 #define ID_WEASELTRAY_ENABLE_ASCII      40013
 #define ID_WEASELTRAY_DISABLE_ASCII     40014
+#define ID_WEASELTRAY_RERUN_SERVICE     40015
+#define ID_WEASELTRAY_LOGDIR            40016
 
 // Next default values for new objects
 // 

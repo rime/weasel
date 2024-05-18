@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Register.h"
 #include <strsafe.h>
+#include <WeaselUtility.h>
 
 #define CLSID_STRLEN 38  // strlen("{xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx}")
 
@@ -65,39 +66,44 @@ BOOL RegisterProfiles() {
     if (!hantEnable && !hansEnable)
       hansEnable = TRUE;
 
+    std::wstring text_service_desc = get_weasel_ime_name();
+    const WCHAR* text_service_desc_str = text_service_desc.c_str();
+    ULONG text_service_desc_len = text_service_desc.size() * sizeof(wchar_t);
+
     hr = pInputProcessorProfileMgr->RegisterProfile(
-        c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, TEXTSERVICE_DESC,
-        (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile, cchIconFile,
-        TEXTSERVICE_ICON_INDEX, FindIME(TEXTSERVICE_LANGID), 0, hansEnable, 0);
+        c_clsidTextService, TEXTSERVICE_LANGID_HANS, c_guidProfile,
+        text_service_desc_str, text_service_desc_len, achIconFile, cchIconFile,
+        TEXTSERVICE_ICON_INDEX, FindIME(TEXTSERVICE_LANGID_HANS), 0, hansEnable,
+        0);
     if (FAILED(hr))
       goto ExitError;
 
     hr = pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID_HANT, c_guidProfile,
-        TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
-        cchIconFile, TEXTSERVICE_ICON_INDEX, FindIME(TEXTSERVICE_LANGID_HANT),
-        0, hantEnable, 0);
+        text_service_desc_str, text_service_desc_len, achIconFile, cchIconFile,
+        TEXTSERVICE_ICON_INDEX, FindIME(TEXTSERVICE_LANGID_HANT), 0, hantEnable,
+        0);
     if (FAILED(hr))
       goto ExitError;
     // WeaselIME not support these languages, so HKL is NULL
     hr = pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID_HONGKONG, c_guidProfile,
-        TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
-        cchIconFile, TEXTSERVICE_ICON_INDEX, NULL, 0, FALSE, 0);
+        text_service_desc_str, text_service_desc_len, achIconFile, cchIconFile,
+        TEXTSERVICE_ICON_INDEX, NULL, 0, FALSE, 0);
     if (FAILED(hr))
       goto ExitError;
 
     hr = pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID_MACAU, c_guidProfile,
-        TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
-        cchIconFile, TEXTSERVICE_ICON_INDEX, NULL, 0, FALSE, 0);
+        text_service_desc_str, text_service_desc_len, achIconFile, cchIconFile,
+        TEXTSERVICE_ICON_INDEX, NULL, 0, FALSE, 0);
     if (FAILED(hr))
       goto ExitError;
 
     hr = pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID_SINGAPORE, c_guidProfile,
-        TEXTSERVICE_DESC, (ULONG)wcslen(TEXTSERVICE_DESC), achIconFile,
-        cchIconFile, TEXTSERVICE_ICON_INDEX, NULL, 0, FALSE, 0);
+        text_service_desc_str, text_service_desc_len, achIconFile, cchIconFile,
+        TEXTSERVICE_ICON_INDEX, NULL, 0, FALSE, 0);
     if (FAILED(hr)) {
     ExitError:
       pInputProcessorProfileMgr.Release();
@@ -120,7 +126,7 @@ void UnregisterProfiles() {
       return;
 
     hr = pInputProcessorProfileMgr->UnregisterProfile(
-        c_clsidTextService, TEXTSERVICE_LANGID, c_guidProfile, 0);
+        c_clsidTextService, TEXTSERVICE_LANGID_HANS, c_guidProfile, 0);
     hr = pInputProcessorProfileMgr->UnregisterProfile(
         c_clsidTextService, TEXTSERVICE_LANGID_HANT, c_guidProfile, 0);
     hr = pInputProcessorProfileMgr->UnregisterProfile(

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <filesystem>
 #include <string>
 
@@ -182,3 +182,13 @@ inline std::basic_string<CharT> unescape_string(
 
 // resource
 std::string GetCustomResource(const char* name, const char* type);
+
+inline std::wstring get_weasel_ime_name() {
+  LCID lcid = GetUserDefaultLCID();
+  if (lcid == 2052 || lcid == 3072 || lcid == 4100 || lcid == 1028 ||
+      lcid == 3076 || lcid == 5124) {
+    return L"小狼毫";
+  } else {
+    return L"Weasel";
+  }
+}

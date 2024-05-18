@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #define WEASEL_CODE_NAME "Weasel"
-#define WEASEL_IME_NAME L"小狼毫"
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
 
