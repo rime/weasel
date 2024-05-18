@@ -289,7 +289,7 @@ int register_ime(const std::wstring& ime_path,
   const WCHAR PRELOAD_KEY[] = L"Keyboard Layout\\Preload";
 
   if (register_ime) {
-    HKL hKL = ImmInstallIME(ime_path.c_str(), WEASEL_IME_NAME);
+    HKL hKL = ImmInstallIME(ime_path.c_str(), get_weasel_ime_name().c_str());
     if (!hKL) {
       // manually register ime
       WCHAR hkl_str[16] = {0};
@@ -323,9 +323,10 @@ int register_ime(const std::wstring& ime_path,
               const WCHAR layout_file[] = L"kbdus.dll";
               RegSetValueEx(hSubKey, L"Layout File", 0, REG_SZ,
                             (LPBYTE)layout_file, sizeof(layout_file));
-              const WCHAR layout_text[] = WEASEL_IME_NAME;
+              const std::wstring layout_text = get_weasel_ime_name();
               RegSetValueEx(hSubKey, L"Layout Text", 0, REG_SZ,
-                            (LPBYTE)layout_text, sizeof(layout_text));
+                            (LPBYTE)layout_text.c_str(),
+                            layout_text.size() * sizeof(wchar_t));
               RegCloseKey(hSubKey);
               hKL = (HKL)k;
             }

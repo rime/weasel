@@ -18,6 +18,14 @@ int WeaselServerApp::Run() {
 
   // win_sparkle_set_appcast_url("http://localhost:8000/weasel/update/appcast.xml");
   win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
+  if (GetThreadUILanguage() ==
+      MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL))
+    win_sparkle_set_lang("zh-TW");
+  else if (GetThreadUILanguage() ==
+           MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED))
+    win_sparkle_set_lang("zh-CN");
+  else
+    win_sparkle_set_lang("en");
   win_sparkle_init();
   m_ui.Create(m_server.GetHWnd());
 

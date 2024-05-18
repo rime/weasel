@@ -95,7 +95,8 @@ void RimeWithWeaselHandler::_Setup() {
   weasel_traits.shared_data_dir = shared_dir.c_str();
   weasel_traits.user_data_dir = user_dir.c_str();
   weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
-  std::string distribution_name = wstring_to_string(WEASEL_IME_NAME, CP_UTF8);
+  std::string distribution_name =
+      wstring_to_string(get_weasel_ime_name(), CP_UTF8);
   weasel_traits.distribution_name = distribution_name.c_str();
   weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
   weasel_traits.distribution_version = WEASEL_VERSION;
@@ -723,15 +724,26 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
   bool show_icon = false;
   if (m_message_type == "deploy") {
     if (m_message_value == "start")
-      tips = L"正在部署 RIME";
+      if (GetThreadUILanguage() == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US))
+        tips = L"Deploying RIME";
+      else
+        tips = L"正在部署 RIME";
     else if (m_message_value == "success")
-      tips = L"部署完成";
+      if (GetThreadUILanguage() == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US))
+        tips = L"Deployed";
+      else
+        tips = L"部署完成";
     else if (m_message_value == "failure") {
       if (GetThreadUILanguage() ==
           MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL))
         tips = L"有錯誤，請查看日誌 %TEMP%\\rime.weasel\\rime.weasel.*.INFO";
-      else
+      else if (GetThreadUILanguage() ==
+               MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED))
         tips = L"有错误，请查看日志 %TEMP%\\rime.weasel\\rime.weasel.*.INFO";
+      else
+        tips =
+            L"There is an error, please check the logs "
+            L"%TEMP%\\rime.weasel\\rime.weasel.*.INFO";
     }
   } else if (m_message_type == "schema") {
     tips = /*L"【" + */ status.schema_name /* + L"】"*/;

@@ -14,7 +14,7 @@ static void error_message(const WCHAR* msg) {
   DWORD now = GetTickCount();
   if (now > next_tick) {
     next_tick = now + 10000;  // (ms)
-    MessageBox(NULL, msg, TEXTSERVICE_DESC, MB_ICONERROR | MB_OK);
+    MessageBox(NULL, msg, get_weasel_ime_name().c_str(), MB_ICONERROR | MB_OK);
   }
 }
 
