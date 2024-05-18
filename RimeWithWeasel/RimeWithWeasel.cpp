@@ -546,7 +546,7 @@ void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
     return;
 
   Status& weasel_status = m_ui->status();
-  Context& weasel_context = m_ui->ctx();
+  Context weasel_context;
 
   RimeSessionId session_id = to_session_id(ipc_id);
   bool is_tsf = _IsSessionTSF(session_id);
@@ -567,9 +567,11 @@ void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
     session_status.style.client_caps &= ~INLINE_PREEDIT_CAPABLE;
 
   if (weasel_status.composing && !is_tsf) {
+    m_ui->Update(weasel_context, weasel_status);
     m_ui->Show();
   } else if (!_ShowMessage(weasel_context, weasel_status) && !is_tsf) {
     m_ui->Hide();
+    m_ui->Update(weasel_context, weasel_status);
   }
 
   _RefreshTrayIcon(session_id, _UpdateUICallback);
