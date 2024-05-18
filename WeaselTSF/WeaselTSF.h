@@ -188,6 +188,8 @@ class WeaselTSF : public ITfTextInputProcessorEx,
   void _UninitCompartment();
   HRESULT _HandleCompartment(REFGUID guidCompartment);
 
+  std::wstring _GetRootDir();
+
   bool isImmersive() const {
     return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;
   }

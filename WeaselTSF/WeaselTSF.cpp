@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 
 #include <WeaselIPCData.h>
+#include <thread>
+#include <shellapi.h>
 #include "WeaselTSF.h"
 #include "CandidateList.h"
 #include "LanguageBar.h"
@@ -217,6 +219,8 @@ STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid,
   return S_OK;
 }
 
+static unsigned int retry = 0;
+
 void WeaselTSF::_EnsureServerConnected() {
   if (!m_client.Echo()) {
     m_client.Disconnect();
@@ -226,6 +230,18 @@ void WeaselTSF::_EnsureServerConnected() {
     bool ok = m_client.GetResponseData(std::ref(parser));
     if (ok) {
       _UpdateLanguageBar(_status);
+    }
+    retry++;
+    if (retry >= 6) {
+      if (!m_client.Echo()) {
+        std::wstring dir = _GetRootDir();
+        std::thread th([dir]() {
+          ShellExecuteW(NULL, L"open", (dir + L"\\start_service.bat").c_str(),
+                        NULL, dir.c_str(), SW_HIDE);
+        });
+        th.detach();
+      }
+      retry = 0;
     }
   }
 }
