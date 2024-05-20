@@ -621,16 +621,31 @@ int uninstall(bool silent) {
   // 注销输入法
   int retval = 0;
 
-  HMODULE hInputDLL = LoadLibrary(TEXT("input.dll"));
-  if (hInputDLL) {
-    PTF_INSTALLLAYOUTORTIP pfnInstallLayoutOrTip;
-    pfnInstallLayoutOrTip =
-        (PTF_INSTALLLAYOUTORTIP)GetProcAddress(hInputDLL, "InstallLayoutOrTip");
-    if (pfnInstallLayoutOrTip) {
-      (*pfnInstallLayoutOrTip)(PSZTITLE_HANS, ILOT_UNINSTALL);
-      (*pfnInstallLayoutOrTip)(PSZTITLE_HANT, ILOT_UNINSTALL);
+  const WCHAR KEY[] = L"Software\\Rime\\Weasel";
+  HKEY hKey;
+  LSTATUS ret = RegOpenKey(HKEY_CURRENT_USER, KEY, &hKey);
+  if (ret == ERROR_SUCCESS) {
+    WCHAR value[MAX_PATH];
+    DWORD type = 0;
+    DWORD data = 0;
+    DWORD len = sizeof(data);
+    ret = RegQueryValueEx(hKey, L"Hant", NULL, &type, (LPBYTE)&data, &len);
+    if (ret == ERROR_SUCCESS && type == REG_DWORD) {
+      HMODULE hInputDLL = LoadLibrary(TEXT("input.dll"));
+      if (hInputDLL) {
+        PTF_INSTALLLAYOUTORTIP pfnInstallLayoutOrTip;
+        pfnInstallLayoutOrTip = (PTF_INSTALLLAYOUTORTIP)GetProcAddress(
+            hInputDLL, "InstallLayoutOrTip");
+        if (pfnInstallLayoutOrTip) {
+          if (data != 0)
+            (*pfnInstallLayoutOrTip)(PSZTITLE_HANT, ILOT_UNINSTALL);
+          else
+            (*pfnInstallLayoutOrTip)(PSZTITLE_HANS, ILOT_UNINSTALL);
+        }
+        FreeLibrary(hInputDLL);
+      }
     }
-    FreeLibrary(hInputDLL);
+    RegCloseKey(hKey);
   }
 
   uninstall_ime_file(L".ime", silent, &register_ime);
