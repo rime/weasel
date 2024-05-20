@@ -19,6 +19,8 @@
 #define GDPCOLOR_FROM_COLORREF(color)                                \
   Gdiplus::Color::MakeARGB(((color >> 24) & 0xff), GetRValue(color), \
                            GetGValue(color), GetBValue(color))
+#define HALF_ALPHA_COLOR(color) \
+  ((((color & 0xff000000) >> 25) & 0xff) << 24) | (color & 0x00ffffff)
 
 #pragma comment(lib, "Shcore.lib")
 
@@ -266,6 +268,7 @@ LRESULT WeaselPanel::OnLeftClickedUp(UINT uMsg,
     if (rect.PtInRect(point)) {
       size_t i = m_ctx.cinfo.highlighted;
       if (_UICallback) {
+        m_mouse_entry = false;
         _UICallback(&i, NULL, NULL, NULL);
         if (!m_status.composing)
           DestroyWindow();
@@ -360,7 +363,7 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
         }
       }
     }
-    // select by click
+    // select by click relative actions
     for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
       CRect rect = m_layout->GetCandidateRect((int)i);
       if (m_istorepos)
@@ -368,6 +371,7 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
       rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
       if (rect.PtInRect(point)) {
         bar_scale_ = 0.8f;
+        // modify highlighted
         if (i != m_ctx.cinfo.highlighted) {
           if (_UICallback)
             _UICallback(NULL, &i, NULL, NULL);
@@ -728,7 +732,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
     // if candidate_shadow_color not transparent, draw candidate shadow first
     if (COLORNOTTRANSPARENT(m_style.candidate_shadow_color)) {
       for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-        if (i == m_ctx.cinfo.highlighted)
+        if (i == m_ctx.cinfo.highlighted || i == m_hoverIndex)
           continue;  // draw non hilited candidates only
         rect = m_layout->GetCandidateRect((int)i);
         IsToRoundStruct rd = m_layout->GetRoundInfo(i);
@@ -744,10 +748,9 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
     }
     // draw non highlighted candidates, without shadow
     if ((COLORNOTTRANSPARENT(m_style.candidate_back_color) ||
-         COLORNOTTRANSPARENT(m_style.candidate_border_color)) ||
-        m_style.hover_type == UIStyle::HoverType::SEMI_HILITE) {
+         COLORNOTTRANSPARENT(m_style.candidate_border_color))) {
       for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-        if (i == m_ctx.cinfo.highlighted)
+        if (i == m_ctx.cinfo.highlighted || i == m_hoverIndex)
           continue;
         rect = m_layout->GetCandidateRect((int)i);
         IsToRoundStruct rd = m_layout->GetRoundInfo(i);
@@ -756,25 +759,28 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
           ReconfigRoundInfo(rd, i, m_candidateCount);
         }
         rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
-        if (i != m_hoverIndex)
-          _HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000,
-                         m_style.round_corner, bkType, rd,
-                         m_style.candidate_border_color);
-        else {
-          int color = ((m_style.hilited_candidate_back_color >> 25) & 0xff)
-                      << 24;
-          color = (m_style.hilited_candidate_back_color & 0x00ffffff) | color;
-          int border_color =
-              ((m_style.hilited_candidate_border_color >> 25) & 0xff) << 24;
-          border_color = (m_style.hilited_candidate_border_color & 0x00ffffff) |
-                         border_color;
-          _HighlightText(dc, rect, color, 0x00000000, m_style.round_corner,
-                         bkType, rd, border_color);
-        }
+        _HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000,
+                       m_style.round_corner, bkType, rd,
+                       m_style.candidate_border_color);
         drawn = true;
       }
     }
-    // draw highlighted back ground and shadow
+    // draw semi-hilite background and shadow
+    if (m_hoverIndex > 0) {
+      rect = m_layout->GetCandidateRect(m_hoverIndex);
+      IsToRoundStruct rd = m_layout->GetRoundInfo(m_hoverIndex);
+      if (m_istorepos) {
+        rect.OffsetRect(0, m_offsetys[m_hoverIndex]);
+        ReconfigRoundInfo(rd, m_hoverIndex, m_candidateCount);
+      }
+      rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
+      _HighlightText(dc, rect,
+                     HALF_ALPHA_COLOR(m_style.hilited_candidate_back_color),
+                     HALF_ALPHA_COLOR(m_style.hilited_candidate_shadow_color),
+                     m_style.round_corner, bkType, rd,
+                     HALF_ALPHA_COLOR(m_style.hilited_candidate_border_color));
+    }
+    // draw highlighted background and shadow
     {
       rect = m_layout->GetHighlightRect();
       bool markSt = bar_scale_ == 1.0 || (!m_style.mark_text.empty());
@@ -1047,6 +1053,8 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg,
                               WPARAM wParam,
                               LPARAM lParam,
                               BOOL& bHandled) {
+  m_mouse_entry = false;
+  m_hoverIndex = -1;
   GetWindowRect(&m_inputPos);
   Refresh();
   return TRUE;
