@@ -176,9 +176,17 @@ STDMETHODIMP WeaselTSF::OnSetThreadFocus() {
     if (ok)
       _UpdateLanguageBar(_status);
   }
+  HANDLE hThread = GetCurrentThread();
+  if (GetThreadPriority(hThread) != THREAD_PRIORITY_ABOVE_NORMAL) {
+    SetThreadPriority(hThread, THREAD_PRIORITY_HIGHEST);
+  }
   return S_OK;
 }
 STDMETHODIMP WeaselTSF::OnKillThreadFocus() {
+  HANDLE hThread = GetCurrentThread();
+  if (GetThreadPriority(hThread) != THREAD_PRIORITY_NORMAL) {
+    SetThreadPriority(hThread, THREAD_PRIORITY_NORMAL);
+  }
   _AbortComposition();
   return S_OK;
 }

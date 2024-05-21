@@ -124,6 +124,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
 
   int nRet = 0;
   try {
+    HANDLE hThread = GetCurrentThread();
+    if (GetThreadPriority(hThread) != THREAD_PRIORITY_ABOVE_NORMAL) {
+      SetThreadPriority(hThread, THREAD_PRIORITY_HIGHEST);
+    }
     WeaselServerApp app;
     RegisterApplicationRestart(NULL, 0);
     nRet = app.Run();
