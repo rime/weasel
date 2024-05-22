@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "WeaselClientImpl.h"
 #include <StringAlgorithm.hpp>
+#include <future>
+#include <chrono>
 
 using namespace weasel;
 
@@ -59,9 +61,20 @@ bool ClientImpl::ProcessKeyEvent(KeyEvent const& keyEvent) {
   if (!_Active())
     return false;
 
-  LRESULT ret =
-      _SendMessage(WEASEL_IPC_PROCESS_KEY_EVENT, keyEvent, session_id);
-  return ret != 0;
+  // create async task _SendMessage
+  auto future = std::async(std::launch::async, [this, &keyEvent]() {
+    return _SendMessage(WEASEL_IPC_PROCESS_KEY_EVENT, keyEvent, session_id);
+  });
+
+  // wait _SendMessage complete or overtime
+  if (future.wait_for(std::chrono::seconds(2)) == std::future_status::timeout) {
+    // _SendMessage overtime
+    return false;
+  } else {
+    // _SendMessage complete
+    LRESULT ret = future.get();
+    return ret != 0;
+  }
 }
 
 bool ClientImpl::CommitComposition() {
