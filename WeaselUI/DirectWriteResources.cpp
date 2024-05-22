@@ -108,6 +108,13 @@ HRESULT DirectWriteResources::InitResources(
        (_style.max_height == 0 &&
         _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT))
           ? DWRITE_WORD_WRAPPING_NO_WRAP
+          : DWRITE_WORD_WRAPPING_WHOLE_WORD;
+  DWRITE_WORD_WRAPPING wrapping_preedit =
+      ((_style.max_width == 0 &&
+        _style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) ||
+       (_style.max_height == 0 &&
+        _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT))
+          ? DWRITE_WORD_WRAPPING_NO_WRAP
           : DWRITE_WORD_WRAPPING_CHARACTER;
   DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right
                                    ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
@@ -174,7 +181,7 @@ HRESULT DirectWriteResources::InitResources(
       pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
     pPreeditTextFormat->SetParagraphAlignment(
         DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-    pPreeditTextFormat->SetWordWrapping(wrapping);
+    pPreeditTextFormat->SetWordWrapping(wrapping_preedit);
     _SetFontFallback(pPreeditTextFormat, fontFaceStrVector);
     if (_style.linespacing && _style.baseline)
       pPreeditTextFormat->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM,
