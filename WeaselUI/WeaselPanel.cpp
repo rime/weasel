@@ -75,6 +75,11 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
   // for gdi+ drawings, initialization
   GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 
+  HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+  UINT dpiX = 96, dpiY = 96;
+  if (hMonitor)
+    GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+  dpi = dpiX;
   _InitFontRes();
   m_ostyle = m_style;
 }
