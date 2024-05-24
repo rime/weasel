@@ -56,6 +56,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
       m_ostyle(ui.ostyle()),
       m_candidateCount(0),
       m_current_zhung_icon(),
+      m_inputPos(CRect()),
       m_sticky(false),
       dpi(96),
       hide_candidates(false),
