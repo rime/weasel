@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "WeaselPanel.h"
 
 #include <utility>
@@ -58,6 +58,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
       m_ostyle(ui.ostyle()),
       m_candidateCount(0),
       m_current_zhung_icon(),
+      m_inputPos(CRect()),
       m_sticky(false),
       dpi(96),
       hide_candidates(false),
@@ -77,6 +78,11 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
   // for gdi+ drawings, initialization
   GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 
+  HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+  UINT dpiX = 96, dpiY = 96;
+  if (hMonitor)
+    GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+  dpi = dpiX;
   _InitFontRes();
   m_ostyle = m_style;
 }
@@ -170,8 +176,10 @@ void WeaselPanel::_InitFontRes(bool forced) {
   // if style changed, or dpi changed, or pDWR NULL, re-initialize directwrite
   // resources
   if (forced || (pDWR == NULL) || (m_ostyle != m_style) || (dpiX != dpi)) {
-    pDWR.reset();
-    pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
+    if (pDWR)
+      pDWR->InitResources(m_style, dpiX);
+    else
+      pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
     pDWR->pRenderTarget->SetTextAntialiasMode(
         (D2D1_TEXT_ANTIALIAS_MODE)m_style.antialias_mode);
   }
@@ -1055,7 +1063,6 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg,
                               BOOL& bHandled) {
   m_mouse_entry = false;
   m_hoverIndex = -1;
-  GetWindowRect(&m_inputPos);
   Refresh();
   return TRUE;
 }
