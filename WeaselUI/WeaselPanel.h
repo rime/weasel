@@ -73,6 +73,10 @@ class WeaselPanel
   static UINT_PTR ptimer;
 
  private:
+  template <typename T>
+  int DPI_SCALE(T t) {
+    return (int)(t * dpiScaleLayout);
+  }
   void _InitFontRes(bool forced = false);
   void _CaptureRect(CRect& rect);
   bool m_mouse_entry = false;
@@ -137,5 +141,8 @@ class WeaselPanel
   std::function<void(size_t* const, size_t* const, bool* const, bool* const)>&
       _UICallback;
   float bar_scale_ = 1.0;
+  float dpiScaleLayout = 1.0f;
   int m_hoverIndex = -1;
+  HMONITOR m_hMonitor = NULL;
+  bool m_redraw_by_monitor_change = false;
 };

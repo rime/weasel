@@ -9,8 +9,9 @@ class FullScreenLayout : public StandardLayout {
                    const Context& context,
                    const Status& status,
                    const CRect& inputPos,
-                   Layout* layout)
-      : StandardLayout(style, context, status),
+                   Layout* layout,
+                   PDWR pDWR)
+      : StandardLayout(style, context, status, pDWR),
         mr_inputPos(inputPos),
         m_layout(layout) {}
   virtual ~FullScreenLayout() { delete m_layout; }

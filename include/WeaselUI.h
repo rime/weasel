@@ -150,7 +150,7 @@ class DirectWriteResources {
   void SetBrushColor(const D2D1_COLOR_F& color) { pBrush->SetColor(color); }
   void SetDpi(const UINT& dpi);
 
-  float dpiScaleX_, dpiScaleY_;
+  float dpiScaleFontPoint, dpiScaleLayout;
   ComPtr<ID2D1Factory> pD2d1Factory;
   ComPtr<IDWriteFactory2> pDWFactory;
   ComPtr<ID2D1DCRenderTarget> pRenderTarget;

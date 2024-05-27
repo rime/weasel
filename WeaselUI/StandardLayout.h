@@ -14,8 +14,9 @@ class StandardLayout : public Layout {
  public:
   StandardLayout(const UIStyle& style,
                  const Context& context,
-                 const Status& status)
-      : Layout(style, context, status) {}
+                 const Status& status,
+                 PDWR pDWR)
+      : Layout(style, context, status, pDWR) {}
 
   /* Layout */
 
