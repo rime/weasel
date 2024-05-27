@@ -32,8 +32,8 @@ std::vector<std::wstring> wc_split(const wchar_t* in, const wchar_t* delim) {
 DirectWriteResources::DirectWriteResources(weasel::UIStyle& style,
                                            UINT dpi = 96)
     : _style(style),
-      dpiScaleX_(0),
-      dpiScaleY_(0),
+      dpiScaleFontPoint(0),
+      dpiScaleLayout(0),
       pD2d1Factory(NULL),
       pDWFactory(NULL),
       pRenderTarget(NULL),
@@ -70,9 +70,9 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style,
   pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f),
                                        pBrush.GetAddressOf());
   // get the dpi information
-  dpiScaleX_ = dpiScaleY_ = (float)dpi;
-  dpiScaleX_ /= 72.0f;
-  dpiScaleY_ /= 72.0f;
+  dpiScaleFontPoint = dpiScaleLayout = (float)dpi;
+  dpiScaleFontPoint /= 72.0f;
+  dpiScaleLayout /= 96.0f;
 
   InitResources(style, dpi);
 }
@@ -130,8 +130,8 @@ HRESULT DirectWriteResources::InitResources(
   DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
   DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
   // convert percentage to float
-  float linespacing = dpiScaleX_ * ((float)_style.linespacing / 100.0f);
-  float baseline = dpiScaleX_ * ((float)_style.baseline / 100.0f);
+  float linespacing = dpiScaleFontPoint * ((float)_style.linespacing / 100.0f);
+  float baseline = dpiScaleFontPoint * ((float)_style.baseline / 100.0f);
   if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
     baseline = linespacing / 2;
   // setup font weight and font style by the first unit of font_face setting
@@ -142,7 +142,7 @@ HRESULT DirectWriteResources::InitResources(
                          std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
   hResult = pDWFactory->CreateTextFormat(
       _mainFontFace.c_str(), NULL, fontWeight, fontStyle,
-      DWRITE_FONT_STRETCH_NORMAL, font_point * dpiScaleX_, L"",
+      DWRITE_FONT_STRETCH_NORMAL, font_point * dpiScaleFontPoint, L"",
       reinterpret_cast<IDWriteTextFormat**>(pTextFormat.GetAddressOf()));
   if (pTextFormat != NULL) {
     if (vertical_text) {
@@ -169,7 +169,7 @@ HRESULT DirectWriteResources::InitResources(
                          std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
   hResult = pDWFactory->CreateTextFormat(
       _mainFontFace.c_str(), NULL, fontWeight, fontStyle,
-      DWRITE_FONT_STRETCH_NORMAL, font_point * dpiScaleX_, L"",
+      DWRITE_FONT_STRETCH_NORMAL, font_point * dpiScaleFontPoint, L"",
       reinterpret_cast<IDWriteTextFormat**>(pPreeditTextFormat.GetAddressOf()));
   if (pPreeditTextFormat != NULL) {
     if (vertical_text) {
@@ -199,7 +199,7 @@ HRESULT DirectWriteResources::InitResources(
                          std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
   hResult = pDWFactory->CreateTextFormat(
       _mainFontFace.c_str(), NULL, fontWeight, fontStyle,
-      DWRITE_FONT_STRETCH_NORMAL, label_font_point * dpiScaleX_, L"",
+      DWRITE_FONT_STRETCH_NORMAL, label_font_point * dpiScaleFontPoint, L"",
       reinterpret_cast<IDWriteTextFormat**>(pLabelTextFormat.GetAddressOf()));
   if (pLabelTextFormat != NULL) {
     if (vertical_text) {
@@ -228,7 +228,7 @@ HRESULT DirectWriteResources::InitResources(
                          std::wregex(STYLEORWEIGHT, std::wregex::icase), L"");
   hResult = pDWFactory->CreateTextFormat(
       _mainFontFace.c_str(), NULL, fontWeight, fontStyle,
-      DWRITE_FONT_STRETCH_NORMAL, comment_font_point * dpiScaleX_, L"",
+      DWRITE_FONT_STRETCH_NORMAL, comment_font_point * dpiScaleFontPoint, L"",
       reinterpret_cast<IDWriteTextFormat**>(pCommentTextFormat.GetAddressOf()));
   if (pCommentTextFormat != NULL) {
     if (vertical_text) {
@@ -255,8 +255,8 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style,
                                             const UINT& dpi = 96) {
   _style = style;
   if (dpi) {
-    dpiScaleX_ = dpi / 72.0f;
-    dpiScaleY_ = dpi / 72.0f;
+    dpiScaleFontPoint = dpi / 72.0f;
+    dpiScaleLayout = dpi / 96.0f;
   }
   return InitResources(style.label_font_face, style.label_font_point,
                        style.font_face, style.font_point,
@@ -265,8 +265,8 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style,
 }
 
 void weasel::DirectWriteResources::SetDpi(const UINT& dpi) {
-  dpiScaleX_ = dpi / 72.0f;
-  dpiScaleY_ = dpi / 72.0f;
+  dpiScaleFontPoint = dpi / 72.0f;
+  dpiScaleLayout = dpi / 96.0f;
 
   pPreeditTextFormat.Reset();
   pTextFormat.Reset();

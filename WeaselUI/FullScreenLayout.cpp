@@ -92,17 +92,18 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc,
     int fontPointComment;
 
     if (pDWR->pLabelTextFormat != NULL)
-      fontPointLabel =
-          (int)(pDWR->pLabelTextFormat->GetFontSize() / pDWR->dpiScaleX_);
+      fontPointLabel = (int)(pDWR->pLabelTextFormat->GetFontSize() /
+                             pDWR->dpiScaleFontPoint);
     else
       fontPointLabel = 0;
     if (pDWR->pTextFormat != NULL)
-      fontPoint = (int)(pDWR->pTextFormat->GetFontSize() / pDWR->dpiScaleX_);
+      fontPoint =
+          (int)(pDWR->pTextFormat->GetFontSize() / pDWR->dpiScaleFontPoint);
     else
       fontPoint = 0;
     if (pDWR->pCommentTextFormat != NULL)
-      fontPointComment =
-          (int)(pDWR->pCommentTextFormat->GetFontSize() / pDWR->dpiScaleX_);
+      fontPointComment = (int)(pDWR->pCommentTextFormat->GetFontSize() /
+                               pDWR->dpiScaleFontPoint);
     else
       fontPointComment = 0;
     CSize sz = m_layout->GetContentSize();

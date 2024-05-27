@@ -64,7 +64,10 @@ struct IsToRoundStruct {
 
 class Layout {
  public:
-  Layout(const UIStyle& style, const Context& context, const Status& status);
+  Layout(const UIStyle& style,
+         const Context& context,
+         const Status& status,
+         PDWR pDWR);
 
   virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL) = 0;
   /* All points in this class is based on the content area */
@@ -104,9 +107,11 @@ class Layout {
   int mark_width = 4;
   int mark_gap = 8;
   int mark_height = 0;
+  int real_margin_x;
+  int real_margin_y;
+  UIStyle _style;
 
  protected:
-  const UIStyle& _style;
   const Context& _context;
   const Status& _status;
   const std::vector<Text>& candidates;
@@ -114,8 +119,6 @@ class Layout {
   const std::vector<Text>& labels;
   const int& id;
   const int candidates_count;
-  const int real_margin_x;
-  const int real_margin_y;
   const int labelFontValid;
   const int textFontValid;
   const int cmtFontValid;
