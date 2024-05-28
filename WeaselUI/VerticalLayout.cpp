@@ -200,10 +200,13 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   }
   UpdateStatusIconLayout(&width, &height);
   // candidate rectangle always align to right side, margin_x to the right edge
-  for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
-    _candidateRects[i].right =
+  for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i) {
+    int right =
         max(_candidateRects[i].right,
             _candidateRects[i].left - real_margin_x + width - real_margin_x);
+    _candidateCommentRects[i].OffsetRect(right - _candidateRects[i].right, 0);
+    _candidateRects[i].right = right;
+  }
 
   _contentSize.SetSize(width + offsetX * 2, height + offsetY * 2);
 

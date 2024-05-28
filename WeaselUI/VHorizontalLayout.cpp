@@ -219,9 +219,12 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   UpdateStatusIconLayout(&width, &height);
   // candidate rectangle always align to bottom side, margin_y to the bottom
   // edge
-  for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
-    _candidateRects[i].bottom =
-        max(_candidateRects[i].bottom, height - real_margin_y);
+  for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i) {
+    int bottom = max(_candidateRects[i].bottom, height - real_margin_y);
+    _candidateCommentRects[i].OffsetRect(
+        0, bottom - _candidateCommentRects[i].bottom);
+    _candidateRects[i].bottom = bottom;
+  }
 
   _highlightRect = _candidateRects[id];
   _contentSize.SetSize(width + offsetX, height + offsetY);
