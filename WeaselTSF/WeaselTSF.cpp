@@ -233,13 +233,17 @@ void WeaselTSF::_EnsureServerConnected() {
     }
     retry++;
     if (retry >= 6) {
-      if (!m_client.Echo()) {
+      HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerExclusiveMutex");
+      if (!m_client.Echo() && GetLastError() != ERROR_ALREADY_EXISTS) {
         std::wstring dir = _GetRootDir();
         std::thread th([dir]() {
           ShellExecuteW(NULL, L"open", (dir + L"\\start_service.bat").c_str(),
                         NULL, dir.c_str(), SW_HIDE);
         });
         th.detach();
+      }
+      if (hMutex) {
+        CloseHandle(hMutex);
       }
       retry = 0;
     }
