@@ -301,18 +301,33 @@ rem ---------------------------------------------------------------------------
 
 rem ---------------------------------------------------------------------------
 rem %1 : ARCH
-rem %2 : target_path of rime.lib, abs path
-rem %3 : target_path of rime.dll, abs path
-:build_librime_platform
-  if "%rime_build_variant%"=="release" (
-    set build_dir=build_%1
-    set rime_install_prefix=%WEASEL_ROOT%\librime\dist_%1
-  ) else (
-    set build_dir=debug_%1
-    set rime_install_prefix=%WEASEL_ROOT%\librime\distd_%1
+rem %2 : push | pop , push to backup when pop to restore
+:stash_build
+  pushd %WEASEL_ROOT%\librime
+  for %%a in ( build dist lib ^
+    deps\glog\build ^
+    deps\googletest\build ^
+    deps\leveldb\build ^
+    deps\marisa-trie\build ^
+    deps\opencc\build ^
+    deps\yaml-cpp\build ) do (
+    if "%2"=="push" (
+      if exist %%a  move %%a %%a_%1 
+    )
+    if "%2"=="pop" (
+      if exist %%a_%1  move %%a_%1 %%a 
+    )
   )
-  rem restore backuped lib_%1 build
-  if exist lib_%1 move lib_%1 lib
+  popd
+  exit /b
+
+rem ---------------------------------------------------------------------------
+rem %1 : ARCH
+rem %2 : target_path of rime.lib, base %WEASEL_ROOT% or abs path
+rem %3 : target_path of rime.dll, base %WEASEL_ROOT% or abs path
+:build_librime_platform
+  rem restore backuped %1 build
+  call :stash_build %1 pop
 
   cd %WEASEL_ROOT%\librime
   if not exist env.bat (
@@ -321,24 +336,24 @@ rem %3 : target_path of rime.dll, abs path
   if not exist lib\opencc.lib (
     call build.bat deps %rime_build_variant%
     if errorlevel 1 (
-      if exist lib move lib lib_%1
+      call :stash_build %1 push
       goto error
     )
   )
   call build.bat %rime_build_variant%
+  if errorlevel 1 (
+    call :stash_build %1 push
+    goto error
+  )
 
   cd %WEASEL_ROOT%\librime
-  rem backup lib to lib_%1
-  if exist lib move lib lib_%1
+  call :stash_build %1 push
 
-  echo copy /Y %rime_install_prefix%\include\rime_*.h %WEASEL_ROOT%\include\
-  copy /Y %rime_install_prefix%\include\rime_*.h %WEASEL_ROOT%\include\
+  copy /Y %WEASEL_ROOT%\librime\dist_%1\include\rime_*.h %WEASEL_ROOT%\include\
   if errorlevel 1 goto error
-  echo copy /Y %rime_install_prefix%\lib\rime.lib %2\
-  copy /Y %rime_install_prefix%\lib\rime.lib %2\
+  copy /Y %WEASEL_ROOT%\librime\dist_%1\lib\rime.lib %2\
   if errorlevel 1 goto error
-  echo copy /Y %rime_install_prefix%\lib\rime.dll %3\
-  copy /Y %rime_install_prefix%\lib\rime.dll %3\
+  copy /Y %WEASEL_ROOT%\librime\dist_%1\lib\rime.dll %3\
   if errorlevel 1 goto error
 
   exit /b
