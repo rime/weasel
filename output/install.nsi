@@ -38,12 +38,6 @@ VIAddVersionKey /LANG=2052 "FileVersion" "${WEASEL_VERSION}"
 !define MUI_ICON ..\resource\weasel.ico
 SetCompressor /SOLID lzma
 
-; The default installation directory
-InstallDir $PROGRAMFILES\Rime
-
-; Registry key to check for directory (so if you install again, it will
-; overwrite the old one automatically)
-InstallDirRegKey HKLM "Software\Rime\Weasel" "InstallDir"
 
 ; Request application privileges for Windows Vista
 RequestExecutionLevel admin
@@ -113,6 +107,24 @@ LangString CONFIRMATION ${LANG_ENGLISH} "Before installation, please uninstall t
 ;--------------------------------
 
 Function .onInit
+  ; The default installation directory
+  ; install x64 build for NativeARM64_WINDOWS11 and NativeAMD64_WINDOWS11
+  ${If} ${AtLeastWin11} ; Windows 11 and above
+    ${If} ${IsNativeARM64}
+      StrCpy $INSTDIR "$PROGRAMFILES64\Rime"
+    ${ElseIf} ${IsNativeAMD64}
+      StrCpy $INSTDIR "$PROGRAMFILES64\Rime"
+    ${Else}
+      StrCpy $INSTDIR "$PROGRAMFILES\Rime"
+    ${Endif}
+  ; install x64 build for NativeAMD64_BELLOW_WINDOWS11
+  ${Else} ; Windows 10 or bellow
+    ${If} ${IsNativeAMD64}
+      StrCpy $INSTDIR "$PROGRAMFILES64\Rime"
+    ${Else}
+      StrCpy $INSTDIR "$PROGRAMFILES\Rime"
+    ${Endif}
+  ${Endif}
   ReadRegStr $R0 HKLM \
   "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" \
   "UninstallString"
@@ -137,6 +149,10 @@ call_uninstaller:
 
 done:
 FunctionEnd
+
+; Registry key to check for directory (so if you install again, it will
+; overwrite the old one automatically)
+InstallDirRegKey HKLM "Software\Rime\Weasel" "InstallDir"
 
 ; The stuff to install
 Section "Weasel"
