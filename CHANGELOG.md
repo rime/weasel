@@ -31,7 +31,7 @@
 * 應用界面及菜單簡繁體自動適應
 * `app_options` 中應用名大小寫不敏感
 * 字體抗鋸齒設定參數 `style/antialias_mode: {force_dword|cleartype|grayscale|aliased|default}`
-* ASCII狀態提示跟隨鼠標光標設定 `style/ascii_tips_follow_cursor: bool`
+* ASCII狀態提示跟隨鼠標光標設定 `style/ascii_tip_follow_cursor: bool`
 * 新增參數 `style/layout/hilite_padding_x: int`、`style/layout/hilite_padding_y: int`，支持分別設置xy向的 padding
 * 新增參數 `schema/full_icon: string`, `schema/half_icon: string`，支持在方案中設定全半角圖標
 * 新增參數 `style/text_orientation: "horizontal" | "vertical"`, 與 `style/vertical_text: bool` 冗餘，設定文字繪製方向，兼容 squirrel 參數
