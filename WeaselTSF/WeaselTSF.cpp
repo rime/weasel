@@ -219,26 +219,33 @@ STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid,
   return S_OK;
 }
 
+void WeaselTSF::_Reconnect() {
+  m_client.Disconnect();
+  m_client.Connect(NULL);
+  m_client.StartSession();
+  weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
+  bool ok = m_client.GetResponseData(std::ref(parser));
+  if (ok) {
+    _UpdateLanguageBar(_status);
+  }
+}
+
 static unsigned int retry = 0;
 
-void WeaselTSF::_EnsureServerConnected() {
+bool WeaselTSF::_EnsureServerConnected() {
   if (!m_client.Echo()) {
-    m_client.Disconnect();
-    m_client.Connect(NULL);
-    m_client.StartSession();
-    weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
-    bool ok = m_client.GetResponseData(std::ref(parser));
-    if (ok) {
-      _UpdateLanguageBar(_status);
-    }
+    _Reconnect();
     retry++;
     if (retry >= 6) {
       HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerExclusiveMutex");
       if (!m_client.Echo() && GetLastError() != ERROR_ALREADY_EXISTS) {
         std::wstring dir = _GetRootDir();
-        std::thread th([dir]() {
+        std::thread th([dir, this]() {
           ShellExecuteW(NULL, L"open", (dir + L"\\start_service.bat").c_str(),
                         NULL, dir.c_str(), SW_HIDE);
+          // wait 500ms, then reconnect
+          std::this_thread::sleep_for(std::chrono::milliseconds(500));
+          _Reconnect();
         });
         th.detach();
       }
@@ -247,5 +254,8 @@ void WeaselTSF::_EnsureServerConnected() {
       }
       retry = 0;
     }
+    return (m_client.Echo() != 0);
+  } else {
+    return true;
   }
 }

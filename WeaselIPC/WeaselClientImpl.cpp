@@ -160,8 +160,17 @@ void ClientImpl::StartSession() {
     return;
 
   _WriteClientInfo();
-  UINT ret = _SendMessage(WEASEL_IPC_START_SESSION, 0, 0);
-  session_id = ret;
+  auto future = std::async(std::launch::async, [this]() {
+    return _SendMessage(WEASEL_IPC_START_SESSION, 0, 0);
+  });
+  // wait _SendMessage complete or overtime
+  if (future.wait_for(std::chrono::seconds(2)) == std::future_status::timeout) {
+    // _SendMessage overtime
+    session_id = 0;
+  } else {
+    // _SendMessage complete
+    session_id = future.get();
+  }
 }
 
 void ClientImpl::EndSession() {
@@ -183,8 +192,19 @@ bool ClientImpl::Echo() {
   if (!_Active())
     return false;
 
-  UINT serverEcho = _SendMessage(WEASEL_IPC_ECHO, 0, session_id);
-  return (serverEcho == session_id);
+  auto future = std::async(std::launch::async, [this]() {
+    return _SendMessage(WEASEL_IPC_ECHO, 0, session_id);
+  });
+
+  // wait _SendMessage complete or overtime
+  if (future.wait_for(std::chrono::seconds(2)) == std::future_status::timeout) {
+    // _SendMessage overtime
+    return false;
+  } else {
+    // _SendMessage complete
+    UINT serverEcho = future.get();
+    return (serverEcho == session_id);
+  }
 }
 
 bool ClientImpl::GetResponseData(ResponseHandler const& handler) {
