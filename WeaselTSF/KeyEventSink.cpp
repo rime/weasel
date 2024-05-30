@@ -5,8 +5,10 @@
 #include "CandidateList.h"
 
 void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
-  if (!_IsKeyboardOpen())
+  if (!_IsKeyboardOpen() || _IsKeyboardDisabled()) {
+    *pfEaten = FALSE;
     return;
+  }
 
   _EnsureServerConnected();
   weasel::KeyEvent ke;
