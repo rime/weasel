@@ -107,6 +107,8 @@ LangString CONFIRMATION ${LANG_ENGLISH} "Before installation, please uninstall t
 ;--------------------------------
 
 Function .onInit
+  ReadRegStr $R0 HKLM "Software\Rime\Weasel" "InstallDir"
+  StrCmp $R0 "" 0 skip
   ; The default installation directory
   ; install x64 build for NativeARM64_WINDOWS11 and NativeAMD64_WINDOWS11
   ${If} ${AtLeastWin11} ; Windows 11 and above
@@ -125,6 +127,7 @@ Function .onInit
       StrCpy $INSTDIR "$PROGRAMFILES\Rime"
     ${Endif}
   ${Endif}
+skip:
   ReadRegStr $R0 HKLM \
   "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel" \
   "UninstallString"
