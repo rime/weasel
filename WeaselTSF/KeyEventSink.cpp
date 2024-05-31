@@ -10,7 +10,11 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
     return;
   }
 
-  _EnsureServerConnected();
+  // if server connection is Not OK, don't eat it.
+  if (!_EnsureServerConnected()) {
+    *pfEaten = FALSE;
+    return;
+  }
   weasel::KeyEvent ke;
   GetKeyboardState(_lpbKeyState);
   if (!ConvertKeyEvent(static_cast<UINT>(wParam), lParam, _lpbKeyState, ke)) {
