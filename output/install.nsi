@@ -74,6 +74,7 @@ LangString LNKFORSETUP ${LANG_TRADCHINESE} "【小狼毫】安裝選項"
 LangString LNKFORUNINSTALL ${LANG_TRADCHINESE} "卸載小狼毫"
 LangString CONFIRMATION ${LANG_TRADCHINESE} "安裝前，請先卸載舊版本的小狼毫。$\n$\n按下「確定」移除舊版本，按下「取消」放棄本次安裝。"
 LangString SYSTEMVERSIONNOTOK ${LANG_TRADCHINESE} "您的系统不被支持，最低系統要求:Windows 8.1!"
+LangString AUTOCHKUPDATE ${LANG_TRADCHINESE} "自動檢查版本更新？"
 
 !insertmacro MUI_LANGUAGE "SimpChinese"
 LangString DISPLAYNAME ${LANG_SIMPCHINESE} "小狼毫输入法"
@@ -90,6 +91,7 @@ LangString LNKFORSETUP ${LANG_SIMPCHINESE} "【小狼毫】安装选项"
 LangString LNKFORUNINSTALL ${LANG_SIMPCHINESE} "卸载小狼毫"
 LangString CONFIRMATION ${LANG_SIMPCHINESE} '安装前，请先卸载旧版本的小狼毫。$\n$\n点击 "确定" 移除旧版本，或点击 "取消" 放弃本次安装。'
 LangString SYSTEMVERSIONNOTOK ${LANG_SIMPCHINESE} "您的系統不被支持，最低系统要求:Windows 8.1!"
+LangString AUTOCHKUPDATE ${LANG_SIMPCHINESE} "自动检查版本更新？"
 
 !insertmacro MUI_LANGUAGE "English"
 LangString DISPLAYNAME ${LANG_ENGLISH} "Weasel"
@@ -106,6 +108,7 @@ LangString LNKFORSETUP ${LANG_ENGLISH} "Weasel Installation Preference"
 LangString LNKFORUNINSTALL ${LANG_ENGLISH} "Uninstall Weasel"
 LangString CONFIRMATION ${LANG_ENGLISH} "Before installation, please uninstall the old version of Weasel.$\n$\nPress 'OK' to remove the old version, or 'Cancel' to abort installation."
 LangString SYSTEMVERSIONNOTOK ${LANG_ENGLISH} "Your system not supported, minimium system required: Windows 8.1!"
+LangString AUTOCHKUPDATE ${LANG_ENGLISH} "Automatically check for updates?"
 
 ;--------------------------------
 
@@ -316,6 +319,16 @@ program_files:
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer" "$INSTDIR\WeaselServer.exe"
   ; Start WeaselServer
   Exec "$INSTDIR\WeaselServer.exe"
+
+  ; option CheckForUpdates
+  IfSilent DisableAutoCheckUpdate
+  MessageBox MB_YESNO|MB_ICONINFORMATION "$(AUTOCHKUPDATE)" IDYES EnableAutoCheckUpdate
+  DisableAutoCheckUpdate:
+  WriteRegStr HKCU "Software\Rime\Weasel\Updates" "CheckForUpdates" "0"
+  GoTo end
+  EnableAutoCheckUpdate:
+  WriteRegStr HKCU "Software\Rime\Weasel\Updates" "CheckForUpdates" "1"
+  end:
 
   ; Prompt reboot
   StrCmp $0 "Upgrade" 0 +2
