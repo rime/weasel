@@ -4,6 +4,7 @@
 #include "stdafx.h"
 
 #include "resource.h"
+#include "WeaselUtility.h"
 #include <thread>
 
 #include "InstallOptionsDlg.h"
@@ -27,17 +28,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
   hRes = _Module.Init(NULL, hInstance);
   ATLASSERT(SUCCEEDED(hRes));
 
-  LCID lcid = GetUserDefaultLCID();
-  LANGID langId;
-  if (lcid == 2052 || lcid == 3072 || lcid == 4100) {
-    langId = SetThreadUILanguage(
-        MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED));
-  } else if (lcid == 1028 || lcid == 3076 || lcid == 5124) {
-    langId = SetThreadUILanguage(
-        MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL));
-  } else {
-    langId = SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
-  }
+  LANGID langId = get_language_id();
+  SetThreadUILanguage(langId);
   SetThreadLocale(langId);
 
   int nRet = Run(lpstrCmdLine);

@@ -184,11 +184,30 @@ inline std::basic_string<CharT> unescape_string(
 std::string GetCustomResource(const char* name, const char* type);
 
 inline std::wstring get_weasel_ime_name() {
-  LCID lcid = GetUserDefaultLCID();
-  if (lcid == 2052 || lcid == 3072 || lcid == 4100 || lcid == 1028 ||
-      lcid == 3076 || lcid == 5124) {
+  LANGID langId = GetUserDefaultUILanguage();
+
+  if (langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL) ||
+      langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) ||
+      langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_HONGKONG) ||
+      langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SINGAPORE) ||
+      langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_MACAU)) {
     return L"小狼毫";
   } else {
     return L"Weasel";
   }
+}
+
+inline LANGID get_language_id() {
+  LANGID langId = GetUserDefaultUILanguage();
+  if (langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) ||
+      langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SINGAPORE)) {
+    langId = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+  } else if (langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL) ||
+             langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_HONGKONG) ||
+             langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_MACAU)) {
+    langId = MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL);
+  } else {
+    langId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+  }
+  return langId;
 }
