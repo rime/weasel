@@ -234,12 +234,6 @@ int uninstall_ime_file(const std::wstring& ext,
   if (is_wow64()) {
     retval += func(imePath, false, true, false, false, silent);
     PVOID OldValue = NULL;
-    // PW64DW64FR fnWow64DisableWow64FsRedirection =
-    // (PW64DW64FR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")),
-    // "Wow64DisableWow64FsRedirection"); PW64RW64FR
-    // fnWow64RevertWow64FsRedirection =
-    // (PW64RW64FR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")),
-    // "Wow64RevertWow64FsRedirection");
     if (Wow64DisableWow64FsRedirection(&OldValue) == FALSE) {
       MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERRCANCELFSREDIRECT,
                             IDS_STR_UNINSTALL_FAILED, MB_ICONERROR | MB_OK);
@@ -676,7 +670,6 @@ int uninstall(bool silent) {
   HKEY hKey;
   LSTATUS ret = RegOpenKey(HKEY_CURRENT_USER, KEY, &hKey);
   if (ret == ERROR_SUCCESS) {
-    WCHAR value[MAX_PATH];
     DWORD type = 0;
     DWORD data = 0;
     DWORD len = sizeof(data);
