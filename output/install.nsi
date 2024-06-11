@@ -287,6 +287,8 @@ program_files:
   IfErrors +2 0
   StrCpy $R2 "/t"
 
+  ; ensure old file deleted, avoid IPC issue
+  ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
   ExecWait '"$INSTDIR\WeaselSetup.exe" $R2'
 
   ; Write the uninstall keys for Windows
