@@ -4,6 +4,16 @@
 
 namespace weasel {
 
+template <typename T>
+void TryDeserialize(boost::archive::text_wiarchive& ia, T& t) {
+  try {
+    ia >> t;
+  } catch (const boost::archive::archive_exception& e) {
+    const std::string msg =
+        std::string("boost::archive::archive_exception: ") + e.what();
+    MessageBoxA(NULL, msg.c_str(), "IPC exception", MB_OK | MB_ICONERROR);
+  }
+}
 class Deserializer {
  public:
   typedef std::vector<std::wstring> KeyType;
