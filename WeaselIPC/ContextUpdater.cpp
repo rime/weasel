@@ -73,7 +73,7 @@ void ContextUpdater::_StoreCand(Deserializer::KeyType k,
   std::wstringstream ss(value);
   boost::archive::text_wiarchive ia(ss);
 
-  ia >> cinfo;
+  TryDeserialize(ia, cinfo);
 
   for (auto& cand : cinfo.candies)
     cand.str = unescape_string(cand.str);
