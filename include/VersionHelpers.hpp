@@ -9,16 +9,16 @@ typedef __success(return >= 0) LONG NTSTATUS;
 
 inline BOOL GetVersionEx2(LPOSVERSIONINFOW lpVersionInformation)
 {
-	HMODULE hNtDll = GetModuleHandleW(L"NTDLL"); // »ñÈ¡ntdll.dllµÄ¾ä±ú
-	typedef NTSTATUS(NTAPI* tRtlGetVersion)(PRTL_OSVERSIONINFOW povi); // RtlGetVersionµÄÔ­ÐÍ
+	HMODULE hNtDll = GetModuleHandleW(L"NTDLL"); // èŽ·å–ntdll.dllçš„å¥æŸ„
+	typedef NTSTATUS(NTAPI* tRtlGetVersion)(PRTL_OSVERSIONINFOW povi); // RtlGetVersionçš„åŽŸåž‹
 	tRtlGetVersion pRtlGetVersion = NULL;
 	if (hNtDll)
 	{
-		pRtlGetVersion = (tRtlGetVersion)GetProcAddress(hNtDll, "RtlGetVersion"); // »ñÈ¡RtlGetVersionµØÖ·
+		pRtlGetVersion = (tRtlGetVersion)GetProcAddress(hNtDll, "RtlGetVersion"); // èŽ·å–RtlGetVersionåœ°å€
 	}
 	if (pRtlGetVersion)
 	{
-		return pRtlGetVersion((PRTL_OSVERSIONINFOW)lpVersionInformation) >= 0; // µ÷ÓÃRtlGetVersion
+		return pRtlGetVersion((PRTL_OSVERSIONINFOW)lpVersionInformation) >= 0; // è°ƒç”¨RtlGetVersion
 	}
 	return FALSE;
 }
