@@ -151,6 +151,26 @@ static int Run(LPTSTR lpCmdLine) {
   if (uninstalling)
     return uninstall(silent);
 
+  auto setLanguage = [](const wchar_t* language) {
+    const WCHAR KEY[] = L"Software\\Rime\\Weasel";
+    HKEY hKey;
+    LSTATUS ret = RegOpenKey(HKEY_CURRENT_USER, KEY, &hKey);
+    if (ret == ERROR_SUCCESS) {
+      ret = RegSetValueEx(hKey, L"Language", 0, REG_SZ, (const BYTE*)language,
+                          (wcslen(language) + 1) * sizeof(wchar_t));
+      RegCloseKey(hKey);
+    }
+    return ret;
+  };
+
+  if (!wcscmp(L"/ls", lpCmdLine)) {
+    return setLanguage(L"chs");
+  } else if (!wcscmp(L"/lt", lpCmdLine)) {
+    return setLanguage(L"cht");
+  } else if (!wcscmp(L"/le", lpCmdLine)) {
+    return setLanguage(L"eng");
+  }
+
   bool hans = !wcscmp(L"/s", lpCmdLine);
   if (hans)
     return install(false, silent, old_ime_support);

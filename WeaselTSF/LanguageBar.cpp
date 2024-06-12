@@ -34,21 +34,6 @@ static void HMENU2ITfMenu(HMENU hMenu, ITfMenu* pTfMenu) {
   }
 }
 
-static LONG RegGetStringValue(HKEY key,
-                              LPCWSTR lpSubKey,
-                              LPCWSTR lpValue,
-                              std::wstring& value) {
-  TCHAR szValue[MAX_PATH];
-  DWORD dwBufLen = MAX_PATH;
-
-  LONG lRes = RegGetValue(key, lpSubKey, lpValue, RRF_RT_REG_SZ, NULL, szValue,
-                          &dwBufLen);
-  if (lRes == ERROR_SUCCESS) {
-    value = std::wstring(szValue);
-  }
-  return lRes;
-}
-
 static LPCWSTR GetWeaselRegName() {
   LPCWSTR WEASEL_REG_NAME_;
   if (is_wow64())

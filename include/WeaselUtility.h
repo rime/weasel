@@ -197,7 +197,32 @@ inline std::wstring get_weasel_ime_name() {
   }
 }
 
+inline LONG RegGetStringValue(HKEY key,
+                              LPCWSTR lpSubKey,
+                              LPCWSTR lpValue,
+                              std::wstring& value) {
+  TCHAR szValue[MAX_PATH];
+  DWORD dwBufLen = MAX_PATH;
+
+  LONG lRes = RegGetValue(key, lpSubKey, lpValue, RRF_RT_REG_SZ, NULL, szValue,
+                          &dwBufLen);
+  if (lRes == ERROR_SUCCESS) {
+    value = std::wstring(szValue);
+  }
+  return lRes;
+}
+
 inline LANGID get_language_id() {
+  std::wstring lang{};
+  if (RegGetStringValue(HKEY_CURRENT_USER, L"Software\\Rime\\Weasel",
+                        L"Language", lang) == ERROR_SUCCESS) {
+    if (lang == L"chs")
+      return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+    else if (lang == L"cht")
+      return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL);
+    else if (lang == L"eng")
+      return MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+  }
   LANGID langId = GetUserDefaultUILanguage();
   if (langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) ||
       langId == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SINGAPORE)) {
