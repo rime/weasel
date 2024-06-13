@@ -4,6 +4,8 @@
 #include <StringAlgorithm.hpp>
 #include <WeaselConstants.h>
 #include <WeaselUtility.h>
+#include <boost/algorithm/string.hpp>
+#include <vector>
 
 #include <filesystem>
 #include <map>
@@ -36,6 +38,40 @@ WeaselSessionId _GenerateNewWeaselSessionId(SessionStatusMap sm, DWORD pid) {
 
 int expand_ibus_modifier(int m) {
   return (m & 0xff) | ((m & 0xff00) << 16);
+}
+
+static void CleanOldLogs() {
+  char ymd[12] = {0};
+  time_t now = time(NULL);
+  strftime(ymd, sizeof(ymd), ".%Y%m%d", localtime(&now));
+  std::string today(ymd);
+  const std::string app_name = "rime.weasel";
+  std::string dir = WeaselLogPath().string();
+  if (!fs::exists(fs::path(dir)))
+    return;
+  std::vector<fs::path> files;
+  try {
+    // preparing files
+    for (const auto& entry : fs::directory_iterator(dir)) {
+      const std::string& file_name(entry.path().filename().string());
+      if (entry.is_regular_file() && !entry.is_symlink() &&
+          boost::starts_with(file_name, app_name) &&
+          boost::ends_with(file_name, ".log") &&
+          !boost::contains(file_name, today)) {
+        files.push_back(entry.path());
+      }
+    }
+  } catch (const fs::filesystem_error& ex) {
+  }
+  // remove files
+  for (const auto& file : files) {
+    try {
+      // ensure write permission
+      fs::permissions(file, fs::perms::owner_write);
+      fs::remove(file);
+    } catch (const fs::filesystem_error& ex) {
+    }
+  }
 }
 
 RimeWithWeaselHandler::RimeWithWeaselHandler(UI* ui)
@@ -120,6 +156,7 @@ void RimeWithWeaselHandler::Initialize() {
     m_disabled = true;
   }
 #endif
+  CleanOldLogs();
 
   RimeConfig config = {NULL};
   if (RimeConfigOpen("weasel", &config)) {
