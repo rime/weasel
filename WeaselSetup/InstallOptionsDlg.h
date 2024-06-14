@@ -31,6 +31,42 @@
       MSG_ID_CAP(info, idCap, uType);                     \
   }
 
+template <typename T>
+LSTATUS SetRegKeyValue(HKEY rootKey,
+                       const wchar_t* subpath,
+                       const wchar_t* key,
+                       const T& value,
+                       DWORD type,
+                       bool disable_reg_redirect = false) {
+  HKEY hKey;
+  auto flag_wow64 = (disable_reg_redirect && is_wow64()) ? KEY_WOW64_64KEY : 0;
+  LSTATUS ret =
+      RegOpenKeyEx(rootKey, subpath, 0, KEY_ALL_ACCESS | flag_wow64, &hKey);
+  if (ret != ERROR_SUCCESS) {
+    ret = RegCreateKeyEx(rootKey, subpath, 0, NULL, 0,
+                         KEY_ALL_ACCESS | flag_wow64, 0, &hKey, NULL);
+    if (ret != ERROR_SUCCESS)
+      return ret;
+  }
+  if (ret == ERROR_SUCCESS) {
+    DWORD dataSize;
+    const BYTE* dataPtr;
+    if constexpr (std::is_same<T, std::wstring>::value) {
+      dataSize = (value.size() + 1) * sizeof(wchar_t);
+      dataPtr = reinterpret_cast<const BYTE*>(value.c_str());
+    } else if constexpr (std::is_same<T, const wchar_t*>::value) {
+      dataSize = (wcslen((wchar_t*)value) + 1) * sizeof(wchar_t);
+      dataPtr = reinterpret_cast<const BYTE*>(value);
+    } else {
+      dataSize = sizeof(T);
+      dataPtr = reinterpret_cast<const BYTE*>(&value);
+    }
+    ret = RegSetValueEx(hKey, key, 0, type, dataPtr, dataSize);
+    RegCloseKey(hKey);
+  }
+  return ret;
+}
+
 class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
  public:
   enum { IDD = IDD_INSTALL_OPTIONS };
