@@ -100,25 +100,15 @@ static int CustomInstall(bool installing) {
     if (0 != install(hant, silent, old_ime_support))
       return 1;
 
-  ret = RegCreateKeyEx(HKEY_CURRENT_USER, KEY, 0, NULL, 0, KEY_ALL_ACCESS, 0,
-                       &hKey, NULL);
-  if (FAILED(HRESULT_FROM_WIN32(ret))) {
-    MSG_ID_CAP(KEY, IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
-    return 1;
-  }
-
-  ret = RegSetValueEx(hKey, L"RimeUserDir", 0, REG_SZ,
-                      (const BYTE*)user_dir.c_str(),
-                      (user_dir.length() + 1) * sizeof(WCHAR));
+  ret = SetRegKeyValue(HKEY_CURRENT_USER, KEY, L"RimeUserDir", user_dir.c_str(),
+                       REG_SZ, false);
   if (FAILED(HRESULT_FROM_WIN32(ret))) {
     MSG_BY_IDS(IDS_STR_ERR_WRITE_USER_DIR, IDS_STR_INSTALL_FAILED,
                MB_ICONERROR | MB_OK);
     return 1;
   }
-
-  DWORD data = hant ? 1 : 0;
-  ret = RegSetValueEx(hKey, L"Hant", 0, REG_DWORD, (const BYTE*)&data,
-                      sizeof(DWORD));
+  ret = SetRegKeyValue(HKEY_CURRENT_USER, KEY, L"Hant", (hant ? 1 : 0),
+                       REG_DWORD, false);
   if (FAILED(HRESULT_FROM_WIN32(ret))) {
     MSG_BY_IDS(IDS_STR_ERR_WRITE_HANT, IDS_STR_INSTALL_FAILED,
                MB_ICONERROR | MB_OK);
@@ -151,24 +141,24 @@ static int Run(LPTSTR lpCmdLine) {
   if (uninstalling)
     return uninstall(silent);
 
-  auto setLanguage = [](const wchar_t* language) {
-    const WCHAR KEY[] = L"Software\\Rime\\Weasel";
-    HKEY hKey;
-    LSTATUS ret = RegOpenKey(HKEY_CURRENT_USER, KEY, &hKey);
-    if (ret == ERROR_SUCCESS) {
-      ret = RegSetValueEx(hKey, L"Language", 0, REG_SZ, (const BYTE*)language,
-                          (wcslen(language) + 1) * sizeof(wchar_t));
-      RegCloseKey(hKey);
-    }
-    return ret;
-  };
-
   if (!wcscmp(L"/ls", lpCmdLine)) {
-    return setLanguage(L"chs");
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"Language", L"chs", REG_SZ);
   } else if (!wcscmp(L"/lt", lpCmdLine)) {
-    return setLanguage(L"cht");
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"Language", L"cht", REG_SZ);
   } else if (!wcscmp(L"/le", lpCmdLine)) {
-    return setLanguage(L"eng");
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"Language", L"eng", REG_SZ);
+  }
+
+  if (!wcscmp(L"/eu", lpCmdLine)) {
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel\\Updates",
+                          L"CheckForUpdates", L"1", REG_SZ);
+  }
+  if (!wcscmp(L"/du", lpCmdLine)) {
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel\\Updates",
+                          L"CheckForUpdates", L"0", REG_SZ);
   }
 
   bool hans = !wcscmp(L"/s", lpCmdLine);
