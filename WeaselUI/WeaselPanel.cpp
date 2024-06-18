@@ -791,7 +791,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
       }
     }
     // draw semi-hilite background and shadow
-    if (m_hoverIndex > 0) {
+    if (m_hoverIndex >= 0) {
       rect = m_layout->GetCandidateRect(m_hoverIndex);
       IsToRoundStruct rd = m_layout->GetRoundInfo(m_hoverIndex);
       if (m_istorepos) {
