@@ -6,7 +6,7 @@ class CCompartmentEventSink : public ITfCompartmentEventSink {
  public:
   using Callback = std::function<HRESULT(REFGUID guidCompartment)>;
   CCompartmentEventSink(Callback callback)
-      : _callback(callback), _refCount(1){};
+      : _callback(callback), _refCount(1) {};
   ~CCompartmentEventSink() = default;
 
   // IUnknown

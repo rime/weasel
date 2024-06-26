@@ -15,7 +15,7 @@
 namespace weasel {
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath {
  public:
-  GraphicsRoundRectPath(){};
+  GraphicsRoundRectPath() {};
   GraphicsRoundRectPath(int left,
                         int top,
                         int width,

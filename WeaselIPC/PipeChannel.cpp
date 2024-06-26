@@ -24,7 +24,7 @@ PipeChannelBase::PipeChannelBase(std::wstring&& pn_cmd,
       buffer(std::make_unique<char[]>(bs)),
       hpipe(INVALID_HANDLE_VALUE),
       has_body(false),
-      sa(s){};
+      sa(s) {};
 
 PipeChannelBase::PipeChannelBase(PipeChannelBase&& r)
     : write_stream(std::move(r.write_stream)),
@@ -33,7 +33,7 @@ PipeChannelBase::PipeChannelBase(PipeChannelBase&& r)
       buffer(std::move(r.buffer)),
       hpipe(r.hpipe),
       has_body(r.has_body),
-      sa(r.sa){};
+      sa(r.sa) {};
 
 PipeChannelBase::~PipeChannelBase() {
   _FinalizePipe(hpipe);

@@ -30,11 +30,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: C:\\Program Files\\LLVM
-          key: ${{ runner.os }}-llvm-17.0.6
+          key: ${{ runner.os }}-llvm-18.1.6
 
       - name: Install llvm
         if: steps.cache-llvm.outputs.cache-hit != 'true'
-        run: choco install llvm --version=17.0.6
+        run: choco install llvm --version=18.1.6
 
       - name: Code style lint
         shell: bash
