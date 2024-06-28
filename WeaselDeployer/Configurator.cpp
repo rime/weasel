@@ -49,10 +49,11 @@ void Configurator::Initialize() {
   weasel_traits.app_name = "rime.weasel";
   std::string log_dir = WeaselLogPath().u8string();
   weasel_traits.log_dir = log_dir.c_str();
-  RimeSetup(&weasel_traits);
-
+  RimeApi* rime_api = rime_get_api();
+  assert(rime_api);
+  rime_api->setup(&weasel_traits);
   LOG(INFO) << "WeaselDeployer reporting.";
-  RimeDeployerInitialize(NULL);
+  rime_api->deployer_initialize(NULL);
 }
 
 static bool configure_switcher(RimeLeversApi* api,
