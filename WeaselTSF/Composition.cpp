@@ -404,6 +404,7 @@ void WeaselTSF::_AbortComposition(bool clear) {
   if (_IsComposing()) {
     _EndComposition(_pEditSessionContext, clear);
   }
+  _committed = TRUE;
   _cand->Destroy();
 }
 
