@@ -25,6 +25,9 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec) {
       }
       _InsertText(_pEditSessionContext, commit);
       _EndComposition(_pEditSessionContext, false);
+      _committed = TRUE;
+    } else {
+      _committed = FALSE;
     }
     if (_status.composing && !_IsComposing()) {
       _StartComposition(_pEditSessionContext,
