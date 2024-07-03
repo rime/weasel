@@ -77,8 +77,10 @@ jobs:
           copy $dir86\dist\include\rime_*.h include\
           copy $dir86\dist\lib\rime.lib lib\
           copy $dir86\dist\lib\rime.dll output\Win32\
+          copy $dir86\dist\lib\rime.pdb output\Win32\
           copy $dir64\dist\lib\rime.lib lib64\
           copy $dir64\dist\lib\rime.dll output\
+          copy $dir64\dist\lib\rime.pdb output\
           if (-not (Test-Path -Path "output\data\opencc")) {
             New-Item -ItemType Directory -Path "output\data\opencc"
           }
