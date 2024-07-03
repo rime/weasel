@@ -68,11 +68,25 @@ jobs:
 
       # use upper stream released librime files if stable release
       - name: Copy Rime files
+        shell: pwsh
         run: |
-          .\github.install.bat
+          $ErrorActionPreference = 'Stop'
+          .\get-rime.ps1 -tag latest -extract $true
+          $dir86 = Get-ChildItem -Path ".\rime*x86" -Directory
+          $dir64 = Get-ChildItem -Path ".\rime*x64" -Directory
+          copy $dir86\dist\include\rime_*.h include\
+          copy $dir86\dist\lib\rime.lib lib\
+          copy $dir86\dist\lib\rime.dll output\Win32\
+          copy $dir64\dist\lib\rime.lib lib64\
+          copy $dir64\dist\lib\rime.dll output\
+          if (-not (Test-Path -Path "output\data\opencc")) {
+            New-Item -ItemType Directory -Path "output\data\opencc"
+          }
+          copy $dir64\share\opencc\*.* output\data\opencc\
 
       - name: Build data
         run: |
+          $ErrorActionPreference = 'Stop'
           .\build.bat data
 
       - name: Build Weasel
@@ -83,6 +97,7 @@ jobs:
       - name: Compress Debug Symbols
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           output\7z.exe a -t7z "./output/archives/debug_symbols.7z" "output/*.pdb" -r
 
       - name: Upload artifacts
