@@ -115,12 +115,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>weasel</TargetName>
+    <TargetExt>.ime</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>weasel$(Platform)</TargetName>
+    <TargetExt>.ime</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)output\</OutDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>weasel</TargetName>
     <TargetExt>.ime</TargetExt>
@@ -132,12 +135,15 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>weasel$(Platform)</TargetName>
+    <TargetExt>.ime</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>weasel$(Platform)</TargetName>
+    <TargetExt>.ime</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)output\</OutDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>weasel$(Platform)</TargetName>
     <TargetExt>.ime</TargetExt>
