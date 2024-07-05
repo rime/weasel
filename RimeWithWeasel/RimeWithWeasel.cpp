@@ -84,7 +84,7 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(UI* ui)
       m_show_notifications_time(1200),
       _UpdateUICallback(NULL) {
   rime_api = rime_get_api();
-  assert(rime);
+  assert(rime_api);
   m_pid = GetCurrentProcessId();
   uint16_t msbit = 0;
   for (auto i = 31; i >= 0; i--) {
