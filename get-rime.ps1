@@ -1,5 +1,5 @@
 param (
-  [switch]$h, [string]$help, [string]$proxy, [string]$tag, [string]$os, [string]$build_variant, [boolean]$extract
+  [switch]$h, [string]$help, [string]$proxy, [string]$tag, [string]$os, [string]$build_variant, [boolean]$extract, [string]$use
 )
 if ($h -or $help -eq "--help") {
   $msg = "
@@ -9,11 +9,12 @@ if ($h -or $help -eq "--help") {
 
   -h                             show help message
   --help                         show help message
-  -proxy proxy_url               default no proxy, format like http://yourdomain:port
-  -tag tag_name                  default the latest public release, or tag_name like 1.11.2 or latest(for nightly build)
-  -os os_name                    default your running system if it's not set, Windows or macOS optional
-  -build_variant build_variant   default msvc for Windows, universal for macOS. clang and mingw are optional for Windows too
-  -extract is_to_extract         default false, 7z in PATH is required
+  -proxy [string]                default no proxy, format like http://yourdomain:port
+  -tag [string]                  default the latest public release, or tag_name like 1.11.2 or latest(for nightly build)
+  -os [string]                   default your running system if it's not set, Windows or macOS optional
+  -build_variant [string]        default msvc for Windows, universal for macOS. clang and mingw are optional for Windows too
+  -extract [boolean]             default false, 7z in PATH is required
+  -use [string]                  dev is for building weasel, weasel is for common usage in weasel(update rime.dll)
 
   All these params are optional.
   To use some kind of mirror of github, set it up in ~/.git-rime.conf.ps1
@@ -69,7 +70,12 @@ if (($os -ne "Windows") -and ($os -ne "macOS")) {
 if ($os -eq "Windows") {
   if (!$build_variant -or ($build_variant -eq "msvc")) {
     $build_variant = "msvc"
-    $pattern = "rime-(deps-)?[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x(64|86)\.7z"
+    $pattern = ""
+    if ($use -eq "weasel") {
+      $pattern = "rime-[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x(64|86)\.7z"
+    } elseif ($use -eq "dev") {
+      $pattern = "rime-(deps-)?[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x(64|86)\.7z"
+    }
   } elseif ($build_variant -eq "mingw") {
     $pattern = "rime-[0-9a-fA-F]+-" + $os + "-" + $build_variant + "\.tar.bz2"
   } elseif ($build_variant -eq "clang") {
@@ -80,6 +86,9 @@ if ($os -eq "Windows") {
   $build_variant = "universal"
   $pattern = "rime-(deps-)?[0-9a-fA-F]+-" + $os + "-" + $build_variant + "\.tar.bz2"
   $home_dir = $HOME
+}
+if ($PSBoundParameters.ContainsKey("use") -and ($use -eq "weasel" -or $use -eq "dev")) {
+  $extract = $true
 }
 # -Parallel require Powershell 7.0 or greater, default try to use it
 $parallel = ($PSVersionTable.PSVersion.Major -ge 7)
@@ -139,12 +148,69 @@ try {
     SafeExit
   }
 }
+# check 64 bit 
+function Is64Bit {
+  function IsWin11OrGreater {
+    $osVersion = (Get-CimInstance Win32_OperatingSystem).Version
+    # Windows 11 的版本号从 10.0.22000.0 开始
+    if ([Version]$osVersion -ge [Version]"10.0.22000.0") {
+        return $true
+    } else {
+        return $false
+    }
+  }
+  $is64BitOs = [Environment]::Is64BitOperatingSystem
+  $processorArchitecture = (Get-CimInstance Win32_Processor).Architecture
+  switch ($processorArchitecture) {
+      9 { $arch = "x64" }
+      12 { $arch = "ARM64" }
+      Default { $arch = "其他" }
+  }
+  if (IsWin11OrGreater) {
+    if ($arch -eq "ARM64" -and $is64BitOs) { #ARM64
+      return $true
+    } elseif ($arch -eq "x64" -and $is64BitOs) {
+      return $true
+    } else {
+      return $false
+    }
+  } else {
+    if ($arch -eq "x64" -and $is64BitOs) {
+      return $true
+    } else {
+      return $false
+    }   
+  }
+}
+# check if file already downloaded
+$ignore_urls = @()
+$files_current_dir = Get-ChildItem -Path . -Name
+if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
+	$response.assets | ForEach-Object {
+		$url = $_.browser_download_url
+		if ($url -match "http.*\/([^/]+)$") {
+			$filename = $matches[1]
+			if ($files_current_dir -contains $filename) {
+				$file_info = Get-ChildItem -Path . $filename -ErrorAction SilentlyContinue
+				# file size the same as the source
+				if ($file_info.Length -eq $_.size) {
+					$ignore_urls += $url
+				}
+			}	
+		}
+	}		
+}
 # start to download files
 $fileNames = @()
 if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
   if ($parallel) {
     $fileNames += $response.assets | ForEach-Object -Parallel {
       $url = $_.browser_download_url
+			if ($using:ignore_urls -contains $url -and $url -match $using:pattern) {
+        $fileName = [System.IO.Path]::GetFileName($url)
+				Write-Host "☑  $fileName is already in the current directory."
+				return $fileName
+			}
       if ($using:url_pat -and $using:url_replace) {
         $url = $url -replace $using:url_pat, $using:url_replace
       }
@@ -198,8 +264,10 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
   # $fileNames not empty, 7z available, and $extract is $true, to extract files
   if ($fileNames -and $cmdOk -and $extract) {
     $fileNames.GetEnumerator() | ForEach-Object {
-      $outPath = $_ -replace "(\.7z|\.tar\.bz2)", ''
-      $outPath = $outPath -replace "deps-", ''
+      $outPath = $_ -replace "(\.7z|\.tar\.bz2)|(deps-)", ''
+			if ((-not $hash) -and $outPath -match "rime-([0-9a-fA-F]+)(.*$)") {
+        $hash = $matches[1]
+			}
       if ($_ -match ".*\.tar\.bz2") {
         $tmpTarFile = $_ -replace '.bz2$', ''
         7z x $_ > $null
@@ -209,6 +277,72 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
         7z x $_ * -o"$outPath" -y > $null
       }
       Write-Host "☑  Extracted $_ to $outPath"
+    }
+    if ($os -eq "Windows" -and $build_variant -eq "msvc") {
+      $dir86 = Get-ChildItem -Path $("rime-"+$hash+"-*x86") -Directory
+      $dir64 = Get-ChildItem -Path $("rime-"+$hash+"-*x64") -Directory
+      function MyCopyItem {
+        param ([string]$src, [string]$subpath, [string]$dest)
+        if (-not (Test-Path -Path $dest)) {
+          New-Item -ItemType Directory -Path $dest > $null
+        }
+        if (Test-Path (Join-Path -Path $src -ChildPath $subpath)) {
+          Copy-Item "$src\$subpath" $dest -ErrorAction Stop
+          Write-Host "☑  $(Split-Path $src -Leaf)\$subpath has been copied to $dest"
+        }
+      }
+
+      if ( $use -eq "dev"){
+        if ((Test-Path ".\include") `
+        -and (Test-Path ".\lib") -and (Test-Path ".\lib64") `
+        -and (Test-Path ".\output\Win32")) {
+          Remove-Item include\rime_*.h -ErrorAction SilentlyContinue
+          MyCopyItem -src $dir86 -subpath "dist\include\rime_*.h" -dest "include\"
+          MyCopyItem -src $dir86 -subpath "dist\lib\rime.lib"     -dest "lib\"
+          MyCopyItem -src $dir86 -subpath "dist\lib\rime.dll"     -dest "output\Win32\"
+          MyCopyItem -src $dir86 -subpath "dist\lib\rime.pdb"     -dest "output\Win32\"
+          MyCopyItem -src $dir64 -subpath "dist\lib\rime.lib"     -dest "lib64\"
+          MyCopyItem -src $dir64 -subpath "dist\lib\rime.dll"     -dest "output\"
+          MyCopyItem -src $dir64 -subpath "dist\lib\rime.pdb"     -dest "output\"
+          MyCopyItem -src $dir64 -subpath "share\opencc\*.*"      -dest "output\data\opencc\"
+        } else {
+          Write-Host "❌ current directory is not a weasel source directory"
+        }
+      } elseif ($use -eq "weasel") {
+        if ([Environment]::Is64BitOperatingSystem) {
+          $registryPath = "HKLM:\SOFTWARE\WOW6432Node\Rime\Weasel"
+        } else {
+          $registryPath = "HKLM:\SOFTWARE\Rime\Weasel"
+        }
+        try {
+          $weaselRoot = (Get-ItemProperty -Path $registryPath -ErrorAction Stop).'WeaselRoot'
+          $servercmd = Join-Path -Path $weaselRoot -ChildPath "WeaselServer.exe"
+          $processName = "WeaselServer"
+          do {
+            $process = Get-Process $processName -ErrorAction SilentlyContinue
+            if ($process) {
+              Stop-Process -Name $processName -Force -ErrorAction SilentlyContinue
+            } else {
+              Write-Host "☑  $processName has been killed"
+            }
+            Start-Sleep -Seconds 0.5
+          } while ($process)
+          $dllbit64 = Is64Bit
+          MyCopyItem -src $(if ($dllbit64) { $dir64 } else { $dir86 }) -subpath "dist\lib\rime.dll" -dest $weaselRoot
+          MyCopyItem -src $(if ($dllbit64) { $dir64 } else { $dir86 }) -subpath "dist\lib\rime.pdb" -dest $weaselRoot
+          Start-Process $servercmd -WorkingDirectory $weaselRoot
+          if ($(Get-Process $processName -ErrorAction SilentlyContinue)) {
+            Write-Host "☑  $processName has been started"
+          }
+        } catch [System.UnauthorizedAccessException] {
+          Write-Host "❗ $_ please run as Administrator!"
+          Start-Process $servercmd -WorkingDirectory $weaselRoot
+          Write-Host "☑  $processName started"
+          SafeExit
+        } catch {
+          Write-Host "❌ Error: $_"
+        }
+      }
     }
   }
 } else {
