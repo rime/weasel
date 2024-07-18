@@ -59,7 +59,7 @@ if (!$os) {
     $os = "Windows"
   } elseif ([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::OSX)) {
     $os = "macOS"
-  } 
+  }
 }
 # eixt if $os is not Windows or macOS
 if (($os -ne "Windows") -and ($os -ne "macOS")) {
@@ -73,7 +73,7 @@ if ($os -eq "Windows") {
     $pattern = ""
     if ($use -eq "weasel") {
       $pattern = "rime-[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x(64|86)\.7z"
-    } elseif ($use -eq "dev") {
+    } else {
       $pattern = "rime-(deps-)?[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x(64|86)\.7z"
     }
   } elseif ($build_variant -eq "mingw") {
@@ -102,7 +102,7 @@ $global:api_pat = "https://api.github.com/repos/rime/librime/releases/"
 $global:url_pat = "github"
 $global:url_replace = "github"
 # if ~/.get-rime.conf.ps1 exist, source it
-if (Test-Path "$home_dir/.get-rime.conf.ps1") { & "$home_dir/.get-rime.conf.ps1" } 
+if (Test-Path "$home_dir/.get-rime.conf.ps1") { & "$home_dir/.get-rime.conf.ps1" }
 # if $api_pat not set, use the original api url, in case of conf files not exist
 if (!$api_pat) { $api_pat = "https://api.github.com/repos/rime/librime/releases/" }
 if ($tag) {
@@ -119,7 +119,7 @@ if (($api_pat -match "^https://api.github.com.*$") -and $authorization) {
 } elseif ($authorization) {
   Write-Host "⛔ Caution:
   $api_pat is not original api url
-  authorization should be removed or commented for security" 
+  authorization should be removed or commented for security"
   SafeExit
 }
 
@@ -148,7 +148,7 @@ try {
     SafeExit
   }
 }
-# check 64 bit 
+# check 64 bit
 function Is64Bit {
   function IsWin11OrGreater {
     $osVersion = (Get-CimInstance Win32_OperatingSystem).Version
@@ -179,26 +179,26 @@ function Is64Bit {
       return $true
     } else {
       return $false
-    }   
+    }
   }
 }
 # check if file already downloaded
 $ignore_urls = @()
 $files_current_dir = Get-ChildItem -Path . -Name
 if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
-	$response.assets | ForEach-Object {
-		$url = $_.browser_download_url
-		if ($url -match "http.*\/([^/]+)$") {
-			$filename = $matches[1]
-			if ($files_current_dir -contains $filename) {
-				$file_info = Get-ChildItem -Path . $filename -ErrorAction SilentlyContinue
-				# file size the same as the source
-				if ($file_info.Length -eq $_.size) {
-					$ignore_urls += $url
-				}
-			}	
-		}
-	}		
+  $response.assets | ForEach-Object {
+    $url = $_.browser_download_url
+    if ($url -match "http.*\/([^/]+)$") {
+      $filename = $matches[1]
+      if ($files_current_dir -contains $filename) {
+        $file_info = Get-ChildItem -Path . $filename -ErrorAction SilentlyContinue
+        # file size the same as the source
+        if ($file_info.Length -eq $_.size) {
+          $ignore_urls += $url
+        }
+      }
+    }
+  }
 }
 # start to download files
 $fileNames = @()
@@ -206,11 +206,11 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
   if ($parallel) {
     $fileNames += $response.assets | ForEach-Object -Parallel {
       $url = $_.browser_download_url
-			if ($using:ignore_urls -contains $url -and $url -match $using:pattern) {
+      if ($using:ignore_urls -contains $url -and $url -match $using:pattern) {
         $fileName = [System.IO.Path]::GetFileName($url)
-				Write-Host "☑  $fileName is already in the current directory."
-				return $fileName
-			}
+        Write-Host "☑  $fileName is already in the current directory."
+        return $fileName
+      }
       if ($using:url_pat -and $using:url_replace) {
         $url = $url -replace $using:url_pat, $using:url_replace
       }
@@ -240,23 +240,29 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
       if ($url_pat -and $url_replace) {
         $url = $url -replace $url_pat, $url_replace
       }
-      if ($url -match $pattern) {
+      if ($ignore_urls -contains $url -and $url -match $pattern) {
         $fileName = [System.IO.Path]::GetFileName($url)
-        Write-Host "⏳ Downloading $fileName..."
-        $downloadParams = @{
-          Uri = $url
-          OutFile = $fileName
-        }
-        if ($proxy) {
-          $downloadParams.Proxy = $proxy
-          $downloadParams.ProxyCredential = $webRequestParams.proxyCredential
-        }
-        try {
-          Invoke-WebRequest @downloadParams
-          Write-Host "☑  Downloaded $fileName to the current directory."
-          $fileNames += $fileName
-        } catch {
-          Write-Host "❌ Error downloading ${fileName}: $($_.Exception.Message)"
+        Write-Host "☑  $fileName is already in the current directory."
+        $fileNames += $fileName
+      } else {
+        if ($url -match $pattern) {
+          $fileName = [System.IO.Path]::GetFileName($url)
+          Write-Host "⏳ Downloading $fileName..."
+          $downloadParams = @{
+            Uri = $url
+            OutFile = $fileName
+          }
+          if ($proxy) {
+            $downloadParams.Proxy = $proxy
+            $downloadParams.ProxyCredential = $webRequestParams.proxyCredential
+          }
+          try {
+            Invoke-WebRequest @downloadParams
+            Write-Host "☑  Downloaded $fileName to the current directory."
+            $fileNames += $fileName
+          } catch {
+            Write-Host "❌ Error downloading ${fileName}: $($_.Exception.Message)"
+          }
         }
       }
     }
@@ -265,9 +271,9 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
   if ($fileNames -and $cmdOk -and $extract) {
     $fileNames.GetEnumerator() | ForEach-Object {
       $outPath = $_ -replace "(\.7z|\.tar\.bz2)|(deps-)", ''
-			if ((-not $hash) -and $outPath -match "rime-([0-9a-fA-F]+)(.*$)") {
+      if ((-not $hash) -and $outPath -match "rime-([0-9a-fA-F]+)(.*$)") {
         $hash = $matches[1]
-			}
+      }
       if ($_ -match ".*\.tar\.bz2") {
         $tmpTarFile = $_ -replace '.bz2$', ''
         7z x $_ > $null
@@ -291,11 +297,25 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
           Write-Host "☑  $(Split-Path $src -Leaf)\$subpath has been copied to $dest"
         }
       }
-
+      function KillWeaselServer {
+        $processName = "WeaselServer"
+        $process = Get-Process $processName -ErrorAction SilentlyContinue
+        while ($process) {
+          if ($process) {
+            Stop-Process -Name $processName -Force -ErrorAction SilentlyContinue
+          }
+          Start-Sleep -Seconds 0.5
+          $process = Get-Process $processName -ErrorAction SilentlyContinue
+          if (-not $process) {
+            Write-Host "☑  $processName has been killed"
+          }
+        }
+      }
       if ( $use -eq "dev"){
         if ((Test-Path ".\include") `
         -and (Test-Path ".\lib") -and (Test-Path ".\lib64") `
         -and (Test-Path ".\output\Win32")) {
+          KillWeaselServer
           Remove-Item include\rime_*.h -ErrorAction SilentlyContinue
           MyCopyItem -src $dir86 -subpath "dist\include\rime_*.h" -dest "include\"
           MyCopyItem -src $dir86 -subpath "dist\lib\rime.lib"     -dest "lib\"
@@ -305,6 +325,8 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
           MyCopyItem -src $dir64 -subpath "dist\lib\rime.dll"     -dest "output\"
           MyCopyItem -src $dir64 -subpath "dist\lib\rime.pdb"     -dest "output\"
           MyCopyItem -src $dir64 -subpath "share\opencc\*.*"      -dest "output\data\opencc\"
+          Remove-Item -Path $dir64 -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+          Remove-Item -Path $dir86 -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
         } else {
           Write-Host "❌ current directory is not a weasel source directory"
         }
@@ -317,19 +339,13 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
         try {
           $weaselRoot = (Get-ItemProperty -Path $registryPath -ErrorAction Stop).'WeaselRoot'
           $servercmd = Join-Path -Path $weaselRoot -ChildPath "WeaselServer.exe"
+          KillWeaselServer
           $processName = "WeaselServer"
-          do {
-            $process = Get-Process $processName -ErrorAction SilentlyContinue
-            if ($process) {
-              Stop-Process -Name $processName -Force -ErrorAction SilentlyContinue
-            } else {
-              Write-Host "☑  $processName has been killed"
-            }
-            Start-Sleep -Seconds 0.5
-          } while ($process)
           $dllbit64 = Is64Bit
           MyCopyItem -src $(if ($dllbit64) { $dir64 } else { $dir86 }) -subpath "dist\lib\rime.dll" -dest $weaselRoot
           MyCopyItem -src $(if ($dllbit64) { $dir64 } else { $dir86 }) -subpath "dist\lib\rime.pdb" -dest $weaselRoot
+          Remove-Item -Path $dir64 -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+          Remove-Item -Path $dir86 -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
           Start-Process $servercmd -WorkingDirectory $weaselRoot
           if ($(Get-Process $processName -ErrorAction SilentlyContinue)) {
             Write-Host "☑  $processName has been started"
