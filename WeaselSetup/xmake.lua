@@ -1,6 +1,7 @@
 target("WeaselSetup")
   set_kind("binary")
-  add_files("./*.cpp", "./*.rc")
+  add_files("./*.cpp")
+  add_rules("add_rcfiles")
   add_links("imm32", "kernel32")
 
   set_policy("windows.manifest.uac", "admin")

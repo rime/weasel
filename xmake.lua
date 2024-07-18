@@ -7,11 +7,6 @@ set_languages("c++17")
 add_defines("UNICODE", "_UNICODE")
 add_defines("WINDOWS")
 add_defines("MSVC")
-add_defines("VERSION_MAJOR=" .. os.getenv("VERSION_MAJOR"))
-add_defines("VERSION_MINOR=" .. os.getenv("VERSION_MINOR"))
-add_defines("VERSION_PATCH=" .. os.getenv("VERSION_PATCH"))
-add_defines("FILE_VERSION=" .. os.getenv("FILE_VERSION"))
-add_defines("PRODUCT_VERSION=" .. os.getenv("PRODUCT_VERSION"))
 
 add_includedirs("$(projectdir)/include")
 -- 设置Boost库的全局路径
@@ -67,3 +62,14 @@ if is_mode("debug") then
 else
 	add_ldflags("/INCREMENTAL:NO", {force = true})
 end
+
+rule("add_rcfiles")
+  on_load(function(target)
+    target:add("files", path.join(target:scriptdir(), "*.rc"),
+      {defines = {"VERSION_MAJOR=" .. os.getenv("VERSION_MAJOR"),
+      "VERSION_MINOR=" .. os.getenv("VERSION_MINOR"),
+      "VERSION_PATCH=" .. os.getenv("VERSION_PATCH"),
+      "FILE_VERSION=" .. os.getenv("FILE_VERSION"),
+      "PRODUCT_VERSION=" .. os.getenv("PRODUCT_VERSION")
+    }})
+  end)

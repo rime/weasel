@@ -1,6 +1,7 @@
 target("WeaselIME")
   set_kind("shared")
-  add_files("./*.cpp", "./*.rc")
+  add_files("./*.cpp")
+  add_rules("add_rcfiles")
   add_links("advapi32", "imm32", "user32", "gdi32")
   add_deps("WeaselIPC", "WeaselUI")
   local fname = ''
