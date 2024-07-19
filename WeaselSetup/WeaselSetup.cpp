@@ -161,6 +161,14 @@ static int Run(LPTSTR lpCmdLine) {
                           L"CheckForUpdates", L"0", REG_SZ);
   }
 
+  if (!wcscmp(L"/testing", lpCmdLine)) {
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"UpdateChannel", L"testing", REG_SZ);
+  }
+  if (!wcscmp(L"/release", lpCmdLine)) {
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"UpdateChannel", L"release", REG_SZ);
+  }
   bool hans = !wcscmp(L"/s", lpCmdLine);
   if (hans)
     return install(false, silent, old_ime_support);
