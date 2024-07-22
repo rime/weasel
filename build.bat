@@ -69,7 +69,7 @@ set rime_build_variant=release
 set build_weasel=0
 set build_installer=0
 set build_arm64=0
-set build_test_cast=0
+set build_appcast=0
 
 rem parse the command line options
 :parse_cmdline_options
@@ -93,7 +93,7 @@ rem parse the command line options
   if "%1" == "weasel" set build_weasel=1
   if "%1" == "installer" set build_installer=1
   if "%1" == "arm64" set build_arm64=1
-  if "%1" == "testing_cast" set build_test_cast=1
+  if "%1" == "appcast" set build_appcast=1
   if "%1" == "all" (
     set build_boost=1
     set build_data=1
@@ -107,8 +107,8 @@ rem parse the command line options
   goto parse_cmdline_options
 :end_parsing_cmdline_options
 
-if %build_test_cast% == 1 (
-  call :build_test_cast_xml
+if %build_appcast% == 1 (
+  call :build_appcast_xml
   exit /b
 )
 
@@ -363,18 +363,18 @@ rem %3 : target_path of rime.dll, base %WEASEL_ROOT% or abs path
 
   exit /b
 
-:build_test_cast_xml
+:build_appcast_xml
   echo generating testing/weasel/appcast.xml
   if not exist testing\weasel (mkdir testing\weasel)
   copy update\testing-appcast.xml testing\weasel\appcast.xml > nul
   if exist update_cast.ps1 del update_cast.ps1 > nul
   echo $content = Get-Content -Path ^
     .\testing\weasel\appcast.xml -Raw -Encoding UTF8 > update_cast.ps1
-	rem set url for nightly build or public release, by %RELEASE_BUILD%
+  rem set url for nightly build or public release, by %RELEASE_BUILD%
   echo $short_pat = "\d+\.\d+\.\d+" >> update_cast.ps1
   echo $long_pat = "\d+\.\d+\.\d+\.\d+" >> update_cast.ps1
-	if not defined RELEASE_BUILD (
-		echo $newcontent = $content -replace "(?<=download/)$short_pat(?=/weasel-)", ^
+  if not defined RELEASE_BUILD (
+    echo $newcontent = $content -replace "(?<=download/)$short_pat(?=/weasel-)", ^
       "latest" >> update_cast.ps1
     echo $newcontent = $newcontent -replace "(?<=weasel-)$long_pat(?=-installer.exe)", ^
       "$env:PRODUCT_VERSION" >> update_cast.ps1
@@ -385,8 +385,8 @@ rem %3 : target_path of rime.dll, base %WEASEL_ROOT% or abs path
     echo $newcontent = $newcontent -replace ^
       "(?<=<sparkle:releaseNotesLink>)(http.*html)(?=</sparkle:releaseNotesLink>)", ^
       "https://github.com/rime/weasel/releases/tag/latest" >> update_cast.ps1
-	) else (
-		echo $newcontent = $content -replace "(?<=download/)$short_pat(?=/weasel-)", ^
+  ) else (
+    echo $newcontent = $content -replace "(?<=download/)$short_pat(?=/weasel-)", ^
       "$env:WEASEL_VERSION" >> update_cast.ps1
     echo $newcontent = $newcontent -replace "(?<=weasel-)$long_pat(?=-installer.exe)", ^
       "$env:PRODUCT_VERSION" >> update_cast.ps1
@@ -394,17 +394,17 @@ rem %3 : target_path of rime.dll, base %WEASEL_ROOT% or abs path
       "$env:WEASEL_VERSION" >> update_cast.ps1
     echo $newcontent = $newcontent -replace "(?<=sparkle:version=.)$short_pat", ^
       "$env:WEASEL_VERSION" >> update_cast.ps1
-	)
-	rem save current set
-	echo $originalCulture = [System.Threading.Thread]::CurrentThread.CurrentCulture >> update_cast.ps1
-	echo $originalUICulture = [System.Threading.Thread]::CurrentThread.CurrentUICulture >> update_cast.ps1
-	echo [System.Threading.Thread]::CurrentThread.CurrentCulture = 'en-US' >> update_cast.ps1
-	echo [System.Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US' >> update_cast.ps1
-	echo $dateString = Get-Date -Format "ddd, dd MMM yyyy HH:mm:ss K" >> update_cast.ps1
-	rem recover current set
-	echo [System.Threading.Thread]::CurrentThread.CurrentCulture = $originalCulture >> update_cast.ps1
-	echo [System.Threading.Thread]::CurrentThread.CurrentUICulture = $originalUICulture >> update_cast.ps1
-	echo $newcontent = $newcontent -replace "(?<=<pubDate>).*(?=</pubDate>)", "$dateString" >> update_cast.ps1
+  )
+  rem save current set
+  echo $originalCulture = [System.Threading.Thread]::CurrentThread.CurrentCulture >> update_cast.ps1
+  echo $originalUICulture = [System.Threading.Thread]::CurrentThread.CurrentUICulture >> update_cast.ps1
+  echo [System.Threading.Thread]::CurrentThread.CurrentCulture = 'en-US' >> update_cast.ps1
+  echo [System.Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US' >> update_cast.ps1
+  echo $dateString = Get-Date -Format "ddd, dd MMM yyyy HH:mm:ss K" >> update_cast.ps1
+  rem recover current set
+  echo [System.Threading.Thread]::CurrentThread.CurrentCulture = $originalCulture >> update_cast.ps1
+  echo [System.Threading.Thread]::CurrentThread.CurrentUICulture = $originalUICulture >> update_cast.ps1
+  echo $newcontent = $newcontent -replace "(?<=<pubDate>).*(?=</pubDate>)", "$dateString" >> update_cast.ps1
   echo $newcontent ^| Set-Content -Path testing\weasel\appcast.xml -Encoding UTF8 >> update_cast.ps1
   powershell.exe -ExecutionPolicy Bypass .\update_cast.ps1
   if errorlevel 1 exit /b 1
