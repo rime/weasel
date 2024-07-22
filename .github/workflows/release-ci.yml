@@ -104,4 +104,15 @@ jobs:
             ./output/archives/weasel*.exe
             ./output/archives/debug_symbols.7z
           body_path: ${{ github.workspace }}/RELEASE_CHANGELOG.md
-        
+
+      - name: Generate testing/weasel/appcast.xml
+        run: |
+          .\build.bat testing_cast
+
+      - name: Deploy testing/weasel/appcast.xml to rime.github.io
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          external_repository: rime/rime.github.io
+          publish_dir: ./testing/weasel/
+          keep_files: true
