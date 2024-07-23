@@ -107,7 +107,7 @@ jobs:
 
       - name: Generate testing/weasel/appcast.xml
         run: |
-          .\build.bat testing_cast
+          .\build.bat appcast
 
       - name: Deploy testing/weasel/appcast.xml to rime.github.io
         uses: peaceiris/actions-gh-pages@v4
