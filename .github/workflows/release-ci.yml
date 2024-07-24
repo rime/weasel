@@ -135,5 +135,7 @@ jobs:
           deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
           external_repository: rime/rime.github.io
           publish_dir: ./testing/weasel/
+          destination_dir: 'testing/weasel'
           keep_files: true
           publish_branch: master
+          cname: rime.im
