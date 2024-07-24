@@ -127,6 +127,7 @@ jobs:
       - name: Prepare file
         run: |
           mkdir -p ./testing/weasel
+          unzip artifact.zip
           mv appcast.xml ./testing/weasel/
 
       - name: Deploy appcast
