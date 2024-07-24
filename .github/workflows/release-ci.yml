@@ -123,12 +123,11 @@ jobs:
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: testing/weasel
+          merge-multiple: true
 
-      - name: Prepare file
-        run: |
-          mkdir -p ./testing/weasel
-          unzip artifact.zip
-          mv appcast.xml ./testing/weasel/
+      - run: ls -R testing/weasel
 
       - name: Deploy appcast
         uses: peaceiris/actions-gh-pages@v4
