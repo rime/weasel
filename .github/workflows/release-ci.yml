@@ -136,3 +136,4 @@ jobs:
           external_repository: rime/rime.github.io
           publish_dir: ./testing/weasel/
           keep_files: true
+          publish_branch: master
