@@ -122,7 +122,12 @@ jobs:
     needs: [build-and-release]
     steps:
       - name: Download artifacts
-        uses: actions/download-artifacts@v4
+        uses: actions/download-artifact@v4
+
+      - name: Prepare file
+        run: |
+          mkdir -p ./testing/weasel
+          mv appcast.xml ./testing/weasel/
 
       - name: Deploy appcast
         uses: peaceiris/actions-gh-pages@v4
