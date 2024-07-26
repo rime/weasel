@@ -199,19 +199,7 @@ LRESULT ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg,
     PipeMessage req{Msg, wParam, lParam};
     LRESULT ret = 0;
     switch (Msg) {
-      case WEASEL_IPC_SHUTDOWN_SERVER:
-      case WEASEL_IPC_START_SESSION:
-      case WEASEL_IPC_END_SESSION:
-      case WEASEL_IPC_START_MAINTENANCE:
-      case WEASEL_IPC_END_MAINTENANCE:
-      case WEASEL_IPC_UPDATE_INPUT_POS:
-      case WEASEL_IPC_FOCUS_IN:
-      case WEASEL_IPC_FOCUS_OUT:
-      case WEASEL_IPC_TRAY_COMMAND: {
-        ret = channel.Transact(req);
-        break;
-      }
-      default: {
+      case WEASEL_IPC_PROCESS_KEY_EVENT: {
         auto future = std::async(std::launch::async, [this, &req]() {
           return channel.Transact(req);
         });
@@ -224,6 +212,10 @@ LRESULT ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg,
           // Transact complete
           ret = future.get();
         }
+        break;
+      }
+      default: {
+        ret = channel.Transact(req);
         break;
       }
     }
