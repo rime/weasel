@@ -73,3 +73,26 @@ rule("add_rcfiles")
       "PRODUCT_VERSION=" .. os.getenv("PRODUCT_VERSION")
     }})
   end)
+rule("use_weaselconstants")
+  on_load(function(target)
+    function check_include_weasel_constants_in_dir(dir)
+      local files = os.files(path.join(dir, "**.h"))
+      table.join2(files, os.files(path.join(dir, "**.cpp")))
+      for _, file in ipairs(files) do
+        local content = io.readfile(file)
+        if content:find('#include%s+"WeaselConstants%.h"') or content:find('#include%s+<WeaselConstants%.h>') then
+          return true
+        end
+      end
+      return false
+    end
+    if check_include_weasel_constants_in_dir(target:scriptdir()) then
+      target:add("defines", {
+        "VERSION_MAJOR=" .. os.getenv("VERSION_MAJOR"),
+        "VERSION_MINOR=" .. os.getenv("VERSION_MINOR"),
+        "VERSION_PATCH=" .. os.getenv("VERSION_PATCH"),
+        "FILE_VERSION=" .. os.getenv("FILE_VERSION"),
+        "PRODUCT_VERSION=" .. os.getenv("PRODUCT_VERSION")
+    })
+    end
+  end)

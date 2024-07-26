@@ -1,7 +1,7 @@
 target("WeaselTSF")
   set_kind("shared")
   add_files("./*.cpp", "WeaselTSF.def")
-  add_rules("add_rcfiles")
+  add_rules("add_rcfiles", "use_weaselconstants")
   add_deps("WeaselIPC", "WeaselUI")
   local fname = ''
   if is_arch("x86") then
