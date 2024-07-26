@@ -23,4 +23,4 @@ jobs:
           token: ${{ secrets.REPO_DISPATCH_PAT }}
           repository: fxliang/RimeSeeMe
           event-type: repository_dispatch_event
-          
+          client-payload: '{"branch": "repo_dispatch"}'
