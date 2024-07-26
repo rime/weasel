@@ -14,6 +14,16 @@ on:
   pull_request:
 
 jobs:
+  repository_dispatch_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: trigger workflow in fxliang/rimeseeme
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_DISPATCH_PAT }}
+          repository: fxliang/RimeSeeMe
+          event-type: repository_dispatch_event
+          
   build:
     runs-on: windows-2019
     env:
