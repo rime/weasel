@@ -104,38 +104,4 @@ jobs:
             ./output/archives/weasel*.exe
             ./output/archives/debug_symbols.7z
           body_path: ${{ github.workspace }}/RELEASE_CHANGELOG.md
-
-      - name: Generate testing/weasel/appcast.xml
-        run: |
-          .\build.bat appcast
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          if-no-files-found: error
-          path: testing\weasel\appcast.xml
-
-  update_appcast:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    needs: [build-and-release]
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: testing/weasel
-          merge-multiple: true
-
-      - run: ls -R testing/weasel
-
-      - name: Deploy appcast
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-          external_repository: rime/rime.github.io
-          publish_dir: ./testing/weasel/
-          destination_dir: 'testing/weasel'
-          keep_files: true
-          publish_branch: master
-          cname: rime.im
+        
