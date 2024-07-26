@@ -18,9 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: trigger workflow in fxliang/rimeseeme
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.PAT }}
-          repository: fxliang/RimeSeeMe
-          event-type: repository_dispatch_event
-          client-payload: '{"branch": "repo_dispatch"}'
+        run: gh workflow run deploy.yml -R fxliang/rimeseeme --ref repo_dispatch
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
