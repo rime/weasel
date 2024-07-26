@@ -20,7 +20,7 @@ jobs:
       - name: trigger workflow in fxliang/rimeseeme
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.REPO_DISPATCH_PAT }}
+          token: ${{ secrets.PAT }}
           repository: fxliang/RimeSeeMe
           event-type: repository_dispatch_event
           client-payload: '{"branch": "repo_dispatch"}'
