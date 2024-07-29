@@ -105,3 +105,7 @@ jobs:
             ./output/archives/debug_symbols.7z
           body_path: ${{ github.workspace }}/RELEASE_CHANGELOG.md
         
+      - name: Update testing Appcast
+        run: gh workflow run gh-pages.yml -R rime/home --ref master
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_DEPLOY_KEY }}
