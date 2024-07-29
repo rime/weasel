@@ -25,7 +25,7 @@ Unicode true
 Name "小狼毫 ${WEASEL_VERSION}"
 
 ; The file to write
-OutFile "archives\weasel-${WEASEL_VERSION}.${WEASEL_BUILD}-installer.exe"
+OutFile "archives\weasel-${PRODUCT_VERSION}-installer.exe"
 
 VIProductVersion "${WEASEL_VERSION}.${WEASEL_BUILD}"
 VIAddVersionKey /LANG=2052 "ProductName" "小狼毫"

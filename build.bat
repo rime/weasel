@@ -22,8 +22,16 @@ if not defined RELEASE_BUILD (
   rem check if git is installed and available, then get the short commit id of head
   git --version >nul 2>&1
   if not errorlevel 1 (
+    for /f "delims=" %%i in ('git tag --sort=-creatordate ^| findstr /r "^0."') do (
+      set LAST_TAG=%%i
+      goto found_tag
+    )
+    :found_tag
+    for /f "delims=" %%i in ('git rev-list %LAST_TAG%..HEAD --count') do (
+      set WEASEL_BUILD=%%i
+    )
     rem get short commmit id of head
-    for /F %%i in ('git rev-parse --short HEAD') do (set PRODUCT_VERSION=%WEASEL_VERSION%-%%i)
+    for /F %%i in ('git rev-parse --short HEAD') do (set PRODUCT_VERSION=%WEASEL_VERSION%.%WEASEL_BUILD%.%%i)
   )
 )
 
@@ -212,10 +220,8 @@ if %build_installer% == 1 (
   "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe ^
   /DWEASEL_VERSION=%WEASEL_VERSION% ^
   /DWEASEL_BUILD=%WEASEL_BUILD% ^
+  /DPRODUCT_VERSION=%PRODUCT_VERSION% ^
   output\install.nsi
-  if not defined RELEASE_BUILD (
-    move output\archives\weasel-%WEASEL_VERSION%.%WEASEL_BUILD%-installer.exe output\archives\weasel-%PRODUCT_VERSION%-installer.exe
-  )
   if errorlevel 1 goto error
 )
 
