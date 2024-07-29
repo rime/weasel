@@ -21,6 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          tags: true
 
       - name: Configure build environment
         shell: bash
