@@ -20,7 +20,8 @@ jobs:
       - name: Checkout last commit
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: true
+          fetch-depth: 0
 
       - name: Fetch all tags
         run: git fetch --tags
