@@ -14,82 +14,10 @@ on:
   pull_request:
 
 jobs:
-  build:
-    runs-on: windows-2019
-    env:
-      boost_version: 1.84.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
+  repository_dispatch_test:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout last commit
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Cache llvm
-        id: cache-llvm
-        uses: actions/cache@v4
-        with:
-          path: C:\\Program Files\\LLVM
-          key: ${{ runner.os }}-llvm-18.1.6
-
-      - name: Install llvm
-        if: steps.cache-llvm.outputs.cache-hit != 'true'
-        run: choco install llvm --version=18.1.6
-
-      - name: Code style lint
-        shell: bash
-        run: ./clang-format.sh -i
-
-      - name: Configure build environment
-        shell: bash
-        run: |
-          cp env.vs2019.bat env.bat
-          echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
-
-      - name: Cache Boost
-        id: cache-boost
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.BOOST_ROOT }}
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}
-
-      # install boost if not cached
-      - name: Install Boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          ./install_boost.bat
-          ./build.bat boost arm64
-
-      # add msbuild to PATH
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v2
-
-      # use upper stream released librime files if stable release
-      - name: Copy Rime files
-        run: |
-          .\github.install.bat
-
-      - name: Build data
-        run: |
-          .\build.bat data
-
-      - name: Build Weasel
-        id: build_weasel
-        run: |
-          .\build.bat arm64 installer
-
-      - name: Compress Debug Symbols
-        shell: pwsh
-        run: |
-          output\7z.exe a -t7z "./output/archives/debug_symbols.7z" "output/*.pdb" -r
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: weasel-artifact-${{ env.git_ref_name }}
-          if-no-files-found: error
-          path: |
-            .\output\archives\weasel*.exe
-            .\output\archives\debug_symbols.7z
+      - name: trigger workflow in fxliang/rimeseeme
+        run: gh workflow run deploy.yml -R fxliang/rimeseeme --ref repo_dispatch
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
