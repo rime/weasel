@@ -25,16 +25,29 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Cache llvm
-        id: cache-llvm
-        uses: actions/cache@v4
-        with:
-          path: C:\\Program Files\\LLVM
-          key: ${{ runner.os }}-llvm-18.1.6
-
-      - name: Install llvm
-        if: steps.cache-llvm.outputs.cache-hit != 'true'
-        run: choco install llvm --version=18.1.6
+      - name: Install llvm if necessary
+        shell: pwsh
+        run: |
+          $version = ""
+          if (Get-Command "clang-format" -ErrorAction SilentlyContinue){
+            $version = clang-format --version
+            $pat = ".*\s+(\d+\.\d+\.\d+)"
+            if ($version -match $pat) {
+              $version = $matches[1]
+            }
+          }
+          if ($version -ne "") {
+            Write-Host "clang-format version：$version"
+            if ([version]$version -ge [version]"18.1.6") {
+              Write-Host "clang-format OK"
+            } else {
+              Write-Host "clang-format vesion does not meet"
+              choco install llvm --version=18.1.6
+            }
+          } else {
+            Write-Host "clang-format not installed"
+            choco install llvm --version=18.1.6
+          }
 
       - name: Code style lint
         shell: bash
