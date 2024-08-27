@@ -1,8 +1,6 @@
 ﻿#include "stdafx.h"
 #include "WeaselClientImpl.h"
 #include <StringAlgorithm.hpp>
-#include <future>
-#include <chrono>
 
 using namespace weasel;
 
@@ -197,29 +195,7 @@ LRESULT ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg,
                                  DWORD lParam) {
   try {
     PipeMessage req{Msg, wParam, lParam};
-    LRESULT ret = 0;
-    switch (Msg) {
-      case WEASEL_IPC_PROCESS_KEY_EVENT: {
-        auto future = std::async(std::launch::async, [this, &req]() {
-          return channel.Transact(req);
-        });
-        // wait Transact complete or overtime
-        if (future.wait_for(std::chrono::seconds(2)) ==
-            std::future_status::timeout) {
-          // Transact overtime
-          ret = 0;
-        } else {
-          // Transact complete
-          ret = future.get();
-        }
-        break;
-      }
-      default: {
-        ret = channel.Transact(req);
-        break;
-      }
-    }
-    return ret;
+    return channel.Transact(req);
   } catch (DWORD /* ex */) {
     return 0;
   }
