@@ -25,7 +25,7 @@ Unicode true
 Name "小狼毫 ${WEASEL_VERSION}"
 
 ; The file to write
-OutFile "archives\weasel-${WEASEL_VERSION}.${WEASEL_BUILD}-installer.exe"
+OutFile "archives\weasel-${PRODUCT_VERSION}-installer.exe"
 
 VIProductVersion "${WEASEL_VERSION}.${WEASEL_BUILD}"
 VIAddVersionKey /LANG=2052 "ProductName" "小狼毫"
@@ -287,8 +287,6 @@ program_files:
   IfErrors +2 0
   StrCpy $R2 "/t"
 
-  ; ensure old file deleted, avoid IPC issue
-  ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
   ExecWait '"$INSTDIR\WeaselSetup.exe" $R2'
 
   ; Write the uninstall keys for Windows
