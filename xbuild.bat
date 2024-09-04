@@ -100,6 +100,7 @@ set build_commands=0
     set build_weasel=1
     set build_installer=1
     set build_arm64=1
+    set build_commands=1
   )
   shift
   goto parse_cmdline_options
@@ -110,8 +111,9 @@ if %build_boost% == 0 (
 if %build_data% == 0 (
 if %build_opencc% == 0 (
 if %build_rime% == 0 (
+if %build_commands% == 0 (
   set build_weasel=1
-)))))
+))))))
 rem 
 rem quit WeaselServer.exe before building
 cd /d %WEASEL_ROOT%
@@ -128,34 +130,31 @@ if %build_boost% == 1 (
   )
   if errorlevel 1 exit /b 1
   cd /d %WEASEL_ROOT%
-  exit /b
 )
 if %build_rime% == 1 (
   call build.bat rime
   if errorlevel 1 exit /b 1
   cd /d %WEASEL_ROOT%
-  exit /b
 )
 if %build_data% == 1 (
   call build.bat data
   if errorlevel 1 exit /b 1
   cd /d %WEASEL_ROOT%
-  exit /b
 )
 if %build_opencc% == 1 (
   call build.bat opencc
   if errorlevel 1 exit /b 1
   cd /d %WEASEL_ROOT%
-  exit /b
 )
 
 if %build_commands% == 1 (
+  echo Generating compile_commands.json
   xmake project -k compile_commands -m %build_config%
-  exit /b
 )
 
 rem if to clean
 if %build_clean% == 1 ( goto clean )
+if %build_weasel% == 0 ( goto end )
 
 if %build_arm64% == 1 (
   xmake f -a arm64 -m %build_config%
