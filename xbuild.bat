@@ -121,7 +121,11 @@ if exist output\weaselserver.exe (
 
 rem build booost
 if %build_boost% == 1 (
-  call build.bat boost
+  if %build_arm64% == 1 (
+    call build.bat boost arm64
+  ) else (
+    call build.bat boost
+  )
   if errorlevel 1 exit /b 1
   cd /d %WEASEL_ROOT%
   exit /b
