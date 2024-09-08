@@ -14,17 +14,11 @@ on:
   pull_request:
 
 jobs:
-  build:
+  lint:
     runs-on: windows-2019
-    env:
-      boost_version: 1.84.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
       - name: Install llvm if necessary
         shell: pwsh
         run: |
@@ -48,10 +42,26 @@ jobs:
             Write-Host "clang-format not installed"
             choco install llvm --version=18.1.6
           }
-
       - name: Code style lint
         shell: bash
         run: ./clang-format.sh -i
+
+  build:
+    needs: lint
+    runs-on: windows-2019
+    env:
+      boost_version: 1.84.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
+    steps:
+
+      - name: Checkout last commit
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Fetch all tags
+        run: git fetch --tags
 
       - name: Configure build environment
         shell: bash
@@ -67,7 +77,6 @@ jobs:
             ${{ env.BOOST_ROOT }}
           key: ${{ runner.os }}-boost-${{ env.boost_version }}
 
-      # install boost if not cached
       - name: Install Boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
         shell: bash
@@ -75,11 +84,9 @@ jobs:
           ./install_boost.bat
           ./build.bat boost arm64
 
-      # add msbuild to PATH
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      # use upper stream released librime files if stable release
       - name: Copy Rime files
         run: |
           .\github.install.bat
@@ -106,3 +113,66 @@ jobs:
           path: |
             .\output\archives\weasel*.exe
             .\output\archives\debug_symbols.7z
+
+  xbuild:
+    needs: lint
+    runs-on: windows-2019
+    env:
+      boost_version: 1.84.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
+    steps:
+
+      - name: Checkout last commit
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Fetch all tags
+        run: git fetch --tags
+
+      - name: Configure build environment
+        shell: bash
+        run: |
+          cp env.vs2019.bat env.bat
+          echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
+
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.BOOST_ROOT }}
+          key: ${{ runner.os }}-boost-${{ env.boost_version }}
+
+      - name: Install Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          ./install_boost.bat
+          ./build.bat boost arm64
+
+      # xmake 2.9.4 or later
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: '2.9.4'
+          actions-cache-folder: '.xmake-cache'
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Copy Rime files
+        shell: pwsh
+        run: |
+          .\github.install.bat
+
+      - name: Build data
+        run: |
+          $ErrorActionPreference = 'Stop'
+          .\build.bat data
+
+      - name: Build Weasel
+        id: build_weasel
+        shell: cmd
+        run: |
+          .\xbuild.bat arm64 installer
+
