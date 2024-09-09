@@ -112,10 +112,16 @@ void CSystemTray::Initialise() {
   m_uCreationFlags = 0;
 
 #ifdef SYSTEMTRAY_USEW2K
-  OSVERSIONINFO os = {sizeof(os)};
-  GetVersionEx(&os);
-  m_bWin2K =
-      (VER_PLATFORM_WIN32_NT == os.dwPlatformId && os.dwMajorVersion >= 5);
+  OSVERSIONINFOEX osInfo = {0};
+  osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+  osInfo.dwMajorVersion = 5;
+  osInfo.dwPlatformId = VER_PLATFORM_WIN32_NT;
+  DWORDLONG conditionMask = 0;
+  conditionMask =
+      VerSetConditionMask(conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+  conditionMask = VerSetConditionMask(conditionMask, VER_PLATFORMID, VER_EQUAL);
+  m_bWin2K = VerifyVersionInfo(&osInfo, VER_MAJORVERSION | VER_PLATFORMID,
+                               conditionMask);
 #else
   m_bWin2K = FALSE;
 #endif
@@ -156,7 +162,13 @@ BOOL CSystemTray::Create(HINSTANCE hInst,
   m_bEnabled = TRUE;
 #else
   // this is only for Windows 95 (or higher)
-  m_bEnabled = (GetVersion() & 0xff) >= 4;
+  OSVERSIONINFOEXW osInfo = {0};
+  osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+  osInfo.dwMajorVersion = 4;
+  DWORDLONG conditionMask = 0;
+  conditionMask =
+      VerSetConditionMask(conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+  m_bEnabled = VerifyVersionInfoW(&osInfo, VER_MAJORVERSION, conditionMask);
   if (!m_bEnabled) {
     ASSERT(FALSE);
     return FALSE;
