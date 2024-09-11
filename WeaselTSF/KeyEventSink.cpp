@@ -9,7 +9,10 @@ static BOOL prevfEaten = FALSE;
 static int keyCountToSimulate = 0;
 
 void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
-  if (!_IsKeyboardOpen() || _IsKeyboardDisabled()) {
+  if (_isToOpenClose && (!_IsKeyboardOpen() || _IsKeyboardDisabled())) {
+    *pfEaten = FALSE;
+    return;
+  } else if (!_isToOpenClose && _IsKeyboardDisabled()) {
     *pfEaten = FALSE;
     return;
   }

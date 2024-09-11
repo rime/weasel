@@ -232,4 +232,5 @@ class WeaselTSF : public ITfTextInputProcessorEx,
   TfGuidAtom _gaDisplayAttributeInput;
   BOOL _async_edit = false;
   BOOL _committed = false;
+  BOOL _isToOpenClose = false;
 };
