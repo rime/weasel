@@ -260,6 +260,8 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
       _HandleLangBarMenuSelect(_status.ascii_mode
                                    ? ID_WEASELTRAY_ENABLE_ASCII
                                    : ID_WEASELTRAY_DISABLE_ASCII);
+      if (_pEditSessionContext)
+        m_client.ClearComposition();
       _UpdateLanguageBar(_status);
     }
   } else if (IsEqualGUID(guidCompartment,
