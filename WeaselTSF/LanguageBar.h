@@ -30,6 +30,7 @@ class CLangBarItemButton : public ITfLangBarItemButton, public ITfSource {
   /* ITfSource */
   STDMETHODIMP AdviseSink(REFIID riid, IUnknown* punk, DWORD* pdwCookie);
   STDMETHODIMP UnadviseSink(DWORD dwCookie);
+  BOOL IsLangBarDisabled() { return (_status & TF_LBI_STATUS_DISABLED); }
 
   void UpdateWeaselStatus(weasel::Status stat);
   void SetLangbarStatus(DWORD dwStatus, BOOL fSet);

@@ -161,6 +161,14 @@ static int Run(LPTSTR lpCmdLine) {
                           L"CheckForUpdates", L"0", REG_SZ);
   }
 
+  if (!wcscmp(L"/toggleime", lpCmdLine)) {
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"ToggleImeOnOpenClose", L"yes", REG_SZ);
+  }
+  if (!wcscmp(L"/toggleascii", lpCmdLine)) {
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"ToggleImeOnOpenClose", L"no", REG_SZ);
+  }
   if (!wcscmp(L"/testing", lpCmdLine)) {
     return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
                           L"UpdateChannel", L"testing", REG_SZ);

@@ -171,6 +171,10 @@ ExitError:
 }
 
 STDMETHODIMP WeaselTSF::OnSetThreadFocus() {
+  std::wstring _ToggleImeOnOpenClose{};
+  RegGetStringValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                    L"ToggleImeOnOpenClose", _ToggleImeOnOpenClose);
+  _isToOpenClose = (_ToggleImeOnOpenClose == L"yes");
   if (m_client.Echo()) {
     m_client.ProcessKeyEvent(0);
     weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
