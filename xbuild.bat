@@ -33,7 +33,7 @@ if not defined RELEASE_BUILD (
   rem check if git is installed and available, then get the short commit id of head
   git --version >nul 2>&1
   if not errorlevel 1 (
-    for /f "delims=" %%i in ('git tag --sort=-creatordate ^| findstr /r "^0."') do (
+    for /f "delims=" %%i in ('git tag --sort=-creatordate ^| findstr /r "%WEASEL_VERSION%"') do (
       set LAST_TAG=%%i
       goto found_tag
     )
