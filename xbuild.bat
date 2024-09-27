@@ -54,6 +54,12 @@ echo WEASEL_BUILD=%WEASEL_BUILD%
 echo WEASEL_ROOT=%WEASEL_ROOT%
 echo WEASEL_BUNDLED_RECIPES=%WEASEL_BUNDLED_RECIPES%
 echo BOOST_ROOT=%BOOST_ROOT%
+
+if defined GITHUB_ENV (
+	setlocal enabledelayedexpansion
+	echo git_ref_name=%PRODUCT_VERSION%>>!GITHUB_ENV!
+)
+
 rem ---------------------------------------------------------------------------
 rem parse the command line options
 set build_config=release
