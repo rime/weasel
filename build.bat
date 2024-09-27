@@ -45,6 +45,11 @@ echo WEASEL_ROOT=%WEASEL_ROOT%
 echo WEASEL_BUNDLED_RECIPES=%WEASEL_BUNDLED_RECIPES%
 echo.
 
+if defined GITHUB_ENV (
+	setlocal enabledelayedexpansion
+	echo git_ref_name=%PRODUCT_VERSION%>>!GITHUB_ENV!
+)
+
 if defined BOOST_ROOT (
   if exist "%BOOST_ROOT%\boost" goto boost_found
 )
