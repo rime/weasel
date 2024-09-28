@@ -24,6 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch all tags
+        if: github.ref == 'refs/heads/master'
         run: git fetch --tags
 
       - name: Configure build environment
