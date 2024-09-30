@@ -72,6 +72,9 @@ update_version_number() {
 update_version_number build.bat VERSION_MAJOR $old_major $new_major
 update_version_number build.bat VERSION_MINOR $old_minor $new_minor
 update_version_number build.bat VERSION_PATCH $old_patch $new_patch
+update_version_number xbuild.bat VERSION_MAJOR $old_major $new_major
+update_version_number xbuild.bat VERSION_MINOR $old_minor $new_minor
+update_version_number xbuild.bat VERSION_PATCH $old_patch $new_patch
 
 if [[ $OSTYPE =~ darwin ]]; then
     L_BOUND='[[:<:]]'
@@ -114,13 +117,14 @@ update_version_string update/appcast.xml
 update_pub_date update/testing-appcast.xml
 update_pub_date update/appcast.xml
 
-update_changelog "${new_version}"
-${VISUAL:-${EDITOR:-nano}} CHANGELOG.md
-match_line "## ${new_version} " CHANGELOG.md || (
-    echo >&2 "CHANGELOG.md has no changes for version ${new_version}."
-    exit 1
-)
-bash update/write-release-notes.sh
+# changelog manually, so disable this
+#update_changelog "${new_version}"
+#${VISUAL:-${EDITOR:-nano}} CHANGELOG.md
+#match_line "## ${new_version} " CHANGELOG.md || (
+#    echo >&2 "CHANGELOG.md has no changes for version ${new_version}."
+#    exit 1
+#)
+#bash update/write-release-notes.sh
 
 release_message="chore(release): ${new_version} :tada:"
 release_tag="${new_version}"
