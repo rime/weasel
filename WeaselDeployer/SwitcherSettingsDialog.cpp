@@ -182,8 +182,8 @@ LRESULT SwitcherSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
 
 LRESULT SwitcherSettingsDialog::OnSchemaListItemChanged(int, LPNMHDR p, BOOL&) {
   LPNMLISTVIEW lv = reinterpret_cast<LPNMLISTVIEW>(p);
-  if (!loaded_ || !lv ||
-      lv->iItem < 0 && lv->iItem >= schema_list_.GetItemCount())
+  if (!loaded_ || !lv || lv->iItem < 0 ||
+      lv->iItem >= schema_list_.GetItemCount())
     return 0;
   if ((lv->uNewState & LVIS_STATEIMAGEMASK) !=
       (lv->uOldState & LVIS_STATEIMAGEMASK)) {
