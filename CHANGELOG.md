@@ -1,3 +1,17 @@
+<a name="0.16.3"></a>
+## [0.16.3](https://github.com/rime/weasel/compare/0.16.2...0.16.3)(2024-10-04)
+
+#### Bug Fixes
+* release channel feed_url not correct. ([fxliang](https://github.com/rime/weasel/commit/0c8bb0f01a929f46160482ae2f4492bed560b7b9))
+* invalid quick return ([Xuesong Peng](https://github.com/rime/weasel/commit/4da263727e16362f01054f6f0bb7522e83ae1e06))
+
+#### Chores
+* add update\bump-version.ps1 to bump version in powershell, when clog is not required ([fxliang](https://github.com/rime/weasel/commit/8770fb3ed1b4341b7875c1d60e98bfa5b42f8ac7))
+* update bump-version.sh, appcast.xml and testing-appcast.xml[skip ci] ([fxliang](https://github.com/rime/weasel/commit/91d5e4e224a0d73b8303a6ce10f03c71dace5cdd))
+
+#### Continuous Integration
+* release and update testing appcast only in rime/weasel ([fxliang](https://github.com/rime/weasel/commit/4af83b6e17f7c3cf78257dd300f4adadbffa1083))
+
 <a name="0.16.2"></a>
 ## [0.16.2](https://github.com/rime/weasel/compare/0.16.1...0.16.2) (2024-09-28)
 
@@ -1052,3 +1066,4 @@
 * 以Python開發的實驗版本
 * 獨創「拼寫運算」技術
 * 預裝標調拼音、註音、粵拼、吳語等多種輸入方案
+
