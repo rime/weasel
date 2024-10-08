@@ -1,3 +1,54 @@
+<a name="0.16.3"></a>
+## [0.16.3](https://github.com/rime/weasel/compare/0.16.2...0.16.3)(2024-10-04)
+
+#### Bug Fixes
+* release channel feed_url not correct. ([fxliang](https://github.com/rime/weasel/commit/0c8bb0f01a929f46160482ae2f4492bed560b7b9))
+* invalid quick return ([Xuesong Peng](https://github.com/rime/weasel/commit/4da263727e16362f01054f6f0bb7522e83ae1e06))
+
+#### Chores
+* add update\bump-version.ps1 to bump version in powershell, when clog is not required ([fxliang](https://github.com/rime/weasel/commit/8770fb3ed1b4341b7875c1d60e98bfa5b42f8ac7))
+* update bump-version.sh, appcast.xml and testing-appcast.xml[skip ci] ([fxliang](https://github.com/rime/weasel/commit/91d5e4e224a0d73b8303a6ce10f03c71dace5cdd))
+
+#### Continuous Integration
+* release and update testing appcast only in rime/weasel ([fxliang](https://github.com/rime/weasel/commit/4af83b6e17f7c3cf78257dd300f4adadbffa1083))
+
+<a name="0.16.2"></a>
+## [0.16.2](https://github.com/rime/weasel/compare/0.16.1...0.16.2) (2024-09-28)
+
+#### 安裝須知
+
+**⚠️如您由0.16.0之前的版本升級，由於參數變化，安裝小狼毫前請保存好文件資料，於安裝後重啓或註銷 Windows，否則正在使用小狼毫的應用可能會崩潰。**
+
+**⚠如您由0.16.0之前的版本升級，請確認您的 `installation.yaml` 文件編碼爲 `UTF-8`, 否則如您在其中修改了非 ASCII 字符內容的路徑時，有可能會引起未明錯誤。**
+
+#### 主要更新
+* 新特性：支持自動檢查更新使用測試通道，使用`WeaselSetup.exe`參數可修改，`/testing`使用測試通道，`/release`使用發佈版本，默認後者；
+* 新特性：`WeaselSetup.exe`參數設置界面語言，设置后覆盖区域设置的自动检测。`/lt`設置爲繁體中文界面，`/ls` 設置爲簡體中文界面，`/le`設置爲英文界面
+* 新特性：`WeaselSetup.exe`參數設置是否使用自動檢查更新，`/du`禁用自動檢查更新，`/eu`使用自動檢查更新
+* 新特性：安裝器彈窗提示設置是否自動檢查升級
+* 新特性：開關IME消息響應狀態可配置，`WeaselSetup.exe`參數`/toggleime`設置關閉鍵盤（原版本狀態），`/toggleascii`切換`ascii_mode`,安裝默認後者 #1364
+* 新特性：支持xmake 2.9.4以上版本構建，使用`xbuild.bat`開展，相關參數基本同`build.bat`, 使用`xbuild.bat commands`可生成`compile_commands.json`便於lsp使用，`xbuild.bat clean`可清空xmake構建 #1360
+* 新特性：支持`Caps_Lock` 按鍵binding（如選重）,需将`key_binder`置于`ascii_composer`之前
+* 使能TSF dll中的WER
+* nightly 構建後自動更新rime/home頁面更新測試通道appcast
+* 升級lint檢查使用的llvm最低版本至18.1.6, 更新ci脚本检查更新llvm
+
+#### Bug 修復
+
+* 修復安裝器在系統未滿足要求時未中斷的問題
+* 修復重新安裝時舊的安於路徑未保持的問題
+* 修復界面語言根據區域格式未正確設置的問題
+* 修復IPC通信時因新舊版本變更引起的異常崩潰的問題
+* 修正代碼編碼格式
+* 修復清空舊log文件
+* 修復控制面板卸載界面中的圖標顯示問題
+* 修復`style/hover_type`爲`"semi_hilite"`在首候選時的顯示異常問題
+* 修復新版librime產物未能直接替換使用問題
+* 禁用IPC通信的異步機制，修復一些因異步機制引發的應用異常
+* 修復構建腳本不能重生成正確的版本信息問題
+* 修復一些vs工程配置設置，處理一些deprecated API警告
+
+
 <a name="0.16.1"></a>
 ## [0.16.1](https://github.com/rime/weasel/compare/0.16.0...0.16.1) (2024-06-06)
 
@@ -1015,3 +1066,4 @@
 * 以Python開發的實驗版本
 * 獨創「拼寫運算」技術
 * 預裝標調拼音、註音、粵拼、吳語等多種輸入方案
+

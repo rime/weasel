@@ -21,7 +21,7 @@ set PRODUCT_VERSION=
 if not defined WEASEL_ROOT set WEASEL_ROOT=%CD%
 if not defined VERSION_MAJOR set VERSION_MAJOR=0
 if not defined VERSION_MINOR set VERSION_MINOR=16
-if not defined VERSION_PATCH set VERSION_PATCH=1
+if not defined VERSION_PATCH set VERSION_PATCH=3
 
 if not defined WEASEL_VERSION set WEASEL_VERSION=%VERSION_MAJOR%.%VERSION_MINOR%.%VERSION_PATCH%
 if not defined WEASEL_BUILD set WEASEL_BUILD=0
@@ -33,7 +33,7 @@ if not defined RELEASE_BUILD (
   rem check if git is installed and available, then get the short commit id of head
   git --version >nul 2>&1
   if not errorlevel 1 (
-    for /f "delims=" %%i in ('git tag --sort=-creatordate ^| findstr /r "^0."') do (
+    for /f "delims=" %%i in ('git tag --sort=-creatordate ^| findstr /r "%WEASEL_VERSION%"') do (
       set LAST_TAG=%%i
       goto found_tag
     )
@@ -54,6 +54,12 @@ echo WEASEL_BUILD=%WEASEL_BUILD%
 echo WEASEL_ROOT=%WEASEL_ROOT%
 echo WEASEL_BUNDLED_RECIPES=%WEASEL_BUNDLED_RECIPES%
 echo BOOST_ROOT=%BOOST_ROOT%
+
+if defined GITHUB_ENV (
+	setlocal enabledelayedexpansion
+	echo git_ref_name=%PRODUCT_VERSION%>>!GITHUB_ENV!
+)
+
 rem ---------------------------------------------------------------------------
 rem parse the command line options
 set build_config=release
