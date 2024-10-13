@@ -4,7 +4,7 @@ target("WeaselSetup")
   add_rules("add_rcfiles", "use_weaselconstants", "subwin")
   add_links("imm32", "kernel32")
 
-  set_policy("windows.manifest.uac", "admin")
+  set_policy("windows.manifest.uac", "invoker")
   add_files("$(projectdir)/PerMonitorHighDPIAware.manifest")
   add_ldflags("/DEBUG /OPT:REF /OPT:ICF /LARGEADDRESSAWARE /ERRORREPORT:QUEUE")
 
