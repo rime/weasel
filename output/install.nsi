@@ -304,11 +304,7 @@ program_files:
   ; run as user...
   IfSilent +2
     ExecWait "$INSTDIR\WeaselDeployer.exe /install"
-    Goto deploy_done
-
-  ExecWait "$INSTDIR\WeaselDeployer.exe /deploy"
-  deploy_done:
-  ; ...
+    ExecWait "$INSTDIR\WeaselDeployer.exe /deploy"
 
   ; don't redirect on 64 bit system for auto run setting
   ${If} ${IsNativeARM64}
