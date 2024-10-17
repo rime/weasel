@@ -134,12 +134,23 @@ static int CustomInstall(bool installing) {
   return 0;
 }
 
+LPCTSTR GetParamByPrefix(LPCTSTR lpCmdLine, LPCTSTR prefix) {
+  return (wcsncmp(lpCmdLine, prefix, wcslen(prefix)) == 0)
+             ? (lpCmdLine + wcslen(prefix))
+             : 0;
+}
+
 static int Run(LPTSTR lpCmdLine) {
   constexpr bool silent = true;
   constexpr bool old_ime_support = false;
   bool uninstalling = !wcscmp(L"/u", lpCmdLine);
   if (uninstalling)
     return uninstall(silent);
+
+  if (auto res = GetParamByPrefix(lpCmdLine, L"/userdir:")) {
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"RimeUserDir", res, REG_SZ);
+  }
 
   if (!wcscmp(L"/ls", lpCmdLine)) {
     return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
