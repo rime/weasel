@@ -14,6 +14,8 @@
 CAppModule _Module;
 
 static int Run(LPTSTR lpCmdLine);
+static bool IsProcAdmin();
+static int RestartAsAdmin(LPTSTR lpCmdLine);
 
 int WINAPI _tWinMain(HINSTANCE hInstance,
                      HINSTANCE /*hPrevInstance*/,
@@ -138,8 +140,12 @@ static int Run(LPTSTR lpCmdLine) {
   constexpr bool silent = true;
   constexpr bool old_ime_support = false;
   bool uninstalling = !wcscmp(L"/u", lpCmdLine);
-  if (uninstalling)
-    return uninstall(silent);
+  if (uninstalling) {
+    if (IsProcAdmin())
+      return uninstall(silent);
+    else
+      return RestartAsAdmin(lpCmdLine);
+  }
 
   if (!wcscmp(L"/ls", lpCmdLine)) {
     return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
@@ -177,6 +183,11 @@ static int Run(LPTSTR lpCmdLine) {
     return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
                           L"UpdateChannel", L"release", REG_SZ);
   }
+
+  if (!IsProcAdmin()) {
+    return RestartAsAdmin(lpCmdLine);
+  }
+
   bool hans = !wcscmp(L"/s", lpCmdLine);
   if (hans)
     return install(false, silent, old_ime_support);
@@ -185,4 +196,45 @@ static int Run(LPTSTR lpCmdLine) {
     return install(true, silent, old_ime_support);
   bool installing = !wcscmp(L"/i", lpCmdLine);
   return CustomInstall(installing);
+}
+
+// https://learn.microsoft.com/zh-cn/windows/win32/api/securitybaseapi/nf-securitybaseapi-checktokenmembership
+bool IsProcAdmin() {
+  BOOL b = FALSE;
+  SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+  PSID AdministratorsGroup;
+  b = AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                               DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+                               &AdministratorsGroup);
+
+  if (b) {
+    if (!CheckTokenMembership(NULL, AdministratorsGroup, &b)) {
+      b = FALSE;
+    }
+    FreeSid(AdministratorsGroup);
+  }
+
+  return (b);
+}
+
+int RestartAsAdmin(LPTSTR lpCmdLine) {
+  SHELLEXECUTEINFO execInfo{0};
+  TCHAR path[MAX_PATH];
+  GetModuleFileName(GetModuleHandle(NULL), path, _countof(path));
+  execInfo.lpFile = path;
+  execInfo.lpParameters = lpCmdLine;
+  execInfo.lpVerb = _T("runas");
+  execInfo.cbSize = sizeof(execInfo);
+  execInfo.nShow = SW_SHOWNORMAL;
+  execInfo.fMask = SEE_MASK_NOASYNC | SEE_MASK_NOCLOSEPROCESS;
+  execInfo.hwnd = NULL;
+  execInfo.hProcess = NULL;
+  if (::ShellExecuteEx(&execInfo) && execInfo.hProcess != NULL) {
+    ::WaitForSingleObject(execInfo.hProcess, INFINITE);
+    DWORD dwExitCode = 0;
+    ::GetExitCodeProcess(execInfo.hProcess, &dwExitCode);
+    ::CloseHandle(execInfo.hProcess);
+    return dwExitCode;
+  }
+  return -1;
 }
