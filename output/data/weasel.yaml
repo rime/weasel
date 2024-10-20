@@ -1,7 +1,7 @@
 # Weasel settings
 # encoding: utf-8
 
-config_version: "0.22"
+config_version: "0.23"
 
 app_options:
   cmd.exe:
@@ -31,7 +31,7 @@ style:
   click_to_capture: false
   horizontal: false
   fullscreen: false
-  inline_preedit: false
+  inline_preedit: true
   preedit_type: composition
   display_tray_icon: false
   label_format: "%s."
