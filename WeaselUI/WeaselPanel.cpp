@@ -179,10 +179,8 @@ void WeaselPanel::_InitFontRes(bool forced) {
   // if style changed, or dpi changed, or pDWR NULL, re-initialize directwrite
   // resources
   if (forced || (pDWR == NULL) || (m_ostyle != m_style) || (dpiX != dpi)) {
-    if (pDWR)
-      pDWR->InitResources(m_style, dpiX);
-    else
-      pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
+    pDWR.reset();
+    pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
     pDWR->pRenderTarget->SetTextAntialiasMode(
         (D2D1_TEXT_ANTIALIAS_MODE)m_style.antialias_mode);
   }
@@ -1023,7 +1021,10 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
     // draw candidates string
     if (m_candidateCount)
       drawn |= _DrawCandidates(memDC);
-    pDWR->pRenderTarget->EndDraw();
+    if (FAILED(pDWR->pRenderTarget->EndDraw())) {
+      _InitFontRes(true);
+      Refresh();
+    }
     // end texts drawing
 
     // status icon (I guess Metro IME stole my idea :)
