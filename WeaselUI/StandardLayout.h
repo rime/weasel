@@ -51,9 +51,9 @@ class StandardLayout : public Layout {
   virtual CSize GetAfterSize() { return _aftersz; }
   virtual weasel::TextRange GetPreeditRange() { return _range; }
 
-  void GetTextSizeDW(const std::wstring text,
+  void GetTextSizeDW(const std::wstring& text,
                      size_t nCount,
-                     ComPtr<IDWriteTextFormat1> pTextFormat,
+                     ComPtr<IDWriteTextFormat1>& pTextFormat,
                      PDWR pDWR,
                      LPSIZE lpSize) const;
 

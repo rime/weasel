@@ -1235,41 +1235,36 @@ void WeaselPanel::_TextOut(const CRect& rc,
   float alpha = (float)((inColor >> 24) & 255) / 255.0f;
   HRESULT hr = S_OK;
   if (pDWR->pBrush == NULL) {
-    hr = pDWR->CreateBrush(D2D1::ColorF(r, g, b, alpha));
-    if (FAILED(hr))
-      MessageBox(L"Failed CreateBrush", L"Info");
+    HR(pDWR->CreateBrush(D2D1::ColorF(r, g, b, alpha)));
   } else
     pDWR->SetBrushColor(D2D1::ColorF(r, g, b, alpha));
 
-  if (NULL != pDWR->pBrush && NULL != pTextFormat) {
-    pDWR->CreateTextLayout(psz.c_str(), (int)cch, pTextFormat,
-                           (float)rc.Width(), (float)rc.Height());
-    if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
-      DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right
-                                       ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
-                                       : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
-      pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-      pDWR->SetLayoutFlowDirection(flow);
-    }
+  HR(pDWR->CreateTextLayout(psz.c_str(), (int)cch, pTextFormat,
+                            (float)rc.Width(), (float)rc.Height()));
+  if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
+    DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right
+                                     ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
+                                     : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
+    HR(pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
+    HR(pDWR->SetLayoutFlowDirection(flow));
+  }
 
-    // offsetx for font glyph over left
-    float offsetx = (float)rc.left;
-    float offsety = (float)rc.top;
-    // prepare for space when first character overhanged
-    DWRITE_OVERHANG_METRICS omt;
-    pDWR->GetLayoutOverhangMetrics(&omt);
-    if (m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT && omt.left > 0)
-      offsetx += omt.left;
-    if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && omt.top > 0)
-      offsety += omt.top;
+  // offsetx for font glyph over left
+  float offsetx = (float)rc.left;
+  float offsety = (float)rc.top;
+  // prepare for space when first character overhanged
+  DWRITE_OVERHANG_METRICS omt;
+  HR(pDWR->GetLayoutOverhangMetrics(&omt));
+  if (m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT && omt.left > 0)
+    offsetx += omt.left;
+  if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && omt.top > 0)
+    offsety += omt.top;
 
-    if (pDWR->pTextLayout != NULL) {
-      pDWR->DrawTextLayoutAt({offsetx, offsety});
+  if (pDWR->pTextLayout != NULL) {
+    pDWR->DrawTextLayoutAt({offsetx, offsety});
 #if 0
-      D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
-      pDWR->DrawRect(&rectf);
+    D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
+    pDWR->DrawRect(&rectf);
 #endif
-    }
-    pDWR->ResetLayout();
   }
 }

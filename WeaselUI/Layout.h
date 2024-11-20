@@ -96,9 +96,9 @@ class Layout {
                                     const wchar_t* format) const = 0;
   virtual bool IsInlinePreedit() const = 0;
   virtual bool ShouldDisplayStatusIcon() const = 0;
-  virtual void GetTextSizeDW(const std::wstring text,
+  virtual void GetTextSizeDW(const std::wstring& text,
                              size_t nCount,
-                             ComPtr<IDWriteTextFormat1> pTextFormat,
+                             ComPtr<IDWriteTextFormat1>& pTextFormat,
                              PDWR pDWR,
                              LPSIZE lpSize) const = 0;
 
