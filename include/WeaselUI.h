@@ -7,18 +7,10 @@
 #include <d2d1.h>
 #include <dwrite_2.h>
 #include <memory>
-#include <wrl/client.h>
 #include <functional>
-using namespace Microsoft::WRL;
-namespace weasel {
+#include <WeaselUtility.h>
 
-template <class T>
-void SafeRelease(T** ppT) {
-  if (*ppT) {
-    (*ppT)->Release();
-    *ppT = NULL;
-  }
-}
+namespace weasel {
 
 enum ClientCapabilities {
   INLINE_PREEDIT_CAPABLE = 1,
@@ -120,7 +112,8 @@ class DirectWriteResources {
                            const float& height) {
     return pDWFactory->CreateTextLayout(
         text.c_str(), nCount, txtFormat, width, height,
-        reinterpret_cast<IDWriteTextLayout**>(pTextLayout.GetAddressOf()));
+        reinterpret_cast<IDWriteTextLayout**>(
+            pTextLayout.ReleaseAndGetAddressOf()));
   }
   void DrawRect(D2D1_RECT_F* const rect,
                 const float& strokeWidth = 1.0f,
@@ -167,7 +160,7 @@ class DirectWriteResources {
   void _ParseFontFace(const std::wstring& fontFaceStr,
                       DWRITE_FONT_WEIGHT& fontWeight,
                       DWRITE_FONT_STYLE& fontStyle);
-  void _SetFontFallback(ComPtr<IDWriteTextFormat1> pTextFormat,
+  void _SetFontFallback(ComPtr<IDWriteTextFormat1>& pTextFormat,
                         const std::vector<std::wstring>& fontVector);
 };
 }  // namespace weasel

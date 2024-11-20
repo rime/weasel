@@ -12,9 +12,9 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text>& labels,
 }
 
 void weasel::StandardLayout::GetTextSizeDW(
-    const std::wstring text,
+    const std::wstring& text,
     size_t nCount,
-    ComPtr<IDWriteTextFormat1> pTextFormat,
+    ComPtr<IDWriteTextFormat1>& pTextFormat,
     PDWR pDWR,
     LPSIZE lpSize) const {
   D2D1_SIZE_F sz;
@@ -26,65 +26,59 @@ void weasel::StandardLayout::GetTextSizeDW(
     return;
   }
   // 创建文本布局
-  if (pTextFormat != NULL) {
-    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-      hr = pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                                  0.0f, (float)_style.max_height);
-    else
-      hr = pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                                  (float)_style.max_width, 0);
+  if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                              0.0f, (float)_style.max_height));
+  else
+    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                              (float)_style.max_width, 0));
+
+  if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
+    DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right
+                                     ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
+                                     : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
+    HR(pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
+    HR(pDWR->SetLayoutFlowDirection(flow));
+  }
+  // 获取文本尺寸
+  DWRITE_TEXT_METRICS textMetrics;
+  HR(pDWR->GetLayoutMetrics(&textMetrics));
+  sz = D2D1::SizeF(ceil(textMetrics.widthIncludingTrailingWhitespace),
+                   ceil(textMetrics.height));
+
+  lpSize->cx = (int)sz.width;
+  lpSize->cy = (int)sz.height;
+
+  if (_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) {
+    auto max_width = _style.max_width == 0
+                         ? textMetrics.widthIncludingTrailingWhitespace
+                         : _style.max_width;
+    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                              max_width, textMetrics.height));
+  } else {
+    auto max_height =
+        _style.max_height == 0 ? textMetrics.height : _style.max_height;
+    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                              textMetrics.widthIncludingTrailingWhitespace,
+                              max_height));
   }
 
-  if (SUCCEEDED(hr)) {
-    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
-      DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right
-                                       ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
-                                       : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
-      pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-      pDWR->SetLayoutFlowDirection(flow);
-    }
-    // 获取文本尺寸
-    DWRITE_TEXT_METRICS textMetrics;
-    hr = pDWR->GetLayoutMetrics(&textMetrics);
-    sz = D2D1::SizeF(ceil(textMetrics.widthIncludingTrailingWhitespace),
-                     ceil(textMetrics.height));
-
-    lpSize->cx = (int)sz.width;
-    lpSize->cy = (int)sz.height;
-    pDWR->ResetLayout();
-
-    if (_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) {
-      auto max_width = _style.max_width == 0
-                           ? textMetrics.widthIncludingTrailingWhitespace
-                           : _style.max_width;
-      hr = pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                                  max_width, textMetrics.height);
-    } else {
-      auto max_height =
-          _style.max_height == 0 ? textMetrics.height : _style.max_height;
-      hr = pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                                  textMetrics.widthIncludingTrailingWhitespace,
-                                  max_height);
-    }
-
-    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
-      pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-      pDWR->SetLayoutFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
-    }
-    DWRITE_OVERHANG_METRICS overhangMetrics;
-    hr = pDWR->GetLayoutOverhangMetrics(&overhangMetrics);
-    {
-      if (overhangMetrics.left > 0)
-        lpSize->cx += (LONG)(overhangMetrics.left + 1);
-      if (overhangMetrics.right > 0)
-        lpSize->cx += (LONG)(overhangMetrics.right + 1);
-      if (overhangMetrics.top > 0)
-        lpSize->cy += (LONG)(overhangMetrics.top + 1);
-      if (overhangMetrics.bottom > 0)
-        lpSize->cy += (LONG)(overhangMetrics.bottom + 1);
-    }
+  if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
+    HR(pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
+    HR(pDWR->SetLayoutFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT));
   }
-  pDWR->ResetLayout();
+  DWRITE_OVERHANG_METRICS overhangMetrics;
+  HR(pDWR->GetLayoutOverhangMetrics(&overhangMetrics));
+  {
+    if (overhangMetrics.left > 0)
+      lpSize->cx += (LONG)(overhangMetrics.left + 1);
+    if (overhangMetrics.right > 0)
+      lpSize->cx += (LONG)(overhangMetrics.right + 1);
+    if (overhangMetrics.top > 0)
+      lpSize->cy += (LONG)(overhangMetrics.top + 1);
+    if (overhangMetrics.bottom > 0)
+      lpSize->cy += (LONG)(overhangMetrics.bottom + 1);
+  }
 }
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc,
