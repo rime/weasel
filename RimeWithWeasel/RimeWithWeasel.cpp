@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <map>
 #include <regex>
+#include <future>
 #include <rime_api.h>
 
 #define TRANSPARENT_COLOR 0x00000000
@@ -322,26 +323,33 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent,
              << ", mask = " << keyEvent.mask << ", ipc_id = " << ipc_id;
   if (m_disabled)
     return FALSE;
-  RimeSessionId session_id = to_session_id(ipc_id);
-  Bool handled = rime_api->process_key(session_id, keyEvent.keycode,
-                                       expand_ibus_modifier(keyEvent.mask));
-  if (!handled) {
-    bool isVimBackInCommandMode =
-        (keyEvent.keycode == ibus::Keycode::Escape) ||
-        ((keyEvent.mask & (1 << 2)) &&
-         (keyEvent.keycode == ibus::Keycode::XK_c ||
-          keyEvent.keycode == ibus::Keycode::XK_C ||
-          keyEvent.keycode == ibus::Keycode::XK_bracketleft));
-    if (isVimBackInCommandMode &&
-        rime_api->get_option(session_id, "vim_mode") &&
-        !rime_api->get_option(session_id, "ascii_mode")) {
-      rime_api->set_option(session_id, "ascii_mode", True);
-    }
-  }
-  _Respond(ipc_id, eat);
-  _UpdateUI(ipc_id);
-  m_active_session = ipc_id;
-  return (BOOL)handled;
+  auto handled = std::async(
+      std::launch::async,
+      [this](WeaselSessionId&& ipc_id, KeyEvent&& keyEvent,
+             EatLine&& eat) -> Bool {
+        RimeSessionId session_id = to_session_id(ipc_id);
+        Bool result = rime_api->process_key(
+            session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
+        if (!result) {
+          bool isVimBackInCommandMode =
+              (keyEvent.keycode == ibus::Keycode::Escape) ||
+              ((keyEvent.mask & (1 << 2)) &&
+               (keyEvent.keycode == ibus::Keycode::XK_c ||
+                keyEvent.keycode == ibus::Keycode::XK_C ||
+                keyEvent.keycode == ibus::Keycode::XK_bracketleft));
+          if (isVimBackInCommandMode &&
+              rime_api->get_option(session_id, "vim_mode") &&
+              !rime_api->get_option(session_id, "ascii_mode")) {
+            rime_api->set_option(session_id, "ascii_mode", True);
+          }
+        }
+        _Respond(ipc_id, eat);
+        _UpdateUI(ipc_id);
+        m_active_session = ipc_id;
+        return result;
+      },
+      ipc_id, keyEvent, eat);
+  return (BOOL)handled.valid();
 }
 
 void RimeWithWeaselHandler::CommitComposition(WeaselSessionId ipc_id) {
