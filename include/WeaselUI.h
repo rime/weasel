@@ -144,7 +144,8 @@ class DirectWriteResources {
                                   D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
   }
   HRESULT CreateBrush(const D2D1_COLOR_F& color) {
-    return pRenderTarget->CreateSolidColorBrush(color, pBrush.GetAddressOf());
+    return pRenderTarget->CreateSolidColorBrush(
+        color, pBrush.ReleaseAndGetAddressOf());
   }
   void ResetLayout() { pTextLayout.Reset(); }
   void SetBrushColor(const D2D1_COLOR_F& color) { pBrush->SetColor(color); }
