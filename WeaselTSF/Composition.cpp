@@ -9,10 +9,8 @@ class CStartCompositionEditSession : public CEditSession {
  public:
   CStartCompositionEditSession(com_ptr<WeaselTSF> pTextService,
                                com_ptr<ITfContext> pContext,
-                               BOOL fCUASWorkaroundEnabled,
-                               BOOL inlinePreeditEnabled)
-      : CEditSession(pTextService, pContext),
-        _inlinePreeditEnabled(inlinePreeditEnabled) {
+                               BOOL fCUASWorkaroundEnabled)
+      : CEditSession(pTextService, pContext) {
     _fCUASWorkaroundEnabled = fCUASWorkaroundEnabled;
   }
 
@@ -21,7 +19,6 @@ class CStartCompositionEditSession : public CEditSession {
 
  private:
   BOOL _fCUASWorkaroundEnabled;
-  BOOL _inlinePreeditEnabled;
 };
 
 STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
@@ -45,26 +42,18 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
       (pComposition != NULL)) {
     _pTextService->_SetComposition(pComposition);
 
-    /* WORKAROUND:
-     *   CUAS does not provide a correct GetTextExt() position unless the
-     * composition is filled with characters. So we insert a zero width space
-     * here. The workaround is only needed when inline preedit is not enabled.
-     *   See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
-     */
-    if (!_inlinePreeditEnabled) {
-      pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
-    }
-
     /* set selection */
     TF_SELECTION tfSelection;
-    if (_inlinePreeditEnabled)
-      pRangeComposition->Collapse(ec, TF_ANCHOR_END);
-    else
-      pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+    pRangeComposition->Collapse(ec, TF_ANCHOR_END);
     tfSelection.range = pRangeComposition;
     tfSelection.style.ase = TF_AE_NONE;
     tfSelection.style.fInterimChar = FALSE;
     _pContext->SetSelection(ec, 1, &tfSelection);
+
+    // The old composition's range is still visible while its asynchronous
+    // end session is pending. Position only after the new composition has
+    // actually been created, not from the response handler's stale range.
+    _pTextService->_UpdateCompositionWindow(_pContext);
   }
 
   return hr;
@@ -73,8 +62,8 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
 void WeaselTSF::_StartComposition(com_ptr<ITfContext> pContext,
                                   BOOL fCUASWorkaroundEnabled) {
   com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
-  pStartCompositionEditSession.Attach(new CStartCompositionEditSession(
-      this, pContext, fCUASWorkaroundEnabled, _cand->style().inline_preedit));
+  pStartCompositionEditSession.Attach(
+      new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled));
   _cand->StartUI();
   if (pStartCompositionEditSession != nullptr) {
     HRESULT hr;
@@ -116,19 +105,28 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec) {
   if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
     pCompositionRange->SetText(ec, 0, L"", 0);
 
-  _pComposition->EndComposition(ec);
-  if (_pTextService)  // if _pTextService released, skip _FinalizeComposition
+  // Drop ownership before EndComposition(). Some applications notify
+  // OnCompositionTerminated synchronously while the old composition ends.
+  // Keeping it as the current composition makes that normal notification
+  // look like an external abort and can clear a new Rime composition during
+  // auto-commit.
+  if (_pTextService && _pTextService->_IsCurrentComposition(_pComposition))
     _pTextService->_FinalizeComposition();
+  _pComposition->EndComposition(ec);
   return S_OK;
 }
 
-void WeaselTSF::_EndComposition(com_ptr<ITfContext> pContext, BOOL clear) {
+void WeaselTSF::_EndComposition(com_ptr<ITfContext> pContext,
+                                BOOL clear,
+                                BOOL endUI) {
   CEndCompositionEditSession* pEditSession;
   HRESULT hr;
+  com_ptr<ITfComposition> pComposition = _pComposition;
 
-  _cand->EndUI();
+  if (endUI)
+    _cand->EndUI();
   if ((pEditSession = new CEndCompositionEditSession(
-           this, pContext, _pComposition, clear)) != NULL) {
+           this, pContext, pComposition, clear)) != NULL) {
     pContext->RequestEditSession(_tfClientId, pEditSession,
                                  TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
     pEditSession->Release();
@@ -389,7 +387,6 @@ void WeaselTSF::_UpdateComposition(com_ptr<ITfContext> pContext) {
   _pEditSessionContext->RequestEditSession(
       _tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
   _async_edit = !!(hr == TF_S_ASYNC);
-  _UpdateCompositionWindow(pContext);
 }
 
 /* Composition State */
@@ -398,6 +395,19 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite,
   // NOTE:
   // This will be called when an edit session ended up with an empty composition
   // string, Even if it is closed normally. Silly M$.
+
+  // EndComposition() may generate this callback for the composition we just
+  // closed. Only an active, matching composition is an external termination.
+  if (!_IsCurrentComposition(pComposition))
+    return S_OK;
+
+  // A host may terminate the empty TSF composition used for a non-inline
+  // preedit. Keep Rime's composing state; the next key will create a fresh
+  // TSF composition. Only an inactive Rime session should be aborted here.
+  if (_status.composing) {
+    _FinalizeComposition();
+    return S_OK;
+  }
 
   _AbortComposition();
   return S_OK;
@@ -422,4 +432,8 @@ void WeaselTSF::_SetComposition(com_ptr<ITfComposition> pComposition) {
 
 BOOL WeaselTSF::_IsComposing() {
   return _pComposition != NULL;
+}
+
+BOOL WeaselTSF::_IsCurrentComposition(ITfComposition* pComposition) {
+  return _pComposition != nullptr && _pComposition == pComposition;
 }
