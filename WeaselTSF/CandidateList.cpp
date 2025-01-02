@@ -309,12 +309,14 @@ void CCandidateList::StartUI() {
 
 void CCandidateList::EndUI() {
   com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
-  com_ptr<ITfUIElementMgr> emgr;
-  auto hr = pThreadMgr->QueryInterface(&emgr);
-  if (FAILED(hr))
-    return;
-  if (emgr != NULL)
-    emgr->EndUIElement(uiid);
+  if (pThreadMgr) {
+    com_ptr<ITfUIElementMgr> emgr;
+    auto hr = pThreadMgr->QueryInterface(&emgr);
+    if (FAILED(hr))
+      return;
+    if (emgr != NULL)
+      emgr->EndUIElement(uiid);
+  }
   _DisposeUIWindow();
 }
 
