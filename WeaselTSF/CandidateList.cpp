@@ -309,7 +309,7 @@ void CCandidateList::StartUI() {
 
 void CCandidateList::EndUI() {
   com_ptr<ITfThreadMgr> pThreadMgr = _tsf->_GetThreadMgr();
-  if (pThreadMgr){
+  if (pThreadMgr) {
     com_ptr<ITfUIElementMgr> emgr;
     auto hr = pThreadMgr->QueryInterface(&emgr);
     if (FAILED(hr))
