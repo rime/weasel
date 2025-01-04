@@ -3,8 +3,8 @@ setlocal
 git submodule init
 git submodule update plum
 
-set rime_version=1.11.2
-set rime_hash=5b09f35
+set rime_version=1.13.0
+set rime_hash=e8184dc
 
 set download_archive=rime-%rime_hash%-Windows-msvc-x86.7z
 set download_archive_deps=rime-deps-%rime_hash%-Windows-msvc-x86.7z
