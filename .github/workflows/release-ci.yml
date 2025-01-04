@@ -54,9 +54,11 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       # use upper stream released librime files if stable release
-      - name: Copy Rime files
+      - name: Get Rime files
+        shell: pwsh
         run: |
-          .\github.install.bat
+          $ErrorActionPreference = 'Stop'
+          .\get-rime.ps1 -tag 1.13.0 -use dev
 
       - name: Build data
         run: |

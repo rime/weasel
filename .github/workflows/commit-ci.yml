@@ -87,22 +87,29 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      - name: Copy Rime files
+      - name: Get Rime files
+        shell: pwsh
         run: |
-          .\github.install.bat
+          $ErrorActionPreference = 'Stop'
+          .\get-rime.ps1 -tag 1.13.0 -use dev
 
       - name: Build data
+        shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           .\build.bat data
 
       - name: Build Weasel
+        shell: pwsh
         id: build_weasel
         run: |
+          $ErrorActionPreference = 'Stop'
           .\build.bat arm64 installer
 
       - name: Compress Debug Symbols
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           output\7z.exe a -t7z "./output/archives/debug_symbols.7z" "output/*.pdb" -r
 
       - name: Upload artifacts
@@ -160,10 +167,12 @@ jobs:
 
       - uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Copy Rime files
+      - name: Get Rime files
         shell: pwsh
         run: |
-          .\github.install.bat
+          $ErrorActionPreference = 'Stop'
+          .\get-rime.ps1 -tag 1.13.0 -use dev
+
 
       - name: Build data
         run: |
