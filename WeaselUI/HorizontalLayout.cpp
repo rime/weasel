@@ -348,9 +348,8 @@ void weasel::HorizontalLayout::LayoutWithCommentOnTop(int& w,
                               : _candidateLabelRects[i].left;
     // if not the first candidate of current row, and current candidate's
     // right > _style.max_width
-    int itemRight = w;
     if (_style.max_width > 0 && (base_left > real_margin_x + offsetX) &&
-        (itemRight - offsetX + real_margin_x > _style.max_width)) {
+        (w - offsetX + real_margin_x > _style.max_width)) {
       // max_width_of_rows current row
       max_width_of_rows =
           max(max_width_of_rows, max(_candidateCommentRects[i - 1].right,
@@ -364,7 +363,9 @@ void weasel::HorizontalLayout::LayoutWithCommentOnTop(int& w,
       _candidateCommentRects[i].OffsetRect(ofx, ofy);
       // max width of next row, if it's the last candidate, make sure
       // max_width_of_rows calc right
-      max_width_of_rows = max(max_width_of_rows, itemRight);
+      max_width_of_rows = max(
+          max_width_of_rows,
+          max(_candidateCommentRects[i].right, _candidateTextRects[i].right));
       mintop_of_rows[row_cnt] = height;
       height += ofy;
       // re calc rect position, decrease offsetX for origin
