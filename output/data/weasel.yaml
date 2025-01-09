@@ -42,6 +42,7 @@ style:
   vertical_text: false
   vertical_text_left_to_right: false
   vertical_text_with_wrap: false
+  comment_on_top: false
   layout:
     align_type: center
     max_width: 0	#set 0 to disable max width
