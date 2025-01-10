@@ -401,9 +401,8 @@ struct UIStyle {
         shadow_offset_x != st.shadow_offset_x ||
         shadow_offset_y != st.shadow_offset_y ||
         vertical_auto_reverse != st.vertical_auto_reverse ||
-        comment_on_top != st.comment_on_top ||
-        baseline != st.baseline || linespacing != st.linespacing ||
-        text_color != st.text_color ||
+        comment_on_top != st.comment_on_top || baseline != st.baseline ||
+        linespacing != st.linespacing || text_color != st.text_color ||
         candidate_text_color != st.candidate_text_color ||
         candidate_back_color != st.candidate_back_color ||
         candidate_shadow_color != st.candidate_shadow_color ||
