@@ -142,7 +142,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
         _candidateTextRects[i].SetRect(w, height, w + textWidth,
                                        height + textHeight);
         w += textWidth + _style.hilite_spacing;
-        current_cand_width += textWidth + _style.hilite_spacing;
+        current_cand_width += textWidth + _style.hilite_spacing * textFontValid;
         _candidateCommentRects[i].SetRect(w, height, w + cmtWidth,
                                           height + cmtHeight);
         w += cmtWidth;
