@@ -61,6 +61,10 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   _prePageRect.OffsetRect(offsetx, offsety);
   _nextPageRect = m_layout->GetNextpageRect();
   _nextPageRect.OffsetRect(offsetx, offsety);
+  _range = m_layout->GetPreeditRange();
+  _beforesz = m_layout->GetBeforeSize();
+  _hilitedsz = m_layout->GetHilitedSize();
+  _aftersz = m_layout->GetAfterSize();
 
   for (auto i = 0, n = (int)_context.cinfo.candies.size();
        i < n && i < MAX_CANDIDATES_COUNT; ++i) {
