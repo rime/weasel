@@ -997,87 +997,64 @@ static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor) {
 // convertions from color format to COLOR_ABGR
 static inline int ConvertColorToAbgr(int color, ColorFormat fmt = COLOR_ABGR) {
   if (fmt == COLOR_ABGR)
-    return color;
+    return color & 0xffffffff;
   else if (fmt == COLOR_ARGB)
-    return ARGB2ABGR(color);
+    return ARGB2ABGR(color) & 0xffffffff;
   else
-    return RGBA2ABGR(color);
+    return RGBA2ABGR(color) & 0xffffffff;
 }
 // parse color value, with fallback value
 static Bool _RimeConfigGetColor32bWithFallback(RimeConfig* config,
                                                const std::string key,
                                                int& value,
                                                const ColorFormat& fmt,
-                                               const int& fallback) {
+                                               const unsigned int& fallback) {
+  RimeApi* rime_api = rime_get_api();
   char color[256] = {0};
   if (!rime_api->config_get_string(config, key.c_str(), color, 256)) {
     value = fallback;
     return False;
   }
-  std::string color_str = std::string(color);
-  // color code hex
+
+  auto color_str = std::string(color);
+  auto alpha = [&](int& value) {
+    value = (fmt != COLOR_RGBA) ? (value | 0xff000000)
+                                : ((value << 8) | 0x000000ff);
+  };
   if (std::regex_match(color_str, HEX_REGEX)) {
-    std::string tmp = std::regex_replace(color_str, TRIMHEAD_REGEX, "");
-    // limit first 8 code
-    tmp = tmp.substr(0, 8);
-    if (tmp.length() == 6)  // color code without alpha, xxyyzz add alpha ff
-    {
-      value = std::stoi(tmp, 0, 16);
-      if (fmt != COLOR_RGBA)
-        value |= 0xff000000;
-      else
-        value = (value << 8) | 0x000000ff;
-    } else if (tmp.length() == 3)  // color hex code xyz => xxyyzz and alpha ff
-    {
-      tmp = tmp.substr(0, 1) + tmp.substr(0, 1) + tmp.substr(1, 1) +
-            tmp.substr(1, 1) + tmp.substr(2, 1) + tmp.substr(2, 1);
-
-      value = std::stoi(tmp, 0, 16);
-      if (fmt != COLOR_RGBA)
-        value |= 0xff000000;
-      else
-        value = (value << 8) | 0x000000ff;
-    } else if (tmp.length() == 4)  // color hex code vxyz => vvxxyyzz
-    {
-      tmp = tmp.substr(0, 1) + tmp.substr(0, 1) + tmp.substr(1, 1) +
-            tmp.substr(1, 1) + tmp.substr(2, 1) + tmp.substr(2, 1) +
-            tmp.substr(3, 1) + tmp.substr(3, 1);
-
-      std::string tmp1 = tmp.substr(0, 6);
-      int value1 = std::stoi(tmp1, 0, 16);
-      tmp1 = tmp.substr(6);
-      int value2 = std::stoi(tmp1, 0, 16);
-      value = (value1 << (tmp1.length() * 4)) | value2;
-    } else if (tmp.length() > 6 &&
-               tmp.length() <= 8) /* color code with alpha */
-    {
-      // stoi limitation, split to handle
-      std::string tmp1 = tmp.substr(0, 6);
-      int value1 = std::stoi(tmp1, 0, 16);
-      tmp1 = tmp.substr(6);
-      int value2 = std::stoi(tmp1, 0, 16);
-      value = (value1 << (tmp1.length() * 4)) | value2;
-    } else  // reject other code, length less then 3 or length == 5
-    {
-      value = fallback;
-      return False;
+    auto tmp = std::regex_replace(color_str, TRIMHEAD_REGEX, "").substr(0, 8);
+    switch (tmp.length()) {
+      case 6:  // color code without alpha, xxyyzz add alpha ff
+        value = std::stoul(tmp, 0, 16);
+        alpha(value);
+        break;
+      case 3:  // color hex code xyz => xxyyzz and alpha ff
+        tmp = std::string(2, tmp[0]) + std::string(2, tmp[1]) +
+              std::string(2, tmp[2]);
+        value = std::stoul(tmp, 0, 16);
+        alpha(value);
+        break;
+      case 4:  // color hex code vxyz => vvxxyyzz
+        tmp = std::string(2, tmp[0]) + std::string(2, tmp[1]) +
+              std::string(2, tmp[2]) + std::string(2, tmp[3]);
+        value = std::stoul(tmp, 0, 16);
+        break;
+      case 7:
+      case 8:  // color code with alpha
+        value = std::stoul(tmp, 0, 16);
+        break;
+      default:  // invalid length
+        value = fallback;
+        return False;
     }
     value = ConvertColorToAbgr(value, fmt);
-    value = (value & 0xffffffff);
     return True;
-  }
-  // regular number or other stuff, if user use pure dec number, they should
-  // take care themselves
-  else {
+  } else {
     int tmp = 0;
     if (!rime_api->config_get_int(config, key.c_str(), &tmp)) {
       value = fallback;
       return False;
     }
-    if (fmt != COLOR_RGBA)
-      value = (tmp | 0xff000000) & 0xffffffff;
-    else
-      value = ((tmp << 8) | 0x000000ff) & 0xffffffff;
     value = ConvertColorToAbgr(value, fmt);
     return True;
   }
