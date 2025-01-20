@@ -613,32 +613,6 @@ void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
   m_option_name.clear();
 }
 
-std::wstring _LoadIconSettingFromSchema(
-    RimeConfig& config,
-    const char* key1,
-    const char* key2,
-    const std::filesystem::path& user_dir,
-    const std::filesystem::path& shared_dir) {
-  const int BUF_SIZE = 255;
-  char buffer[BUF_SIZE + 1] = {0};
-  if (rime_api->config_get_string(&config, key1, buffer, BUF_SIZE) ||
-      (key2 != NULL &&
-       rime_api->config_get_string(&config, key2, buffer, BUF_SIZE))) {
-    std::wstring resource = u8tow(buffer);
-    DWORD dwAttrib = GetFileAttributes((user_dir / resource).c_str());
-    if (INVALID_FILE_ATTRIBUTES != dwAttrib &&
-        0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)) {
-      return (user_dir / resource).wstring();
-    }
-    dwAttrib = GetFileAttributes((shared_dir / resource).c_str());
-    if (INVALID_FILE_ATTRIBUTES != dwAttrib &&
-        0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)) {
-      return (shared_dir / resource).wstring();
-    }
-  }
-  return L"";
-}
-
 void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(
     WeaselSessionId ipc_id,
     const std::string& schema_id) {
@@ -652,52 +626,53 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(
   _UpdateUIStyle(&config, m_ui, false);
   SessionStatus& session_status = get_session_status(ipc_id);
   session_status.style = m_ui->style();
+  UIStyle& style = session_status.style;
   // load schema color style config
   const int BUF_SIZE = 255;
   char buffer[BUF_SIZE + 1] = {0};
-  if (!m_current_dark_mode &&
-      rime_api->config_get_string(&config, "style/color_scheme", buffer,
-                                  BUF_SIZE)) {
+  const auto update_color_scheme = [&]() {
     std::string color_name(buffer);
     RimeConfigIterator preset = {0};
     if (rime_api->config_begin_map(
             &preset, &config, ("preset_color_schemes/" + color_name).c_str())) {
-      _UpdateUIStyleColor(&config, session_status.style, color_name);
+      _UpdateUIStyleColor(&config, style, color_name);
+      rime_api->config_end(&preset);
     } else {
       RimeConfig weaselconfig;
       if (rime_api->config_open("weasel", &weaselconfig)) {
-        _UpdateUIStyleColor(&weaselconfig, session_status.style, color_name);
+        _UpdateUIStyleColor(&weaselconfig, style, color_name);
         rime_api->config_close(&weaselconfig);
       }
     }
-  } else if (m_current_dark_mode &&
-             rime_api->config_get_string(&config, "style/color_scheme_dark",
-                                         buffer, BUF_SIZE)) {
-    std::string color_name(buffer);
-    RimeConfigIterator preset = {0};
-    if (rime_api->config_begin_map(
-            &preset, &config, ("preset_color_schemes/" + color_name).c_str())) {
-      _UpdateUIStyleColor(&config, session_status.style, color_name);
-    } else {
-      RimeConfig weaselconfig;
-      if (rime_api->config_open("weasel", &weaselconfig)) {
-        _UpdateUIStyleColor(&weaselconfig, session_status.style, color_name);
-        rime_api->config_close(&weaselconfig);
-      }
-    }
-  }
+  };
+  const char* key =
+      m_current_dark_mode ? "style/color_scheme_dark" : "style/color_scheme";
+  if (rime_api->config_get_string(&config, key, buffer, BUF_SIZE))
+    update_color_scheme();
   // load schema icon start
   {
-    auto user_dir = WeaselUserDataPath();
-    auto shared_dir = WeaselSharedDataPath();
-    session_status.style.current_zhung_icon = _LoadIconSettingFromSchema(
-        config, "schema/icon", "schema/zhung_icon", user_dir, shared_dir);
-    session_status.style.current_ascii_icon = _LoadIconSettingFromSchema(
-        config, "schema/ascii_icon", NULL, user_dir, shared_dir);
-    session_status.style.current_full_icon = _LoadIconSettingFromSchema(
-        config, "schema/full_icon", NULL, user_dir, shared_dir);
-    session_status.style.current_half_icon = _LoadIconSettingFromSchema(
-        config, "schema/half_icon", NULL, user_dir, shared_dir);
+    const auto load_icon = [](RimeConfig& config, const char* key1,
+                              const char* key2) {
+      const auto user_dir = WeaselUserDataPath();
+      const auto shared_dir = WeaselSharedDataPath();
+      const int BUF_SIZE = 255;
+      char buffer[BUF_SIZE + 1] = {0};
+      if (rime_api->config_get_string(&config, key1, buffer, BUF_SIZE) ||
+          (key2 != NULL &&
+           rime_api->config_get_string(&config, key2, buffer, BUF_SIZE))) {
+        auto resource = u8tow(buffer);
+        if (fs::is_regular_file(user_dir / resource))
+          return (user_dir / resource).wstring();
+        else if (fs::is_regular_file(shared_dir / resource))
+          return (shared_dir / resource).wstring();
+      }
+      return std::wstring();
+    };
+    style.current_zhung_icon =
+        load_icon(config, "schema/icon", "schema/zhung_icon");
+    style.current_ascii_icon = load_icon(config, "schema/ascii_icon", NULL);
+    style.current_full_icon = load_icon(config, "schema/full_icon", NULL);
+    style.current_half_icon = load_icon(config, "schema/half_icon", NULL);
   }
   // load schema icon end
   rime_api->config_close(&config);
