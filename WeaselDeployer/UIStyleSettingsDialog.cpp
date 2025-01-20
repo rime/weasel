@@ -18,7 +18,7 @@ void UIStyleSettingsDialog::Populate() {
   int active_index = -1;
   settings_->GetPresetColorSchemes(&preset_);
   for (size_t i = 0; i < preset_.size(); ++i) {
-    std::wstring txt = string_to_wstring(preset_[i].name.c_str(), CP_UTF8);
+    std::wstring txt = u8tow(preset_[i].name);
     color_schemes_.AddString(txt.c_str());
     if (preset_[i].color_scheme_id == active) {
       active_index = i;
@@ -72,7 +72,7 @@ void UIStyleSettingsDialog::Preview(int index) {
     return;
   image_.Destroy();
   // it is from ansi coding, not utf8
-  image_.Load(string_to_wstring(file_path).c_str());
+  image_.Load(acptow(file_path).c_str());
   if (!image_.IsNull()) {
     preview_.SetBitmap(image_);
   }

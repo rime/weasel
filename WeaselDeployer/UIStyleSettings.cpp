@@ -40,7 +40,7 @@ bool UIStyleSettings::GetPresetColorSchemes(
 
 // check if a file exists
 static inline bool IfFileExist(std::string filename) {
-  DWORD dwAttrib = GetFileAttributes(string_to_wstring(filename).c_str());
+  DWORD dwAttrib = GetFileAttributes(acptow(filename).c_str());
   return (INVALID_FILE_ATTRIBUTES != dwAttrib &&
           0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }

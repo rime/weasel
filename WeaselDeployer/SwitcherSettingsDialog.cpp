@@ -32,7 +32,7 @@ void SwitcherSettingsDialog::Populate() {
       if (!strcmp(item.schema_id, schema_id) &&
           recruited.find(info) == recruited.end()) {
         recruited.insert(info);
-        std::wstring itemwstr = string_to_wstring(item.name, CP_UTF8);
+        std::wstring itemwstr = u8tow(item.name);
         schema_list_.AddItem(k, 0, itemwstr.c_str());
         schema_list_.SetItemData(k, (DWORD_PTR)info);
         schema_list_.SetCheckState(k, TRUE);
@@ -46,13 +46,13 @@ void SwitcherSettingsDialog::Populate() {
     RimeSchemaInfo* info = (RimeSchemaInfo*)item.reserved;
     if (recruited.find(info) == recruited.end()) {
       recruited.insert(info);
-      std::wstring itemwstr = string_to_wstring(item.name, CP_UTF8);
+      std::wstring itemwstr = u8tow(item.name);
       schema_list_.AddItem(k, 0, itemwstr.c_str());
       schema_list_.SetItemData(k, (DWORD_PTR)info);
       ++k;
     }
   }
-  std::wstring txt = string_to_wstring(api_->get_hotkeys(settings_), CP_UTF8);
+  std::wstring txt = u8tow(api_->get_hotkeys(settings_));
   hotkeys_.SetWindowTextW(txt.c_str());
   loaded_ = true;
   modified_ = false;
@@ -71,7 +71,7 @@ void SwitcherSettingsDialog::ShowDetails(RimeSchemaInfo* info) {
   if (const char* description = api_->get_schema_description(info)) {
     (details += "\n\n") += description;
   }
-  std::wstring txt = string_to_wstring(details.c_str(), CP_UTF8);
+  std::wstring txt = u8tow(details.c_str());
   description_.SetWindowTextW(txt.c_str());
 }
 
