@@ -236,3 +236,8 @@ inline LANGID get_language_id() {
   }
   return langId;
 }
+
+#define wtou8(x) wstring_to_string(x, CP_UTF8)
+#define wtoacp(x) wstring_to_string(x, CP_ACP)
+#define u8tow(x) string_to_wstring(x, CP_UTF8)
+#define acptow(x) string_to_wstring(x, CP_ACP)

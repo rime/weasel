@@ -116,7 +116,7 @@ void _RefreshTrayIcon(const RimeSessionId session_id,
   static char app_name[50];
   rime_api->get_property(session_id, "client_app", app_name,
                          sizeof(app_name) - 1);
-  if (string_to_wstring(app_name, CP_UTF8) == std::wstring(L"explorer.exe"))
+  if (u8tow(app_name) == std::wstring(L"explorer.exe"))
     boost::thread th([=]() {
       ::Sleep(100);
       if (_UpdateUICallback)
@@ -128,15 +128,12 @@ void _RefreshTrayIcon(const RimeSessionId session_id,
 
 void RimeWithWeaselHandler::_Setup() {
   RIME_STRUCT(RimeTraits, weasel_traits);
-  std::string shared_dir =
-      wstring_to_string(WeaselSharedDataPath().wstring(), CP_UTF8);
-  std::string user_dir =
-      wstring_to_string(WeaselUserDataPath().wstring(), CP_UTF8);
+  std::string shared_dir = wtou8(WeaselSharedDataPath().wstring());
+  std::string user_dir = wtou8(WeaselUserDataPath().wstring());
   weasel_traits.shared_data_dir = shared_dir.c_str();
   weasel_traits.user_data_dir = user_dir.c_str();
   weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
-  std::string distribution_name =
-      wstring_to_string(get_weasel_ime_name(), CP_UTF8);
+  std::string distribution_name = wtou8(get_weasel_ime_name());
   weasel_traits.distribution_name = distribution_name.c_str();
   weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
   weasel_traits.distribution_version = WEASEL_VERSION;
@@ -474,13 +471,11 @@ void RimeWithWeaselHandler::_ReadClientInfo(WeaselSessionId ipc_id,
     if (starts_with(line, kClientAppKey)) {
       std::wstring lwr = line;
       to_lower(lwr);
-      app_name = wstring_to_string(lwr.substr(kClientAppKey.length()).c_str(),
-                                   CP_UTF8);
+      app_name = wtou8(lwr.substr(kClientAppKey.length()));
     }
     const std::wstring kClientTypeKey = L"session.client_type=";
     if (starts_with(line, kClientTypeKey)) {
-      client_type = wstring_to_string(
-          line.substr(kClientTypeKey.length()).c_str(), CP_UTF8);
+      client_type = wtou8(line.substr(kClientTypeKey.length()));
     }
   }
   SessionStatus& session_status = get_session_status(ipc_id);
@@ -514,15 +509,13 @@ void RimeWithWeaselHandler::_GetCandidateInfo(CandidateInfo& cinfo,
   cinfo.comments.resize(ctx.menu.num_candidates);
   cinfo.labels.resize(ctx.menu.num_candidates);
   for (int i = 0; i < ctx.menu.num_candidates; ++i) {
-    cinfo.candies[i].str =
-        escape_string(string_to_wstring(ctx.menu.candidates[i].text, CP_UTF8));
+    cinfo.candies[i].str = escape_string(u8tow(ctx.menu.candidates[i].text));
     if (ctx.menu.candidates[i].comment) {
-      cinfo.comments[i].str = escape_string(
-          string_to_wstring(ctx.menu.candidates[i].comment, CP_UTF8));
+      cinfo.comments[i].str =
+          escape_string(u8tow(ctx.menu.candidates[i].comment));
     }
     if (RIME_STRUCT_HAS_MEMBER(ctx, ctx.select_labels) && ctx.select_labels) {
-      cinfo.labels[i].str =
-          escape_string(string_to_wstring(ctx.select_labels[i], CP_UTF8));
+      cinfo.labels[i].str = escape_string(u8tow(ctx.select_labels[i]));
     } else if (ctx.menu.select_keys) {
       cinfo.labels[i].str =
           escape_string(std::wstring(1, ctx.menu.select_keys[i]));
@@ -631,7 +624,7 @@ std::wstring _LoadIconSettingFromSchema(
   if (rime_api->config_get_string(&config, key1, buffer, BUF_SIZE) ||
       (key2 != NULL &&
        rime_api->config_get_string(&config, key2, buffer, BUF_SIZE))) {
-    std::wstring resource = string_to_wstring(buffer, CP_UTF8);
+    std::wstring resource = u8tow(buffer);
     DWORD dwAttrib = GetFileAttributes((user_dir / resource).c_str());
     if (INVALID_FILE_ATTRIBUTES != dwAttrib &&
         0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -796,7 +789,7 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
     } else if (m_message_value == "ascii_mode") {
       show_icon = true;
     } else
-      tips = string_to_wstring(m_message_label, CP_UTF8);
+      tips = u8tow(m_message_label);
 
     if (m_message_value == "full_shape" || m_message_value == "!full_shape")
       status.type = FULL_SHAPE;
@@ -821,7 +814,7 @@ inline std::string _GetLabelText(const std::vector<Text>& labels,
                                  const wchar_t* format) {
   wchar_t buffer[128];
   swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
-  return wstring_to_string(std::wstring(buffer), CP_UTF8);
+  return wtou8(std::wstring(buffer));
 }
 
 bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
@@ -917,15 +910,12 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
                           cinfo.labels, i,
                           session_status.style.label_text_format.c_str())
                     : "";
-            std::string comment =
-                session_status.style.comment_font_point > 0
-                    ? wstring_to_string(cinfo.comments.at(i).str, CP_UTF8)
-                    : "";
-            std::string mark_text =
-                session_status.style.mark_text.empty()
-                    ? "*"
-                    : wstring_to_string(session_status.style.mark_text,
-                                        CP_UTF8);
+            std::string comment = session_status.style.comment_font_point > 0
+                                      ? wtou8(cinfo.comments.at(i).str)
+                                      : "";
+            std::string mark_text = session_status.style.mark_text.empty()
+                                        ? "*"
+                                        : wtou8(session_status.style.mark_text);
             std::string prefix =
                 (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
             topush += " " + prefix + escape_string(label) +
@@ -957,8 +947,7 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
 
       oa << cinfo;
 
-      messages.push_back(std::string("ctx.cand=") +
-                         wstring_to_string(ss.str().c_str(), CP_UTF8) + '\n');
+      messages.push_back(std::string("ctx.cand=") + wtou8(ss.str()) + '\n');
     }
     rime_api->free_context(&ctx);
   }
@@ -976,8 +965,7 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
     oa << session_status.style;
 
     actions.insert("style");
-    messages.push_back(std::string("style=") +
-                       wstring_to_string(ss.str().c_str(), CP_UTF8) + '\n');
+    messages.push_back(std::string("style=") + wtou8(ss.str().c_str()) + '\n');
     session_status.__synced = true;
   }
 
@@ -993,10 +981,11 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
 
   messages.push_back(std::string(".\n"));
 
-  return std::all_of(
-      messages.begin(), messages.end(), [&eat](std::string& msg) {
-        return eat(std::wstring(string_to_wstring(msg.c_str(), CP_UTF8)));
-      });
+  return std::all_of(messages.begin(), messages.end(),
+                     [&eat](std::string& msg) {
+                       auto wmsg = u8tow(msg);
+                       return eat(wmsg);
+                     });
 }
 
 static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor) {
@@ -1151,7 +1140,7 @@ static void _RimeGetStringWithFunc(
   const int BUF_SIZE = 2047;
   char buffer[BUF_SIZE + 1] = {0};
   if (rime_api->config_get_string(config, key, buffer, BUF_SIZE)) {
-    std::wstring tmp = string_to_wstring(buffer, CP_UTF8);
+    std::wstring tmp = u8tow(buffer);
     if (func)
       func(tmp);
     value = tmp;
@@ -1524,8 +1513,8 @@ void RimeWithWeaselHandler::_GetStatus(Status& stat,
     std::string schema_id = "";
     if (status.schema_id)
       schema_id = status.schema_id;
-    stat.schema_name = string_to_wstring(status.schema_name, CP_UTF8);
-    stat.schema_id = string_to_wstring(status.schema_id, CP_UTF8);
+    stat.schema_name = u8tow(status.schema_name);
+    stat.schema_id = u8tow(status.schema_id);
     stat.ascii_mode = !!status.is_ascii_mode;
     stat.composing = !!status.is_composing;
     stat.disabled = !!status.is_disabled;
@@ -1560,8 +1549,7 @@ void RimeWithWeaselHandler::_GetContext(Context& weasel_context,
   RIME_STRUCT(RimeContext, ctx);
   if (rime_api->get_context(session_id, &ctx)) {
     if (ctx.composition.length > 0) {
-      weasel_context.preedit.str =
-          string_to_wstring(ctx.composition.preedit, CP_UTF8);
+      weasel_context.preedit.str = u8tow(ctx.composition.preedit);
       if (ctx.composition.sel_start < ctx.composition.sel_end) {
         TextAttribute attr;
         attr.type = HIGHLIGHTED;
