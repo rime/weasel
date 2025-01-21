@@ -1000,10 +1000,26 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
 }
 
 static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor) {
-  return RGB((GetRValue(fcolor) * 2 + GetRValue(bcolor)) / 3,
-             (GetGValue(fcolor) * 2 + GetGValue(bcolor)) / 3,
-             (GetBValue(fcolor) * 2 + GetBValue(bcolor)) / 3) |
-         ((((fcolor >> 24) + (bcolor >> 24) / 2) << 24));
+  // 提取各通道的值
+  BYTE fA = (fcolor >> 24) & 0xFF;  // 获取前景的 alpha 通道
+  BYTE fB = (fcolor >> 16) & 0xFF;  // 获取前景的 blue 通道
+  BYTE fG = (fcolor >> 8) & 0xFF;   // 获取前景的 green 通道
+  BYTE fR = fcolor & 0xFF;          // 获取前景的 red 通道
+  BYTE bA = (bcolor >> 24) & 0xFF;  // 获取背景的 alpha 通道
+  BYTE bB = (bcolor >> 16) & 0xFF;  // 获取背景的 blue 通道
+  BYTE bG = (bcolor >> 8) & 0xFF;   // 获取背景的 green 通道
+  BYTE bR = bcolor & 0xFF;          // 获取背景的 red 通道
+  // 将 alpha 通道转换为 [0, 1] 的浮动值
+  float fAlpha = fA / 255.0f;
+  float bAlpha = bA / 255.0f;
+  // 计算每个通道的加权平均值
+  float retAlpha = fAlpha + (1 - fAlpha) * bAlpha;
+  // 混合红、绿、蓝通道
+  BYTE retR = (BYTE)((fR * fAlpha + bR * bAlpha * (1 - fAlpha)) / retAlpha);
+  BYTE retG = (BYTE)((fG * fAlpha + bG * bAlpha * (1 - fAlpha)) / retAlpha);
+  BYTE retB = (BYTE)((fB * fAlpha + bB * bAlpha * (1 - fAlpha)) / retAlpha);
+  // 返回合成后的颜色
+  return (BYTE)(retAlpha * 255) << 24 | retB << 16 | retG << 8 | retR;
 }
 // convertions from color format to COLOR_ABGR
 static inline int ConvertColorToAbgr(int color, ColorFormat fmt = COLOR_ABGR) {
