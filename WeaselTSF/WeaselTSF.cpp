@@ -67,8 +67,6 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void** ppvObject) {
     *ppvObject = (ITfThreadFocusSink*)this;
   else if (IsEqualIID(riid, IID_ITfDisplayAttributeProvider))
     *ppvObject = (ITfDisplayAttributeProvider*)this;
-  else if (IsEqualIID(riid, IID_ITfThreadFocusSink))
-    *ppvObject = (ITfThreadFocusSink*)this;
 
   if (*ppvObject) {
     AddRef();
