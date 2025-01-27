@@ -15,5 +15,6 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="TSF.TypeLib.Update" Version="1.0.4" />
+		<PackageReference Include="Resource.Embedder" Version="2.2.0" />
 	</ItemGroup>
 </Project>
