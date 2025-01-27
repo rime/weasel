@@ -61,6 +61,15 @@ namespace Weasel.Setup.Localization {
         }
         
         /// <summary>
+        ///   查找类似 Error 的本地化字符串。
+        /// </summary>
+        internal static string STR_ERROR {
+            get {
+                return ResourceManager.GetString("STR_ERROR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Install 的本地化字符串。
         /// </summary>
         internal static string STR_INSTALL {
@@ -70,11 +79,38 @@ namespace Weasel.Setup.Localization {
         }
         
         /// <summary>
+        ///   查找类似 Installation success 的本地化字符串。
+        /// </summary>
+        internal static string STR_INSTALL_SUCCESS {
+            get {
+                return ResourceManager.GetString("STR_INSTALL_SUCCESS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 OK 的本地化字符串。
         /// </summary>
         internal static string STR_OK {
             get {
                 return ResourceManager.GetString("STR_OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Change the user folder location successfully 的本地化字符串。
+        /// </summary>
+        internal static string STR_UF_CHANGE_SUCCESS {
+            get {
+                return ResourceManager.GetString("STR_UF_CHANGE_SUCCESS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Uninstall successfully 的本地化字符串。
+        /// </summary>
+        internal static string STR_UNINSTALL_SUCCESS {
+            get {
+                return ResourceManager.GetString("STR_UNINSTALL_SUCCESS", resourceCulture);
             }
         }
     }

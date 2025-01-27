@@ -64,4 +64,16 @@
   <data name="STR_OK" xml:space="preserve">
     <value>確認</value>
   </data>
+  <data name="STR_ERROR" xml:space="preserve">
+    <value>出錯了</value>
+  </data>
+  <data name="STR_INSTALL_SUCCESS" xml:space="preserve">
+    <value>可以使【小狼毫】寫字了 :)</value>
+  </data>
+  <data name="STR_UNINSTALL_SUCCESS" xml:space="preserve">
+    <value>小狼毫 :)</value>
+  </data>
+  <data name="STR_UF_CHANGE_SUCCESS" xml:space="preserve">
+    <value>更改用戶資料夾位置成功 :)</value>
+  </data>
 </root>

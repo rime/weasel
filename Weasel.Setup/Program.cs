@@ -124,8 +124,7 @@ namespace Weasel.Setup
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
-                MessageBox.Show(ex.StackTrace);
+                MessageBox.Show(ex.Message, Localization.Resources.STR_ERROR);
             }
         }
 
@@ -196,6 +195,7 @@ namespace Weasel.Setup
 
                     ExecProcess(Path.Combine(installDir, "WeaselDeployer.exe"), "/deploy");
                 });
+                MessageBox.Show(Localization.Resources.STR_UF_CHANGE_SUCCESS);
             }
         }
 

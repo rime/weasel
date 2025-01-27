@@ -45,4 +45,16 @@
   <data name="STR_OK" xml:space="preserve">
     <value>OK</value>
   </data>
+  <data name="STR_ERROR" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="STR_INSTALL_SUCCESS" xml:space="preserve">
+    <value>Installation success</value>
+  </data>
+  <data name="STR_UNINSTALL_SUCCESS" xml:space="preserve">
+    <value>Uninstall successfully</value>
+  </data>
+  <data name="STR_UF_CHANGE_SUCCESS" xml:space="preserve">
+    <value>Change the user folder location successfully</value>
+  </data>
 </root>

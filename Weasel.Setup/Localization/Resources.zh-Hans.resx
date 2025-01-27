@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -63,5 +63,17 @@
   </data>
   <data name="STR_OK" xml:space="preserve">
     <value>确定</value>
+  </data>
+  <data name="STR_ERROR" xml:space="preserve">
+    <value>出错了</value>
+  </data>
+  <data name="STR_INSTALL_SUCCESS" xml:space="preserve">
+    <value>可以使【小狼毫】写字了 :)</value>
+  </data>
+  <data name="STR_UNINSTALL_SUCCESS" xml:space="preserve">
+    <value>小狼毫 :)</value>
+  </data>
+  <data name="STR_UF_CHANGE_SUCCESS" xml:space="preserve">
+    <value>更改用户文件夹位置成功 :)</value>
   </data>
 </root>
