@@ -27,5 +27,16 @@ namespace Weasel.Setup
         [DllImport("kernel32.dll", EntryPoint = "MoveFileExW", SetLastError = true, CharSet = CharSet.Unicode)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool MoveFileEx(string src, string dest, MoveFileFlags flags);
+        
+        [Flags]
+        public enum PROCESS_DPI_AWARENESS
+        {
+            PROCESS_DPI_UNAWARE = 0,
+            PROCESS_SYSTEM_DPI_AWARE,
+            PROCESS_PER_MONITOR_DPI_AWARE,
+        }
+
+        [DllImport("Shcore.dll", SetLastError = true)]
+        public static extern int SetProcessDpiAwareness(PROCESS_DPI_AWARENESS type);
     }
 }

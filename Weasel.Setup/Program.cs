@@ -2,8 +2,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -38,6 +38,13 @@ namespace Weasel.Setup
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            Utils.App.SetProcessApiAwareness();
+
+            var appCulture = Utils.App.CultureInfo;
+            Thread.CurrentThread.CurrentCulture = appCulture;
+            Thread.CurrentThread.CurrentUICulture = appCulture;
+
             Run(string.Join(" ", args));
         }
 
@@ -145,7 +152,7 @@ namespace Weasel.Setup
 
             if (!isSilentMode)
             {
-                var dialog = new InstallOptionDialog
+                var dialog = new SetupOptionDialog
                 {
                     IsInstalled = isInstalled,
                     IsHant = isHant,
