@@ -12,6 +12,7 @@ ReleaseHant/
 /output/*.ime
 /output/*.txt
 /output/*.bat
+/output/*.config
 /output/data/essay.txt
 /output/data/opencc/
 /output/data/*.yaml

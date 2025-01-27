@@ -51,9 +51,24 @@ if is_arch("x64") or is_arch("x86") then
   includes("RimeWithWeasel", "WeaselIPCServer", "WeaselServer", "WeaselDeployer")
 end
 
-if is_arch("x86") then
-  includes("WeaselSetup")
-end
+target("Weasel.Setup")
+  on_build(function(target)
+    import("package.tools.msbuild")
+
+    local sln = "weasel.sln"
+    local target_name = string.gsub(target:name(), "%.", "_")
+    local build_type = is_mode("debug") and "Debug" or "Release"
+    local platform = "Any CPU"
+    local configs = {
+      sln,
+      "/t:" .. target_name,
+      "-restore",
+      "/p:Configuration=" .. build_type,
+      "/p:Platform=" .. platform
+    }
+
+    msbuild.build(target, configs)
+  end)
 
 if is_mode("debug") then
   includes("test/TestWeaselIPC")
