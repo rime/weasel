@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<OutputType>WinExe</OutputType>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<OutputPath>$(SolutionDir)output\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <PreferNativeArm64>True</PreferNativeArm64>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <PreferNativeArm64>True</PreferNativeArm64>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="TSF.TypeLib.Update" Version="1.0.4" />
+	</ItemGroup>
+</Project>
