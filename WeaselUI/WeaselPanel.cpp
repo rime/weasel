@@ -1066,6 +1066,15 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
   ::DeleteObject(memBitmap);
 }
 
+// 由于某些软件并不依赖 WM_PAINT 消息来重绘，在消息循环中直接忽略掉了 WM_PAINT 消息，
+// 导致 DoPaint() 永远不会被调用，这里手动调用 DoPaint() 强制重绘
+void WeaselPanel::RedrawWindow()
+{
+  HDC hdc = GetDC();
+  DoPaint(hdc);
+  ReleaseDC(hdc);
+}
+
 void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc) {
   HDC ScreenDC = ::GetDC(NULL);
   CRect rect;
