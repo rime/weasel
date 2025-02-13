@@ -1,7 +1,10 @@
-param( [string]$tag, [switch]$updatelog)
-# -tag [new_tag], new tag shall be in format ^\d+\.\d+\.\d+$ and greater than
-# the current one
-# -updatelog update CHANGELOG.md if this switch used
+param( [string]$tag, [string]$basetag, [switch]$updatelog, [switch]$h)
+# -tag [new_tag], new tag shall be in format of ^\d+\.\d+\.\d+$ and greater than
+#     the current one or $basetag
+# -basetag [basetag name], specify the base tag(which shall be in format of ^\d+\.\d+\.\d+$),
+#     default to be the latest number format tag name
+# -updatelog, update CHANGELOG.md if this switch used
+# -h, show help info
 
 # get old version info from file, esp from build.bat
 function get_old_version{
@@ -43,20 +46,17 @@ function update_bat_file{
   param( [string]$filePath, $old_version, $new_version)
   $old_major, $old_minor, $old_patch = $old_version['major'], $old_version["minor"], $old_version["patch"];
   $new_major, $new_minor, $new_patch = $new_version['major'], $new_version["minor"], $new_version["patch"];
-  $fileContent = Get-Content -Path $filePath;
+  $fileContent = Get-Content -Path $filePath -Raw;
   $fileContent = $fileContent -replace "VERSION_MAJOR=$old_major", "VERSION_MAJOR=$new_major";
   $fileContent = $fileContent -replace "VERSION_MINOR=$old_minor", "VERSION_MINOR=$new_minor";
   $fileContent = $fileContent -replace "VERSION_PATCH=$old_patch", "VERSION_PATCH=$new_patch";
-  Set-Content -Path $filePath -Value $fileContent -Encoding UTF8;
+  $fileContent | Out-File -FilePath $filePath -NoNewline -Encoding UTF8;
 }
 
 # update change log, work like clog-cli
 function update_changelog {
   param( [string]$new_tag, [string]$old_tag)
-  # get the current the previous release tag and current release tag
-  $tags = git tag --sort=creatordate | Select-String -Pattern '^\d+\.\d+\.\d+$' | ForEach-Object { $_.ToString() };
-  $latestTag = $tags[-1];
-  $commits = git log "$latestTag..HEAD" --pretty=format:"%s ([%an](https://github.com/rime/weasel/commit/%H))";
+  $commits = git log "$old_tag..HEAD" --pretty=format:"%s ([%an](https://github.com/rime/weasel/commit/%H))";
   # group commit logs
   $groupedCommits = @{
     build = @(); ci = @(); fix = @(); feat = @(); docs = @(); style = @();
@@ -75,8 +75,8 @@ function update_changelog {
     commit = "Commits";
   };
   foreach ($commit in $commits) {
-    if ($commit -match "^(build|ci|fix|feat|docs|style|refactor|test|chore):") {
-      $prefix = $matches[1];
+    if ($commit -match "^((?i)(build|ci|fix|feat|docs|style|refactor|test|chore)(\([^\)]+\))?):") {
+      $prefix = $matches[2].ToLower();
       $groupedCommits[$prefix] += $commit;
     } else {
       $groupedCommits["commit"] += $commit;
@@ -99,18 +99,38 @@ function update_changelog {
   $contentAdd += $changelog;
   Write-Host "`n" + $contentAdd + "`n"
   $fileContent = $contentAdd + "`n" + $fileContent;
-  $fileContent | Out-File -FilePath "CHANGELOG.md" -Encoding UTF8;
+  $fileContent | Out-File -FilePath "CHANGELOG.md" -NoNewline -Encoding UTF8;
 }
 
 # update appcast file, with regex patterns
 function update_appcast_file {
   param( [string]$filePath, [string]$pat_orig, [string]$pat_replace)
-  $fileContent = Get-Content -Path $filePath;
+  $fileContent = Get-Content -Path $filePath -Raw;
   $fileContent = $fileContent -replace $pat_orig, $pat_replace;
-  Set-Content -Path $filePath -Value $fileContent;
+  $fileContent | Out-File -FilePath $filePath -NoNewline;
+}
+# test if cwd is weasel root
+function is_weasel_root() {
+  return (Test-Path -Path "weasel.sln") -and (Test-Path -Path ".git")
 }
 ###############################################################################
 # program now started
+if ($h) {
+  $info = @(
+ "-tag [new_tag]`n`tnew tag shall be in format of ^\d+\.\d+\.\d+$ and greater than the current one or `$basetag",
+ "-basetag [basetag name]`n`tspecify the base tag(which shall be in format of ^\d+\.\d+\.\d+$), default to be the latest number format tag name",
+ "-updatelog`n`tupdate CHANGELOG.md if this switch used",
+ "-h`n`tshow help info"
+ )
+ Write-Host ($info -join "`n");
+ exit;
+}
+if (-not (is_weasel_root)) {
+  Write-Host "Current directory is: $(Get-Location), it's not the weasel root directory"
+  Write-Host "please run ``update/bump_version.ps1`` with parameters under the weasel root in Powershell";
+  Write-Host "or run ``pwsh update/bump_version.ps1`` with parameters under weasel root in shell if yor're running Mac OS or Linux"
+  exit;
+}
 # tag name not match rule, exit
 if (-not ($tag -match '^\d+\.\d+\.\d+$')) {
   Write-Host "tag name not match rule '^\d+\.\d+\.\d+$'";
@@ -122,6 +142,15 @@ $old_version = get_old_version -filePath "build.bat";
 $old_major, $old_minor, $old_patch = $old_version['major'], $old_version["minor"], $old_version["patch"];
 # get new version
 $new_version = parse_new_version -new_version $tag
+if ($basetag -eq "") {
+  $basetag = "$old_major.$old_minor.$old_patch"
+}
+if ($basetag -notmatch "^\d+\.\d+\.\d+$") {
+  Write-Host "basetag format is not correct, it shall be in format of '^\d+\.\d+\.\d+$'"
+  Write-Host "please recheck it";
+  exit;
+}
+
 # check new version is greater than the current one
 if ($tag -eq $old_version["str"]) {
   Write-Host "the new tag: $tag is the same with the old one:" $old_version["str"];
@@ -149,7 +178,7 @@ update_bat_file -filePath "xbuild.bat" -old_version $old_version -new_version $n
 Write-Host "xbuild.bat updated"
 #update CHANGELOG.md
 if ($updatelog) {
-  update_changelog -new_tag $tag -old_tag "$old_major.$old_minor.$old_patch"
+  update_changelog -new_tag $tag -old_tag $basetag
   & git add CHANGELOG.md
   Write-Host "CHANGELOG.md updated"
 }
