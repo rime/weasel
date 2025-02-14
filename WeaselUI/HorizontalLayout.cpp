@@ -93,21 +93,15 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
       std::wstring label =
           GetLabelText(labels, i, _style.label_text_format.c_str());
       GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
-      _candidateLabelRects[i].SetRect(w, height, w + size.cx * labelFontValid,
-                                      height + size.cy);
-      w += size.cx * labelFontValid;
-      current_cand_width += size.cx * labelFontValid;
+      int labelWidth = size.cx * labelFontValid, labelHeight = size.cy;
 
       /* Text */
-      w += _style.hilite_spacing;
       const std::wstring& text = candidates.at(i).str;
       GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
-      _candidateTextRects[i].SetRect(w, height, w + size.cx * textFontValid,
-                                     height + size.cy);
-      w += size.cx * textFontValid;
-      current_cand_width += (size.cx + _style.hilite_spacing) * textFontValid;
+      int textWidth = size.cx * textFontValid, textHeight = size.cy;
 
       /* Comment */
+      int cmtWidth = 0, cmtHeight = 0;
       bool cmtFontNotTrans =
           (i == id && (_style.hilited_comment_text_color & 0xff000000)) ||
           (i != id && (_style.comment_text_color & 0xff000000));
@@ -115,24 +109,79 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
         const std::wstring& comment = comments.at(i).str;
         GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR,
                       &size);
+        cmtWidth = size.cx * cmtFontValid;
+        cmtHeight = size.cy;
+      }
+
+      int totalHeight = 0;
+
+      if (_style.comment_on_top) {
+        totalHeight = max(labelHeight, textHeight) + cmtHeight;
+        int maxWidthTextOrCmt = max(textWidth, cmtWidth);
+        int maxHeightTextOrLabel = max(textHeight, labelHeight);
+
+        _candidateLabelRects[i].SetRect(w, height + cmtHeight, w + labelWidth,
+                                        height + cmtHeight + labelHeight);
+        w += labelWidth;
+        current_cand_width += labelWidth;
+
         w += _style.hilite_spacing;
-        _candidateCommentRects[i].SetRect(w, height, w + size.cx * cmtFontValid,
-                                          height + size.cy);
-        w += size.cx * cmtFontValid;
-        current_cand_width += (size.cx + _style.hilite_spacing) * cmtFontValid;
-      } else /* Used for highlighted candidate calculation below */
-        _candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
+        current_cand_width += _style.hilite_spacing * textFontValid;
+
+        _candidateTextRects[i].SetRect(w, height + cmtHeight, w + textWidth,
+                                       height + cmtHeight + textHeight);
+        _candidateCommentRects[i].SetRect(w, height, w + cmtWidth,
+                                          height + cmtHeight);
+        w += maxWidthTextOrCmt;
+        current_cand_width += maxWidthTextOrCmt;
+
+        _candidateLabelRects[i].OffsetRect(
+            0, (maxHeightTextOrLabel - labelHeight) / 2);
+        _candidateTextRects[i].OffsetRect(
+            (maxWidthTextOrCmt - textWidth) / 2,
+            (maxHeightTextOrLabel - textHeight) / 2);
+        _candidateCommentRects[i].OffsetRect((maxWidthTextOrCmt - cmtWidth) / 2,
+                                             0);
+      } else {
+        totalHeight = max(labelHeight, max(textHeight, cmtHeight));
+        _candidateLabelRects[i].SetRect(w, height, w + labelWidth,
+                                        height + labelHeight);
+        w += labelWidth;
+        current_cand_width += labelWidth;
+
+        w += _style.hilite_spacing;
+        current_cand_width += _style.hilite_spacing * textFontValid;
+
+        _candidateTextRects[i].SetRect(w, height, w + textWidth,
+                                       height + textHeight);
+        w += textWidth;
+        current_cand_width += textWidth;
+
+        if (cmtWidth > 0) {
+          w += _style.hilite_spacing;
+          current_cand_width += _style.hilite_spacing * cmtFontValid;
+
+          _candidateCommentRects[i].SetRect(w, height, w + cmtWidth,
+                                            height + cmtHeight);
+
+          w += cmtWidth;
+          current_cand_width += cmtWidth;
+        } else {
+          _candidateCommentRects[i].SetRect(w, height, w + cmtWidth,
+                                            height + cmtHeight);
+        }
+      }
 
       int base_left = (i == id) ? _candidateLabelRects[i].left - base_offset
                                 : _candidateLabelRects[i].left;
       // if not the first candidate of current row, and current candidate's
       // right > _style.max_width
       if (_style.max_width > 0 && (base_left > real_margin_x + offsetX) &&
-          (_candidateCommentRects[i].right - offsetX + real_margin_x >
-           _style.max_width)) {
+          (w - offsetX + real_margin_x > _style.max_width)) {
         // max_width_of_rows current row
         max_width_of_rows =
-            max(max_width_of_rows, _candidateCommentRects[i - 1].right);
+            max(max_width_of_rows, max(_candidateCommentRects[i - 1].right,
+                                       _candidateTextRects[i - 1].right));
         w = offsetX + real_margin_x + (i == id ? base_offset : 0);
         int ofx = w - _candidateLabelRects[i].left;
         int ofy = height_of_rows[row_cnt] + _style.candidate_spacing;
@@ -142,8 +191,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
         _candidateCommentRects[i].OffsetRect(ofx, ofy);
         // max width of next row, if it's the last candidate, make sure
         // max_width_of_rows calc right
-        max_width_of_rows =
-            max(max_width_of_rows, _candidateCommentRects[i].right);
+        max_width_of_rows = max(
+            max_width_of_rows,
+            max(_candidateCommentRects[i].right, _candidateTextRects[i].right));
         mintop_of_rows[row_cnt] = height;
         height += ofy;
         // re calc rect position, decrease offsetX for origin
@@ -153,12 +203,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
         max_width_of_rows = max(max_width_of_rows, w);
       // calculate height of current row is the max of three rects
       mintop_of_rows[row_cnt] = height;
-      height_of_rows[row_cnt] =
-          max(height_of_rows[row_cnt], _candidateLabelRects[i].Height());
-      height_of_rows[row_cnt] =
-          max(height_of_rows[row_cnt], _candidateTextRects[i].Height());
-      height_of_rows[row_cnt] =
-          max(height_of_rows[row_cnt], _candidateCommentRects[i].Height());
+      height_of_rows[row_cnt] = max(height_of_rows[row_cnt], totalHeight);
       // set row info of current candidate
       row_of_candidate[i] = row_cnt;
     }
@@ -168,32 +213,47 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
     for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i) {
       int base_left = (i == id) ? _candidateLabelRects[i].left - base_offset
                                 : _candidateLabelRects[i].left;
-      _candidateRects[i].SetRect(base_left, mintop_of_rows[row_of_candidate[i]],
-                                 _candidateCommentRects[i].right,
-                                 mintop_of_rows[row_of_candidate[i]] +
-                                     height_of_rows[row_of_candidate[i]]);
-      int ol = 0, ot = 0, oc = 0;
-      if (_style.align_type == UIStyle::ALIGN_CENTER) {
-        ol = (height_of_rows[row_of_candidate[i]] -
-              _candidateLabelRects[i].Height()) /
-             2;
-        ot = (height_of_rows[row_of_candidate[i]] -
-              _candidateTextRects[i].Height()) /
-             2;
-        oc = (height_of_rows[row_of_candidate[i]] -
-              _candidateCommentRects[i].Height()) /
-             2;
-      } else if (_style.align_type == UIStyle::ALIGN_BOTTOM) {
-        ol = (height_of_rows[row_of_candidate[i]] -
-              _candidateLabelRects[i].Height());
-        ot = (height_of_rows[row_of_candidate[i]] -
-              _candidateTextRects[i].Height());
-        oc = (height_of_rows[row_of_candidate[i]] -
-              _candidateCommentRects[i].Height());
+      _candidateRects[i].SetRect(
+          base_left, mintop_of_rows[row_of_candidate[i]],
+          max(_candidateCommentRects[i].right, _candidateTextRects[i].right),
+          mintop_of_rows[row_of_candidate[i]] +
+              height_of_rows[row_of_candidate[i]]);
+      if (_style.comment_on_top) {
+        int ot = 0;
+        int height_of_candidate =
+            _candidateTextRects[i].bottom - _candidateCommentRects[i].top;
+        if (_style.align_type == UIStyle::ALIGN_CENTER) {
+          ot = (height_of_rows[row_of_candidate[i]] - height_of_candidate) / 2;
+        } else if (_style.align_type == UIStyle::ALIGN_BOTTOM) {
+          ot = (height_of_rows[row_of_candidate[i]] - height_of_candidate);
+        }
+        _candidateLabelRects[i].OffsetRect(0, ot);
+        _candidateTextRects[i].OffsetRect(0, ot);
+        _candidateCommentRects[i].OffsetRect(0, ot);
+      } else {
+        int ol = 0, ot = 0, oc = 0;
+        if (_style.align_type == UIStyle::ALIGN_CENTER) {
+          ol = (height_of_rows[row_of_candidate[i]] -
+                _candidateLabelRects[i].Height()) /
+               2;
+          ot = (height_of_rows[row_of_candidate[i]] -
+                _candidateTextRects[i].Height()) /
+               2;
+          oc = (height_of_rows[row_of_candidate[i]] -
+                _candidateCommentRects[i].Height()) /
+               2;
+        } else if (_style.align_type == UIStyle::ALIGN_BOTTOM) {
+          ol = (height_of_rows[row_of_candidate[i]] -
+                _candidateLabelRects[i].Height());
+          ot = (height_of_rows[row_of_candidate[i]] -
+                _candidateTextRects[i].Height());
+          oc = (height_of_rows[row_of_candidate[i]] -
+                _candidateCommentRects[i].Height());
+        }
+        _candidateLabelRects[i].OffsetRect(0, ol);
+        _candidateTextRects[i].OffsetRect(0, ot);
+        _candidateCommentRects[i].OffsetRect(0, oc);
       }
-      _candidateLabelRects[i].OffsetRect(0, ol);
-      _candidateTextRects[i].OffsetRect(0, ot);
-      _candidateCommentRects[i].OffsetRect(0, oc);
     }
     height = mintop_of_rows[row_cnt] + height_of_rows[row_cnt] - offsetY;
     width = max(width, max_width_of_rows);
