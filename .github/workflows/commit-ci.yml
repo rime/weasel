@@ -91,7 +91,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          .\get-rime.ps1 -tag 1.13.0 -use dev
+          .\get-rime.ps1 -use dev
 
       - name: Build data
         shell: pwsh
@@ -171,7 +171,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          .\get-rime.ps1 -tag 1.13.0 -use dev
+          .\get-rime.ps1 -use dev
 
 
       - name: Build data
