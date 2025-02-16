@@ -144,8 +144,20 @@ try {
 } catch {
   $cmdOk = $false
   if($extract) {
-    Write-Host "❌ Error: 7z is not available. Maybe 7z is not in PATH or not installed"
-    SafeExit
+    Write-Host "❌ Error: 7z is not available. Maybe 7z is not in PATH or not installed";
+    $original_7z_url = "https://github.com/ip7z/7zip/releases/download/24.08/7zr.exe";
+    if ($url_pat -and $url_replace) {
+      $original_7z_url = $original_7z_url -replace $url_pat, $url_replace;
+    }
+    try {
+      Write-Host "We will download 7z console tool from: $original_7z_url";
+      Invoke-WebRequest -Uri $original_7z_url -OutFile ".\7z.exe";
+      $env:Path += ";$PWD";
+      $cmdOk = $true
+    } catch{
+      Write-Host "Error download 7z commandline tool";
+      SafeExit
+    }
   }
 }
 # check 64 bit
