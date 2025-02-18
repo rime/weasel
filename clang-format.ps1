@@ -21,7 +21,7 @@ $filesToProcess = @()
 
 $WEASEL_SOURCE_PATH | ForEach-Object {
   $filesToProcess += Get-ChildItem -Path $_ -Recurse -Include *.cpp, *.h |
-  Where-Object { $_.FullName -notmatch "include\\wtl\\" -and -not (ShouldExclude $_.FullName) } |
+  Where-Object { $_.FullName -notmatch "include[\\/]wtl[\\/]" -and -not (ShouldExclude $_.FullName) } |
   ForEach-Object { $_.FullName }
 }
 
