@@ -57,6 +57,7 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
   virtual void UpdateInputPosition(RECT const& rc, WeaselSessionId ipc_id);
   virtual void StartMaintenance();
   virtual void EndMaintenance();
+  virtual bool GetStatus(EatLine eat);
   virtual void SetOption(WeaselSessionId ipc_id,
                          const std::string& opt,
                          bool val);
