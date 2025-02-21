@@ -10,7 +10,7 @@ show_help() {
   echo "-h"
   echo "    show help info"
 }
-
+# get old version info from file to array
 get_old_version() {
   local filePath=$1
   local version
@@ -27,7 +27,7 @@ get_old_version() {
   echo "${version_map[patch]}"
   echo "${version_map[str]}"
 }
-
+# parse new version string to array
 parse_new_version() {
   local new_version=$1
   declare -A version
@@ -36,13 +36,15 @@ parse_new_version() {
     version[major]=${BASH_REMATCH[1]}
     version[minor]=${BASH_REMATCH[2]}
     version[patch]=${BASH_REMATCH[3]}
+    version[str]=$1
   fi
 
   echo "${version[major]}"
   echo "${version[minor]}"
   echo "${version[patch]}"
+  echo "${version[str]}"
 }
-
+# update changelog withot clog
 update_changelog() {
   local new_tag=$1
   local old_tag=$2
@@ -99,8 +101,9 @@ update_changelog() {
 
   echo "$contentAdd"
   echo "$contentAdd$fileContent" > CHANGELOG.md
+  echo "CHANGELOG.md updated"
 }
-
+# fallback faild action, clean the modification and exit
 faild_exit() {
   echo 
   echo "Orz :( bump version failed!"
@@ -109,7 +112,34 @@ faild_exit() {
   git checkout .
   exit 1
 }
-
+# replace string in whole file, filename, old pattern, new pattern
+replace_str() {
+  sed -b -i "s|$2|$3|g" "$1" || faild_exit
+}
+# update bat files
+update_bat() {
+  replace_str "$1" "\(VERSION_MAJOR=\)[0-9]\+" "\1${new_version[0]}"
+  replace_str "$1" "\(VERSION_MINOR=\)[0-9]\+" "\1${new_version[1]}"
+  replace_str "$1" "\(VERSION_PATCH=\)[0-9]\+" "\1${new_version[2]}"
+  echo "$1 updated"
+}
+# update xml files
+update_xml() {
+  # update release notes link
+  replace_str "$1" "\(<sparkle:releaseNotesLink>\)[^<]*\(</sparkle:releaseNotesLink>\)" \
+    "\1http://rime.github.io/release/weasel/\2"
+  # update version tag
+  replace_str "$1" "[0-9]\+\.[0-9]\+\.[0-9]\+" "$tag"
+  # update pubDate
+  replace_str "$1" "\(<pubDate>\)[^<]*\(</pubDate>\)" "\1$currentDateTime\2"
+  echo "$1 updated"
+}
+# check if the script run without any parameter
+if [[ $# -eq 0 ]]; then
+  show_help
+  exit 0
+fi
+# parse parameters
 while [[ $# -gt 0 ]]; do
   case $1 in
     -tag)
@@ -134,32 +164,33 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
-
+# check if the script run under the weasel root directory
 if ! [[ -f weasel.sln && -d .git ]]; then
   echo "Current directory is: $(pwd), it's not the weasel root directory"
   echo "please run 'update/bump_version.sh' with parameters under the weasel root in bash"
   exit 1
 fi
-
+# check if the tag is in correct format
 if [[ ! $tag =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   echo "Tag name does not match rule '^\\d+\\.\\d+\\.\\d+$'"
   echo "Please recheck it"
   exit 1
 fi
-
+# get old version info, major, minor, patch and string
 old_version=($(get_old_version "build.bat"))
+# get new version info, major, minor, patch and string
 new_version=($(parse_new_version "$tag"))
-
+# if the basetag is not specified, use the old version info in string
 if [[ -z "$basetag" ]]; then
   basetag=${old_version[3]}
 fi
-
+# check if the basetag is in correct format
 if [[ ! $basetag =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   echo "Basetag format is not correct, it shall be in format of '^\\d+\\.\\d+\\.\\d+$'"
   echo "Please recheck it"
   exit 1
 fi
-
+# check if the version is newer than the basetag
 if [[ "$tag" == "${old_version[3]}" ]]; then
   echo "The new tag: $tag is the same as the old one: ${old_version[3]}"
   exit 1
@@ -167,36 +198,22 @@ elif [[ "$tag" < "${old_version[3]}" ]]; then
   echo "$tag is older than ${old_version[3]}, please recheck your target version"
   exit 1
 fi
-
-echo "Bumping version to $tag ..."
+# work starts
+echo "Bumping version from $basetag to $tag ..."
 currentDateTime=$(date --rfc-2822)
-
 # update appcast xml files
-sed -i "s|${old_version[3]}|$tag|g" ./update/appcast.xml || faild_exit
-sed -i "s|<pubDate>[^<]*</pubDate>|<pubDate>$currentDateTime</pubDate>|g" ./update/appcast.xml || faild_exit
-echo "update/appcast.xml updated"
-
-sed -i "s|${old_version[3]}|$tag|g" ./update/testing-appcast.xml || faild_exit
-sed -i "s|<pubDate>[^<]*</pubDate>|<pubDate>$currentDateTime</pubDate>|g" ./update/testing-appcast.xml || faild_exit
-echo "update/testing-appcast.xml updated"
+update_xml "./update/appcast.xml"
+update_xml "./update/testing-appcast.xml"
 
 # update bat files
-sed -i "s/VERSION_MAJOR=${old_version[0]}/VERSION_MAJOR=${new_version[0]}/g" ./build.bat || faild_exit
-sed -i "s/VERSION_MINOR=${old_version[1]}/VERSION_MINOR=${new_version[1]}/g" ./build.bat || faild_exit
-sed -i "s/VERSION_PATCH=${old_version[2]}/VERSION_PATCH=${new_version[2]}/g" ./build.bat || faild_exit
-echo "build.bat updated"
-
-sed -i "s/VERSION_MAJOR=${old_version[0]}/VERSION_MAJOR=${new_version[0]}/g" ./xbuild.bat || faild_exit
-sed -i "s/VERSION_MINOR=${old_version[1]}/VERSION_MINOR=${new_version[1]}/g" ./xbuild.bat || faild_exit
-sed -i "s/VERSION_PATCH=${old_version[2]}/VERSION_PATCH=${new_version[2]}/g" ./xbuild.bat || faild_exit
-echo "xbuild.bat updated"
-
+update_bat "./build.bat"
+update_bat "./xbuild.bat"
+# update CHANGELOG.md if needed
 if [[ $updatelog ]]; then
   update_changelog "$tag" "$basetag" || faild_exit
   git add CHANGELOG.md
-  echo "CHANGELOG.md updated"
 fi
-
+# commit and tag
 release_message="chore(release): $tag :tada:"
 release_tag="$tag"
 git add update/*.xml build.bat xbuild.bat
