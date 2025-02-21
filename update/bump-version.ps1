@@ -1,3 +1,4 @@
+#!/usr/bin/env pwsh
 param( [string]$tag, [string]$basetag, [switch]$updatelog, [switch]$h)
 # -tag [new_tag], new tag shall be in format of ^\d+\.\d+\.\d+$ and greater than
 #     the current one or $basetag
@@ -5,7 +6,14 @@ param( [string]$tag, [string]$basetag, [switch]$updatelog, [switch]$h)
 #     default to be the latest number format tag name
 # -updatelog, update CHANGELOG.md if this switch used
 # -h, show help info
-
+function faild_exit {
+  Write-Host 
+  Write-Host "Orz :( bump version failed!"
+  Write-Host "we will revert the modification by command git checkout . "
+  Write-Host 
+  & git checkout .
+  exit 1
+}
 # get old version info from file, esp from build.bat
 function get_old_version{
   param ([string]$filePath)
@@ -28,7 +36,6 @@ function get_old_version{
   $version['str'] = $version["major"] + "." + $version["minor"] + "." + $version["patch"];
   return $version;
 }
-
 # parse new version info
 function parse_new_version {
   param([string]$new_version)
@@ -40,19 +47,6 @@ function parse_new_version {
   }
   return $version;
 }
-
-# update bat file with param filePath, and tags 
-function update_bat_file{
-  param( [string]$filePath, $old_version, $new_version)
-  $old_major, $old_minor, $old_patch = $old_version['major'], $old_version["minor"], $old_version["patch"];
-  $new_major, $new_minor, $new_patch = $new_version['major'], $new_version["minor"], $new_version["patch"];
-  $fileContent = Get-Content -Path $filePath -Raw;
-  $fileContent = $fileContent -replace "VERSION_MAJOR=$old_major", "VERSION_MAJOR=$new_major";
-  $fileContent = $fileContent -replace "VERSION_MINOR=$old_minor", "VERSION_MINOR=$new_minor";
-  $fileContent = $fileContent -replace "VERSION_PATCH=$old_patch", "VERSION_PATCH=$new_patch";
-  $fileContent | Out-File -FilePath $filePath -NoNewline -Encoding UTF8;
-}
-
 # update change log, work like clog-cli
 function update_changelog {
   param( [string]$new_tag, [string]$old_tag)
@@ -101,13 +95,35 @@ function update_changelog {
   $fileContent = $contentAdd + "`n" + $fileContent;
   $fileContent | Out-File -FilePath "CHANGELOG.md" -NoNewline -Encoding UTF8;
 }
-
-# update appcast file, with regex patterns
-function update_appcast_file {
+# replace string with regex pat
+function replace_str {
   param( [string]$filePath, [string]$pat_orig, [string]$pat_replace)
   $fileContent = Get-Content -Path $filePath -Raw;
-  $fileContent = $fileContent -replace $pat_orig, $pat_replace;
+  $fileContent = [regex]::Replace($fileContent, $pat_orig, $pat_replace)
   $fileContent | Out-File -FilePath $filePath -NoNewline;
+}
+# update xml file
+function update_xml {
+  param([string]$filePath, [string]$tag)
+  $CurrentCulture = [System.Globalization.CultureInfo]::InvariantCulture
+  $localTime = Get-Date
+  $currentDateTime = $localTime.ToString("ddd, dd MMM yyyy HH:mm:ss zz00")
+  replace_str -filePath "$filePath" -pat_orig "\d+\.\d+\.\d+" -pat_replace $tag
+  replace_str -filePath "$filePath" `
+    -pat_orig "(?<=<sparkle:releaseNotesLink>)[^>]*(?=</sparkle:releaseNotesLink>)" `
+    -pat_replace "http://rime.github.io/release/weasel/"
+  replace_str -filePath "$filePath" `
+    -pat_orig "(?<=<pubDate>).*?(?=</pubDate>)" -pat_replace "$currentDateTime"
+  Write-Host "$filePath updated"
+}
+# update bat file
+function update_bat {
+  param([string]$filePath, [string]$tag)
+  $new_version = parse_new_version -new_version $tag
+  replace_str -filePath $filePath -pat_orig "(?<=VERSION_MAJOR=)\d+" $new_version['major']
+  replace_str -filePath $filePath -pat_orig "(?<=VERSION_MINOR=)\d+" $new_version['minor']
+  replace_str -filePath $filePath -pat_orig "(?<=VERSION_PATCH=)\d+" $new_version['patch']
+  Write-Host "$filePath updated"
 }
 # test if cwd is weasel root
 function is_weasel_root() {
@@ -115,7 +131,7 @@ function is_weasel_root() {
 }
 ###############################################################################
 # program now started
-if ($h) {
+if ($h -or (-not $tag)) {
   $info = @(
  "-tag [new_tag]`n`tnew tag shall be in format of ^\d+\.\d+\.\d+$ and greater than the current one or `$basetag",
  "-basetag [basetag name]`n`tspecify the base tag(which shall be in format of ^\d+\.\d+\.\d+$), default to be the latest number format tag name",
@@ -123,62 +139,56 @@ if ($h) {
  "-h`n`tshow help info"
  )
  Write-Host ($info -join "`n");
- exit;
+ exit 0;
 }
 if (-not (is_weasel_root)) {
   Write-Host "Current directory is: $(Get-Location), it's not the weasel root directory"
   Write-Host "please run ``update/bump_version.ps1`` with parameters under the weasel root in Powershell";
   Write-Host "or run ``pwsh update/bump_version.ps1`` with parameters under weasel root in shell if yor're running Mac OS or Linux"
-  exit;
+  exit 1;
 }
 # tag name not match rule, exit
 if (-not ($tag -match '^\d+\.\d+\.\d+$')) {
   Write-Host "tag name not match rule '^\d+\.\d+\.\d+$'";
   Write-Host "please recheck it";
-  exit;
+  exit 1;
 }
 # get old version
 $old_version = get_old_version -filePath "build.bat";
-$old_major, $old_minor, $old_patch = $old_version['major'], $old_version["minor"], $old_version["patch"];
 # get new version
 $new_version = parse_new_version -new_version $tag
 if ($basetag -eq "") {
-  $basetag = "$old_major.$old_minor.$old_patch"
+  $basetag = $old_version["str"]
 }
 if ($basetag -notmatch "^\d+\.\d+\.\d+$") {
   Write-Host "basetag format is not correct, it shall be in format of '^\d+\.\d+\.\d+$'"
   Write-Host "please recheck it";
-  exit;
+  exit 1;
 }
 
 # check new version is greater than the current one
 if ($tag -eq $old_version["str"]) {
   Write-Host "the new tag: $tag is the same with the old one:" $old_version["str"];
-  exit;
+  exit 1;
 } elseif ($tag -lt $old_version["str"]) {
   Write-Host "$tag is older version than " $old_version['str']", please recheck your target version.";
-  exit;
+  exit 1;
 }
-Write-Host "bump version to $tag ... "
-#get date-time string in english date-time format
-$CurrentCulture = [System.Globalization.CultureInfo]::InvariantCulture
-$currentDateTime = (Get-Date).ToString("ddd, dd MMM yyyy HH:mm:ss K", $CurrentCulture)
-
-#update appcast files
-update_appcast_file -filePath "update/appcast.xml" -pat_orig "$old_major\.$old_minor\.$old_patch" -pat_replace $tag
-update_appcast_file -filePath "update/appcast.xml" -pat_orig "<pubDate>.*?</pubDate>" -pat_replace "<pubDate>$currentDateTime</pubDate>"
-Write-Host "update/appcast.xml updated"
-update_appcast_file -filePath "update/testing-appcast.xml" -pat_orig "$old_major\.$old_minor\.$old_patch" -pat_replace $tag
-update_appcast_file -filePath "update/testing-appcast.xml" -pat_orig "<pubDate>.*?</pubDate>" -pat_replace "<pubDate>$currentDateTime</pubDate>"
-Write-Host "update/testing-appcast.xml updated"
-#update bat files
-update_bat_file -filePath "build.bat" -old_version $old_version -new_version $new_version
-Write-Host "build.bat updated"
-update_bat_file -filePath "xbuild.bat" -old_version $old_version -new_version $new_version
-Write-Host "xbuild.bat updated"
+Write-Host "Bumping version from $($old_version['str']) to $tag ..."
+# update xml files
+update_xml -filePath "update/appcast.xml" -tag "$tag";
+if ($?) { } else { faild_exit }
+update_xml -filePath "update/testing-appcast.xml" -tag "$tag";
+if ($?) { } else { faild_exit }
+# update bat files
+update_bat -filePath "build.bat" -tag "$tag";
+if ($?) { } else { faild_exit }
+update_bat -filePath "xbuild.bat" -tag "$tag";
+if ($?) { } else { faild_exit }
 #update CHANGELOG.md
 if ($updatelog) {
-  update_changelog -new_tag $tag -old_tag $basetag
+  update_changelog -new_tag $tag -old_tag $basetag;
+  if ($?) { } else { faild_exit }
   & git add CHANGELOG.md
   Write-Host "CHANGELOG.md updated"
 }
