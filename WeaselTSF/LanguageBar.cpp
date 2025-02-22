@@ -374,8 +374,12 @@ BOOL WeaselTSF::_InitLanguageBar() {
   if (_pThreadMgr->QueryInterface(&pLangBarItemMgr) != S_OK)
     return FALSE;
 
-  if ((_pLangBarButton = new CLangBarItemButton(this, GUID_LBI_INPUTMODE,
-                                                _cand->style())) == NULL)
+  std::wstring hideIcon{};
+  RegGetStringValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                    L"HideImeModeIcon", hideIcon);
+  GUID langBarGuid = (hideIcon == L"yes") ? GUID_NULL : GUID_LBI_INPUTMODE;
+  if ((_pLangBarButton =
+           new CLangBarItemButton(this, langBarGuid, _cand->style())) == NULL)
     return FALSE;
 
   if (pLangBarItemMgr->AddItem(_pLangBarButton) != S_OK) {
