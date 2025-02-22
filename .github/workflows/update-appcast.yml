@@ -1,0 +1,16 @@
+name: Update Appcast
+on:
+  release:
+    types: [published, prereleased]
+jobs:
+
+  update_appcast:
+
+    runs-on: windows-2019
+
+    steps:
+      - name: Update Appcast
+        if: ${{ github.repository == 'rime/weasel' }}
+        run: gh workflow run gh-pages.yml -R rime/home --ref master
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_DEPLOY_KEY }}
