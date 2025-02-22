@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-WEASEL_SOURCE_PATH="RimeWithWeasel WeaselDeployer WeaselIME WeaselIPC WeaselIPCServer WeaselServer WeaselSetup WeaselTSF WeaselUI include test"
+WEASEL_SOURCE_PATH="RimeWithWeasel WeaselDeployer WeaselIME WeaselIPC WeaselIPCServer WeaselServer WeaselTSF WeaselUI include test"
 
 # clang format options
 method="-i"
