@@ -1181,6 +1181,8 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
                true, false);
   _RimeGetBool(config, "style/vertical_auto_reverse", initialize,
                style.vertical_auto_reverse, true, false);
+  _RimeGetBool(config, "style/comment_on_top", initialize, style.comment_on_top,
+               true, false);
   const std::map<std::string, UIStyle::PreeditType> _preeditMap = {
       {std::string("composition"), UIStyle::COMPOSITION},
       {std::string("preview"), UIStyle::PREVIEW},
