@@ -378,17 +378,17 @@ Section "Uninstall"
 
   ; Remove files and uninstaller
   SetOutPath $TEMP
-  Delete /REBOOTOK "$INSTDIR\data\opencc\*.*"
-  Delete /REBOOTOK "$INSTDIR\data\preview\*.*"
-  Delete /REBOOTOK "$INSTDIR\data\*.*"
-  Delete /REBOOTOK "$INSTDIR\*.*"
-  RMDir /REBOOTOK "$INSTDIR\data\opencc"
-  RMDir /REBOOTOK "$INSTDIR\data\preview"
-  RMDir /REBOOTOK "$INSTDIR\data"
-  RMDir /REBOOTOK "$INSTDIR"
+  Delete  "$INSTDIR\data\opencc\*.*"
+  Delete  "$INSTDIR\data\preview\*.*"
+  Delete  "$INSTDIR\data\*.*"
+  Delete  "$INSTDIR\*.*"
+  RMDir  "$INSTDIR\data\opencc"
+  RMDir  "$INSTDIR\data\preview"
+  RMDir  "$INSTDIR\data"
+  RMDir  "$INSTDIR"
   SetShellVarContext all
-  Delete /REBOOTOK "$SMPROGRAMS\$(DISPLAYNAME)\*.*"
-  RMDir /REBOOTOK "$SMPROGRAMS\$(DISPLAYNAME)"
+  Delete  "$SMPROGRAMS\$(DISPLAYNAME)\*.*"
+  RMDir  "$SMPROGRAMS\$(DISPLAYNAME)"
 
   ; Prompt reboot
   SetRebootFlag true
