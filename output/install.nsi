@@ -161,7 +161,34 @@ uninst:
   CopyFiles $R1\data\*.* $TEMP\weasel-backup
 
 call_uninstaller:
-  ExecWait '$R0 /S'
+  ExecWait '"$R1\WeaselServer.exe" /quit'
+  ExecWait '"$R1\WeaselSetup.exe" /u'
+  ; Remove registry keys
+  DeleteRegKey HKLM SOFTWARE\Rime
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel"
+  ; don't redirect on 64 bit system for auto run setting
+  ${If} ${IsNativeARM64}
+    SetRegView 64
+  ${ElseIf} ${IsNativeAMD64}
+    SetRegView 64
+  ${Endif}
+  DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "WeaselServer"
+  ; recover back to 32bit view
+  SetRegView 32
+  ; Remove files and uninstaller
+  Delete  "$R1\data\opencc\*.*"
+  Delete  "$R1\data\preview\*.*"
+  Delete  "$R1\data\*.*"
+  Delete  "$R1\*.*"
+  RMDir   "$R1\data\opencc"
+  RMDir   "$R1\data\preview"
+  RMDir   "$R1\data"
+  RMDir   "$R1"
+  SetShellVarContext all
+  Delete  "$SMPROGRAMS\$(DISPLAYNAME)\*.*"
+  RMDir  "$SMPROGRAMS\$(DISPLAYNAME)"
+  ; Prompt reboot
+  SetRebootFlag true
   Sleep 800
 
 done:
