@@ -118,40 +118,26 @@ const GUID SupportCategories0[] = {
     GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER, GUID_TFCAT_DISPLAYATTRIBUTEPROPERTY};
 
 BOOL RegisterCategories() {
-  ITfCategoryMgr* pCategoryMgr;
-  HRESULT hr;
-
-  hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER,
-                        IID_ITfCategoryMgr, (void**)&pCategoryMgr);
-  if (hr != S_OK)
+  CComPtr<ITfCategoryMgr> pCategoryMgr = NULL;
+  if (FAILED(CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER,
+                              IID_ITfCategoryMgr, (LPVOID*)&pCategoryMgr)))
     return FALSE;
-
-  BOOL flag = TRUE;
   for (const auto& guid : SupportCategories0) {
-    hr = pCategoryMgr->RegisterCategory(c_clsidTextService, guid,
-                                        c_clsidTextService);
-    if (hr != S_OK)
-      flag = FALSE;
+    if (FAILED(pCategoryMgr->RegisterCategory(c_clsidTextService, guid,
+                                              c_clsidTextService)))
+      return FALSE;
   }
-
-  pCategoryMgr->Release();
-  return flag;
+  return TRUE;
 }
 
 void UnregisterCategories() {
-  ITfCategoryMgr* pCategoryMgr;
-  HRESULT hr;
-
-  hr = CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER,
-                        IID_ITfCategoryMgr, (void**)&pCategoryMgr);
-  if (FAILED(hr))
+  CComPtr<ITfCategoryMgr> pCategoryMgr = NULL;
+  if (FAILED(CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER,
+                              IID_ITfCategoryMgr, (LPVOID*)&pCategoryMgr)))
     return;
-
   for (const auto& guid : SupportCategories0)
     pCategoryMgr->UnregisterCategory(c_clsidTextService, guid,
                                      c_clsidTextService);
-
-  pCategoryMgr->Release();
 }
 
 static BOOL CLSIDToStringA(REFGUID refGUID, char* pchA) {
