@@ -24,6 +24,7 @@ compile_commands.json
 /output/*.ime
 /output/*.txt
 /output/*.bat
+/output/*.config
 /output/data/essay.txt
 /output/data/opencc/
 /output/data/*.yaml
@@ -56,3 +57,4 @@ arm64x_wrapper/*.dll
 arm64x_wrapper/*.ime
 arm64x_wrapper/*.lib
 arm64x_wrapper/*.exp
+/packages
