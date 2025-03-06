@@ -51,9 +51,9 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
      * here. The workaround is only needed when inline preedit is not enabled.
      *   See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
      */
-    if (!_inlinePreeditEnabled) {
-      pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
-    }
+    // if (!_inlinePreeditEnabled) {
+    //   pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
+    // }
 
     /* set selection */
     TF_SELECTION tfSelection;
