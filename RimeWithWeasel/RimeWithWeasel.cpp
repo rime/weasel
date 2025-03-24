@@ -322,7 +322,8 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent,
   RimeSessionId session_id = to_session_id(ipc_id);
   Bool handled = rime_api->process_key(session_id, keyEvent.keycode,
                                        expand_ibus_modifier(keyEvent.mask));
-  if (!handled) {
+  // vim_mode when keydown only
+  if (!handled && !(keyEvent.mask & (1 << 14))) {
     bool isVimBackInCommandMode =
         (keyEvent.keycode == ibus::Keycode::Escape) ||
         ((keyEvent.mask & (1 << 2)) &&
