@@ -1,5 +1,4 @@
 #pragma once
-#include <WeaselIPC.h>
 
 struct KeyInfo {
   UINT repeatCount : 16;
@@ -14,6 +13,19 @@ struct KeyInfo {
 
   operator UINT32() { return *reinterpret_cast<UINT32*>(this); }
 };
+
+namespace weasel {
+struct KeyEvent {
+  UINT keycode : 16;
+  UINT mask : 16;
+  KeyEvent() : keycode(0), mask(0) {}
+  KeyEvent(UINT _keycode, UINT _mask) : keycode(_keycode), mask(_mask) {}
+  KeyEvent(UINT x) { *reinterpret_cast<UINT*>(this) = x; }
+  operator UINT32 const() const {
+    return *reinterpret_cast<UINT32 const*>(this);
+  }
+};
+}  // namespace weasel
 
 bool ConvertKeyEvent(UINT vkey,
                      KeyInfo kinfo,
@@ -198,6 +210,9 @@ enum Keycode {
   Super_R = 0xFFEC,
   Hyper_L = 0xFFED,
   Hyper_R = 0xFFEE,
+  XK_bracketleft = 0x005b, /* U+005B LEFT SQUARE BRACKET */
+  XK_c = 0x0063,           /* U+0063 LATIN SMALL LETTER C */
+  XK_C = 0x0043,           /* U+0043 LATIN CAPITAL LETTER C */
   Null = 0
 };
 

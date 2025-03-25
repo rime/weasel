@@ -1,5 +1,5 @@
 ﻿#include "stdafx.h"
-#include "KeyEvent.h"
+#include <KeyEvent.h>
 
 bool ConvertKeyEvent(UINT vkey,
                      KeyInfo kinfo,

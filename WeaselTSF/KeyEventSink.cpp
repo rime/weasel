@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "WeaselIPC.h"
 #include "WeaselTSF.h"
-#include "KeyEvent.h"
+#include <KeyEvent.h>
 #include "CandidateList.h"
 
 static weasel::KeyEvent prevKeyEvent;

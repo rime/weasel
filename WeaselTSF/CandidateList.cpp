@@ -2,7 +2,7 @@
 
 #include "WeaselTSF.h"
 #include "CandidateList.h"
-#include "KeyEvent.h"
+#include <KeyEvent.h>
 #include <math.h>
 
 using namespace std;
