@@ -186,6 +186,16 @@ static int Run(LPTSTR lpCmdLine) {
     return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
                           L"ToggleImeOnOpenClose", L"no", REG_SZ);
   }
+
+  if (!wcscmp(L"/hidemodeicon", lpCmdLine)) {
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"HideImeModeIcon", L"yes", REG_SZ);
+  }
+  if (!wcscmp(L"/showmodeicon", lpCmdLine)) {
+    return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
+                          L"HideImeModeIcon", L"no", REG_SZ);
+  }
+
   if (!wcscmp(L"/testing", lpCmdLine)) {
     return SetRegKeyValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
                           L"UpdateChannel", L"testing", REG_SZ);
