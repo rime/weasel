@@ -116,7 +116,7 @@ void _RefreshTrayIcon(const RimeSessionId session_id,
   static char app_name[50];
   rime_api->get_property(session_id, "client_app", app_name,
                          sizeof(app_name) - 1);
-  if (u8tow(app_name) == std::wstring(L"explorer.exe"))
+  if (u8tow(app_name) == std::wstring(L"explorer.exe") || !app_name[0])
     boost::thread th([=]() {
       ::Sleep(100);
       if (_UpdateUICallback)
