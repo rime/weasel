@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <functional>
 #include <memory>
+#include <KeyEvent.h>
 
 #define WEASEL_IPC_WINDOW L"WeaselIPCWindow_1.0"
 #define WEASEL_IPC_PIPE_NAME L"WeaselNamedPipe"
@@ -45,17 +46,6 @@ struct IPCMetadata {
   enum { WINDOW_CLASS_LENGTH = 64 };
   UINT32 server_hwnd;
   WCHAR server_window_class[WINDOW_CLASS_LENGTH];
-};
-
-struct KeyEvent {
-  UINT keycode : 16;
-  UINT mask : 16;
-  KeyEvent() : keycode(0), mask(0) {}
-  KeyEvent(UINT _keycode, UINT _mask) : keycode(_keycode), mask(_mask) {}
-  KeyEvent(UINT x) { *reinterpret_cast<UINT*>(this) = x; }
-  operator UINT32 const() const {
-    return *reinterpret_cast<UINT32 const*>(this);
-  }
 };
 
 // 處理請求之物件

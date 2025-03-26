@@ -89,9 +89,6 @@
     <ClInclude Include="WeaselTSF.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="KeyEvent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="EditSession.h">
       <Filter>Header Files</Filter>
     </ClInclude>

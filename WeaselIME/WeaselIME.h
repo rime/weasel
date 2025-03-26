@@ -1,6 +1,6 @@
 #pragma once
 #include <WeaselIPC.h>
-#include "KeyEvent.h"
+#include <KeyEvent.h>
 
 #define MAX_COMPOSITION_SIZE 256
 

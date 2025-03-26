@@ -269,15 +269,6 @@ DWORD RimeWithWeaselHandler::RemoveSession(WeaselSessionId ipc_id) {
   return 0;
 }
 
-namespace ibus {
-enum Keycode {
-  Escape = 0xFF1B,
-  XK_bracketleft = 0x005b, /* U+005B LEFT SQUARE BRACKET */
-  XK_c = 0x0063,           /* U+0063 LATIN SMALL LETTER C */
-  XK_C = 0x0043,           /* U+0043 LATIN CAPITAL LETTER C */
-};
-}
-
 void RimeWithWeaselHandler::UpdateColorTheme(BOOL darkMode) {
   RimeConfig config = {NULL};
   if (rime_api->config_open("weasel", &config)) {
@@ -322,7 +313,8 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent,
   RimeSessionId session_id = to_session_id(ipc_id);
   Bool handled = rime_api->process_key(session_id, keyEvent.keycode,
                                        expand_ibus_modifier(keyEvent.mask));
-  if (!handled) {
+  // vim_mode when keydown only
+  if (!handled && !(keyEvent.mask & ibus::Modifier::RELEASE_MASK)) {
     bool isVimBackInCommandMode =
         (keyEvent.keycode == ibus::Keycode::Escape) ||
         ((keyEvent.mask & (1 << 2)) &&

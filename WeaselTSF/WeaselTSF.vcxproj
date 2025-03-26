@@ -486,7 +486,6 @@
     <ClInclude Include="EditSession.h" />
     <ClInclude Include="EnumDisplayAttributeInfo.h" />
     <ClInclude Include="Globals.h" />
-    <ClInclude Include="KeyEvent.h" />
     <ClInclude Include="LanguageBar.h" />
     <ClInclude Include="Register.h" />
     <ClInclude Include="resource.h" />
