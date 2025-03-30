@@ -72,7 +72,7 @@ if not defined PLATFORM_TOOLSET (
 if defined DEVTOOLS_PATH set PATH=%DEVTOOLS_PATH%%PATH%
 
 set build_config=Release
-set build_option=/t:Build
+set build_option=/t:Build -restore
 set build_boost=0
 set boost_build_variant=release
 set build_data=0

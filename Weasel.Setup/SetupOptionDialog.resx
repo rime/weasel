@@ -1,0 +1,364 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="&gt;&gt;chtRadio.Name" xml:space="preserve">
+    <value>chtRadio</value>
+  </data>
+  <data name="&gt;&gt;chtRadio.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;chtRadio.Parent" xml:space="preserve">
+    <value>inputLangGroup</value>
+  </data>
+  <data name="&gt;&gt;chtRadio.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;chsRadio.Name" xml:space="preserve">
+    <value>chsRadio</value>
+  </data>
+  <data name="&gt;&gt;chsRadio.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;chsRadio.Parent" xml:space="preserve">
+    <value>inputLangGroup</value>
+  </data>
+  <data name="&gt;&gt;chsRadio.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="inputLangGroup.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 11</value>
+  </data>
+  <data name="inputLangGroup.Size" type="System.Drawing.Size, System.Drawing">
+    <value>652, 204</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="inputLangGroup.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="inputLangGroup.Text" xml:space="preserve">
+    <value>Input language</value>
+  </data>
+  <data name="&gt;&gt;inputLangGroup.Name" xml:space="preserve">
+    <value>inputLangGroup</value>
+  </data>
+  <data name="&gt;&gt;inputLangGroup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;inputLangGroup.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;inputLangGroup.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="chtRadio.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="chtRadio.Location" type="System.Drawing.Point, System.Drawing">
+    <value>45, 125</value>
+  </data>
+  <data name="chtRadio.Size" type="System.Drawing.Size, System.Drawing">
+    <value>218, 21</value>
+  </data>
+  <data name="chtRadio.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="chtRadio.Text" xml:space="preserve">
+    <value>Chinese (Traditional)</value>
+  </data>
+  <data name="&gt;&gt;chtRadio.Name" xml:space="preserve">
+    <value>chtRadio</value>
+  </data>
+  <data name="&gt;&gt;chtRadio.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;chtRadio.Parent" xml:space="preserve">
+    <value>inputLangGroup</value>
+  </data>
+  <data name="&gt;&gt;chtRadio.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="chsRadio.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="chsRadio.Location" type="System.Drawing.Point, System.Drawing">
+    <value>45, 63</value>
+  </data>
+  <data name="chsRadio.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 21</value>
+  </data>
+  <data name="chsRadio.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="chsRadio.Text" xml:space="preserve">
+    <value>Chinese (Simplified)</value>
+  </data>
+  <data name="&gt;&gt;chsRadio.Name" xml:space="preserve">
+    <value>chsRadio</value>
+  </data>
+  <data name="&gt;&gt;chsRadio.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;chsRadio.Parent" xml:space="preserve">
+    <value>inputLangGroup</value>
+  </data>
+  <data name="&gt;&gt;chsRadio.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="selectButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>495, 137</value>
+  </data>
+  <data name="selectButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 33</value>
+  </data>
+  <data name="selectButton.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="selectButton.Text" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="&gt;&gt;selectButton.Name" xml:space="preserve">
+    <value>selectButton</value>
+  </data>
+  <data name="&gt;&gt;selectButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;selectButton.Parent" xml:space="preserve">
+    <value>userFolderGroup</value>
+  </data>
+  <data name="&gt;&gt;selectButton.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="customPathBox.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="customPathBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>45, 139</value>
+  </data>
+  <data name="customPathBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>440, 27</value>
+  </data>
+  <data name="customPathBox.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;customPathBox.Name" xml:space="preserve">
+    <value>customPathBox</value>
+  </data>
+  <data name="&gt;&gt;customPathBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;customPathBox.Parent" xml:space="preserve">
+    <value>userFolderGroup</value>
+  </data>
+  <data name="&gt;&gt;customPathBox.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="customFolderRadio.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="customFolderRadio.Location" type="System.Drawing.Point, System.Drawing">
+    <value>45, 93</value>
+  </data>
+  <data name="customFolderRadio.Size" type="System.Drawing.Size, System.Drawing">
+    <value>164, 21</value>
+  </data>
+  <data name="customFolderRadio.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="customFolderRadio.Text" xml:space="preserve">
+    <value>Custom location</value>
+  </data>
+  <data name="&gt;&gt;customFolderRadio.Name" xml:space="preserve">
+    <value>customFolderRadio</value>
+  </data>
+  <data name="&gt;&gt;customFolderRadio.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;customFolderRadio.Parent" xml:space="preserve">
+    <value>userFolderGroup</value>
+  </data>
+  <data name="&gt;&gt;customFolderRadio.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="defaultFolderRadio.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="defaultFolderRadio.Location" type="System.Drawing.Point, System.Drawing">
+    <value>45, 46</value>
+  </data>
+  <data name="defaultFolderRadio.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 21</value>
+  </data>
+  <data name="defaultFolderRadio.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="defaultFolderRadio.Text" xml:space="preserve">
+    <value>Default location</value>
+  </data>
+  <data name="&gt;&gt;defaultFolderRadio.Name" xml:space="preserve">
+    <value>defaultFolderRadio</value>
+  </data>
+  <data name="&gt;&gt;defaultFolderRadio.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;defaultFolderRadio.Parent" xml:space="preserve">
+    <value>userFolderGroup</value>
+  </data>
+  <data name="&gt;&gt;defaultFolderRadio.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="userFolderGroup.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 222</value>
+  </data>
+  <data name="userFolderGroup.Size" type="System.Drawing.Size, System.Drawing">
+    <value>652, 204</value>
+  </data>
+  <data name="userFolderGroup.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="userFolderGroup.Text" xml:space="preserve">
+    <value>User folder</value>
+  </data>
+  <data name="&gt;&gt;userFolderGroup.Name" xml:space="preserve">
+    <value>userFolderGroup</value>
+  </data>
+  <data name="&gt;&gt;userFolderGroup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;userFolderGroup.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;userFolderGroup.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="confirmButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>55, 442</value>
+  </data>
+  <data name="confirmButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 45</value>
+  </data>
+  <data name="confirmButton.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="confirmButton.Text" xml:space="preserve">
+    <value>Install</value>
+  </data>
+  <data name="&gt;&gt;confirmButton.Name" xml:space="preserve">
+    <value>confirmButton</value>
+  </data>
+  <data name="&gt;&gt;confirmButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;confirmButton.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;confirmButton.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="removeButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>505, 442</value>
+  </data>
+  <data name="removeButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 45</value>
+  </data>
+  <data name="removeButton.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="removeButton.Text" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="&gt;&gt;removeButton.Name" xml:space="preserve">
+    <value>removeButton</value>
+  </data>
+  <data name="&gt;&gt;removeButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeButton.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;removeButton.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>9, 17</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>675, 510</value>
+  </data>
+  <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
+    <value>宋体, 10pt</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterScreen</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Weasel Setup Options</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>SetupOptionDialog</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+</root>

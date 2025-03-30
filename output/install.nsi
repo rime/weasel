@@ -287,7 +287,8 @@ program_files:
     ${Endif}
   ${Endif}
 
-  File "WeaselSetup.exe"
+  File "Weasel.Setup.exe"
+  File "TSF.TypeLib.dll"
   ; shared data files
   SetOutPath $INSTDIR\data
   File "data\*.yaml"
@@ -314,7 +315,7 @@ program_files:
   IfErrors +2 0
   StrCpy $R2 "/t"
 
-  ExecWait '"$INSTDIR\WeaselSetup.exe" $R2'
+  ExecWait '"$INSTDIR\Weasel.Setup.exe" $R2'
 
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayName" "$(DISPLAYNAME)"
@@ -377,7 +378,7 @@ Section "Start Menu Shortcuts"
   CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORUSERFOLDER).lnk" "$INSTDIR\WeaselServer.exe" "/userdir" "$SYSDIR\shell32.dll" 126
   CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORAPPFOLDER).lnk" "$INSTDIR\WeaselServer.exe" "/weaseldir" "$SYSDIR\shell32.dll" 19
   CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORUPDATER).lnk" "$INSTDIR\WeaselServer.exe" "/update" "$SYSDIR\shell32.dll" 13
-  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORSETUP).lnk" "$INSTDIR\WeaselSetup.exe" "" "$SYSDIR\shell32.dll" 162
+  CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORSETUP).lnk" "$INSTDIR\Weasel.Setup.exe" "" "$SYSDIR\shell32.dll" 162
   CreateShortCut "$SMPROGRAMS\$(DISPLAYNAME)\$(LNKFORUNINSTALL).lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 
 SectionEnd
@@ -390,7 +391,7 @@ Section "Uninstall"
 
   ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
 
-  ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
+  ExecWait '"$INSTDIR\Weasel.Setup.exe" /u'
 
   ; Remove registry keys
   DeleteRegKey HKLM SOFTWARE\Rime
