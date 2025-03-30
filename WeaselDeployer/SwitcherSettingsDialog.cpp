@@ -52,8 +52,11 @@ void SwitcherSettingsDialog::Populate() {
       ++k;
     }
   }
-  std::wstring txt = u8tow(api_->get_hotkeys(settings_));
-  hotkeys_.SetWindowTextW(txt.c_str());
+  auto hotkeys_str = api_->get_hotkeys(settings_);
+  if (hotkeys_str) {
+    std::wstring txt = u8tow(hotkeys_str);
+    hotkeys_.SetWindowTextW(txt.c_str());
+  }
   loaded_ = true;
   modified_ = false;
 }
