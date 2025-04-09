@@ -175,13 +175,13 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc) {
          {true, true, true, true}}};
 
     _textRoundInfo.IsTopLeftNeedToRound =
-        hilite_rd_info[layout_type][_style.inline_preedit][0];
+        hilite_rd_info[layout_type][!textHemispherical][0];
     _textRoundInfo.IsBottomLeftNeedToRound =
-        hilite_rd_info[layout_type][_style.inline_preedit][1];
+        hilite_rd_info[layout_type][!textHemispherical][1];
     _textRoundInfo.IsTopRightNeedToRound =
-        hilite_rd_info[layout_type][_style.inline_preedit][2];
+        hilite_rd_info[layout_type][!textHemispherical][2];
     _textRoundInfo.IsBottomRightNeedToRound =
-        hilite_rd_info[layout_type][_style.inline_preedit][3];
+        hilite_rd_info[layout_type][!textHemispherical][3];
     _textRoundInfo.Hemispherical = textHemispherical;
     if (_style.vertical_text_left_to_right &&
         _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
