@@ -1,10 +1,53 @@
 #include "stdafx.h"
 #include <WeaselUtility.h>
+#include <WeaselConstants.h>
 #include "UIStyleSettings.h"
 
 UIStyleSettings::UIStyleSettings() {
   api_ = (RimeLeversApi*)rime_get_api()->find_module("levers")->get_api();
   settings_ = api_->custom_settings_init("weasel", "Weasel::UIStyleSettings");
+  InitFontSettings();
+}
+
+void _Setup() {
+  RIME_STRUCT(RimeTraits, weasel_traits);
+  std::string shared_dir = wtou8(WeaselSharedDataPath().wstring());
+  std::string user_dir = wtou8(WeaselUserDataPath().wstring());
+  weasel_traits.shared_data_dir = shared_dir.c_str();
+  weasel_traits.user_data_dir = user_dir.c_str();
+  weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
+  std::string distribution_name = wtou8(get_weasel_ime_name());
+  weasel_traits.distribution_name = distribution_name.c_str();
+  weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
+  weasel_traits.distribution_version = WEASEL_VERSION;
+  weasel_traits.app_name = "rime.weasel";
+  std::string log_dir = WeaselLogPath().u8string();
+  weasel_traits.log_dir = log_dir.c_str();
+  rime_get_api()->setup(&weasel_traits);
+  // rime_api->set_notification_handler(&RimeWithWeaselHandler::OnNotify, this);
+}
+
+void UIStyleSettings::InitFontSettings() {
+  _Setup();
+  RimeConfig config = {0};
+  RimeApi* rime = rime_get_api();
+  rime->config_open("weasel", &config);
+
+  auto get_font = [&](wstring& value, const char* key) {
+    char buffer[4096] = {0};
+    rime->config_get_string(&config, key, buffer, _countof(buffer));
+    value = u8tow(buffer);
+  };
+  get_font(font_face, "style/font_face");
+  get_font(label_font_face, "style/label_font_face");
+  get_font(comment_font_face, "style/comment_font_face");
+  rime->config_get_int(&config, "style/font_point", &font_point);
+  if (!rime->config_get_int(&config, "style/label_font_point",
+                            &label_font_point))
+    label_font_point = font_point;
+  if (!rime->config_get_int(&config, "style/comment_font_point",
+                            &comment_font_point))
+    comment_font_point = font_point;
 }
 
 bool UIStyleSettings::GetPresetColorSchemes(
@@ -71,5 +114,17 @@ std::string UIStyleSettings::GetActiveColorScheme() {
 bool UIStyleSettings::SelectColorScheme(const std::string& color_scheme_id) {
   api_->customize_string(settings_, "style/color_scheme",
                          color_scheme_id.c_str());
+  return true;
+}
+
+bool UIStyleSettings::SetFontFace(const std::string& key,
+                                  const std::string& font_face) {
+  api_->customize_string(settings_, key.c_str(), font_face.c_str());
+  return true;
+}
+
+bool UIStyleSettings::SetFontPoint(const std::string& key,
+                                   const int font_point) {
+  api_->customize_int(settings_, key.c_str(), font_point);
   return true;
 }

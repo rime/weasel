@@ -3,6 +3,7 @@
 #include "UIStyleSettings.h"
 #include "Configurator.h"
 #include <WeaselUtility.h>
+#include "FontSettingDialog.h"
 
 UIStyleSettingsDialog::UIStyleSettingsDialog(UIStyleSettings* settings)
     : settings_(settings), loaded_(false) {}
@@ -35,7 +36,7 @@ LRESULT UIStyleSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
   color_schemes_.Attach(GetDlgItem(IDC_COLOR_SCHEME));
   preview_.Attach(GetDlgItem(IDC_PREVIEW));
   select_font_.Attach(GetDlgItem(IDC_SELECT_FONT));
-  select_font_.EnableWindow(FALSE);
+  select_font_.EnableWindow(TRUE);
 
   Populate();
 
@@ -51,6 +52,24 @@ LRESULT UIStyleSettingsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 
 LRESULT UIStyleSettingsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
   EndDialog(code);
+  return 0;
+}
+
+LRESULT UIStyleSettingsDialog::OnSelectFont(WORD, WORD code, HWND, BOOL&) {
+  FontSettingDialog dialog(settings_, m_hWnd);
+
+  if (dialog.ShowDialog() == IDOK) {
+    settings_->SetFontFace("style/font_face", wtou8(dialog.m_font_face));
+    settings_->SetFontFace("style/label_font_face",
+                           wtou8(dialog.m_label_font_face));
+    settings_->SetFontFace("style/comment_font_face",
+                           wtou8(dialog.m_comment_font_face));
+    settings_->SetFontPoint("style/font_point", dialog.m_font_point);
+    settings_->SetFontPoint("style/label_font_point",
+                            dialog.m_label_font_point);
+    settings_->SetFontPoint("style/comment_font_point",
+                            dialog.m_comment_font_point);
+  }
   return 0;
 }
 

@@ -50,6 +50,20 @@
 #define IDC_RESTORE                     1009
 #define IDC_EXPORT                      1010
 #define IDC_IMPORT                      1011
+
+#define IDD_DIALOG_FONT          1999
+#define IDC_CBB_FONTPICKER       2000
+#define IDC_CKB_RANGEEN          2001
+#define IDC_EDIT_RANGESTART      2002
+#define IDC_EDIT_RANGEEND        2003
+#define IDC_BTN_ADDFONT          2004
+#define IDC_CBB_FONTFACE_NAME    2005
+#define IDC_EDIT_FONTFACE        2006
+#define IDC_CBB_FONTSTYLE        2007
+#define IDC_CBB_FONTWEIGHT       2008
+#define IDC_EDIT_PREVIEW_TEXT    2009
+#define IDC_CBB_FONTPOINT        2010
+#define IDC_STATIC_PREVIEW       2011
 #define IDC_STATIC1                     -1
 
 // Next default values for new objects
