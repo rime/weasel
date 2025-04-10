@@ -275,15 +275,15 @@ inline std::string current_time() {
   using namespace std::chrono;
   auto now = system_clock::now();
   auto time_point = system_clock::to_time_t(now);
-  auto ns = duration_cast<microseconds>(now.time_since_epoch());  // 转换为微秒
-  std::tm tm = *std::localtime(&time_point);
+  auto ns = duration_cast<microseconds>(now.time_since_epoch());
+  std::tm tm;
+  localtime_s(&tm, &time_point);
   std::ostringstream oss;
-  oss << std::put_time(&tm,
-                       "%Y%m%d %H:%M:%S");  // 日期时间格式：20241113 08:54:34
-  oss << "." << std::setw(6) << std::setfill('0')
-      << ns.count() % 1000000;  // 微秒部分
+  oss << std::put_time(&tm, "%Y%m%d %H:%M:%S");
+  oss << "." << std::setw(6) << std::setfill('0') << ns.count() % 1000000;
   return oss.str();
 }
+
 #define DEBUG                                                       \
   (DebugStream() << "[" << current_time() << " " << __FILE__ << ":" \
                  << __LINE__ << "] ")
