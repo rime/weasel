@@ -5,6 +5,7 @@
 #include <fstream>
 #include "WeaselDeployer.h"
 #include "Configurator.h"
+#include <ShellScalingApi.h>
 
 CAppModule _Module;
 
@@ -15,7 +16,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                        LPTSTR lpCmdLine,
                        int nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance);
-
+  SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
   LANGID langId = get_language_id();
   SetThreadUILanguage(langId);
   SetThreadLocale(langId);
