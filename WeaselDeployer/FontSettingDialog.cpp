@@ -151,8 +151,8 @@ INT_PTR FontSettingDialog::OnInitDialog() {
   SendMessage(m_hFontFaceNameCbb, CB_SETCURSEL, 1, 0);
 
   m_hComboBoxFontPoint = GetDlgItem(hDlg_, IDC_CBB_FONTPOINT);
-  for (auto i = 0; i < 95; i++) {
-    auto font_point = std::to_wstring(i + 6);
+  for (auto i = 0; i < 100; i++) {
+    auto font_point = std::to_wstring(i);
     SendMessage(m_hComboBoxFontPoint, CB_ADDSTRING, 0,
                 (LPARAM)font_point.c_str());
   }
@@ -166,7 +166,7 @@ INT_PTR FontSettingDialog::OnInitDialog() {
 
   m_font_face_ptr = &m_font_face;
   m_font_point_ptr = &m_font_point;
-  int sel = (*m_font_point_ptr) - 6;
+  int sel = (*m_font_point_ptr) >= 0 ? (*m_font_point_ptr) : 0;
   SendMessage(m_hComboBoxFontPoint, CB_SETCURSEL, sel, 0);
 
   m_hFontStyleCbb = GetDlgItem(hDlg_, IDC_CBB_FONTSTYLE);
@@ -274,16 +274,15 @@ void FontSettingDialog::OnChangeFontFace() {
   auto curFontFaceName = GetComboBoxSelectStr(m_hFontFaceNameCbb);
   if (curFontFaceName == L"label_font_face") {
     m_font_face_ptr = &m_label_font_face;
-    SendMessage(m_hComboBoxFontPoint, CB_SETCURSEL, m_label_font_point - 6, 0);
+    SendMessage(m_hComboBoxFontPoint, CB_SETCURSEL, m_label_font_point, 0);
     m_font_point_ptr = &m_label_font_point;
   } else if (curFontFaceName == L"font_face") {
     m_font_face_ptr = &m_font_face;
-    SendMessage(m_hComboBoxFontPoint, CB_SETCURSEL, m_font_point - 6, 0);
+    SendMessage(m_hComboBoxFontPoint, CB_SETCURSEL, m_font_point, 0);
     m_font_point_ptr = &m_font_point;
   } else if (curFontFaceName == L"comment_font_face") {
     m_font_face_ptr = &m_comment_font_face;
-    SendMessage(m_hComboBoxFontPoint, CB_SETCURSEL, m_comment_font_point - 6,
-                0);
+    SendMessage(m_hComboBoxFontPoint, CB_SETCURSEL, m_comment_font_point, 0);
     m_font_point_ptr = &m_comment_font_point;
   }
 
