@@ -8,6 +8,7 @@
 #include <map>
 #include <regex>
 #include <string>
+#include <unordered_map>
 #include <windows.h>
 #include <wrl.h>
 #include "UIStyleSettings.h"
@@ -242,8 +243,12 @@ class FontSettingDialog {
                                      LPARAM lParam);
   INT_PTR HandleMsg(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
   INT_PTR OnInitDialog();
+  LRESULT OnDpiChanged(UINT, WPARAM wParam, LPARAM lParam, BOOL&);
+  UINT GetWindowDpi();
   wstring GetComboBoxSelectStr(HWND target);
   wstring GetTextOfEdit(HWND& hwndEdit);
+  void InitCtrlRects();
+  void ScaleControlsAndFonts(UINT newDpi);
   void UpdatePreview();
   void OnAddFont();
   void OnChangeFontFace();
@@ -276,4 +281,9 @@ class FontSettingDialog {
   HINSTANCE hInstance_;
   HWND hDlg_;
   HWND hParent;
+
+  UINT m_currentDpi = 96;
+  RECT m_rect;
+  std::unordered_map<HWND, RECT> m_controlOriginalRects;
+  HFONT m_currentFont = nullptr;
 };

@@ -88,6 +88,97 @@ INT_PTR FontSettingDialog::ShowDialog() {
                         DialogProc, reinterpret_cast<LPARAM>(this));
 }
 
+void FontSettingDialog::ScaleControlsAndFonts(UINT newDpi) {
+  const float scaleFactor = static_cast<float>(newDpi) / 96;
+  for (const auto& [hWnd, originalRect] : m_controlOriginalRects) {
+    int newX = static_cast<int>(originalRect.left * scaleFactor);
+    int newY = static_cast<int>(originalRect.top * scaleFactor);
+    int newWidth = static_cast<int>((originalRect.right - originalRect.left) *
+                                    scaleFactor);
+    int newHeight = static_cast<int>((originalRect.bottom - originalRect.top) *
+                                     scaleFactor);
+    ::SetWindowPos(hWnd, nullptr, newX, newY, newWidth, newHeight,
+                   SWP_NOZORDER | SWP_NOACTIVATE);
+  }
+  HFONT oldFont = (HFONT)::SendMessage(hDlg_, WM_GETFONT, 0, 0);
+  LOGFONT lf;
+  if (!GetObject(oldFont, sizeof(lf), &lf)) {
+    return;
+  }
+  lf.lfHeight = static_cast<int>(lf.lfHeight * scaleFactor);
+  HFONT hNewFont = CreateFontIndirect(&lf);
+  if (m_currentFont) {
+    DeleteObject(m_currentFont);
+  }
+  ::SendMessage(hDlg_, WM_SETFONT, (WPARAM)hNewFont, TRUE);
+  for (const auto& [hWnd, rect] : m_controlOriginalRects) {
+    ::SendMessage(hWnd, WM_SETFONT, (WPARAM)hNewFont, TRUE);
+  }
+  m_currentFont = hNewFont;
+}
+
+void FontSettingDialog::InitCtrlRects() {
+  ::GetWindowRect(hDlg_, &m_rect);
+  EnumChildWindows(
+      hDlg_,
+      [](HWND hWnd, LPARAM lParam) {
+        auto pThis = reinterpret_cast<FontSettingDialog*>(lParam);
+        RECT rect, rcDlg;
+        ::GetClientRect(pThis->hDlg_, &rcDlg);
+        ::ClientToScreen(pThis->hDlg_, (LPPOINT)&rcDlg.left);
+        ::ClientToScreen(pThis->hDlg_, (LPPOINT)&rcDlg.right);
+        ::GetWindowRect(hWnd, &rect);
+        rect.left -= rcDlg.left;
+        rect.right -= rcDlg.left;
+        rect.top -= rcDlg.top;
+        rect.bottom -= rcDlg.top;
+        pThis->m_controlOriginalRects[hWnd] = rect;
+        return TRUE;
+      },
+      reinterpret_cast<LPARAM>(this));
+
+  UINT newDpi = GetWindowDpi();
+  if (newDpi != 96) {
+    float scaleFactor = (float)newDpi / (float)96.0f;
+    int width = (m_rect.right - m_rect.left) * scaleFactor;
+    int height = (m_rect.bottom - m_rect.top) * scaleFactor;
+    SetWindowPos(hDlg_, nullptr, m_rect.left, m_rect.top, width, height,
+                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW);
+    ScaleControlsAndFonts(newDpi);
+    InvalidateRect(hDlg_, nullptr, true);
+  }
+  m_currentDpi = newDpi;
+}
+
+UINT FontSettingDialog::GetWindowDpi() {
+  HMONITOR hMonitor = MonitorFromWindow(hDlg_, MONITOR_DEFAULTTONEAREST);
+  UINT dpiX = 96, dpiY = 96;
+  if (SUCCEEDED(GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY))) {
+    if (dpiX == 0)
+      dpiX = 96;
+    return dpiX;
+  }
+  return 96;
+}
+
+LRESULT FontSettingDialog::OnDpiChanged(UINT,
+                                        WPARAM wParam,
+                                        LPARAM lParam,
+                                        BOOL&) {
+  UINT newDpi = HIWORD(wParam);
+  if (newDpi == m_currentDpi)
+    return 0;
+  const RECT* pNewRect = reinterpret_cast<const RECT*>(lParam);
+  // 直接使用系统建议的矩形
+  SetWindowPos(hDlg_, nullptr, pNewRect->left, pNewRect->top,
+               pNewRect->right - pNewRect->left,
+               pNewRect->bottom - pNewRect->top, SWP_NOZORDER | SWP_NOACTIVATE);
+  ScaleControlsAndFonts(newDpi);
+  m_currentDpi = newDpi;
+  InvalidateRect(hDlg_, nullptr, true);
+  return 0;
+}
+
 INT_PTR CALLBACK FontSettingDialog::DialogProc(HWND hDlg,
                                                UINT message,
                                                WPARAM wParam,
@@ -113,14 +204,15 @@ INT_PTR FontSettingDialog::HandleMsg(HWND hDlg,
                                      WPARAM wParam,
                                      LPARAM lParam) {
   switch (message) {
-    case WM_COMMAND:
-      return OnCommand(wParam);
-    case WM_DPICHANGED:
-    case WM_MOVE: {
+    case WM_DPICHANGED: {
+      BOOL handled = false;
+      OnDpiChanged(message, wParam, lParam, handled);
+
       if (!(m_pD2D && m_pD2D->GetDpi()))
         UpdatePreview();
-      return 0;
-    }
+    } break;
+    case WM_COMMAND:
+      return OnCommand(wParam);
     case WM_PAINT: {
       PAINTSTRUCT ps;
       HDC hdc = BeginPaint(hDlg_, &ps);
@@ -195,6 +287,7 @@ INT_PTR FontSettingDialog::OnInitDialog() {
 
   m_hPreview = GetDlgItem(hDlg_, IDC_STATIC_PREVIEW);
   m_pD2D = make_unique<D2D>(m_hPreview, m_text);
+  InitCtrlRects();
   UpdatePreview();
 
   return (INT_PTR)TRUE;
