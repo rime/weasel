@@ -187,9 +187,15 @@ struct Status {
 
 // 用於向前端告知設置信息
 struct Config {
-  Config() : inline_preedit(false) {}
-  void reset() { inline_preedit = false; }
+  Config() : inline_preedit(false), hide_ime_mode_icon(false) {}
+  void reset() {
+    inline_preedit = false;
+    hide_ime_mode_icon = false;
+  }
+  // inline preedit switch
   bool inline_preedit;
+  // hide tsf mode icon switch
+  bool hide_ime_mode_icon;
 };
 
 struct UIStyle {
@@ -531,6 +537,11 @@ void serialize(Archive& ar, weasel::TextRange& s, const unsigned int version) {
   ar & s.start;
   ar & s.end;
   ar & s.cursor;
+}
+template <typename Archive>
+void serialize(Archive& ar, weasel::Config& s, const unsigned int version) {
+  ar & s.inline_preedit;
+  ar & s.hide_ime_mode_icon;
 }
 }  // namespace serialization
 }  // namespace boost
