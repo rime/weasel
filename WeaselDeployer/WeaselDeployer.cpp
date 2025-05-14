@@ -61,6 +61,25 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 static int Run(LPTSTR lpCmdLine) {
   Configurator configurator;
   configurator.Initialize();
+
+  if (!wcscmp(L"/?", lpCmdLine) || !wcscmp(L"/help", lpCmdLine)) {
+    WCHAR msg[1024] = {0};
+    if (LoadString(GetModuleHandle(NULL), IDS_STR_HELP, msg,
+                   sizeof(msg) / sizeof(TCHAR))) {
+      MessageBox(NULL, msg, L"Weasel Deployer", MB_ICONINFORMATION | MB_OK);
+    } else {
+      MessageBox(NULL,
+                 L"Usage: WeaselDeployer.exe [options]\n"
+                 L"/? or /help		- Show this help message\n"
+                 L"/deploy		- Update Workspace\n"
+                 L"/dict		- Manage dictionary\n"
+                 L"/sync		- Sync user data\n"
+                 L"/install		- Install Weasel (Initial deployment)",
+                 L"Weasel Deployer", MB_ICONINFORMATION | MB_OK);
+    }
+    return 0;
+  }
+
   bool deployment_scheduled = !wcscmp(L"/deploy", lpCmdLine);
   if (deployment_scheduled) {
     return configurator.UpdateWorkspace();
