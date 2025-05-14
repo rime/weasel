@@ -24,6 +24,7 @@
 #define IDS_STR_ERR_WRITE_HANT          145
 #define IDS_STR_MODIFY_SUCCESS_INFO     146
 #define IDS_STR_MODIFY_SUCCESS_CAP      147
+#define IDS_STR_HELP                    148
 #define IDD_INSTALL_OPTIONS             201
 #define IDD_DIALOG1                     203
 #define IDC_RADIO_CN                    1000
