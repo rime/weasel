@@ -145,6 +145,35 @@ LPCTSTR GetParamByPrefix(LPCTSTR lpCmdLine, LPCTSTR prefix) {
 static int Run(LPTSTR lpCmdLine) {
   constexpr bool silent = true;
   constexpr bool old_ime_support = false;
+  // parameter /? or /help to show commandline args
+  if (!wcscmp(L"/?", lpCmdLine) || !wcscmp(L"/help", lpCmdLine)) {
+    WCHAR msg[1024] = {0};
+    if (LoadString(GetModuleHandle(NULL), IDS_STR_HELP, msg,
+                   sizeof(msg) / sizeof(TCHAR))) {
+      MessageBox(NULL, msg, L"WeaselSetup", MB_ICONINFORMATION | MB_OK);
+    } else {
+      MessageBox(
+          NULL,
+          L"Usage: WeaselSetup.exe [options]\n"
+          L"/? or /help    - Show this help message\n"
+          L"/u             - Uninstall Weasel\n"
+          L"/i             - Install Weasel\n"
+          L"/s             - Install Weasel (Simplified Chinese)\n"
+          L"/t             - Install Weasel (Traditional Chinese)\n"
+          L"/ls            - Set Weasel language to Simplified Chinese\n"
+          L"/lt            - Set Weasel language to Traditional Chinese\n"
+          L"/le            - Set Weasel language to English\n"
+          L"/eu            - Enable automatic update check\n"
+          L"/du            - Disable automatic update check\n"
+          L"/toggleime     - Toggle IME on open/close(ctrl+space)\n"
+          L"/toggleascii   - Toggle ASCII on open/close(ctrl+space)\n"
+          L"/testing       - Set update channel to testing\n"
+          L"/release       - Set update channel to release\n"
+          L"/userdir:<dir> - Set user directory\n",
+          L"WeaselSetup", MB_ICONINFORMATION | MB_OK);
+    }
+    return 0;
+  }
   bool uninstalling = !wcscmp(L"/u", lpCmdLine);
   if (uninstalling) {
     if (IsProcAdmin())
