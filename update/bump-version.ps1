@@ -90,6 +90,13 @@ function update_changelog {
   $fileContent = Get-Content -Path "CHANGELOG.md" -Raw -Encoding UTF8;
   $contentAdd = "<a name=`"$new_tag`"></a>`n" ;
   $contentAdd += "## [$new_tag](https://github.com/rime/weasel/compare/$old_tag...$new_tag)($currentDateTime)`n" ;
+  # if $new_tag.txt exists, add the content to changelog
+  $new_tag_file = "$new_tag.txt";
+  if (Test-Path -Path $new_tag_file) {
+    $new_tag_content = Get-Content -Path $new_tag_file -Raw -Encoding UTF8;
+    $contentAdd += "`n" + $new_tag_content + "`n";
+  }
+
   $contentAdd += $changelog;
   Write-Host "`n" + $contentAdd + "`n"
   $fileContent = $contentAdd + "`n" + $fileContent;
