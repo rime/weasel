@@ -113,10 +113,10 @@ void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 void _RefreshTrayIcon(const RimeSessionId session_id,
                       const std::function<void()> _UpdateUICallback) {
   // Dangerous, don't touch
-  static char app_name[50];
-  rime_api->get_property(session_id, "client_app", app_name,
-                         sizeof(app_name) - 1);
-  if (u8tow(app_name) == std::wstring(L"explorer.exe"))
+  static char app_name[256] = {0};
+  auto ret = rime_api->get_property(session_id, "client_app", app_name,
+                                    sizeof(app_name) - 1);
+  if (!ret || u8tow(app_name) == std::wstring(L"explorer.exe"))
     boost::thread th([=]() {
       ::Sleep(100);
       if (_UpdateUICallback)
