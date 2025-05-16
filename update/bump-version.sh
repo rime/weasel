@@ -96,6 +96,12 @@ update_changelog() {
   local contentAdd
   contentAdd="<a name=\"$new_tag\"></a>"$'\n'
   contentAdd+="## [$new_tag](https://github.com/rime/weasel/compare/$old_tag...$new_tag)($currentDateTime)"$'\n'
+  # if $new_tag.txt exists, add the content to changelog
+  if [[ -f "$new_tag.txt" ]]; then
+    contentAdd+=$'\n'
+    contentAdd+=$(<"$new_tag.txt")
+    contentAdd+=$'\n'
+  fi
   contentAdd+="$changelog"
   contentAdd=$"$contentAdd"$'\n'
 
