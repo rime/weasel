@@ -1,3 +1,80 @@
+<a name="0.17.0"></a>
+## [0.17.0](https://github.com/rime/weasel/compare/0.16.3...0.17.0)(2025-05-17)
+
+### 主要更新
+* 更新 librime 至 1.13.1 版本
+* 修復托盤圖標卡死問題
+* 修復當熱鍵設置為空時 WeaselDeployer 崩潰的問題
+* 修復更新安裝後可能導致重啟後程式檔案被刪除的問題
+* 修復多線程導致的服務崩潰問題
+* 修復部分應用程式中的異常崩潰問題
+* 修復部分應用中無法顯示輸入法的問題
+* 修復因顯示卡重置導致的文字繪製失敗問題
+* 修復「天圓地方」狀態下編碼高亮未正確繪製的問題
+* 修復 vim-mode 下按鍵響應異常問題
+* 修復輸入法顯示狀態異常問題
+* 修復全螢幕模式下高亮背景繪製錯誤問題
+* 修正混色算法，解決部分情況下的混色異常問題
+* `WeaselDeployer.exe` 和 `WeaselSetup.exe` 新增 `/h` 及 `/help` 參數，顯示使用說明
+* `WeaselSetup.exe` 新增參數支援設定用戶資料目錄，例如：`WeaselSetup.exe /userdir:D:\rime_data_dir`
+
+#### Code Refactor
+refactor(WeaselUI): DirectWriteResources ([fxliang](https://github.com/rime/weasel/commit/16672f47cfcb75426459afa8d4ba3c7069eeb2d8))
+refactor(WeaselTSF): simplify codes of RegisterCategories and UnregisterCategories ([fxliang](https://github.com/rime/weasel/commit/4b47310e95c76cfffb0c0828be9563dbb4125aeb))
+refactor(WeaselTSF): simplify codes of RegisterProfiles and UnregisterProfiles ([fxliang](https://github.com/rime/weasel/commit/83881f07227ffec2f202847a6d2cbb28991f7fcc))
+refactor(RimeWithWeasel): simplify configuration parsing ([fxliang](https://github.com/rime/weasel/commit/8125608f3f24ec16c1e2b78ee8ff8b0a2f5d1dbc))
+refactor(WeaselDeployer): string convertions with macro ([fxliang](https://github.com/rime/weasel/commit/30e5adf80e2171fee40cebad71281c8551210e55))
+refactor(RimeWithWeasel): simplify _LoadSchemaSpecificSettings ([fxliang](https://github.com/rime/weasel/commit/aba0609f64e5122748db80150de9644ffec0699f))
+refactor(RimeWithWeasel): string convertions with macro ([fxliang](https://github.com/rime/weasel/commit/597993e8992e5081c9c0786c9b491c93fc3bbd71))
+
+#### Features
+feat: WeaselSetup.exe with new param /? or /help to show help info ([fxliang](https://github.com/rime/weasel/commit/63f27915f3dd03da2bc2b9d4ae1209f1b5e56e0b))
+feat: WeaselDeployer.exe with new param /? or /help to show help info ([fxliang](https://github.com/rime/weasel/commit/1004f399d4b5c90652ae63f33f40247adc56e91b))
+feat: WeaselSetup.exe parameter /userdir:<user_data_dir_full_path> to set user data directory in command line ([fxliang](https://github.com/rime/weasel/commit/0ef3154e489eed1176e9ca3a2e5f244fc0c1cf0f))
+feat: WeaselSetup 默认启动不请求管理员权限，必要时使用管理员权限重启 (#1390) ([Wendy](https://github.com/rime/weasel/commit/ba768a6d65895837b052a1d366ffb872df5f0091))
+
+#### Chores
+chore: update bump version scripts ([fxliang](https://github.com/rime/weasel/commit/967674ff5295c4a389b35e9f8070b9fe43d0dcb1))
+chore: update update/bump-version.ps1 [skip ci] ([fxliang](https://github.com/rime/weasel/commit/d13fd1250545d05df6573be7c0dee2529a4dc3fc))
+chore: update update/bump_version.sh [skip ci] ([fxliang](https://github.com/rime/weasel/commit/8d12cafec0a84498c3f32d6821b7ccbd85fe1f21))
+chore: follow #1379, update `update/bump-version.sh` to work without clog[skip ci] ([fxliang](https://github.com/rime/weasel/commit/d75b34bce20026f54ebbae73b6c591b3db473d11))
+chore: make clang-format.ps1 worked in linux/Mac OS[skip ci] ([fxliang](https://github.com/rime/weasel/commit/d3e872c6671aaab5bfc0a6caa8227b416a5c5601))
+chore: update update/bump_version.ps1 ([fxliang](https://github.com/rime/weasel/commit/18cb65206c494e5b3bc21380dc938d5553a7e83a))
+chore: add powershell script for linting ([fxliang](https://github.com/rime/weasel/commit/a6d15cea4ad14c921bbde4c6b9c99a8a15c4dcde))
+chore: update .gitignore ([fxliang](https://github.com/rime/weasel/commit/094e99de9e47b0aa9469b3d94a03e78501d8b1bb))
+chore(install_boost): update boost download url ([居戎氏](https://github.com/rime/weasel/commit/235308dc7425529b49ffe3a5eb29947a4657f8cd))
+
+#### Builds
+build: bump librime to 1.13.0 ([fxliang](https://github.com/rime/weasel/commit/9a5244b1fae8de8f52c2f774eddc2986d869e98a))
+build: set /utf-8 for source compilation ([fxliang](https://github.com/rime/weasel/commit/acbb0c393c65ebfea2ac176723f08e5b121442aa))
+build: IntDir and OutDir set for msbuild solution, intermediary files will be always in `$(SolutionDir)\msbuild`. ([fxliang](https://github.com/rime/weasel/commit/5d5d5b0338a5eead4d898a2589f280015acdae85))
+
+#### Continuous Integration
+ci: run update rime/home appcast on published or prereleased ([fxliang](https://github.com/rime/weasel/commit/41dc044d7c34d30a574a72095361abf345c133f5))
+ci: bump librime 1.13.1 ([fxliang](https://github.com/rime/weasel/commit/d279d9d78cce33a4e3f36e29c0a1ef6bef423121))
+ci: draft before release ([fxliang](https://github.com/rime/weasel/commit/57b4cc44b46a1e9050b154178885cfccd1e9fdbe))
+
+#### Bug Fixes
+fix(trayicon): explorer.exe hangs ([fxliang](https://github.com/rime/weasel/commit/f11831fb16446ab98c1a2fee9ec6245a0d24144b))
+fix(WeaselUI): hemispherical of hilite text preedit not correct ([fxliang](https://github.com/rime/weasel/commit/6e884c299b28c4a8e2d5ed2dc1845e702da35868))
+fix(WeaselDeployer): WeaselDeployer will dump if hotkeys is set empty #1549 ([fxliang](https://github.com/rime/weasel/commit/bf4853dde1a4476489c4d7e85ab9407e5fc7c5f7))
+fix(RimeWithWeasel): avoid vim_mode misoperations (#1543) ([fxliang](https://github.com/rime/weasel/commit/c2beb41a63567de7b9399ede13db65f0d3254221))
+fix(installer): avoid files are deleted on system reboot after reinstallation (#1520) ([fxliang](https://github.com/rime/weasel/commit/2f92c6c5b885caf633f61d47e21ae61a93658246))
+fix(tsf): ime status (#1499) ([wzv5](https://github.com/rime/weasel/commit/ea49aa13e936cf2309854ee353f18c2442153643))
+fix(CandidateList): not displaying in some applications (#1494) ([wzv5](https://github.com/rime/weasel/commit/35afa144056e26e26f1c5eb092fd77942174cb35))
+fix(ipcserver): concurrent access to rime api ([居戎氏](https://github.com/rime/weasel/commit/2dc4e1923a95d8ad4c1eff19399614253507c0fe))
+fix(RimeWithWeasel): blend_colors algorithm, fix issue like #1405 ([fxliang](https://github.com/rime/weasel/commit/5dbafbb893cd79c876dab8600833266ce12ecdbd))
+fix(WeaselUI): highlight back is not drawn correctly when fullscreen layout set ([fxliang](https://github.com/rime/weasel/commit/8b95887f4e2375659ed228e921f481a462b97376))
+fix(CandidateList): null pointer error ([居戎氏](https://github.com/rime/weasel/commit/588a31f8eedf6066e5b6a1cc7f010ed528154445))
+fix: silent installation script repeated call ([居戎氏](https://github.com/rime/weasel/commit/150c5608ba5338cedf124a0c1adf2caf5948a6cf))
+fix: silent installation script typo ([Yh793](https://github.com/rime/weasel/commit/c599f2e67ab26dac3f77066d4d57d9295092be96))
+fix: fix unexpected crash in some applications (#1458) ([Alfred Lieu](https://github.com/rime/weasel/commit/3f1e05b255867b8d9d31212fe840bcfa8f23b50c))
+fix: candidate ui can't be drawn correctly after GPU reset ([fxliang](https://github.com/rime/weasel/commit/37c8fa161a221a263bb439a1158ba401c0cf90a3))
+
+#### Commits
+remove duplicated branch ([Qijia Liu](https://github.com/rime/weasel/commit/78e20ab7893ffe07904ef10eebe55c27bb05cc2a))
+refactorï(RimeWithWeasel) simplify color parsing function ([fxliang](https://github.com/rime/weasel/commit/836dc9e35c25564fb4b8ab95e575afa4454ee5f3))
+
 <a name="0.16.3"></a>
 ## [0.16.3](https://github.com/rime/weasel/compare/0.16.2...0.16.3)(2024-10-04)
 
