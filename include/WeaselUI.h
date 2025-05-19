@@ -62,6 +62,7 @@ class UI {
   Context& ctx() { return ctx_; }
   Context& octx() { return octx_; }
   Status& status() { return status_; }
+  Status& ostatus() { return ostatus_; }
   UIStyle& style() { return style_; }
   UIStyle& ostyle() { return ostyle_; }
   PDWR pdwr() { return pDWR; }
@@ -85,6 +86,7 @@ class UI {
   Context ctx_;
   Context octx_;
   Status status_;
+  Status ostatus_;
   UIStyle style_;
   UIStyle ostyle_;
   std::function<void(size_t* const, size_t* const, bool* const, bool* const)>
