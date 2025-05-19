@@ -418,11 +418,7 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status stat) {
   else
     flags &= (~TF_CONVERSIONMODE_FULLSHAPE);
   _SetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
-  if (!_isToOpenClose) {
-    BOOL open = !stat.ascii_mode;
-    if (_IsKeyboardOpen() != open)
-      _SetKeyboardOpen(open);
-  }
+
   _pLangBarButton->UpdateWeaselStatus(stat);
 }
 

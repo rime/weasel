@@ -253,7 +253,8 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
       _EnableLanguageBar(isOpen);
       _UpdateLanguageBar(_status);
     } else {
-      _status.ascii_mode = !_IsKeyboardOpen();
+      _status.ascii_mode = !_status.ascii_mode;
+      _SetKeyboardOpen(true);
       if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
         _EnableLanguageBar(true);
       _HandleLangBarMenuSelect(_status.ascii_mode
