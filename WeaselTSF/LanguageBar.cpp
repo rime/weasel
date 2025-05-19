@@ -318,12 +318,14 @@ void WeaselTSF::_HandleLangBarMenuSelect(UINT wID) {
     case ID_WEASELTRAY_USERCONFIG:
       if (RegGetStringValue(HKEY_CURRENT_USER, L"Software\\Rime\\Weasel",
                             L"RimeUserDir", dir) == ERROR_SUCCESS) {
-        if (dir.empty()) {
-          TCHAR _path[MAX_PATH];
-          ExpandEnvironmentStringsW(L"%AppData%\\Rime", _path, _countof(_path));
-          dir = std::wstring(_path);
-        }
         explore(dir);
+      } else {
+        WCHAR _path[MAX_PATH] = {0};
+        ExpandEnvironmentStringsW(L"%AppData%\\Rime", _path, _countof(_path));
+        if (_path[0]) {
+          dir = std::wstring(_path);
+          explore(dir);
+        }
       }
       break;
     case ID_WEASELTRAY_LOGDIR:
