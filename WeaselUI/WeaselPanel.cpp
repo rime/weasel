@@ -54,6 +54,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
       m_ctx(ui.ctx()),
       m_octx(ui.octx()),
       m_status(ui.status()),
+      m_ostatus(ui.ostatus()),
       m_style(ui.style()),
       m_ostyle(ui.ostyle()),
       m_candidateCount(0),
@@ -130,15 +131,13 @@ void WeaselPanel::_CreateLayout() {
 
 // 更新界面
 void WeaselPanel::Refresh() {
-  bool should_show_icon =
-      (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
   m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
   // check if to hide candidates window
   // show tips status, two kind of situation: 1) only aux strings, don't care
   // icon status; 2)only icon(ascii mode switching)
   bool show_tips =
       (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty()) ||
-      (m_ctx.empty() && should_show_icon);
+      (m_ostatus.ascii_mode != m_status.ascii_mode);
   // show schema menu status: schema_id == L".default"
   bool show_schema_menu = m_status.schema_id == L".default";
   bool margin_negative =
@@ -150,7 +149,7 @@ void WeaselPanel::Refresh() {
   bool inline_no_candidates =
       (m_style.inline_preedit && m_candidateCount == 0) && !show_tips;
   hide_candidates = inline_no_candidates ||
-                    (margin_negative && !show_tips && !show_schema_menu);
+                    (margin_negative && !show_schema_menu && !show_tips);
 
   // only RedrawWindow if no need to hide candidates window, or
   // inline_no_candidates
@@ -168,6 +167,7 @@ void WeaselPanel::Refresh() {
       RedrawWindow();
     }
   }
+  m_ostatus = m_status;
 }
 
 void WeaselPanel::_InitFontRes(bool forced) {

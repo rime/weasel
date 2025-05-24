@@ -107,6 +107,7 @@ class WeaselPanel
   weasel::Context& m_ctx;
   weasel::Context& m_octx;
   weasel::Status& m_status;
+  weasel::Status& m_ostatus;
   weasel::UIStyle& m_style;
   weasel::UIStyle& m_ostyle;
 
