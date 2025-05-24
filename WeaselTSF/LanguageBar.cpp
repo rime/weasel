@@ -376,8 +376,10 @@ BOOL WeaselTSF::_InitLanguageBar() {
   if (_pThreadMgr->QueryInterface(&pLangBarItemMgr) != S_OK)
     return FALSE;
 
-  if ((_pLangBarButton = new CLangBarItemButton(this, GUID_LBI_INPUTMODE,
-                                                _cand->style())) == NULL)
+  const GUID langBarGuid =
+      _config.hide_ime_mode_icon ? GUID_NULL : GUID_LBI_INPUTMODE;
+  if ((_pLangBarButton =
+           new CLangBarItemButton(this, langBarGuid, _cand->style())) == NULL)
     return FALSE;
 
   if (pLangBarItemMgr->AddItem(_pLangBarButton) != S_OK) {
@@ -385,7 +387,7 @@ BOOL WeaselTSF::_InitLanguageBar() {
     return FALSE;
   }
 
-  _pLangBarButton->Show(TRUE);
+  _pLangBarButton->Show(!_config.hide_ime_mode_icon);
   fRet = TRUE;
 
   return fRet;
