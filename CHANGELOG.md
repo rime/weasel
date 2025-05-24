@@ -1,3 +1,18 @@
+<a name="0.17.3"></a>
+## [0.17.3](https://github.com/rime/weasel/compare/0.17.0...0.17.3)(2025-05-24)
+
+### 主要更新
+* 修复未自定义设定用户目录潜在可能无法在右键菜单打开用户目录的问题
+* 修复配色方案中未定义色回退错误问题
+* 回退#1499，修复由之产生的inline_preedit失效问题
+
+#### Bug Fixes
+fix(WeaselTSF): explore user dir failed if it's not customized ([fxliang](https://github.com/rime/weasel/commit/facecbf2d29cb45ee695e5a27e68f76dd796264a))
+fix(RimeWithWeasel): color parsing for decimal number fix(RimeWithWeasel): highlight label color and highlight comment color not correct when it's not defined ([fxliang](https://github.com/rime/weasel/commit/c52f260c603aa5b19b084317c22c978e61cbbaab))
+
+#### Commits
+Revert "fix(tsf): ime status (#1499)" ([居戎氏](https://github.com/rime/weasel/commit/c72cbc8e002f88c2b24b6866e28260897e49d1fe))
+
 <a name="0.17.0"></a>
 ## [0.17.0](https://github.com/rime/weasel/compare/0.16.3...0.17.0)(2025-05-17)
 
