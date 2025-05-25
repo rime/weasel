@@ -102,6 +102,12 @@ static int CustomInstall(bool installing) {
     if (0 != install(hant, silent, old_ime_support))
       return 1;
 
+  if (user_dir.empty()) {
+    // default user dir %APPDATA%\Rime
+    WCHAR _path[MAX_PATH] = {0};
+    ExpandEnvironmentStringsW(L"%APPDATA%\\Rime", _path, _countof(_path));
+    user_dir = std::wstring(_path);
+  }
   ret = SetRegKeyValue(HKEY_CURRENT_USER, KEY, L"RimeUserDir", user_dir.c_str(),
                        REG_SZ, false);
   if (FAILED(HRESULT_FROM_WIN32(ret))) {
