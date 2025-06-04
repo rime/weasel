@@ -1,3 +1,15 @@
+<a name="0.17.4"></a>
+## [0.17.4](https://github.com/rime/weasel/compare/0.17.3...0.17.4)(2025-06-04)
+
+### 主要更新
+* 修复#1585 未处理完整的用户目录路径打开处理问题
+
+#### Code Refactor
+refactor(WeaselTSF): add error handling when try open RimeUserDir ([fxliang](https://github.com/rime/weasel/commit/7a52fce2e6f5a991c58f2a19c93e82d3cfa191d3))
+
+#### Bug Fixes
+fix(WeaselSetup): RimeUserDir in registry is empty when default location ([fxliang](https://github.com/rime/weasel/commit/1ffd4412005962e0f9dd88558f23ec37e982ce59))
+
 <a name="0.17.3"></a>
 ## [0.17.3](https://github.com/rime/weasel/compare/0.17.0...0.17.3)(2025-05-24)
 
