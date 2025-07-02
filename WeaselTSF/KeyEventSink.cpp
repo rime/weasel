@@ -7,6 +7,7 @@
 static weasel::KeyEvent prevKeyEvent;
 static BOOL prevfEaten = FALSE;
 static int keyCountToSimulate = 0;
+static BOOL backspaceHeldWhenComposing = FALSE;
 
 void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
   // when _IsKeyboardDisabled don't eat the key,
@@ -36,25 +37,38 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
     }
     if (!keyCountToSimulate)
       *pfEaten = (BOOL)m_client.ProcessKeyEvent(ke);
-
-    if (ke.keycode == ibus::Caps_Lock) {
-      if (prevKeyEvent.keycode == ibus::Caps_Lock && prevfEaten == TRUE &&
-          (ke.mask & ibus::RELEASE_MASK) && (!keyCountToSimulate)) {
-        if ((GetKeyState(VK_CAPITAL) & 0x01)) {
-          if (_committed || (!*pfEaten && _status.composing)) {
-            keyCountToSimulate = 2;
-            INPUT inputs[2];
-            inputs[0].type = INPUT_KEYBOARD;
-            inputs[0].ki = {VK_CAPITAL, 0, 0, 0, 0};
-            inputs[1].type = INPUT_KEYBOARD;
-            inputs[1].ki = {VK_CAPITAL, 0, KEYEVENTF_KEYUP, 0, 0};
-            ::SendInput(sizeof(inputs) / sizeof(INPUT), inputs, sizeof(INPUT));
-          }
-        }
-        *pfEaten = TRUE;
+    // if backspace pressed when composing, set backspaceHeldWhenComposing
+    if (ke.keycode == ibus::BackSpace) {
+      if (ke.mask & ibus::RELEASE_MASK) {
+        backspaceHeldWhenComposing = FALSE;
+      } else if (_IsComposing()) {
+        backspaceHeldWhenComposing = TRUE;
       }
-      if (keyCountToSimulate)
-        keyCountToSimulate--;
+    } else {
+      backspaceHeldWhenComposing = FALSE;
+      if (ke.keycode == ibus::Caps_Lock) {
+        if (prevKeyEvent.keycode == ibus::Caps_Lock && prevfEaten == TRUE &&
+            (ke.mask & ibus::RELEASE_MASK) && (!keyCountToSimulate)) {
+          if ((GetKeyState(VK_CAPITAL) & 0x01)) {
+            if (_committed || (!*pfEaten && _status.composing)) {
+              keyCountToSimulate = 2;
+              INPUT inputs[2];
+              inputs[0].type = INPUT_KEYBOARD;
+              inputs[0].ki = {VK_CAPITAL, 0, 0, 0, 0};
+              inputs[1].type = INPUT_KEYBOARD;
+              inputs[1].ki = {VK_CAPITAL, 0, KEYEVENTF_KEYUP, 0, 0};
+              ::SendInput(sizeof(inputs) / sizeof(INPUT), inputs,
+                          sizeof(INPUT));
+            }
+          }
+          *pfEaten = TRUE;
+        }
+        if (keyCountToSimulate)
+          keyCountToSimulate--;
+      }
+
+      if (backspaceHeldWhenComposing)
+        *pfEaten = TRUE;
     }
 
     prevfEaten = *pfEaten;
