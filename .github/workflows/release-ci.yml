@@ -12,7 +12,7 @@ jobs:
   build-and-release:
     permissions:
       contents: write
-    runs-on: windows-2019
+    runs-on: windows-latest
     env:
       boost_version: 1.84.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
