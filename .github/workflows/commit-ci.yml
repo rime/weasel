@@ -66,7 +66,7 @@ jobs:
       - name: Configure build environment
         shell: bash
         run: |
-          cp env.vs2019.bat env.bat
+          cp env.vs2022.bat env.bat
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
 
       - name: Cache Boost
@@ -141,7 +141,7 @@ jobs:
       - name: Configure build environment
         shell: bash
         run: |
-          cp env.vs2019.bat env.bat
+          cp env.vs2022.bat env.bat
           echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
 
       - name: Cache Boost
