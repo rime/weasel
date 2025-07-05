@@ -70,13 +70,13 @@ jobs:
         env:
           RELEASE_BUILD: 1
         run: |
-          .\build.bat arm64 installer
+          .\build.bat installer
 
       - name: Build Weasel Nightly
         id: build_weasel_nightly
         if: github.ref == 'refs/heads/master'
         run: |
-          .\build.bat arm64 installer
+          .\build.bat installer
 
       - name: Compress Debug Symbols
         shell: pwsh
