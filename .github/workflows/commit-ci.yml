@@ -88,8 +88,9 @@ jobs:
           ./install_boost.bat
           ./build.bat boost arm64
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          sdk: 10.0.19041.0
 
       - name: Get Rime files
         shell: pwsh
@@ -108,7 +109,8 @@ jobs:
         id: build_weasel
         run: |
           $ErrorActionPreference = 'Stop'
-          .\build.bat installer
+          $env:SDKVER="10.0.19041.0"
+          .\build.bat arm64 installer
 
       - name: Compress Debug Symbols
         shell: pwsh
@@ -170,6 +172,8 @@ jobs:
           actions-cache-folder: '.xmake-cache'
 
       - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          sdk: 10.0.19041.0
 
       - name: Get Rime files
         shell: pwsh
@@ -187,5 +191,6 @@ jobs:
         id: build_weasel
         shell: cmd
         run: |
-          .\xbuild.bat installer
+          set SDKVER=10.0.19041.0
+          .\xbuild.bat arm64 installer
 
