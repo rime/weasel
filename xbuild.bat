@@ -158,25 +158,28 @@ if %build_commands% == 1 (
   xmake project -k compile_commands -m %build_config%
 )
 
+if defined SDKVER set build_sdk_option=--vs_sdkver=%SDKVER% -c
+if not defined SDKVER set build_sdk_option=
+
 rem if to clean
 if %build_clean% == 1 ( goto clean )
 if %build_weasel% == 0 ( goto end )
 
 if %build_arm64% == 1 (
-  xmake f -a arm64 -m %build_config%
+  xmake f -a arm64 -m %build_config% %build_sdk_option%
   if %build_rebuild% == 1 ( xmake clean )
   xmake
   if errorlevel 1 goto error
-  xmake f -a arm  -m %build_config%
+  xmake f -a arm  -m %build_config% %build_sdk_option%
   if %build_rebuild% == 1 ( xmake clean )
   xmake
   if errorlevel 1 goto error
 )
-xmake f -a x64 -m %build_config%
+xmake f -a x64 -m %build_config% %build_sdk_option%
 if %build_rebuild% == 1 ( xmake clean )
 xmake
 if errorlevel 1 goto error
-xmake f -a x86 -m %build_config%
+xmake f -a x86 -m %build_config% %build_sdk_option%
 if %build_rebuild% == 1 ( xmake clean )
 xmake
 if errorlevel 1 goto error
