@@ -108,7 +108,7 @@ jobs:
         id: build_weasel
         run: |
           $ErrorActionPreference = 'Stop'
-          .\build.bat installer
+          .\build.bat arm64 installer
 
       - name: Compress Debug Symbols
         shell: pwsh
@@ -187,5 +187,5 @@ jobs:
         id: build_weasel
         shell: cmd
         run: |
-          .\xbuild.bat installer
+          .\xbuild.bat arm64 installer
 
