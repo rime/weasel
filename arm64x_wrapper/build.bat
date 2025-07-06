@@ -5,6 +5,8 @@ setlocal
 call :find_toolchain
 if errorlevel 1 exit /b 1
 
+echo Windows SDK Version = %WindowsSDKVersion:~0,-1%
+
 REM Build dummy object files
 cl.exe /c /Fo:dummy.o dummy.c || exit /b 1
 cl.exe /c /arm64EC /Fo:dummy_x64.o dummy.c || exit /b 1
