@@ -151,12 +151,28 @@ void RimeWithWeaselHandler::Initialize() {
   }
 
   LOG(INFO) << "Initializing la rime.";
-  rime_api->initialize(NULL);
-#if 0
+
+  RIME_STRUCT(RimeTraits, weasel_traits);
+  std::string shared_dir = wtou8(WeaselSharedDataPath().wstring());
+  std::string user_dir = wtou8(WeaselUserDataPath().wstring());
+  weasel_traits.shared_data_dir = shared_dir.c_str();
+  weasel_traits.user_data_dir = user_dir.c_str();
+  weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
+  std::string distribution_name = wtou8(get_weasel_ime_name());
+  weasel_traits.distribution_name = distribution_name.c_str();
+  weasel_traits.distribution_code_name = WEASEL_CODE_NAME;
+  weasel_traits.distribution_version = WEASEL_VERSION;
+  weasel_traits.app_name = "rime.weasel";
+  std::string log_dir = WeaselLogPath().u8string();
+  weasel_traits.log_dir = log_dir.c_str();
+
+  rime_api->initialize(&weasel_traits);
+
   if (rime_api->start_maintenance(/*full_check = */ False)) {
     m_disabled = true;
+    rime_api->deploy_config_file("ibus_rime.yaml", "config_version");
   }
-#endif
+
   CleanOldLogs();
 
   RimeConfig config = {NULL};

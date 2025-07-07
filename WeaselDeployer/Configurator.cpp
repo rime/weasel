@@ -49,7 +49,7 @@ void Configurator::Initialize() {
   assert(rime_api);
   rime_api->setup(&weasel_traits);
   LOG(INFO) << "WeaselDeployer reporting.";
-  rime_api->deployer_initialize(NULL);
+  rime_api->deployer_initialize(&weasel_traits);
 }
 
 static bool configure_switcher(RimeLeversApi* api,
