@@ -19,23 +19,8 @@ jobs:
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Check sources changed
-        id: check_sources_changed
-        run: |
-          # check if any source files have changed, when no source files changed, skip the lint job
-          if git diff --name-only HEAD^ HEAD | grep -qE '(\.cpp|\.h|\.hpp|\.cxx|\.cc|\.c)$'; then
-            echo "Source files changed, proceeding with lint job."
-            echo "skip_lint=false" >> $GITHUB_OUTPUT
-          else
-            echo "No source files changed, skipping lint job."
-            echo "skip_lint=true" >> $GITHUB_OUTPUT
-          fi
 
       - name: Install clang-format 18
-        if: steps.check_sources_changed.outputs.skip_lint == 'false'
         run: |
           wget https://apt.llvm.org/llvm-snapshot.gpg.key
           sudo gpg --dearmor < llvm-snapshot.gpg.key > /usr/share/keyrings/llvm-archive-keyring.gpg
@@ -46,7 +31,6 @@ jobs:
           clang-format --version
 
       - name: Code style lint
-        if: steps.check_sources_changed.outputs.skip_lint == 'false'
         shell: bash
         run: ./clang-format.sh -i
 
