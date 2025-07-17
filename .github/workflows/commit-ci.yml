@@ -15,33 +15,21 @@ on:
 
 jobs:
   lint:
-    runs-on: windows-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v4
-      - name: Install llvm if necessary
-        shell: pwsh
+
+      - name: Install clang-format 18
         run: |
-          $version = ""
-          if (Get-Command "clang-format" -ErrorAction SilentlyContinue){
-            $version = clang-format --version
-            $pat = ".*\s+(\d+\.\d+\.\d+)"
-            if ($version -match $pat) {
-              $version = $matches[1]
-            }
-          }
-          if ($version -ne "") {
-            Write-Host "clang-format version：$version"
-            if ([version]$version -ge [version]"18.1.6") {
-              Write-Host "clang-format OK"
-            } else {
-              Write-Host "clang-format vesion does not meet"
-              choco install llvm --version=18.1.6
-            }
-          } else {
-            Write-Host "clang-format not installed"
-            choco install llvm --version=18.1.6
-          }
+          wget https://apt.llvm.org/llvm-snapshot.gpg.key
+          sudo gpg --dearmor < llvm-snapshot.gpg.key > /usr/share/keyrings/llvm-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/llvm-archive-keyring.gpg] http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main" | sudo tee /etc/apt/sources.list.d/llvm-toolchain-jammy-18.list
+          sudo apt-get update
+          sudo apt-get install -y clang-format-18
+          sudo ln -sf /usr/bin/clang-format-18 /usr/local/bin/clang-format
+          clang-format --version
+
       - name: Code style lint
         shell: bash
         run: ./clang-format.sh -i
@@ -84,8 +72,9 @@ jobs:
           ./install_boost.bat
           ./build.bat boost arm64
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          sdk: 10.0.19041.0
 
       - name: Get Rime files
         shell: pwsh
@@ -104,6 +93,7 @@ jobs:
         id: build_weasel
         run: |
           $ErrorActionPreference = 'Stop'
+          $env:SDKVER="10.0.19041.0"
           .\build.bat arm64 installer
 
       - name: Compress Debug Symbols
@@ -166,6 +156,8 @@ jobs:
           actions-cache-folder: '.xmake-cache'
 
       - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          sdk: 10.0.19041.0
 
       - name: Get Rime files
         shell: pwsh
@@ -183,5 +175,6 @@ jobs:
         id: build_weasel
         shell: cmd
         run: |
+          set SDKVER=10.0.19041.0
           .\xbuild.bat arm64 installer
 
