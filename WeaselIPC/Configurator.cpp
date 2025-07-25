@@ -19,5 +19,11 @@ void Configurator::Store(Deserializer::KeyType const& key,
   bool bool_value = (!value.empty() && value != L"0");
   if (key[1] == L"inline_preedit") {
     m_pTarget->p_config->inline_preedit = bool_value;
+    return;
+  }
+
+  if (key[1] == L"hide_ime_mode_icon") {
+    m_pTarget->p_config->hide_ime_mode_icon = bool_value;
+    return;
   }
 }
