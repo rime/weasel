@@ -57,6 +57,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
       m_style(ui.style()),
       m_ostyle(ui.ostyle()),
       m_candidateCount(0),
+	  m_lastCandidateCount(0),
       m_current_zhung_icon(),
       m_inputPos(CRect()),
       m_sticky(false),
@@ -133,6 +134,11 @@ void WeaselPanel::Refresh() {
   bool should_show_icon =
       (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
   m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
+  // When the candidate window changes from having content to having no content, reset the sticky state
+  if (m_lastCandidateCount > 0 && m_candidateCount == 0) {
+    m_sticky = false;
+  }
+  m_lastCandidateCount = m_candidateCount;
   // check if to hide candidates window
   // show tips status, two kind of situation: 1) only aux strings, don't care
   // icon status; 2)only icon(ascii mode switching)
@@ -1121,6 +1127,30 @@ void WeaselPanel::MoveTo(RECT const& rc) {
   if (!m_layout)
     return;  // avoid handling nullptr in _RepositionWindow
   m_redraw_by_monitor_change = false;
+  // The conditions for resetting the sticky state:
+  // 1. When the input session ends (ctx.empty() is true)
+  // 2. When the input position changes significantly (the position change exceeds the threshold)
+  // 3. When the content of the candidate window is empty
+  bool should_reset_sticky = false;
+  if (m_ctx.empty()) {
+    // When the input session ends, reset the sticky state
+    should_reset_sticky = true;
+  } else if (abs(rc.left - m_inputPos.left) > 50 || abs(rc.bottom - m_inputPos.bottom) > 50) {
+    // If the input position changes significantly (more than 50 pixels), reset the sticky state
+    should_reset_sticky = true;
+  } else if (m_ctx.cinfo.candies.empty() && !m_status.composing) {
+    // If the candidate window content is empty and not in the input state, reset the sticky state
+    should_reset_sticky = true;
+  }
+  if (should_reset_sticky && m_sticky) {
+    m_sticky = false;
+    // Force reposition the window
+    m_inputPos = rc;
+    m_inputPos.OffsetRect(0, 6);
+    _RepositionWindow(true);
+    RedrawWindow();
+    return;
+  }
   // if ascii_tip_follow_cursor set, move tip icon to mouse cursor
   if (m_style.ascii_tip_follow_cursor && m_ctx.empty() &&
       (!m_status.composing) && m_layout->ShouldDisplayStatusIcon()) {
