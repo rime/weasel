@@ -241,7 +241,6 @@ program_files:
     File "weaselx64.dll"
   ${EndIf}
   ${If} ${IsNativeARM64}
-    File /nonfatal "weaselARM.dll"
     File /nonfatal "weaselARM64.dll"
     File /nonfatal "weaselARM64X.dll"
   ${EndIf}
@@ -250,7 +249,6 @@ program_files:
     File "weaselx64.ime"
   ${EndIf}
   ${If} ${IsNativeARM64}
-    File /nonfatal "weaselARM.ime"
     File /nonfatal "weaselARM64.ime"
     File /nonfatal "weaselARM64X.ime"
   ${EndIf}

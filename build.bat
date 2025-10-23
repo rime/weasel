@@ -196,20 +196,14 @@ cscript.exe render.js weasel.props %WEASEL_PROJECT_PROPERTIES%
 
 del msbuild*.log
 
-if defined SDKVER set build_sdk_option=/p:WindowsTargetPlatformVersion=%SDKVER%
-if not defined SDKVER set build_sdk_option=
-
 if %build_arm64% == 1 (
-
-  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="ARM" /fl6 %build_sdk_option%
-  if errorlevel 1 goto error
-  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="ARM64" /fl5 %build_sdk_option%
+  msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="ARM64" /fl5
   if errorlevel 1 goto error
 )
 
-msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2 %build_sdk_option%
+msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="x64" /fl2
 if errorlevel 1 goto error
-msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1 %build_sdk_option%
+msbuild.exe weasel.sln %build_option% /p:Configuration=%build_config% /p:Platform="Win32" /fl1
 if errorlevel 1 goto error
 
 if %build_arm64% == 1 (
@@ -260,11 +254,6 @@ rem build boost
     architecture=x86^
     address-model=64
   
-  set BJAM_OPTIONS_ARM32=%BJAM_OPTIONS_COMMON%^
-    define=BOOST_USE_WINAPI_VERSION=0x0A00^
-    architecture=arm^
-    address-model=32
-  
   set BJAM_OPTIONS_ARM64=%BJAM_OPTIONS_COMMON%^
     define=BOOST_USE_WINAPI_VERSION=0x0A00^
     architecture=arm^
@@ -279,8 +268,6 @@ rem build boost
   if errorlevel 1 goto error
   
   if %build_arm64% == 1 (
-    b2 %BJAM_OPTIONS_ARM32% stage %BOOST_COMPILED_LIBS%
-    if errorlevel 1 goto error
     b2 %BJAM_OPTIONS_ARM64% stage %BOOST_COMPILED_LIBS%
     if errorlevel 1 goto error
   )

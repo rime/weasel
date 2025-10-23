@@ -37,8 +37,6 @@ if is_arch("x64") then
 elseif is_arch("x86") then
   add_linkdirs("$(projectdir)/lib")
   add_linkdirs(atl_lib_dir .. "/x86")
-elseif is_arch("arm") then
-  add_linkdirs(atl_lib_dir .. "/arm")
 elseif is_arch("arm64") then
   add_linkdirs(atl_lib_dir .. "/arm64")
 end

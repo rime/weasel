@@ -21,8 +21,6 @@ target("WeaselIME")
     fname = "weasel.ime"
   elseif is_arch("x64") then
     fname = "weaselx64.ime"
-  elseif is_arch("arm") then
-    fname = "weaselARM.ime"
   elseif is_arch("arm64") then
     fname = "weaselARM64.ime"
   end

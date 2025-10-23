@@ -8,8 +8,6 @@ target("WeaselTSF")
     fname = "weasel.dll"
   elseif is_arch("x64") then
     fname = "weaselx64.dll"
-  elseif is_arch("arm") then
-    fname = "weaselARM.dll"
   elseif is_arch("arm64") then
     fname = "weaselARM64.dll"
   end
