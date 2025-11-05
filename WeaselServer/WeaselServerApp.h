@@ -41,6 +41,9 @@ class WeaselServerApp {
                                  L"UpdateChannel", channel);
     if (!ret && channel == L"testing") {
       feed_url = GetCustomResource("TestingManualUpdateFeedURL", "APPCAST");
+    } else if (!wcsncmp(channel.c_str(), L"http://", wcslen(L"http://")) ||
+               !wcsncmp(channel.c_str(), L"https://", wcslen(L"https://"))) {
+      feed_url = wtou8(channel);
     }
     if (!feed_url.empty()) {
       win_sparkle_set_appcast_url(feed_url.c_str());
