@@ -85,36 +85,9 @@ BOOL is_arm64_machine() {
   return nativeMachine == IMAGE_FILE_MACHINE_ARM64;
 }
 
-typedef HRESULT(WINAPI* PISWOWGMS)(USHORT, BOOL*);
-typedef UINT(WINAPI* PGSW64DIR2)(LPWSTR, UINT, WORD);
-INT get_wow_arm32_system_dir(LPWSTR lpBuffer, UINT uSize) {
-  PISWOWGMS fnIsWow64GuestMachineSupported = (PISWOWGMS)GetProcAddress(
-      GetModuleHandle(_T("kernel32.dll")), "IsWow64GuestMachineSupported");
-  PGSW64DIR2 fnGetSystemWow64Directory2W = (PGSW64DIR2)GetProcAddress(
-      GetModuleHandle(_T("kernelbase.dll")), "GetSystemWow64Directory2W");
-
-  if (fnIsWow64GuestMachineSupported == NULL ||
-      fnGetSystemWow64Directory2W == NULL) {
-    return 0;
-  }
-
-  BOOL supported;
-  if (fnIsWow64GuestMachineSupported(IMAGE_FILE_MACHINE_ARMNT, &supported) !=
-      S_OK) {
-    return 0;
-  }
-
-  if (!supported) {
-    return 0;
-  }
-
-  return fnGetSystemWow64Directory2W(lpBuffer, uSize, IMAGE_FILE_MACHINE_ARMNT);
-}
-
 typedef int (*ime_register_func)(const std::wstring& ime_path,
                                  bool register_ime,
                                  bool is_wow64,
-                                 bool is_wowarm,
                                  bool hant,
                                  bool silent);
 
@@ -145,7 +118,7 @@ int install_ime_file(std::wstring& srcPath,
                           MB_ICONERROR | MB_OK);
     return 1;
   }
-  retval += func(destPath, true, false, false, hant, silent);
+  retval += func(destPath, true, false, hant, silent);
   if (is_wow64()) {
     PVOID OldValue = NULL;
     // PW64DW64FR fnWow64DisableWow64FsRedirection =
@@ -161,23 +134,7 @@ int install_ime_file(std::wstring& srcPath,
     }
 
     if (is_arm64_machine()) {
-      WCHAR sysarm32[MAX_PATH];
-      if (get_wow_arm32_system_dir(sysarm32, _countof(sysarm32)) > 0) {
-        // Install the ARM32 version if ARM32 WOW is supported （lower than
-        // Windows 11 24H2).
-        std::wstring srcPathARM32 = srcPath;
-        ireplace_last(srcPathARM32, ext, L"ARM" + ext);
-
-        std::wstring destPathARM32 = std::wstring(sysarm32) + L"\\weasel" + ext;
-        if (!copy_file(srcPathARM32, destPathARM32)) {
-          MSG_NOT_SILENT_ID_CAP(silent, destPathARM32.c_str(),
-                                IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
-          return 1;
-        }
-        retval += func(destPathARM32, true, true, true, hant, silent);
-      }
-
-      // Then install the ARM64 (and x64) version.
+      // Install the ARM64 (and x64) version.
       // On ARM64 weasel.dll(ime) is an ARM64X redirection DLL (weaselARM64X).
       // When loaded, it will be redirected to weaselARM64.dll(ime) on ARM64
       // processes, and weaselx64.dll(ime) on x64 processes. So we need a total
@@ -215,7 +172,7 @@ int install_ime_file(std::wstring& srcPath,
                             MB_ICONERROR | MB_OK);
       return 1;
     }
-    retval += func(destPath, true, true, false, hant, silent);
+    retval += func(destPath, true, true, hant, silent);
     if (Wow64RevertWow64FsRedirection(OldValue) == FALSE) {
       MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERRRECOVERFSREDIRECT,
                             IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
@@ -233,10 +190,10 @@ int uninstall_ime_file(const std::wstring& ext,
   GetSystemDirectoryW(path, _countof(path));
   std::wstring imePath(path);
   imePath += L"\\weasel" + ext;
-  retval += func(imePath, false, false, false, false, silent);
+  retval += func(imePath, false, false, false, silent);
   delete_file(imePath);
   if (is_wow64()) {
-    retval += func(imePath, false, true, false, false, silent);
+    retval += func(imePath, false, true, false, silent);
     PVOID OldValue = NULL;
     if (Wow64DisableWow64FsRedirection(&OldValue) == FALSE) {
       MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERRCANCELFSREDIRECT,
@@ -245,13 +202,6 @@ int uninstall_ime_file(const std::wstring& ext,
     }
 
     if (is_arm64_machine()) {
-      WCHAR sysarm32[MAX_PATH];
-      if (get_wow_arm32_system_dir(sysarm32, _countof(sysarm32)) > 0) {
-        std::wstring imePathARM32 = std::wstring(sysarm32) + L"\\weasel" + ext;
-        retval += func(imePathARM32, false, true, true, false, silent);
-        delete_file(imePathARM32);
-      }
-
       std::wstring imePathX64 = imePath;
       ireplace_last(imePathX64, ext, L"x64" + ext);
       delete_file(imePathX64);
@@ -275,7 +225,6 @@ int uninstall_ime_file(const std::wstring& ext,
 int register_ime(const std::wstring& ime_path,
                  bool register_ime,
                  bool is_wow64,
-                 bool is_wowarm,
                  bool hant,
                  bool silent) {
   if (is_wow64) {
@@ -478,7 +427,6 @@ void enable_profile(BOOL fEnable, bool hant) {
 int register_text_service(const std::wstring& tsf_path,
                           bool register_ime,
                           bool is_wow64,
-                          bool is_wowarm32,
                           bool hant,
                           bool silent) {
   using RegisterServerFunction = HRESULT(STDAPICALLTYPE*)();
@@ -504,12 +452,6 @@ int register_text_service(const std::wstring& tsf_path,
   }
 
   std::wstring app = L"regsvr32.exe";
-  if (is_wowarm32) {
-    WCHAR sysarm32[MAX_PATH];
-    get_wow_arm32_system_dir(sysarm32, _countof(sysarm32));
-
-    app = std::wstring(sysarm32) + L"\\" + app;
-  }
 
   SHELLEXECUTEINFOW shExInfo = {0};
   shExInfo.cbSize = sizeof(shExInfo);
@@ -679,3 +621,4 @@ bool has_installed() {
   return (attr != INVALID_FILE_ATTRIBUTES &&
           !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
+
