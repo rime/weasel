@@ -439,7 +439,9 @@ int register_text_service(const std::wstring& tsf_path,
     params = L" /u " + params;  // unregister
   }
   // if (silent)  // always silent
-  { params = L" /s " + params; }
+  {
+    params = L" /s " + params;
+  }
 
   if (hant) {
     if (!SetEnvironmentVariable(L"TEXTSERVICE_PROFILE", L"hant")) {
@@ -621,4 +623,3 @@ bool has_installed() {
   return (attr != INVALID_FILE_ATTRIBUTES &&
           !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
-

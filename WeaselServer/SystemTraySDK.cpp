@@ -765,7 +765,7 @@ LRESULT CSystemTray::OnTrayNotification(WPARAM wParam, LPARAM lParam) {
   if (!hTargetWnd)
     return 0L;
 
-    // Clicking with right button brings up a context menu
+  // Clicking with right button brings up a context menu
 #if defined(_WIN32_WCE)  //&& _WIN32_WCE < 211
   BOOL bAltPressed =
       ((GetKeyState(VK_MENU) & (1 << (sizeof(SHORT) * 8 - 1))) != 0);
