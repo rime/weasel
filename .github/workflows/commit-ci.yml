@@ -86,6 +86,10 @@ jobs:
           $ErrorActionPreference = 'Stop'
           .\build.bat data
 
+      - uses: repolevedavaj/install-nsis@v1.0.1
+        with:
+          nsis-version: '3.11'
+
       - name: Build Weasel
         shell: pwsh
         id: build_weasel
@@ -165,6 +169,10 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           .\build.bat data
+
+      - uses: repolevedavaj/install-nsis@v1.0.1
+        with:
+          nsis-version: '3.11'
 
       - name: Build Weasel
         id: build_weasel

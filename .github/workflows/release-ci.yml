@@ -62,6 +62,10 @@ jobs:
         run: |
           .\build.bat data
 
+      - uses: repolevedavaj/install-nsis@v1.0.1
+        with:
+          nsis-version: '3.11'
+
       - name: Build Weasel Release
         id: build_weasel
         if: startsWith(github.ref, 'refs/tags/')
