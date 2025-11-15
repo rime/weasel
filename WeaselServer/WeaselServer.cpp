@@ -61,7 +61,23 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
 
   hRes = _Module.Init(NULL, hInstance);
   ATLASSERT(SUCCEEDED(hRes));
-
+  HANDLE hMutex =
+      OpenMutexW(SYNCHRONIZE, FALSE, L"Global\\WeaselStartMaintenanceMutex");
+  if (hMutex) {
+    DWORD wr = WaitForSingleObject(hMutex, 0);
+    if (wr == WAIT_TIMEOUT) {
+      CloseHandle(hMutex);
+      return 0;
+    }
+    if (wr == WAIT_OBJECT_0 || wr == WAIT_ABANDONED) {
+      ReleaseMutex(hMutex);
+    }
+    CloseHandle(hMutex);
+  }
+  if (hMutex) {
+    ReleaseMutex(hMutex);
+    CloseHandle(hMutex);
+  }
   if (!wcscmp(L"/userdir", lpstrCmdLine)) {
     CreateDirectory(WeaselUserDataPath().c_str(), NULL);
     WeaselServerApp::explore(WeaselUserDataPath());
