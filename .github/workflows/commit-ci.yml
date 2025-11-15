@@ -36,7 +36,7 @@ jobs:
 
   build:
     needs: lint
-    runs-on: windows-latest
+    runs-on: windows-2022
     env:
       boost_version: 1.84.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
@@ -113,7 +113,7 @@ jobs:
 
   xbuild:
     needs: lint
-    runs-on: windows-latest
+    runs-on: windows-2022
     env:
       boost_version: 1.84.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
