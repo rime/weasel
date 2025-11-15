@@ -235,6 +235,20 @@ void WeaselTSF::_Reconnect() {
 static unsigned int retry = 0;
 
 bool WeaselTSF::_EnsureServerConnected() {
+  // if maintenancing, return false
+  HANDLE hMutex =
+      OpenMutexW(SYNCHRONIZE, FALSE, L"Global\\WeaselStartMaintenanceMutex");
+  if (hMutex) {
+    DWORD wr = WaitForSingleObject(hMutex, 0);
+    if (wr == WAIT_TIMEOUT) {
+      CloseHandle(hMutex);
+      return false;
+    }
+    if (wr == WAIT_OBJECT_0 || wr == WAIT_ABANDONED) {
+      ReleaseMutex(hMutex);
+    }
+    CloseHandle(hMutex);
+  }
   if (!m_client.Echo()) {
     _Reconnect();
     retry++;

@@ -116,10 +116,18 @@ void RimeWithWeaselHandler::Initialize() {
 
   LOG(INFO) << "Initializing la rime.";
   rime_api->initialize(NULL);
-  if (rime_api->start_maintenance(/*full_check = */ False)) {
-    m_disabled = true;
+  HANDLE hMutex =
+      CreateMutexW(NULL, FALSE, L"Global\\WeaselStartMaintenanceMutex");
+  if (hMutex) {
+    if (WaitForSingleObject(hMutex, 0) == WAIT_OBJECT_0) {
+      if (rime_api->start_maintenance(/*full_check = */ False)) {
+        rime_api->join_maintenance_thread();
+        m_disabled = true;
+      }
+      ReleaseMutex(hMutex);
+    }
+    CloseHandle(hMutex);
   }
-
   RimeConfig config = {NULL};
   if (rime_api->config_open("weasel", &config)) {
     if (m_ui) {
