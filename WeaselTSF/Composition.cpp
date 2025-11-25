@@ -106,15 +106,19 @@ STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec) {
   /* Clear the dummy text we set before, if any. */
   if (_pComposition == nullptr)
     return S_OK;
+  // Avoid null pointer dereference
+  if (!_pTextService || !_pContext)
+    return S_OK;
 
   _pTextService->_ClearCompositionDisplayAttributes(ec, _pContext);
 
-  ITfRange* pCompositionRange;
+  com_ptr<ITfRange> pCompositionRange;
   if (_clear && _pComposition->GetRange(&pCompositionRange) == S_OK)
     pCompositionRange->SetText(ec, 0, L"", 0);
 
   _pComposition->EndComposition(ec);
-  _pTextService->_FinalizeComposition();
+  if (_pTextService)  // if _pTextService released, skip _FinalizeComposition
+    _pTextService->_FinalizeComposition();
   return S_OK;
 }
 
