@@ -134,6 +134,7 @@ class WeaselPanel
 
   CRect rcw;
   BYTE m_candidateCount;
+  BYTE m_lastCandidateCount;
 
   bool hide_candidates;
   bool m_sticky;
