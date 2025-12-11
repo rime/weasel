@@ -149,7 +149,7 @@ void WeaselPanel::Refresh() {
   // 2. inline preedit without candidates
   bool inline_no_candidates =
       (m_style.inline_preedit && m_candidateCount == 0) && !show_tips;
-  hide_candidates = inline_no_candidates ||
+  hide_candidates = m_status.hide_candidates || inline_no_candidates ||
                     (margin_negative && !show_tips && !show_schema_menu);
 
   // only RedrawWindow if no need to hide candidates window, or

@@ -153,7 +153,8 @@ struct Status {
         ascii_mode(false),
         composing(false),
         disabled(false),
-        full_shape(false) {}
+        full_shape(false),
+        hide_candidates(false) {}
   void reset() {
     schema_name.clear();
     schema_id.clear();
@@ -161,13 +162,15 @@ struct Status {
     composing = false;
     disabled = false;
     full_shape = false;
+    hide_candidates = false;
     type = SCHEMA;
   }
   bool operator==(const Status status) {
     return (status.schema_name == schema_name &&
             status.schema_id == schema_id && status.ascii_mode == ascii_mode &&
             status.composing == composing && status.disabled == disabled &&
-            status.full_shape == full_shape && status.type == type);
+            status.full_shape == full_shape &&
+            status.hide_candidates == hide_candidates && status.type == type);
   }
   // 輸入方案
   std::wstring schema_name;
@@ -181,6 +184,8 @@ struct Status {
   bool disabled;
   // 全角状态
   bool full_shape;
+  // 是否隐藏候选列表
+  bool hide_candidates;
   // 图标类型, schema/full_shape
   IconType type;
 };

@@ -1388,6 +1388,8 @@ void RimeWithWeaselHandler::_GetStatus(Status& stat,
     stat.composing = !!status.is_composing;
     stat.disabled = !!status.is_disabled;
     stat.full_shape = !!status.is_full_shape;
+    stat.hide_candidates =
+        !!rime_api->get_option(session_id, "_hide_candidate");
     if (schema_id != m_last_schema_id) {
       session_status.__synced = false;
       m_last_schema_id = schema_id;
