@@ -381,6 +381,7 @@ std::string RimeWithWeaselHandler::m_message_type;
 std::string RimeWithWeaselHandler::m_message_value;
 std::string RimeWithWeaselHandler::m_message_label;
 std::string RimeWithWeaselHandler::m_option_name;
+std::mutex RimeWithWeaselHandler::m_notifier_mutex;
 
 void RimeWithWeaselHandler::OnNotify(void* context_object,
                                      uintptr_t session_id,
@@ -391,6 +392,7 @@ void RimeWithWeaselHandler::OnNotify(void* context_object,
       reinterpret_cast<RimeWithWeaselHandler*>(context_object);
   if (!self || !message_type || !message_value)
     return;
+  std::lock_guard<std::mutex> lock(m_notifier_mutex);
   m_message_type = message_type;
   m_message_value = message_value;
   if (RIME_API_AVAILABLE(rime_api, get_state_label) &&
@@ -560,10 +562,13 @@ void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
 
   _RefreshTrayIcon(session_id, _UpdateUICallback);
 
-  m_message_type.clear();
-  m_message_value.clear();
-  m_message_label.clear();
-  m_option_name.clear();
+  {
+    std::lock_guard<std::mutex> lock(m_notifier_mutex);
+    m_message_type.clear();
+    m_message_value.clear();
+    m_message_label.clear();
+    m_option_name.clear();
+  }
 }
 
 void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(
@@ -685,6 +690,7 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
   // show as auxiliary string
   std::wstring& tips(ctx.aux.str);
   bool show_icon = false;
+  std::lock_guard<std::mutex> lock(m_notifier_mutex);
   if (m_message_type == "deploy") {
     if (m_message_value == "start")
       if (GetThreadUILanguage() == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US))
