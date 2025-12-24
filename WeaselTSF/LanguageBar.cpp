@@ -169,7 +169,7 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click,
     HWND hwnd = _pTextService->_GetFocusedContextWindow();
     if (hwnd != NULL) {
       LANGID langid = get_language_id();
-      HMENU menu;
+      HMENU menu = NULL;
       if (langid == TEXTSERVICE_LANGID_HANS) {
         menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP_HANS));
       } else if (langid == TEXTSERVICE_LANGID_HANT) {
@@ -177,12 +177,17 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click,
       } else {
         menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
       }
-      HMENU popupMenu = GetSubMenu(menu, 0);
-      UINT wID = TrackPopupMenuEx(
-          popupMenu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION, pt.x,
-          pt.y, hwnd, NULL);
-      DestroyMenu(menu);
-      _pTextService->_HandleLangBarMenuSelect(wID);
+      if (menu) {
+        HMENU popupMenu = GetSubMenu(menu, 0);
+        if (popupMenu) {
+          UINT wID = TrackPopupMenuEx(
+              popupMenu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_HORPOSANIMATION,
+              pt.x, pt.y, hwnd, NULL);
+          _pTextService->_HandleLangBarMenuSelect(wID);
+        }
+        if (menu)
+          DestroyMenu(menu);
+      }
     }
   }
   return S_OK;
