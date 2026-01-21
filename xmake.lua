@@ -4,6 +4,7 @@ set_project("weasel")
 -- 定义全局变量
 set_xmakever("2.9.4")
 set_languages("c++17")
+set_runtimes("MT")  -- 设置运行时库为静态链接，避免/MD与/MT冲突
 add_defines("UNICODE", "_UNICODE")
 add_defines("WINDOWS")
 add_defines("MSVC")
