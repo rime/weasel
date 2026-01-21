@@ -18,32 +18,18 @@ using namespace boost;
 PipeChannelBase::PipeChannelBase(std::wstring&& pn_cmd,
                                  size_t bs = 4 * 1024,
                                  SECURITY_ATTRIBUTES* s = NULL)
-    : pname(pn_cmd),
-      write_stream(nullptr),
-      buff_size(bs),
-      buffer(std::make_unique<char[]>(bs)),
-      hpipe(INVALID_HANDLE_VALUE),
-      has_body(false),
-      sa(s) {};
-
-PipeChannelBase::PipeChannelBase(PipeChannelBase&& r)
-    : write_stream(std::move(r.write_stream)),
-      pname(std::move(r.pname)),
-      buff_size(r.buff_size),
-      buffer(std::move(r.buffer)),
-      hpipe(r.hpipe),
-      has_body(r.has_body),
-      sa(r.sa) {};
+    : pname(pn_cmd), buff_size(bs), sa(s) {};
 
 PipeChannelBase::~PipeChannelBase() {
-  _FinalizePipe(hpipe);
+  // Thread-specific pointers are cleaned up automatically
 }
 
 bool PipeChannelBase::_Ensure() {
   try {
-    if (_Invalid(hpipe)) {
-      hpipe = _Connect(pname.c_str());
-      return !_Invalid(hpipe);
+    HANDLE* phandle = _GetPipeHandle();
+    if (_Invalid(*phandle)) {
+      *phandle = _Connect(pname.c_str());
+      return !_Invalid(*phandle);
     }
   } catch (...) {
     return false;
@@ -64,7 +50,8 @@ HANDLE PipeChannelBase::_Connect(const wchar_t* name) {
 }
 
 void PipeChannelBase::_Reconnect() {
-  _FinalizePipe(hpipe);
+  HANDLE* phandle = _GetPipeHandle();
+  _FinalizePipe(*phandle);
   _Ensure();
 }
 
@@ -104,13 +91,14 @@ void PipeChannelBase::_Receive(HANDLE pipe, LPVOID msg, size_t rec_len) {
   if (!success) {
     _ThrowIfNot(ERROR_MORE_DATA);
 
-    memset(buffer.get(), 0, buff_size);
-    success = ::ReadFile(pipe, buffer.get(), buff_size, &lread, NULL);
+    auto ctx = _GetContext();
+    memset(ctx->buffer.get(), 0, buff_size);
+    success = ::ReadFile(pipe, ctx->buffer.get(), buff_size, &lread, NULL);
     if (!success) {
       _ThrowLastError;
     }
   }
-  has_body = false;
+  _GetContext()->has_body = false;
 }
 
 HANDLE PipeChannelBase::_ConnectServerPipe(std::wstring& pn) {
