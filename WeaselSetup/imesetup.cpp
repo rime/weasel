@@ -305,7 +305,7 @@ int register_ime(const std::wstring& ime_path,
             DWORD type = 0;
             ret = RegQueryValueEx(hSubKey, L"Ime File", NULL, &type,
                                   (LPBYTE)imeFile, &len);
-            if (ret = ERROR_SUCCESS) {
+            if (ret == ERROR_SUCCESS) {
               if (_wcsicmp(imeFile, L"weasel.ime") == 0) {
                 hKL = (HKL)k;  // already there
               }
