@@ -64,7 +64,7 @@ bool add_session = false;
 void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config,
                          UIStyle& style,
-                         std::string color = "");
+                         const std::string& color = std::string());
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void _RefreshTrayIcon(const RimeSessionId session_id,
@@ -953,7 +953,7 @@ static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor) {
 }
 // parse color value, with fallback value
 static Bool _RimeGetColor(RimeConfig* config,
-                          const std::string key,
+                          const std::string& key,
                           int& value,
                           const ColorFormat& fmt,
                           const unsigned int& fallback) {
@@ -1344,7 +1344,7 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
 // "color" which is default empty
 static bool _UpdateUIStyleColor(RimeConfig* config,
                                 UIStyle& style,
-                                std::string color) {
+                                const std::string& color) {
   const int BUF_SIZE = 255;
   char buffer[BUF_SIZE + 1] = {0};
   std::string color_mark = "style/color_scheme";
