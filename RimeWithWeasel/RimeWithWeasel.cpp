@@ -957,7 +957,6 @@ static Bool _RimeGetColor(RimeConfig* config,
                           int& value,
                           const ColorFormat& fmt,
                           const unsigned int& fallback) {
-  RimeApi* rime_api = rime_get_api();
   char color[256] = {0};
   if (!rime_api->config_get_string(config, key.c_str(), color, 256)) {
     value = fallback;
@@ -1032,7 +1031,6 @@ void _RimeGetBool(RimeConfig* config,
                   T& value,
                   const T& trueValue = true,
                   const T& falseValue = false) {
-  RimeApi* rime_api = rime_get_api();
   Bool tempb = False;
   if (rime_api->config_get_bool(config, key, &tempb) || cond)
     value = (!!tempb) ? trueValue : falseValue;
@@ -1044,7 +1042,6 @@ void _RimeParseStringOptWithFallback(RimeConfig* config,
                                      T& value,
                                      const std::map<std::string, T>& amap,
                                      const T& fallback) {
-  RimeApi* rime_api = rime_get_api();
   char str_buff[256] = {0};
   if (rime_api->config_get_string(config, key.c_str(), str_buff, 255)) {
     auto it = amap.find(std::string(str_buff));
@@ -1060,7 +1057,6 @@ void _RimeGetIntStr(RimeConfig* config,
                     const char* fb_key = nullptr,
                     const void* fb_value = nullptr,
                     const std::function<void(T&)>& func = nullptr) {
-  RimeApi* rime_api = rime_get_api();
   if constexpr (std::is_same<T, int>::value) {
     if (!rime_api->config_get_int(config, key, &value) && fb_key != 0)
       rime_api->config_get_int(config, fb_key, &value);
