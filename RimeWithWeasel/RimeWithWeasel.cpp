@@ -19,13 +19,6 @@
    ((value & 0x00ff0000) >> 8) | ((value & 0x0000ff00) << 8))
 typedef enum { COLOR_ABGR = 0, COLOR_ARGB, COLOR_RGBA } ColorFormat;
 
-#ifdef USE_SHARP_COLOR_CODE
-#define HEX_REGEX std::regex("^(0x|#)[0-9a-f]+$", std::regex::icase)
-#define TRIMHEAD_REGEX std::regex("0x|#", std::regex::icase)
-#else
-#define HEX_REGEX std::regex("^0x[0-9a-f]+$", std::regex::icase)
-#define TRIMHEAD_REGEX std::regex("0x", std::regex::icase)
-#endif
 using namespace weasel;
 
 static RimeApi* rime_api;
@@ -927,27 +920,37 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
                      });
 }
 
+// Blend foreground and background ARGB colors taking alpha into account.
+// Returns an ABGR COLORREF with premultiplied alpha blended result.
 static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor) {
-  // 提取各通道的值
-  BYTE fA = (fcolor >> 24) & 0xFF;  // 获取前景的 alpha 通道
-  BYTE fB = (fcolor >> 16) & 0xFF;  // 获取前景的 blue 通道
-  BYTE fG = (fcolor >> 8) & 0xFF;   // 获取前景的 green 通道
-  BYTE fR = fcolor & 0xFF;          // 获取前景的 red 通道
-  BYTE bA = (bcolor >> 24) & 0xFF;  // 获取背景的 alpha 通道
-  BYTE bB = (bcolor >> 16) & 0xFF;  // 获取背景的 blue 通道
-  BYTE bG = (bcolor >> 8) & 0xFF;   // 获取背景的 green 通道
-  BYTE bR = bcolor & 0xFF;          // 获取背景的 red 通道
-  // 将 alpha 通道转换为 [0, 1] 的浮动值
+  // Extract ARGB channels from both colors.
+  BYTE fA = (fcolor >> 24) & 0xFF;
+  BYTE fB = (fcolor >> 16) & 0xFF;
+  BYTE fG = (fcolor >> 8) & 0xFF;
+  BYTE fR = fcolor & 0xFF;
+  BYTE bA = (bcolor >> 24) & 0xFF;
+  BYTE bB = (bcolor >> 16) & 0xFF;
+  BYTE bG = (bcolor >> 8) & 0xFF;
+  BYTE bR = bcolor & 0xFF;
+  // Convert alpha to [0,1]
   float fAlpha = fA / 255.0f;
   float bAlpha = bA / 255.0f;
-  // 计算每个通道的加权平均值
+  // Result alpha
   float retAlpha = fAlpha + (1 - fAlpha) * bAlpha;
-  // 混合红、绿、蓝通道
-  BYTE retR = (BYTE)((fR * fAlpha + bR * bAlpha * (1 - fAlpha)) / retAlpha);
-  BYTE retG = (BYTE)((fG * fAlpha + bG * bAlpha * (1 - fAlpha)) / retAlpha);
-  BYTE retB = (BYTE)((fB * fAlpha + bB * bAlpha * (1 - fAlpha)) / retAlpha);
-  // 返回合成后的颜色
-  return (BYTE)(retAlpha * 255) << 24 | retB << 16 | retG << 8 | retR;
+  if (retAlpha <= 1e-6f) {
+    // Fully transparent result — return background unchanged as fallback.
+    return bcolor;
+  }
+  auto mix = [&](float fc, float bc) -> BYTE {
+    return static_cast<BYTE>((fc * fAlpha + bc * bAlpha * (1 - fAlpha)) /
+                             retAlpha);
+  };
+  BYTE retR = mix(fR, bR);
+  BYTE retG = mix(fG, bG);
+  BYTE retB = mix(fB, bB);
+  BYTE outA = static_cast<BYTE>(retAlpha * 255.0f);
+  return (static_cast<COLORREF>(outA) << 24) | (retB << 16) | (retG << 8) |
+         retR;
 }
 // parse color value, with fallback value
 static Bool _RimeGetColor(RimeConfig* config,
@@ -962,54 +965,64 @@ static Bool _RimeGetColor(RimeConfig* config,
     return False;
   }
   const auto color_str = std::string(color);
-  const auto make_opaque = [&](int& value) {
-    value = (fmt != COLOR_RGBA) ? (value | 0xff000000)
-                                : ((value << 8) | 0x000000ff);
-  };
-  const auto ConvertColorToAbgr = [](int color, ColorFormat fmt = COLOR_ABGR) {
-    if (fmt == COLOR_ABGR)
-      return color & 0xffffffff;
-    else if (fmt == COLOR_ARGB)
-      return ARGB2ABGR(color) & 0xffffffff;
-    else
-      return RGBA2ABGR(color) & 0xffffffff;
-  };
-  if (std::regex_match(color_str, HEX_REGEX)) {
-    auto tmp = std::regex_replace(color_str, TRIMHEAD_REGEX, "").substr(0, 8);
-    switch (tmp.length()) {
-      case 6:  // color code without alpha, xxyyzz add alpha ff
-        value = std::stoul(tmp, 0, 16);
-        make_opaque(value);
-        break;
-      case 3:  // color hex code xyz => xxyyzz and alpha ff
-        tmp = std::string(2, tmp[0]) + std::string(2, tmp[1]) +
-              std::string(2, tmp[2]);
-        value = std::stoul(tmp, 0, 16);
-        make_opaque(value);
-        break;
-      case 4:  // color hex code vxyz => vvxxyyzz
-        tmp = std::string(2, tmp[0]) + std::string(2, tmp[1]) +
-              std::string(2, tmp[2]) + std::string(2, tmp[3]);
-        value = std::stoul(tmp, 0, 16);
-        break;
-      case 7:
-      case 8:  // color code with alpha
-        value = std::stoul(tmp, 0, 16);
-        break;
-      default:  // invalid length
-        value = fallback;
-        return False;
+  // adjudge if str is 0x 0X # hex color format, return trimmed hex part
+  // out part is 6 or 8 length hex string without white space
+  const auto parse_color_code = [](const std::string& str, std::string& out) {
+    if (str.empty())
+      return false;
+    size_t start = 0;
+    if (str[0] == '#') {
+      start = 1;
+    } else if (str.size() >= 2 &&
+               (str.compare(0, 2, "0x") == 0 || str.compare(0, 2, "0X") == 0)) {
+      start = 2;
+    } else {
+      return false;
     }
+    const std::string hex_part = str.substr(start);
+    if (hex_part.empty())
+      return false;
+    if ((start == 1 || start == 2) && hex_part.length() != 3 &&
+        hex_part.length() != 4 && hex_part.length() != 6 &&
+        hex_part.length() != 8) {
+      return false;
+    }
+    for (char c : hex_part) {
+      if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+            (c >= 'A' && c <= 'F')))
+        return false;
+    }
+    out = str.substr(start).substr(0, 8);
+#define _2C(c) std::string(2, c)
+    if (out.size() == 3)
+      out = _2C(out[0]) + _2C(out[1]) + _2C(out[2]);
+    else if (out.size() == 4)
+      out = _2C(out[0]) + _2C(out[1]) + _2C(out[2]) + _2C(out[3]);
+#undef _2C
+    return true;
+  };
+  auto hex_color = std::string();
+  if (parse_color_code(color_str, hex_color)) {
+    value = std::stoul(hex_color, 0, 16);
+    if (hex_color.length() == 6)
+      value = (fmt != COLOR_RGBA) ? (value | 0xff000000)
+                                  : (((unsigned int)value << 8) | 0x000000ff);
   } else {
-    int tmp = 0;
-    if (!rime_api->config_get_int(config, key.c_str(), &tmp)) {
+    if (!rime_api->config_get_int(config, key.c_str(), &value)) {
       value = fallback;
       return False;
-    } else
-      value = tmp;
-    make_opaque(value);
+    }
+    if (value <= 0xffffff)
+      value = (fmt != COLOR_RGBA) ? (value | 0xff000000)
+                                  : (((unsigned int)value << 8) | 0x000000ff);
+    else if (value > 0xffffffff)
+      value &= 0xffffffff;
   }
-  value = ConvertColorToAbgr(value, fmt);
+  if (fmt == COLOR_ARGB)
+    value = ARGB2ABGR(value);
+  else if (fmt == COLOR_RGBA)
+    value = RGBA2ABGR(value);
+  value &= 0xffffffff;
   return True;
 }
 // parset bool type configuration to T type value trueValue / falseValue
@@ -1066,37 +1079,63 @@ void _RimeGetIntStr(RimeConfig* config,
     func(value);
 }
 
+// Helper to iterate a Rime map and invoke callback with key/path
+static void ForEachRimeMap(
+    RimeConfig* config,
+    const std::string& path,
+    const std::function<void(const char* key, const char* child_path)>& cb) {
+  RimeConfigIterator iter;
+  if (!rime_api->config_begin_map(&iter, config, path.c_str()))
+    return;
+  while (rime_api->config_next(&iter)) {
+    cb(iter.key, iter.path);
+  }
+  rime_api->config_end(&iter);
+}
+
+// Helper to iterate a Rime list and invoke callback with item path
+static void ForEachRimeList(
+    RimeConfig* config,
+    const std::string& path,
+    const std::function<void(const char* item_path)>& cb) {
+  RimeConfigIterator iter;
+  if (!rime_api->config_begin_list(&iter, config, path.c_str()))
+    return;
+  while (rime_api->config_next(&iter)) {
+    cb(iter.path);
+  }
+  rime_api->config_end(&iter);
+}
+
 void RimeWithWeaselHandler::_UpdateShowNotifications(RimeConfig* config,
                                                      bool initialize) {
   Bool show_notifications = true;
-  RimeConfigIterator iter;
   if (initialize)
     m_show_notifications_base.clear();
   m_show_notifications.clear();
 
   if (rime_api->config_get_bool(config, "show_notifications",
                                 &show_notifications)) {
-    // config read as bool, for gloal all on or off
+    // config read as bool, for global all on or off
     if (show_notifications)
       m_show_notifications["always"] = true;
     if (initialize)
       m_show_notifications_base = m_show_notifications;
-  } else if (rime_api->config_begin_list(&iter, config, "show_notifications")) {
-    // config read as list, list item should be option name in schema
-    // or key word 'schema' for schema switching tip
-    while (rime_api->config_next(&iter)) {
+  } else {
+    // read as list using helper
+    ForEachRimeList(config, "show_notifications", [&](const char* item_path) {
       char buffer[256] = {0};
-      if (rime_api->config_get_string(config, iter.path, buffer, 256))
+      if (rime_api->config_get_string(config, item_path, buffer, 256))
         m_show_notifications[std::string(buffer)] = true;
-    }
+    });
     if (initialize)
       m_show_notifications_base = m_show_notifications;
-    rime_api->config_end(&iter);
-  } else {
-    // not configured, or incorrect type
-    if (initialize)
-      m_show_notifications_base["always"] = true;
-    m_show_notifications = m_show_notifications_base;
+    if (m_show_notifications.empty()) {
+      // not configured, or incorrect type
+      if (initialize)
+        m_show_notifications_base["always"] = true;
+      m_show_notifications = m_show_notifications_base;
+    }
   }
 }
 
@@ -1362,25 +1401,20 @@ static bool _UpdateUIStyleColor(RimeConfig* config,
   }
   return false;
 }
-
 static void _LoadAppOptions(RimeConfig* config,
                             AppOptionsByAppName& app_options) {
   app_options.clear();
-  RimeConfigIterator app_iter;
-  RimeConfigIterator option_iter;
-  rime_api->config_begin_map(&app_iter, config, "app_options");
-  while (rime_api->config_next(&app_iter)) {
-    AppOptions& options(app_options[app_iter.key]);
-    rime_api->config_begin_map(&option_iter, config, app_iter.path);
-    while (rime_api->config_next(&option_iter)) {
-      Bool value = False;
-      if (rime_api->config_get_bool(config, option_iter.path, &value)) {
-        options[option_iter.key] = !!value;
-      }
-    }
-    rime_api->config_end(&option_iter);
-  }
-  rime_api->config_end(&app_iter);
+  ForEachRimeMap(
+      config, "app_options", [&](const char* app_key, const char* app_path) {
+        AppOptions& options(app_options[app_key]);
+        ForEachRimeMap(
+            config, app_path, [&](const char* opt_key, const char* opt_path) {
+              Bool value = False;
+              if (rime_api->config_get_bool(config, opt_path, &value)) {
+                options[opt_key] = !!value;
+              }
+            });
+      });
 }
 
 void RimeWithWeaselHandler::_GetStatus(Status& stat,
