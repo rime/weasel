@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <map>
 #include <array>
+#include <vector>
 #include <regex>
 #include <rime_api.h>
 
@@ -749,35 +750,42 @@ inline std::string _GetLabelText(const std::vector<Text>& labels,
 }
 
 bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
-  std::set<std::string> actions;
-  std::list<std::string> messages;
+  std::wstring body;
+  body.reserve(4096);
+  std::vector<const char*> actions;
+  actions.reserve(8);
 
   SessionStatus& session_status = get_session_status(ipc_id);
   RimeSessionId session_id = session_status.session_id;
   RIME_STRUCT(RimeCommit, commit);
   if (rime_api->get_commit(session_id, &commit)) {
-    actions.insert("commit");
-
-    std::string commit_text = escape_string<char>(commit.text);
-    messages.push_back(std::string("commit=") + commit_text + '\n');
+    actions.push_back("commit");
+    std::wstring commit_text_w = escape_string(u8tow(commit.text));
+    body.append(L"commit=").append(commit_text_w).append(L"\n");
     rime_api->free_commit(&commit);
   }
 
   bool is_composing = false;
   RIME_STRUCT(RimeStatus, status);
+  static const std::wstring Bool_wstring[] = {L"0", L"1"};
   if (rime_api->get_status(session_id, &status)) {
     is_composing = !!status.is_composing;
-    actions.insert("status");
-    messages.push_back(std::string("status.ascii_mode=") +
-                       std::to_string(status.is_ascii_mode) + '\n');
-    messages.push_back(std::string("status.composing=") +
-                       std::to_string(status.is_composing) + '\n');
-    messages.push_back(std::string("status.disabled=") +
-                       std::to_string(status.is_disabled) + '\n');
-    messages.push_back(std::string("status.full_shape=") +
-                       std::to_string(status.is_full_shape) + '\n');
-    messages.push_back(std::string("status.schema_id=") +
-                       std::string(status.schema_id) + '\n');
+    actions.push_back("status");
+    body.append(L"status.ascii_mode=")
+        .append(Bool_wstring[!!status.is_ascii_mode])
+        .append(L"\n")
+        .append(L"status.composing=")
+        .append(Bool_wstring[!!status.is_composing])
+        .append(L"\n")
+        .append(L"status.disabled=")
+        .append(Bool_wstring[!!status.is_disabled])
+        .append(L"\n")
+        .append(L"status.full_shape=")
+        .append(Bool_wstring[!!status.is_full_shape])
+        .append(L"\n")
+        .append(L"status.schema_id=")
+        .append(status.schema_id ? u8tow(status.schema_id) : std::wstring())
+        .append(L"\n");
     if (m_global_ascii_mode &&
         (session_status.status.is_ascii_mode != status.is_ascii_mode)) {
       for (auto& pair : m_session_status_map) {
@@ -798,79 +806,93 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
       _GetCandidateInfo(cinfo, ctx);
     }
     if (is_composing) {
-      actions.insert("ctx");
+      const auto& preedit = ctx.composition.preedit;
+      const auto& start = ctx.composition.sel_start;
+      const auto& end = ctx.composition.sel_end;
+      const auto& cursor = ctx.composition.cursor_pos;
+      static const auto u8towstring = [](const char* u8str, int len = 0) {
+        return std::to_wstring(utf8towcslen(u8str, len));
+      };
+      actions.push_back("ctx");
       switch (session_status.style.preedit_type) {
-        case UIStyle::PREVIEW:
-          if (ctx.commit_text_preview != NULL) {
-            std::string first = ctx.commit_text_preview;
-            messages.push_back(std::string("ctx.preedit=") +
-                               escape_string<char>(first) + '\n');
-            messages.push_back(
-                std::string("ctx.preedit.cursor=") +
-                std::to_string(utf8towcslen(first.c_str(), 0)) + ',' +
-                std::to_string(utf8towcslen(first.c_str(), (int)first.size())) +
-                ',' +
-                std::to_string(utf8towcslen(first.c_str(), (int)first.size())) +
-                '\n');
+        case UIStyle::PREVIEW: {
+          if (ctx.commit_text_preview) {
+            const char* first_utf8 = ctx.commit_text_preview;
+            const size_t first_len = std::strlen(first_utf8);
+            const std::wstring first_w = escape_string(u8tow(first_utf8));
+            const std::wstring tmp = u8towstring(first_utf8, (int)first_len);
+            body.append(L"ctx.preedit=")
+                .append(first_w)
+                .append(L"\n")
+                .append(L"ctx.preedit.cursor=")
+                .append(u8towstring(first_utf8, 0))
+                .append(L",")
+                .append(tmp)
+                .append(L",")
+                .append(tmp)
+                .append(L"\n");
             break;
           }
           // no preview, fall back to composition
-        case UIStyle::COMPOSITION:
-          messages.push_back(std::string("ctx.preedit=") +
-                             escape_string<char>(ctx.composition.preedit) +
-                             '\n');
-          if (ctx.composition.sel_start <= ctx.composition.sel_end) {
-            messages.push_back(
-                std::string("ctx.preedit.cursor=") +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.sel_start)) +
-                ',' +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.sel_end)) +
-                ',' +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.cursor_pos)) +
-                '\n');
+        }
+        case UIStyle::COMPOSITION: {
+          body.append(L"ctx.preedit=")
+              .append(escape_string(u8tow(preedit)))
+              .append(L"\n");
+          if (start <= end) {
+            body.append(L"ctx.preedit.cursor=")
+                .append(u8towstring(preedit, start))
+                .append(L",")
+                .append(u8towstring(preedit, end))
+                .append(L",")
+                .append(u8towstring(preedit, cursor))
+                .append(L"\n");
           }
           break;
-        case UIStyle::PREVIEW_ALL:
-          std::string topush = std::string("ctx.preedit=") +
-                               escape_string<char>(ctx.composition.preedit) +
-                               "  [";
+        }
+        case UIStyle::PREVIEW_ALL: {
+          body.append(L"ctx.preedit=")
+              .append(escape_string(u8tow(preedit)))
+              .append(L"  [");
+          auto label_valid = session_status.style.label_font_point > 0;
+          auto comment_valid = session_status.style.comment_font_point > 0;
+          const std::wstring mark_text_w =
+              session_status.style.mark_text.empty()
+                  ? std::wstring(L"*")
+                  : session_status.style.mark_text;
           for (auto i = 0; i < ctx.menu.num_candidates; i++) {
-            std::string label =
-                session_status.style.label_font_point > 0
-                    ? _GetLabelText(
-                          cinfo.labels, i,
-                          session_status.style.label_text_format.c_str())
-                    : "";
-            std::string comment = session_status.style.comment_font_point > 0
-                                      ? wtou8(cinfo.comments.at(i).str)
-                                      : "";
-            std::string mark_text = session_status.style.mark_text.empty()
-                                        ? "*"
-                                        : wtou8(session_status.style.mark_text);
-            std::string prefix =
-                (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
-            topush += " " + prefix + escape_string(label) +
-                      escape_string<char>(ctx.menu.candidates[i].text) + " " +
-                      escape_string(comment);
+            std::wstring label_w;
+            if (label_valid) {
+              wchar_t buf_lbl[128];
+              swprintf_s<128>(buf_lbl,
+                              session_status.style.label_text_format.c_str(),
+                              cinfo.labels.at(i).str.c_str());
+              label_w = std::wstring(buf_lbl);
+            }
+            std::wstring comment_w =
+                comment_valid ? cinfo.comments.at(i).str : std::wstring();
+            std::wstring prefix_w = (i != ctx.menu.highlighted_candidate_index)
+                                        ? std::wstring()
+                                        : mark_text_w;
+            body.append(L" ")
+                .append(prefix_w)
+                .append(escape_string(label_w))
+                .append(escape_string(u8tow(ctx.menu.candidates[i].text)))
+                .append(L" ")
+                .append(escape_string(comment_w));
           }
-          messages.push_back(topush + " ]\n");
-          if (ctx.composition.sel_start <= ctx.composition.sel_end) {
-            messages.push_back(
-                std::string("ctx.preedit.cursor=") +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.sel_start)) +
-                ',' +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.sel_end)) +
-                ',' +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.cursor_pos)) +
-                '\n');
+          body.append(L" ]\n");
+          if (start <= end) {
+            body.append(L"ctx.preedit.cursor=")
+                .append(u8towstring(preedit, start))
+                .append(L",")
+                .append(u8towstring(preedit, end))
+                .append(L",")
+                .append(u8towstring(preedit, cursor))
+                .append(L"\n");
           }
           break;
+        }
       }
     }
     if (has_candidates) {
@@ -879,16 +901,17 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
 
       oa << cinfo;
 
-      messages.push_back(std::string("ctx.cand=") + wtou8(ss.str()) + '\n');
+      auto s = ss.str();
+      body.append(L"ctx.cand=").append(std::move(s)).append(L"\n");
     }
     rime_api->free_context(&ctx);
   }
 
   // configuration information
-  actions.insert("config");
-  messages.push_back(std::string("config.inline_preedit=") +
-                     std::to_string((int)session_status.style.inline_preedit) +
-                     '\n');
+  actions.push_back("config");
+  body.append(L"config.inline_preedit=")
+      .append(std::to_wstring((int)session_status.style.inline_preedit))
+      .append(L"\n");
 
   // style
   if (!session_status.__synced) {
@@ -896,28 +919,33 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
     boost::archive::text_woarchive oa(ss);
     oa << session_status.style;
 
-    actions.insert("style");
-    messages.push_back(std::string("style=") + wtou8(ss.str().c_str()) + '\n');
+    actions.push_back("style");
+    body.append(L"style=").append(ss.str()).append(L"\n");
     session_status.__synced = true;
   }
 
-  // summarize
-
+  // summarize: send header first to avoid vector head-insert cost
+  std::wstring header;
   if (actions.empty()) {
-    messages.insert(messages.begin(), std::string("action=noop\n"));
+    header = L"action=noop\n";
   } else {
-    std::string actionList(join(actions, ","));
-    messages.insert(messages.begin(),
-                    std::string("action=") + actionList + '\n');
+    std::string actionList;
+    actionList.reserve(64);
+    for (size_t i = 0; i < actions.size(); ++i) {
+      if (i > 0)
+        actionList += ',';
+      actionList += actions[i];
+    }
+    header = std::wstring(L"action=") + u8tow(actionList) + L"\n";
   }
+  if (!eat(header))
+    return false;
 
-  messages.push_back(std::string(".\n"));
+  body.append(L".\n");
+  if (!eat(body))
+    return false;
 
-  return std::all_of(messages.begin(), messages.end(),
-                     [&eat](std::string& msg) {
-                       auto wmsg = u8tow(msg);
-                       return eat(wmsg);
-                     });
+  return true;
 }
 
 // Blend foreground and background ARGB colors taking alpha into account.
