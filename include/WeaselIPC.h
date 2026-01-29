@@ -153,7 +153,7 @@ class Server {
   virtual ~Server();
 
   // 初始化服务
-  int Start();
+  HWND Start();
   // 结束服务
   int Stop();
   // 消息循环

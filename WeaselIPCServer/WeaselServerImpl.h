@@ -75,7 +75,7 @@ class ServerImpl : public CWindowImpl<ServerImpl, CWindow, ServerWinTraits>
   ServerImpl();
   ~ServerImpl();
 
-  int Start();
+  HWND Start();
   int Stop();
   int Run();
 

@@ -12,7 +12,7 @@ void static OpenFolderAndSelectItem(std::wstring filepath) {
   HRESULT hr;
   hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
-  ITEMIDLIST* folder = ILCreateFromPath(directory.c_str());
+  auto folder = ILCreateFromPath(directory.c_str());
   std::vector<LPITEMIDLIST> v;
   v.push_back(ILCreateFromPath(filepath.c_str()));
 

@@ -139,7 +139,7 @@ DWORD ServerImpl::OnCommand(WEASEL_IPC_COMMAND uMsg,
   return handled;
 }
 
-int ServerImpl::Start() {
+HWND ServerImpl::Start() {
   std::wstring instanceName = L"(WEASEL)Furandōru-Sukāretto-";
   instanceName += getUsername();
   HANDLE hMutexOneInstance = ::CreateMutex(NULL, FALSE, instanceName.c_str());
@@ -152,7 +152,7 @@ int ServerImpl::Start() {
 
   HWND hwnd = Create(NULL);
 
-  return (int)hwnd;
+  return hwnd;
 }
 
 int ServerImpl::Stop() {
@@ -446,7 +446,7 @@ Server::~Server() {
     delete m_pImpl;
 }
 
-int Server::Start() {
+HWND Server::Start() {
   return m_pImpl->Start();
 }
 
