@@ -1,5 +1,4 @@
 ﻿#include "stdafx.h"
-#include <logging.h>
 #include <RimeWithWeasel.h>
 #include <StringAlgorithm.hpp>
 #include <WeaselConstants.h>

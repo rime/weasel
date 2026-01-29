@@ -333,6 +333,9 @@ inline std::string current_time() {
 
 #define DEBUG DebugStream(__FILE__, __LINE__)
 
+#define LOG(x) DEBUG << #x << ": "
+#define DLOG(x) LOG(x)
+
 using wstring = std::wstring;
 using string = std::string;
 template <typename T>
