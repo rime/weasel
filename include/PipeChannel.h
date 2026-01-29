@@ -154,7 +154,16 @@ class PipeChannel : public PipeChannelBase {
     DWORD lwritten = 0;
 
     *reinterpret_cast<Msg*>(pbuff) = msg;
-    size_t data_sz = ctx->has_body ? buff_size : _MsgSize;
+    size_t body_bytes = 0;
+    if (ctx->has_body && ctx->write_stream) {
+      std::streampos pos = ctx->write_stream->tellp();
+      if (pos != std::streampos(-1)) {
+        body_bytes = static_cast<size_t>(pos) * sizeof(wchar_t);
+      }
+    }
+    size_t data_sz = ctx->has_body ? (_MsgSize + body_bytes) : _MsgSize;
+    if (data_sz > buff_size)
+      data_sz = buff_size;
 
     try {
       _WritePipe(pipe, data_sz, pbuff);
