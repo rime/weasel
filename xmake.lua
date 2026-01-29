@@ -16,7 +16,7 @@ boost_include_path = boost_root
 boost_lib_path = boost_root .. "/stage/lib"
 add_includedirs(boost_include_path)
 add_linkdirs(boost_lib_path)
-add_cxflags("/utf-8 /MP /O2 /Oi /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /external:W3 /Gd /TP /FC")
+add_cxflags("/utf-8 /MP /O2 /Oi /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /external:W3 /Gd /TP")
 add_ldflags("/TLBID:1 /DYNAMICBASE /NXCOMPAT")
 
 -- 全局ATL lib路径
