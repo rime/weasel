@@ -9,10 +9,8 @@ class CStartCompositionEditSession : public CEditSession {
  public:
   CStartCompositionEditSession(com_ptr<WeaselTSF> pTextService,
                                com_ptr<ITfContext> pContext,
-                               BOOL fCUASWorkaroundEnabled,
-                               BOOL inlinePreeditEnabled)
-      : CEditSession(pTextService, pContext),
-        _inlinePreeditEnabled(inlinePreeditEnabled) {
+                               BOOL fCUASWorkaroundEnabled)
+      : CEditSession(pTextService, pContext) {
     _fCUASWorkaroundEnabled = fCUASWorkaroundEnabled;
   }
 
@@ -21,7 +19,6 @@ class CStartCompositionEditSession : public CEditSession {
 
  private:
   BOOL _fCUASWorkaroundEnabled;
-  BOOL _inlinePreeditEnabled;
 };
 
 STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
@@ -45,22 +42,9 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
       (pComposition != NULL)) {
     _pTextService->_SetComposition(pComposition);
 
-    /* WORKAROUND:
-     *   CUAS does not provide a correct GetTextExt() position unless the
-     * composition is filled with characters. So we insert a zero width space
-     * here. The workaround is only needed when inline preedit is not enabled.
-     *   See https://github.com/rime/weasel/pull/883#issuecomment-1567625762
-     */
-    if (!_inlinePreeditEnabled) {
-      pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
-    }
-
     /* set selection */
     TF_SELECTION tfSelection;
-    if (_inlinePreeditEnabled)
-      pRangeComposition->Collapse(ec, TF_ANCHOR_END);
-    else
-      pRangeComposition->Collapse(ec, TF_ANCHOR_START);
+    pRangeComposition->Collapse(ec, TF_ANCHOR_END);
     tfSelection.range = pRangeComposition;
     tfSelection.style.ase = TF_AE_NONE;
     tfSelection.style.fInterimChar = FALSE;
@@ -73,8 +57,8 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
 void WeaselTSF::_StartComposition(com_ptr<ITfContext> pContext,
                                   BOOL fCUASWorkaroundEnabled) {
   com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
-  pStartCompositionEditSession.Attach(new CStartCompositionEditSession(
-      this, pContext, fCUASWorkaroundEnabled, _cand->style().inline_preedit));
+  pStartCompositionEditSession.Attach(
+      new CStartCompositionEditSession(this, pContext, fCUASWorkaroundEnabled));
   _cand->StartUI();
   if (pStartCompositionEditSession != nullptr) {
     HRESULT hr;
