@@ -143,7 +143,7 @@ const wchar_t EscapeChar<wchar_t>::tab_escape = L't';
 
 template <typename CharT>
 inline std::basic_string<CharT> escape_string(
-    const std::basic_string<CharT> input) {
+    const std::basic_string<CharT>& input) {
   using Esc = EscapeChar<CharT>;
   std::basic_stringstream<CharT> res;
   for (auto p = input.begin(); p != input.end(); ++p) {

@@ -7,6 +7,8 @@
 
 #include <filesystem>
 #include <map>
+#include <array>
+#include <vector>
 #include <regex>
 #include <rime_api.h>
 
@@ -19,13 +21,6 @@
    ((value & 0x00ff0000) >> 8) | ((value & 0x0000ff00) << 8))
 typedef enum { COLOR_ABGR = 0, COLOR_ARGB, COLOR_RGBA } ColorFormat;
 
-#ifdef USE_SHARP_COLOR_CODE
-#define HEX_REGEX std::regex("^(0x|#)[0-9a-f]+$", std::regex::icase)
-#define TRIMHEAD_REGEX std::regex("0x|#", std::regex::icase)
-#else
-#define HEX_REGEX std::regex("^0x[0-9a-f]+$", std::regex::icase)
-#define TRIMHEAD_REGEX std::regex("0x", std::regex::icase)
-#endif
 using namespace weasel;
 
 static RimeApi* rime_api;
@@ -72,7 +67,7 @@ bool add_session = false;
 void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize);
 bool _UpdateUIStyleColor(RimeConfig* config,
                          UIStyle& style,
-                         std::string color = "");
+                         const std::string& color = std::string());
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void _RefreshTrayIcon(const RimeSessionId session_id,
@@ -756,35 +751,42 @@ inline std::string _GetLabelText(const std::vector<Text>& labels,
 }
 
 bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
-  std::set<std::string> actions;
-  std::list<std::string> messages;
+  std::wstring body;
+  body.reserve(4096);
+  std::vector<const char*> actions;
+  actions.reserve(8);
 
   SessionStatus& session_status = get_session_status(ipc_id);
   RimeSessionId session_id = session_status.session_id;
   RIME_STRUCT(RimeCommit, commit);
   if (rime_api->get_commit(session_id, &commit)) {
-    actions.insert("commit");
-
-    std::string commit_text = escape_string<char>(commit.text);
-    messages.push_back(std::string("commit=") + commit_text + '\n');
+    actions.push_back("commit");
+    std::wstring commit_text_w = escape_string(u8tow(commit.text));
+    body.append(L"commit=").append(commit_text_w).append(L"\n");
     rime_api->free_commit(&commit);
   }
 
   bool is_composing = false;
   RIME_STRUCT(RimeStatus, status);
+  static const std::wstring Bool_wstring[] = {L"0", L"1"};
   if (rime_api->get_status(session_id, &status)) {
     is_composing = !!status.is_composing;
-    actions.insert("status");
-    messages.push_back(std::string("status.ascii_mode=") +
-                       std::to_string(status.is_ascii_mode) + '\n');
-    messages.push_back(std::string("status.composing=") +
-                       std::to_string(status.is_composing) + '\n');
-    messages.push_back(std::string("status.disabled=") +
-                       std::to_string(status.is_disabled) + '\n');
-    messages.push_back(std::string("status.full_shape=") +
-                       std::to_string(status.is_full_shape) + '\n');
-    messages.push_back(std::string("status.schema_id=") +
-                       std::string(status.schema_id) + '\n');
+    actions.push_back("status");
+    body.append(L"status.ascii_mode=")
+        .append(Bool_wstring[!!status.is_ascii_mode])
+        .append(L"\n")
+        .append(L"status.composing=")
+        .append(Bool_wstring[!!status.is_composing])
+        .append(L"\n")
+        .append(L"status.disabled=")
+        .append(Bool_wstring[!!status.is_disabled])
+        .append(L"\n")
+        .append(L"status.full_shape=")
+        .append(Bool_wstring[!!status.is_full_shape])
+        .append(L"\n")
+        .append(L"status.schema_id=")
+        .append(status.schema_id ? u8tow(status.schema_id) : std::wstring())
+        .append(L"\n");
     if (m_global_ascii_mode &&
         (session_status.status.is_ascii_mode != status.is_ascii_mode)) {
       for (auto& pair : m_session_status_map) {
@@ -805,79 +807,93 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
       _GetCandidateInfo(cinfo, ctx);
     }
     if (is_composing) {
-      actions.insert("ctx");
+      const auto& preedit = ctx.composition.preedit;
+      const auto& start = ctx.composition.sel_start;
+      const auto& end = ctx.composition.sel_end;
+      const auto& cursor = ctx.composition.cursor_pos;
+      static const auto u8towstring = [](const char* u8str, int len = 0) {
+        return std::to_wstring(utf8towcslen(u8str, len));
+      };
+      actions.push_back("ctx");
       switch (session_status.style.preedit_type) {
-        case UIStyle::PREVIEW:
-          if (ctx.commit_text_preview != NULL) {
-            std::string first = ctx.commit_text_preview;
-            messages.push_back(std::string("ctx.preedit=") +
-                               escape_string<char>(first) + '\n');
-            messages.push_back(
-                std::string("ctx.preedit.cursor=") +
-                std::to_string(utf8towcslen(first.c_str(), 0)) + ',' +
-                std::to_string(utf8towcslen(first.c_str(), (int)first.size())) +
-                ',' +
-                std::to_string(utf8towcslen(first.c_str(), (int)first.size())) +
-                '\n');
+        case UIStyle::PREVIEW: {
+          if (ctx.commit_text_preview) {
+            const char* first_utf8 = ctx.commit_text_preview;
+            const size_t first_len = std::strlen(first_utf8);
+            const std::wstring first_w = escape_string(u8tow(first_utf8));
+            const std::wstring tmp = u8towstring(first_utf8, (int)first_len);
+            body.append(L"ctx.preedit=")
+                .append(first_w)
+                .append(L"\n")
+                .append(L"ctx.preedit.cursor=")
+                .append(u8towstring(first_utf8, 0))
+                .append(L",")
+                .append(tmp)
+                .append(L",")
+                .append(tmp)
+                .append(L"\n");
             break;
           }
           // no preview, fall back to composition
-        case UIStyle::COMPOSITION:
-          messages.push_back(std::string("ctx.preedit=") +
-                             escape_string<char>(ctx.composition.preedit) +
-                             '\n');
-          if (ctx.composition.sel_start <= ctx.composition.sel_end) {
-            messages.push_back(
-                std::string("ctx.preedit.cursor=") +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.sel_start)) +
-                ',' +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.sel_end)) +
-                ',' +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.cursor_pos)) +
-                '\n');
+        }
+        case UIStyle::COMPOSITION: {
+          body.append(L"ctx.preedit=")
+              .append(escape_string(u8tow(preedit)))
+              .append(L"\n");
+          if (start <= end) {
+            body.append(L"ctx.preedit.cursor=")
+                .append(u8towstring(preedit, start))
+                .append(L",")
+                .append(u8towstring(preedit, end))
+                .append(L",")
+                .append(u8towstring(preedit, cursor))
+                .append(L"\n");
           }
           break;
-        case UIStyle::PREVIEW_ALL:
-          std::string topush = std::string("ctx.preedit=") +
-                               escape_string<char>(ctx.composition.preedit) +
-                               "  [";
+        }
+        case UIStyle::PREVIEW_ALL: {
+          body.append(L"ctx.preedit=")
+              .append(escape_string(u8tow(preedit)))
+              .append(L"  [");
+          auto label_valid = session_status.style.label_font_point > 0;
+          auto comment_valid = session_status.style.comment_font_point > 0;
+          const std::wstring mark_text_w =
+              session_status.style.mark_text.empty()
+                  ? std::wstring(L"*")
+                  : session_status.style.mark_text;
           for (auto i = 0; i < ctx.menu.num_candidates; i++) {
-            std::string label =
-                session_status.style.label_font_point > 0
-                    ? _GetLabelText(
-                          cinfo.labels, i,
-                          session_status.style.label_text_format.c_str())
-                    : "";
-            std::string comment = session_status.style.comment_font_point > 0
-                                      ? wtou8(cinfo.comments.at(i).str)
-                                      : "";
-            std::string mark_text = session_status.style.mark_text.empty()
-                                        ? "*"
-                                        : wtou8(session_status.style.mark_text);
-            std::string prefix =
-                (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
-            topush += " " + prefix + escape_string(label) +
-                      escape_string<char>(ctx.menu.candidates[i].text) + " " +
-                      escape_string(comment);
+            std::wstring label_w;
+            if (label_valid) {
+              wchar_t buf_lbl[128];
+              swprintf_s<128>(buf_lbl,
+                              session_status.style.label_text_format.c_str(),
+                              cinfo.labels.at(i).str.c_str());
+              label_w = std::wstring(buf_lbl);
+            }
+            std::wstring comment_w =
+                comment_valid ? cinfo.comments.at(i).str : std::wstring();
+            std::wstring prefix_w = (i != ctx.menu.highlighted_candidate_index)
+                                        ? std::wstring()
+                                        : mark_text_w;
+            body.append(L" ")
+                .append(prefix_w)
+                .append(escape_string(label_w))
+                .append(escape_string(u8tow(ctx.menu.candidates[i].text)))
+                .append(L" ")
+                .append(escape_string(comment_w));
           }
-          messages.push_back(topush + " ]\n");
-          if (ctx.composition.sel_start <= ctx.composition.sel_end) {
-            messages.push_back(
-                std::string("ctx.preedit.cursor=") +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.sel_start)) +
-                ',' +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.sel_end)) +
-                ',' +
-                std::to_string(utf8towcslen(ctx.composition.preedit,
-                                            ctx.composition.cursor_pos)) +
-                '\n');
+          body.append(L" ]\n");
+          if (start <= end) {
+            body.append(L"ctx.preedit.cursor=")
+                .append(u8towstring(preedit, start))
+                .append(L",")
+                .append(u8towstring(preedit, end))
+                .append(L",")
+                .append(u8towstring(preedit, cursor))
+                .append(L"\n");
           }
           break;
+        }
       }
     }
     if (has_candidates) {
@@ -886,16 +902,17 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
 
       oa << cinfo;
 
-      messages.push_back(std::string("ctx.cand=") + wtou8(ss.str()) + '\n');
+      auto s = ss.str();
+      body.append(L"ctx.cand=").append(std::move(s)).append(L"\n");
     }
     rime_api->free_context(&ctx);
   }
 
   // configuration information
-  actions.insert("config");
-  messages.push_back(std::string("config.inline_preedit=") +
-                     std::to_string((int)session_status.style.inline_preedit) +
-                     '\n');
+  actions.push_back("config");
+  body.append(L"config.inline_preedit=")
+      .append(std::to_wstring((int)session_status.style.inline_preedit))
+      .append(L"\n");
 
   // style
   if (!session_status.__synced) {
@@ -903,115 +920,143 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
     boost::archive::text_woarchive oa(ss);
     oa << session_status.style;
 
-    actions.insert("style");
-    messages.push_back(std::string("style=") + wtou8(ss.str().c_str()) + '\n');
+    actions.push_back("style");
+    body.append(L"style=").append(ss.str()).append(L"\n");
     session_status.__synced = true;
   }
 
-  // summarize
-
+  // summarize: send header first to avoid vector head-insert cost
+  std::wstring header;
   if (actions.empty()) {
-    messages.insert(messages.begin(), std::string("action=noop\n"));
+    header = L"action=noop\n";
   } else {
-    std::string actionList(join(actions, ","));
-    messages.insert(messages.begin(),
-                    std::string("action=") + actionList + '\n');
+    std::string actionList;
+    actionList.reserve(64);
+    for (size_t i = 0; i < actions.size(); ++i) {
+      if (i > 0)
+        actionList += ',';
+      actionList += actions[i];
+    }
+    header = std::wstring(L"action=") + u8tow(actionList) + L"\n";
   }
+  if (!eat(header))
+    return false;
 
-  messages.push_back(std::string(".\n"));
+  body.append(L".\n");
+  if (!eat(body))
+    return false;
 
-  return std::all_of(messages.begin(), messages.end(),
-                     [&eat](std::string& msg) {
-                       auto wmsg = u8tow(msg);
-                       return eat(wmsg);
-                     });
+  return true;
 }
 
+// Blend foreground and background ARGB colors taking alpha into account.
+// Returns an ABGR COLORREF with premultiplied alpha blended result.
 static inline COLORREF blend_colors(COLORREF fcolor, COLORREF bcolor) {
-  // 提取各通道的值
-  BYTE fA = (fcolor >> 24) & 0xFF;  // 获取前景的 alpha 通道
-  BYTE fB = (fcolor >> 16) & 0xFF;  // 获取前景的 blue 通道
-  BYTE fG = (fcolor >> 8) & 0xFF;   // 获取前景的 green 通道
-  BYTE fR = fcolor & 0xFF;          // 获取前景的 red 通道
-  BYTE bA = (bcolor >> 24) & 0xFF;  // 获取背景的 alpha 通道
-  BYTE bB = (bcolor >> 16) & 0xFF;  // 获取背景的 blue 通道
-  BYTE bG = (bcolor >> 8) & 0xFF;   // 获取背景的 green 通道
-  BYTE bR = bcolor & 0xFF;          // 获取背景的 red 通道
-  // 将 alpha 通道转换为 [0, 1] 的浮动值
+  // Extract ARGB channels from both colors.
+  BYTE fA = (fcolor >> 24) & 0xFF;
+  BYTE fB = (fcolor >> 16) & 0xFF;
+  BYTE fG = (fcolor >> 8) & 0xFF;
+  BYTE fR = fcolor & 0xFF;
+  BYTE bA = (bcolor >> 24) & 0xFF;
+  BYTE bB = (bcolor >> 16) & 0xFF;
+  BYTE bG = (bcolor >> 8) & 0xFF;
+  BYTE bR = bcolor & 0xFF;
+  // Convert alpha to [0,1]
   float fAlpha = fA / 255.0f;
   float bAlpha = bA / 255.0f;
-  // 计算每个通道的加权平均值
+  // Result alpha
   float retAlpha = fAlpha + (1 - fAlpha) * bAlpha;
-  // 混合红、绿、蓝通道
-  BYTE retR = (BYTE)((fR * fAlpha + bR * bAlpha * (1 - fAlpha)) / retAlpha);
-  BYTE retG = (BYTE)((fG * fAlpha + bG * bAlpha * (1 - fAlpha)) / retAlpha);
-  BYTE retB = (BYTE)((fB * fAlpha + bB * bAlpha * (1 - fAlpha)) / retAlpha);
-  // 返回合成后的颜色
-  return (BYTE)(retAlpha * 255) << 24 | retB << 16 | retG << 8 | retR;
+  if (retAlpha <= 1e-6f) {
+    // Fully transparent result — return background unchanged as fallback.
+    return bcolor;
+  }
+  auto mix = [&](float fc, float bc) -> BYTE {
+    return static_cast<BYTE>((fc * fAlpha + bc * bAlpha * (1 - fAlpha)) /
+                             retAlpha);
+  };
+  BYTE retR = mix(fR, bR);
+  BYTE retG = mix(fG, bG);
+  BYTE retB = mix(fB, bB);
+  BYTE outA = static_cast<BYTE>(retAlpha * 255.0f);
+  return (static_cast<COLORREF>(outA) << 24) | (retB << 16) | (retG << 8) |
+         retR;
 }
 // parse color value, with fallback value
 static Bool _RimeGetColor(RimeConfig* config,
-                          const std::string key,
+                          const std::string& key,
                           int& value,
                           const ColorFormat& fmt,
                           const unsigned int& fallback) {
-  RimeApi* rime_api = rime_get_api();
   char color[256] = {0};
   if (!rime_api->config_get_string(config, key.c_str(), color, 256)) {
     value = fallback;
     return False;
   }
   const auto color_str = std::string(color);
-  const auto make_opaque = [&](int& value) {
-    value = (fmt != COLOR_RGBA) ? (value | 0xff000000)
-                                : ((value << 8) | 0x000000ff);
-  };
-  const auto ConvertColorToAbgr = [](int color, ColorFormat fmt = COLOR_ABGR) {
-    if (fmt == COLOR_ABGR)
-      return color & 0xffffffff;
-    else if (fmt == COLOR_ARGB)
-      return ARGB2ABGR(color) & 0xffffffff;
-    else
-      return RGBA2ABGR(color) & 0xffffffff;
-  };
-  if (std::regex_match(color_str, HEX_REGEX)) {
-    auto tmp = std::regex_replace(color_str, TRIMHEAD_REGEX, "").substr(0, 8);
-    switch (tmp.length()) {
-      case 6:  // color code without alpha, xxyyzz add alpha ff
-        value = std::stoul(tmp, 0, 16);
-        make_opaque(value);
-        break;
-      case 3:  // color hex code xyz => xxyyzz and alpha ff
-        tmp = std::string(2, tmp[0]) + std::string(2, tmp[1]) +
-              std::string(2, tmp[2]);
-        value = std::stoul(tmp, 0, 16);
-        make_opaque(value);
-        break;
-      case 4:  // color hex code vxyz => vvxxyyzz
-        tmp = std::string(2, tmp[0]) + std::string(2, tmp[1]) +
-              std::string(2, tmp[2]) + std::string(2, tmp[3]);
-        value = std::stoul(tmp, 0, 16);
-        break;
-      case 7:
-      case 8:  // color code with alpha
-        value = std::stoul(tmp, 0, 16);
-        break;
-      default:  // invalid length
-        value = fallback;
-        return False;
+  // adjudge if str is 0x 0X # hex color format, return trimmed hex part
+  // out part is 6 or 8 length hex string without white space
+  const auto parse_color_code = [](const std::string& str, std::string& out) {
+    if (str.empty())
+      return false;
+    size_t start = 0;
+    if (str[0] == '#') {
+      start = 1;
+    } else if (str.size() >= 2 &&
+               (str.compare(0, 2, "0x") == 0 || str.compare(0, 2, "0X") == 0)) {
+      start = 2;
+    } else {
+      return false;
     }
+    const std::string hex_part = str.substr(start);
+    if (hex_part.empty())
+      return false;
+    if ((start == 1 || start == 2) && hex_part.length() != 3 &&
+        hex_part.length() != 4 && hex_part.length() != 6 &&
+        hex_part.length() != 8) {
+      return false;
+    }
+    for (char c : hex_part) {
+      if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+            (c >= 'A' && c <= 'F')))
+        return false;
+    }
+    out = str.substr(start).substr(0, 8);
+#define _2C(c) std::string(2, c)
+    if (out.size() == 3)
+      out = _2C(out[0]) + _2C(out[1]) + _2C(out[2]);
+    else if (out.size() == 4)
+      out = _2C(out[0]) + _2C(out[1]) + _2C(out[2]) + _2C(out[3]);
+#undef _2C
+    return true;
+  };
+  auto hex_color = std::string();
+  if (parse_color_code(color_str, hex_color)) {
+    value = std::stoul(hex_color, 0, 16);
+    if (hex_color.length() == 6)
+      value = (fmt != COLOR_RGBA) ? (value | 0xff000000)
+                                  : (((unsigned int)value << 8) | 0x000000ff);
   } else {
-    int tmp = 0;
-    if (!rime_api->config_get_int(config, key.c_str(), &tmp)) {
+    if (!rime_api->config_get_int(config, key.c_str(), &value)) {
       value = fallback;
       return False;
-    } else
-      value = tmp;
-    make_opaque(value);
+    }
+    if (value <= 0xffffff)
+      value = (fmt != COLOR_RGBA) ? (value | 0xff000000)
+                                  : (((unsigned int)value << 8) | 0x000000ff);
+    else if (value > 0xffffffff)
+      value &= 0xffffffff;
   }
-  value = ConvertColorToAbgr(value, fmt);
+  if (fmt == COLOR_ARGB)
+    value = ARGB2ABGR(value);
+  else if (fmt == COLOR_RGBA)
+    value = RGBA2ABGR(value);
+  value &= 0xffffffff;
   return True;
 }
+
+template <typename T, size_t N>
+using Array = std::array<std::pair<const char*, T>, N>;
+
 // parset bool type configuration to T type value trueValue / falseValue
 template <typename T>
 void _RimeGetBool(RimeConfig* config,
@@ -1020,25 +1065,27 @@ void _RimeGetBool(RimeConfig* config,
                   T& value,
                   const T& trueValue = true,
                   const T& falseValue = false) {
-  RimeApi* rime_api = rime_get_api();
   Bool tempb = False;
   if (rime_api->config_get_bool(config, key, &tempb) || cond)
     value = (!!tempb) ? trueValue : falseValue;
 }
-//	parse string option to T type value, with fallback
-template <typename T>
+// parse string option to T type value, with fallback
+template <typename T, size_t N>
 void _RimeParseStringOptWithFallback(RimeConfig* config,
-                                     const std::string& key,
+                                     const char* key,
                                      T& value,
-                                     const std::map<std::string, T>& amap,
+                                     const Array<T, N>& arr,
                                      const T& fallback) {
-  RimeApi* rime_api = rime_get_api();
   char str_buff[256] = {0};
-  if (rime_api->config_get_string(config, key.c_str(), str_buff, 255)) {
-    auto it = amap.find(std::string(str_buff));
-    value = (it != amap.end()) ? it->second : fallback;
-  } else
-    value = fallback;
+  if (rime_api->config_get_string(config, key, str_buff, 255)) {
+    for (size_t i = 0; i < N; ++i) {
+      if (strcmp(arr[i].first, str_buff) == 0) {
+        value = arr[i].second;
+        return;
+      }
+    }
+  }
+  value = fallback;
 }
 
 template <typename T>
@@ -1048,7 +1095,6 @@ void _RimeGetIntStr(RimeConfig* config,
                     const char* fb_key = nullptr,
                     const void* fb_value = nullptr,
                     const std::function<void(T&)>& func = nullptr) {
-  RimeApi* rime_api = rime_get_api();
   if constexpr (std::is_same<T, int>::value) {
     if (!rime_api->config_get_int(config, key, &value) && fb_key != 0)
       rime_api->config_get_int(config, fb_key, &value);
@@ -1066,37 +1112,63 @@ void _RimeGetIntStr(RimeConfig* config,
     func(value);
 }
 
+// Helper to iterate a Rime map and invoke callback with key/path
+static void ForEachRimeMap(
+    RimeConfig* config,
+    const std::string& path,
+    const std::function<void(const char* key, const char* child_path)>& cb) {
+  RimeConfigIterator iter;
+  if (!rime_api->config_begin_map(&iter, config, path.c_str()))
+    return;
+  while (rime_api->config_next(&iter)) {
+    cb(iter.key, iter.path);
+  }
+  rime_api->config_end(&iter);
+}
+
+// Helper to iterate a Rime list and invoke callback with item path
+static void ForEachRimeList(
+    RimeConfig* config,
+    const std::string& path,
+    const std::function<void(const char* item_path)>& cb) {
+  RimeConfigIterator iter;
+  if (!rime_api->config_begin_list(&iter, config, path.c_str()))
+    return;
+  while (rime_api->config_next(&iter)) {
+    cb(iter.path);
+  }
+  rime_api->config_end(&iter);
+}
+
 void RimeWithWeaselHandler::_UpdateShowNotifications(RimeConfig* config,
                                                      bool initialize) {
   Bool show_notifications = true;
-  RimeConfigIterator iter;
   if (initialize)
     m_show_notifications_base.clear();
   m_show_notifications.clear();
 
   if (rime_api->config_get_bool(config, "show_notifications",
                                 &show_notifications)) {
-    // config read as bool, for gloal all on or off
+    // config read as bool, for global all on or off
     if (show_notifications)
       m_show_notifications["always"] = true;
     if (initialize)
       m_show_notifications_base = m_show_notifications;
-  } else if (rime_api->config_begin_list(&iter, config, "show_notifications")) {
-    // config read as list, list item should be option name in schema
-    // or key word 'schema' for schema switching tip
-    while (rime_api->config_next(&iter)) {
+  } else {
+    // read as list using helper
+    ForEachRimeList(config, "show_notifications", [&](const char* item_path) {
       char buffer[256] = {0};
-      if (rime_api->config_get_string(config, iter.path, buffer, 256))
+      if (rime_api->config_get_string(config, item_path, buffer, 256))
         m_show_notifications[std::string(buffer)] = true;
-    }
+    });
     if (initialize)
       m_show_notifications_base = m_show_notifications;
-    rime_api->config_end(&iter);
-  } else {
-    // not configured, or incorrect type
-    if (initialize)
-      m_show_notifications_base["always"] = true;
-    m_show_notifications = m_show_notifications_base;
+    if (m_show_notifications.empty()) {
+      // not configured, or incorrect type
+      if (initialize)
+        m_show_notifications_base["always"] = true;
+      m_show_notifications = m_show_notifications_base;
+    }
   }
 }
 
@@ -1133,32 +1205,32 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
                style.inline_preedit);
   _RimeGetBool(config, "style/vertical_auto_reverse", initialize,
                style.vertical_auto_reverse);
-  const std::map<std::string, UIStyle::PreeditType> _preeditMap = {
-      {std::string("composition"), UIStyle::COMPOSITION},
-      {std::string("preview"), UIStyle::PREVIEW},
-      {std::string("preview_all"), UIStyle::PREVIEW_ALL}};
+  static constexpr Array<UIStyle::PreeditType, 3> _preeditArr = {
+      {{"composition", UIStyle::COMPOSITION},
+       {"preview", UIStyle::PREVIEW},
+       {"preview_all", UIStyle::PREVIEW_ALL}}};
   _RimeParseStringOptWithFallback(config, "style/preedit_type",
-                                  style.preedit_type, _preeditMap,
+                                  style.preedit_type, _preeditArr,
                                   style.preedit_type);
-  const std::map<std::string, UIStyle::AntiAliasMode> _aliasModeMap = {
-      {std::string("force_dword"), UIStyle::FORCE_DWORD},
-      {std::string("cleartype"), UIStyle::CLEARTYPE},
-      {std::string("grayscale"), UIStyle::GRAYSCALE},
-      {std::string("aliased"), UIStyle::ALIASED},
-      {std::string("default"), UIStyle::DEFAULT}};
+  static constexpr Array<UIStyle::AntiAliasMode, 5> _aliasModeArr = {
+      {{"force_dword", UIStyle::FORCE_DWORD},
+       {"cleartype", UIStyle::CLEARTYPE},
+       {"grayscale", UIStyle::GRAYSCALE},
+       {"aliased", UIStyle::ALIASED},
+       {"default", UIStyle::DEFAULT}}};
   _RimeParseStringOptWithFallback(config, "style/antialias_mode",
-                                  style.antialias_mode, _aliasModeMap,
+                                  style.antialias_mode, _aliasModeArr,
                                   style.antialias_mode);
-  const std::map<std::string, UIStyle::HoverType> _hoverTypeMap = {
-      {std::string("none"), UIStyle::HoverType::NONE},
-      {std::string("semi_hilite"), UIStyle::HoverType::SEMI_HILITE},
-      {std::string("hilite"), UIStyle::HoverType::HILITE}};
+  static constexpr Array<UIStyle::HoverType, 3> _hoverTypeArr = {
+      {{"none", UIStyle::HoverType::NONE},
+       {"semi_hilite", UIStyle::HoverType::SEMI_HILITE},
+       {"hilite", UIStyle::HoverType::HILITE}}};
   _RimeParseStringOptWithFallback(config, "style/hover_type", style.hover_type,
-                                  _hoverTypeMap, style.hover_type);
-  const std::map<std::string, UIStyle::LayoutAlignType> _alignType = {
-      {std::string("top"), UIStyle::ALIGN_TOP},
-      {std::string("center"), UIStyle::ALIGN_CENTER},
-      {std::string("bottom"), UIStyle::ALIGN_BOTTOM}};
+                                  _hoverTypeArr, style.hover_type);
+  static constexpr Array<UIStyle::LayoutAlignType, 3> _alignType = {
+      {{"top", UIStyle::ALIGN_TOP},
+       {"center", UIStyle::ALIGN_CENTER},
+       {"bottom", UIStyle::ALIGN_BOTTOM}}};
   _RimeParseStringOptWithFallback(config, "style/layout/align_type",
                                   style.align_type, _alignType,
                                   style.align_type);
@@ -1183,8 +1255,8 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
                style.vertical_text_left_to_right);
   _RimeGetBool(config, "style/vertical_text_with_wrap", false,
                style.vertical_text_with_wrap);
-  const std::map<std::string, bool> _text_orientation = {
-      {std::string("horizontal"), false}, {std::string("vertical"), true}};
+  static constexpr Array<bool, 2> _text_orientation = {
+      {{"horizontal", false}, {"vertical", true}}};
   bool _text_orientation_bool = false;
   _RimeParseStringOptWithFallback(config, "style/text_orientation",
                                   _text_orientation_bool, _text_orientation,
@@ -1203,15 +1275,14 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   _RimeGetIntStr(config, "style/layout/max_height", style.max_height, 0, 0,
                  _abs);
   // layout (alternative to style/horizontal)
-  const std::map<std::string, UIStyle::LayoutType> _layoutMap = {
-      {std::string("vertical"), UIStyle::LAYOUT_VERTICAL},
-      {std::string("horizontal"), UIStyle::LAYOUT_HORIZONTAL},
-      {std::string("vertical_text"), UIStyle::LAYOUT_VERTICAL_TEXT},
-      {std::string("vertical+fullscreen"), UIStyle::LAYOUT_VERTICAL_FULLSCREEN},
-      {std::string("horizontal+fullscreen"),
-       UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN}};
+  static constexpr Array<UIStyle::LayoutType, 5> _layoutArr = {
+      {{"vertical", UIStyle::LAYOUT_VERTICAL},
+       {"horizontal", UIStyle::LAYOUT_HORIZONTAL},
+       {"vertical_text", UIStyle::LAYOUT_VERTICAL_TEXT},
+       {"vertical+fullscreen", UIStyle::LAYOUT_VERTICAL_FULLSCREEN},
+       {"horizontal+fullscreen", UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN}}};
   _RimeParseStringOptWithFallback(config, "style/layout/type",
-                                  style.layout_type, _layoutMap,
+                                  style.layout_type, _layoutArr,
                                   style.layout_type);
   // disable max_width when full screen
   if (style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN ||
@@ -1306,7 +1377,7 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
 // "color" which is default empty
 static bool _UpdateUIStyleColor(RimeConfig* config,
                                 UIStyle& style,
-                                std::string color) {
+                                const std::string& color) {
   const int BUF_SIZE = 255;
   char buffer[BUF_SIZE + 1] = {0};
   std::string color_mark = "style/color_scheme";
@@ -1318,12 +1389,10 @@ static bool _UpdateUIStyleColor(RimeConfig* config,
     prefix += (color.empty()) ? buffer : color;
     // define color format, default abgr if not set
     ColorFormat fmt = COLOR_ABGR;
-    const std::map<std::string, ColorFormat> _colorFmt = {
-        {std::string("argb"), COLOR_ARGB},
-        {std::string("rgba"), COLOR_RGBA},
-        {std::string("abgr"), COLOR_ABGR}};
-    _RimeParseStringOptWithFallback(config, (prefix + "/color_format"), fmt,
-                                    _colorFmt, COLOR_ABGR);
+    static constexpr Array<ColorFormat, 3> _colorFmt = {
+        {{"argb", COLOR_ARGB}, {"rgba", COLOR_RGBA}, {"abgr", COLOR_ABGR}}};
+    _RimeParseStringOptWithFallback(config, (prefix + "/color_format").c_str(),
+                                    fmt, _colorFmt, COLOR_ABGR);
 #define COLOR(key, value, fallback) \
   _RimeGetColor(config, (prefix + "/" + key), value, fmt, fallback)
     COLOR("back_color", style.back_color, 0xffffffff);
@@ -1362,25 +1431,20 @@ static bool _UpdateUIStyleColor(RimeConfig* config,
   }
   return false;
 }
-
 static void _LoadAppOptions(RimeConfig* config,
                             AppOptionsByAppName& app_options) {
   app_options.clear();
-  RimeConfigIterator app_iter;
-  RimeConfigIterator option_iter;
-  rime_api->config_begin_map(&app_iter, config, "app_options");
-  while (rime_api->config_next(&app_iter)) {
-    AppOptions& options(app_options[app_iter.key]);
-    rime_api->config_begin_map(&option_iter, config, app_iter.path);
-    while (rime_api->config_next(&option_iter)) {
-      Bool value = False;
-      if (rime_api->config_get_bool(config, option_iter.path, &value)) {
-        options[option_iter.key] = !!value;
-      }
-    }
-    rime_api->config_end(&option_iter);
-  }
-  rime_api->config_end(&app_iter);
+  ForEachRimeMap(
+      config, "app_options", [&](const char* app_key, const char* app_path) {
+        AppOptions& options(app_options[app_key]);
+        ForEachRimeMap(
+            config, app_path, [&](const char* opt_key, const char* opt_path) {
+              Bool value = False;
+              if (rime_api->config_get_bool(config, opt_path, &value)) {
+                options[opt_key] = !!value;
+              }
+            });
+      });
 }
 
 void RimeWithWeaselHandler::_GetStatus(Status& stat,
