@@ -54,6 +54,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
       m_ctx(ui.ctx()),
       m_octx(ui.octx()),
       m_status(ui.status()),
+      m_in_server(ui.InServer()),
       m_style(ui.style()),
       m_ostyle(ui.ostyle()),
       m_candidateCount(0),
@@ -144,8 +145,9 @@ void WeaselPanel::Refresh() {
   // show tips status, two kind of situation: 1) only aux strings, don't care
   // icon status; 2)only icon(ascii mode switching)
   bool show_tips =
-      (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty()) ||
-      (m_ctx.empty() && should_show_icon);
+      m_in_server &&
+      ((!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty()) ||
+       (m_ctx.empty() && should_show_icon));
   // show schema menu status: schema_id == L".default"
   bool show_schema_menu = m_status.schema_id == L".default";
   bool margin_negative =

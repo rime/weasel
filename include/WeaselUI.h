@@ -27,7 +27,7 @@ using PDWR = an<DirectWriteResources>;
 //
 class UI {
  public:
-  UI() : pimpl_(0) {}
+  UI() : pimpl_(0), in_server_(false) {}
 
   virtual ~UI() {
     if (pimpl_)
@@ -66,6 +66,7 @@ class UI {
   UIStyle& ostyle() { return ostyle_; }
   PDWR pdwr() { return pDWR; }
   bool GetIsReposition();
+  bool& InServer() { return in_server_; }
 
   std::function<void(size_t* const, size_t* const, bool* const, bool* const)>&
   uiCallback() {
@@ -87,6 +88,7 @@ class UI {
   Status status_;
   UIStyle style_;
   UIStyle ostyle_;
+  bool in_server_;
   std::function<void(size_t* const, size_t* const, bool* const, bool* const)>
       _UICallback;
 };

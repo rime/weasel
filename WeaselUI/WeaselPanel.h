@@ -109,6 +109,7 @@ class WeaselPanel
   weasel::Status& m_status;
   weasel::UIStyle& m_style;
   weasel::UIStyle& m_ostyle;
+  const bool& m_in_server;
 
   CRect m_inputPos;
   int m_offsetys[MAX_CANDIDATES_COUNT];  // offset y for candidates when
