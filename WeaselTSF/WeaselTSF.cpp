@@ -119,6 +119,15 @@ STDAPI WeaselTSF::Deactivate() {
   return S_OK;
 }
 
+static void fake_key() {
+  INPUT inputs[2];
+  inputs[0].type = INPUT_KEYBOARD;
+  inputs[0].ki = {VK_SELECT, 0, 0, 0, 0};
+  inputs[1].type = INPUT_KEYBOARD;
+  inputs[1].ki = {VK_SELECT, 0, KEYEVENTF_KEYUP, 0, 0};
+  ::SendInput(sizeof(inputs) / sizeof(INPUT), inputs, sizeof(INPUT));
+}
+
 STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr,
                              TfClientId tfClientId,
                              DWORD dwFlags) {
@@ -148,6 +157,7 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr,
   if (!_InitPreservedKey())
     goto ExitError;
 
+  fake_key();
   if (!_InitLanguageBar())
     goto ExitError;
 
@@ -175,10 +185,12 @@ STDMETHODIMP WeaselTSF::OnSetThreadFocus() {
   _isToOpenClose = (_ToggleImeOnOpenClose == L"yes");
   if (m_client.Echo()) {
     m_client.ProcessKeyEvent(0);
-    weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
+    weasel::ResponseParser parser(NULL, NULL, &_status, &_config,
+                                  &_cand->style());
     bool ok = m_client.GetResponseData(std::ref(parser));
     if (ok)
       _UpdateLanguageBar(_status);
+    _ShowLanguageBar(!_config.hide_ime_mode_icon);
   }
   return S_OK;
 }
