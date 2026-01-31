@@ -272,183 +272,7 @@ int uninstall_ime_file(const std::wstring& ext,
 }
 
 // 注册IME输入法
-int register_ime(const std::wstring& ime_path,
-                 bool register_ime,
-                 bool is_wow64,
-                 bool is_wowarm,
-                 bool hant,
-                 bool silent) {
-  if (is_wow64) {
-    return 0;  // only once
-  }
-
-  const WCHAR KEYBOARD_LAYOUTS_KEY[] =
-      L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts";
-  const WCHAR PRELOAD_KEY[] = L"Keyboard Layout\\Preload";
-
-  if (register_ime) {
-    HKL hKL = ImmInstallIME(ime_path.c_str(), get_weasel_ime_name().c_str());
-    if (!hKL) {
-      // manually register ime
-      WCHAR hkl_str[16] = {0};
-      HKEY hKey;
-      LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
-      if (ret == ERROR_SUCCESS) {
-        for (DWORD k = 0xE0200000 + (hant ? 0x0404 : 0x0804); k <= 0xE0FF0804;
-             k += 0x10000) {
-          StringCchPrintfW(hkl_str, _countof(hkl_str), L"%08X", k);
-          HKEY hSubKey;
-          ret = RegOpenKey(hKey, hkl_str, &hSubKey);
-          if (ret == ERROR_SUCCESS) {
-            WCHAR imeFile[32] = {0};
-            DWORD len = sizeof(imeFile);
-            DWORD type = 0;
-            ret = RegQueryValueEx(hSubKey, L"Ime File", NULL, &type,
-                                  (LPBYTE)imeFile, &len);
-            if (ret == ERROR_SUCCESS) {
-              if (_wcsicmp(imeFile, L"weasel.ime") == 0) {
-                hKL = (HKL)k;  // already there
-              }
-            }
-            RegCloseKey(hSubKey);
-          } else {
-            // found a spare number to register
-            ret = RegCreateKey(hKey, hkl_str, &hSubKey);
-            if (ret == ERROR_SUCCESS) {
-              const WCHAR ime_file[] = L"weasel.ime";
-              RegSetValueEx(hSubKey, L"Ime File", 0, REG_SZ, (LPBYTE)ime_file,
-                            sizeof(ime_file));
-              const WCHAR layout_file[] = L"kbdus.dll";
-              RegSetValueEx(hSubKey, L"Layout File", 0, REG_SZ,
-                            (LPBYTE)layout_file, sizeof(layout_file));
-              const std::wstring layout_text = get_weasel_ime_name();
-              RegSetValueEx(hSubKey, L"Layout Text", 0, REG_SZ,
-                            (LPBYTE)layout_text.c_str(),
-                            layout_text.size() * sizeof(wchar_t));
-              RegCloseKey(hSubKey);
-              hKL = (HKL)k;
-            }
-            break;
-          }
-        }
-        RegCloseKey(hKey);
-      }
-      if (hKL) {
-        HKEY hPreloadKey;
-        ret = RegOpenKey(HKEY_CURRENT_USER, PRELOAD_KEY, &hPreloadKey);
-        if (ret == ERROR_SUCCESS) {
-          for (size_t i = 1; true; ++i) {
-            std::wstring number = std::to_wstring(i);
-            DWORD type = 0;
-            WCHAR value[32];
-            DWORD len = sizeof(value);
-            ret = RegQueryValueEx(hPreloadKey, number.c_str(), 0, &type,
-                                  (LPBYTE)value, &len);
-            if (ret != ERROR_SUCCESS) {
-              RegSetValueEx(hPreloadKey, number.c_str(), 0, REG_SZ,
-                            (const BYTE*)hkl_str,
-                            (wcslen(hkl_str) + 1) * sizeof(WCHAR));
-              break;
-            }
-          }
-          RegCloseKey(hPreloadKey);
-        }
-      }
-    }
-    if (!hKL) {
-      DWORD dwErr = GetLastError();
-      WCHAR msg[100];
-      CString str;
-      str.LoadStringW(IDS_STR_ERRREGIME);
-      StringCchPrintfW(msg, _countof(msg), str, hKL, dwErr);
-      MSG_NOT_SILENT_ID_CAP(silent, msg, IDS_STR_INSTALL_FAILED,
-                            MB_ICONERROR | MB_OK);
-      return 1;
-    }
-    return 0;
-  }
-
-  // unregister ime
-
-  HKEY hKey;
-  LSTATUS ret = RegOpenKey(HKEY_LOCAL_MACHINE, KEYBOARD_LAYOUTS_KEY, &hKey);
-  if (ret != ERROR_SUCCESS) {
-    MSG_NOT_SILENT_ID_CAP(silent, KEYBOARD_LAYOUTS_KEY,
-                          IDS_STR_UNINSTALL_FAILED, MB_ICONERROR | MB_OK);
-    return 1;
-  }
-
-  for (int i = 0; true; ++i) {
-    WCHAR subKey[16];
-    ret = RegEnumKey(hKey, i, subKey, _countof(subKey));
-    if (ret != ERROR_SUCCESS)
-      break;
-
-    // 中文键盘布局?
-    if (wcscmp(subKey + 4, L"0804") == 0 || wcscmp(subKey + 4, L"0404") == 0) {
-      HKEY hSubKey;
-      ret = RegOpenKey(hKey, subKey, &hSubKey);
-      if (ret != ERROR_SUCCESS)
-        continue;
-
-      WCHAR imeFile[32];
-      DWORD len = sizeof(imeFile);
-      DWORD type = 0;
-      ret = RegQueryValueEx(hSubKey, L"Ime File", NULL, &type, (LPBYTE)imeFile,
-                            &len);
-      RegCloseKey(hSubKey);
-      if (ret != ERROR_SUCCESS)
-        continue;
-
-      // 小狼毫?
-      if (_wcsicmp(imeFile, L"weasel.ime") == 0) {
-        DWORD value;
-        swscanf_s(subKey, L"%x", &value);
-        UnloadKeyboardLayout((HKL)value);
-
-        RegDeleteKey(hKey, subKey);
-
-        // 移除preload
-        HKEY hPreloadKey;
-        ret = RegOpenKey(HKEY_CURRENT_USER, PRELOAD_KEY, &hPreloadKey);
-        if (ret != ERROR_SUCCESS)
-          continue;
-        std::vector<std::wstring> preloads;
-        std::wstring number;
-        for (size_t i = 1; true; ++i) {
-          number = std::to_wstring(i);
-          DWORD type = 0;
-          WCHAR value[32];
-          DWORD len = sizeof(value);
-          ret = RegQueryValueEx(hPreloadKey, number.c_str(), 0, &type,
-                                (LPBYTE)value, &len);
-          if (ret != ERROR_SUCCESS) {
-            if (i > preloads.size()) {
-              // 删除最大一号注册表值
-              number = std::to_wstring(i - 1);
-              RegDeleteValue(hPreloadKey, number.c_str());
-            }
-            break;
-          }
-          if (_wcsicmp(subKey, value) != 0) {
-            preloads.push_back(value);
-          }
-        }
-        // 重写preloads
-        for (size_t i = 0; i < preloads.size(); ++i) {
-          number = std::to_wstring(i + 1);
-          RegSetValueEx(hPreloadKey, number.c_str(), 0, REG_SZ,
-                        (const BYTE*)preloads[i].c_str(),
-                        (preloads[i].length() + 1) * sizeof(WCHAR));
-        }
-        RegCloseKey(hPreloadKey);
-      }
-    }
-  }
-
-  RegCloseKey(hKey);
-  return 0;
-}
+// `register_ime` (IMM/.ime) support removed — TSF-only build
 
 void enable_profile(BOOL fEnable, bool hant) {
   HRESULT hr;
@@ -493,14 +317,9 @@ int register_text_service(const std::wstring& tsf_path,
   // if (silent)  // always silent
   { params = L" /s " + params; }
 
-  if (hant) {
-    if (!SetEnvironmentVariable(L"TEXTSERVICE_PROFILE", L"hant")) {
-      // bad luck
-    }
-  } else {
-    if (!SetEnvironmentVariable(L"TEXTSERVICE_PROFILE", L"hans")) {
-      // bad luck
-    }
+  if (!SetEnvironmentVariable(L"TEXTSERVICE_PROFILE",
+                              hant ? L"hant" : L"hans")) {
+    throw std::runtime_error("SetEnvironmentVariable failed");
   }
 
   std::wstring app = L"regsvr32.exe";
@@ -529,9 +348,6 @@ int register_text_service(const std::wstring& tsf_path,
     CString str;
     str.LoadStringW(IDS_STR_ERRREGTSF);
     StringCchPrintfW(msg, _countof(msg), str, params.c_str());
-    // StringCchPrintfW(msg, _countof(msg), L"註冊輸入法錯誤 regsvr32.exe %s",
-    // params.c_str()); if (!silent) MessageBoxW(NULL, msg, L"安装/卸載失败",
-    // MB_ICONERROR | MB_OK);
     MSG_NOT_SILENT_ID_CAP(silent, msg, IDS_STR_INORUN_FAILED,
                           MB_ICONERROR | MB_OK);
     return 1;
@@ -543,13 +359,10 @@ int register_text_service(const std::wstring& tsf_path,
   return 0;
 }
 
-int install(bool hant, bool silent, bool old_ime_support) {
+int install(bool hant, bool silent) {
   std::wstring ime_src_path;
   int retval = 0;
-  if (old_ime_support) {
-    retval +=
-        install_ime_file(ime_src_path, L".ime", hant, silent, &register_ime);
-  }
+
   retval += install_ime_file(ime_src_path, L".dll", hant, silent,
                              &register_text_service);
 
@@ -649,7 +462,7 @@ int uninstall(bool silent) {
     RegCloseKey(hKey);
   }
 
-  uninstall_ime_file(L".ime", silent, &register_ime);
+  // IMM/.ime support removed; only uninstall TSF/.dll
   retval += uninstall_ime_file(L".dll", silent, &register_text_service);
 
   // 清除注册信息

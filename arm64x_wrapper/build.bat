@@ -17,12 +17,6 @@ link.exe /lib /machine:arm64 /def:WeaselTSF_arm64.def /out:WeaselTSF_arm64.lib /
 link.exe /dll /noentry /machine:arm64x /defArm64Native:WeaselTSF_arm64.def /def:WeaselTSF_x64.def ^
   /out:weaselARM64X.dll dummy.o dummy_x64.o WeaselTSF_x64.lib WeaselTSF_arm64.lib /ignore:4104 || exit /b 1
 
-REM Build weasel.ime wrapper
-link.exe /lib /machine:arm64ec /def:WeaselIME_x64.def /out:WeaselIME_x64.lib /ignore:4104 || exit /b 1
-link.exe /lib /machine:arm64 /def:WeaselIME_arm64.def /out:WeaselIME_arm64.lib /ignore:4104 || exit /b 1
-link.exe /dll /noentry /machine:arm64x /defArm64Native:WeaselIME_arm64.def /def:WeaselIME_x64.def ^
-  /out:weaselARM64X.ime dummy.o dummy_x64.o WeaselIME_x64.lib WeaselIME_arm64.lib /ignore:4104 || exit /b 1
-
 endlocal
 exit /b
 

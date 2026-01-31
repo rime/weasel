@@ -76,7 +76,6 @@ class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
 
   bool installed;
   bool hant;
-  bool old_ime_support;
   std::wstring user_dir;
 
  protected:
@@ -103,7 +102,6 @@ class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
   CButton default_dir_;
   CButton custom_dir_;
   CButton ok_;
-  CButton ime_;
   CButton button_custom_dir_;
   CEdit dir_;
 };

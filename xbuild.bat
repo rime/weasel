@@ -192,8 +192,6 @@ if %build_arm64% == 1 (
 
   copy arm64x_wrapper\weaselARM64X.dll output
   if errorlevel 1 goto error
-  copy arm64x_wrapper\weaselARM64X.ime output
-  if errorlevel 1 goto error
 )
 if %build_installer% == 1 (
   "%ProgramFiles(x86)%"\NSIS\Bin\makensis.exe ^
