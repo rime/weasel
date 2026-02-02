@@ -407,7 +407,6 @@ void RimeWithWeaselHandler::OnNotify(void* context_object,
 void RimeWithWeaselHandler::_ReadClientInfo(WeaselSessionId ipc_id,
                                             LPWSTR buffer) {
   std::string app_name;
-  std::string client_type;
   // parse request text
   wbufferstream bs(buffer, WEASEL_IPC_BUFFER_LENGTH);
   std::wstring line;
@@ -423,10 +422,6 @@ void RimeWithWeaselHandler::_ReadClientInfo(WeaselSessionId ipc_id,
       std::wstring lwr = line;
       to_lower(lwr);
       app_name = wtou8(lwr.substr(kClientAppKey.length()));
-    }
-    const std::wstring kClientTypeKey = L"session.client_type=";
-    if (starts_with(line, kClientTypeKey)) {
-      client_type = wtou8(line.substr(kClientTypeKey.length()));
     }
   }
   SessionStatus& session_status = get_session_status(ipc_id);
@@ -444,11 +439,8 @@ void RimeWithWeaselHandler::_ReadClientInfo(WeaselSessionId ipc_id,
       }
     }
   }
-  // ime | tsf
-  rime_api->set_property(session_id, "client_type", client_type.c_str());
   // inline preedit
-  bool inline_preedit =
-      session_status.style.inline_preedit && (client_type == "tsf");
+  bool inline_preedit = session_status.style.inline_preedit;
   rime_api->set_option(session_id, "inline_preedit", Bool(inline_preedit));
   // show soft cursor on weasel panel but not inline
   rime_api->set_option(session_id, "soft_cursor", Bool(!inline_preedit));
@@ -531,16 +523,11 @@ void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
   Context weasel_context;
 
   RimeSessionId session_id = to_session_id(ipc_id);
-  bool is_tsf = _IsSessionTSF(session_id);
 
   if (ipc_id == 0)
     weasel_status.disabled = m_disabled;
 
   _GetStatus(weasel_status, ipc_id, weasel_context);
-
-  if (!is_tsf) {
-    _GetContext(weasel_context, session_id);
-  }
 
   SessionStatus& session_status = get_session_status(ipc_id);
   if (rime_api->get_option(session_id, "inline_preedit"))
@@ -548,10 +535,7 @@ void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
   else
     session_status.style.client_caps &= ~INLINE_PREEDIT_CAPABLE;
 
-  if (weasel_status.composing && !is_tsf) {
-    m_ui->Update(weasel_context, weasel_status);
-    m_ui->Show();
-  } else if (!_ShowMessage(weasel_context, weasel_status) && !is_tsf) {
+  if (!_ShowMessage(weasel_context, weasel_status)) {
     m_ui->Hide();
     m_ui->Update(weasel_context, weasel_status);
   }
@@ -1513,21 +1497,13 @@ void RimeWithWeaselHandler::_GetContext(Context& weasel_context,
   }
 }
 
-bool RimeWithWeaselHandler::_IsSessionTSF(RimeSessionId session_id) {
-  static char client_type[20] = {0};
-  rime_api->get_property(session_id, "client_type", client_type,
-                         sizeof(client_type) - 1);
-  return std::string(client_type) == "tsf";
-}
-
 void RimeWithWeaselHandler::_UpdateInlinePreeditStatus(WeaselSessionId ipc_id) {
   if (!m_ui)
     return;
   SessionStatus& session_status = get_session_status(ipc_id);
   RimeSessionId session_id = session_status.session_id;
   // set inline_preedit option
-  bool inline_preedit =
-      session_status.style.inline_preedit && _IsSessionTSF(session_id);
+  bool inline_preedit = session_status.style.inline_preedit;
   rime_api->set_option(session_id, "inline_preedit", Bool(inline_preedit));
   // show soft cursor on weasel panel but not inline
   rime_api->set_option(session_id, "soft_cursor", Bool(!inline_preedit));
