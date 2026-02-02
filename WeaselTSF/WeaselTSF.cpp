@@ -3,6 +3,7 @@
 #include <WeaselIPCData.h>
 #include <thread>
 #include <shellapi.h>
+#include <tlhelp32.h>
 #include "WeaselTSF.h"
 #include "CandidateList.h"
 #include "LanguageBar.h"
@@ -240,7 +241,24 @@ bool WeaselTSF::_EnsureServerConnected() {
     retry++;
     if (retry >= 6) {
       HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerExclusiveMutex");
-      if (!m_client.Echo() && GetLastError() != ERROR_ALREADY_EXISTS) {
+      const auto count_server_process = []() -> int {
+        int count = 0;
+        HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if (snap == INVALID_HANDLE_VALUE)
+          return 0;
+        PROCESSENTRY32 pe;
+        pe.dwSize = sizeof(pe);
+        if (Process32First(snap, &pe)) {
+          do {
+            if (_wcsicmp(pe.szExeFile, L"WeaselServer.exe") == 0)
+              count++;
+          } while (Process32Next(snap, &pe));
+        }
+        CloseHandle(snap);
+        return count;
+      };
+      if (!m_client.Echo() && GetLastError() != ERROR_ALREADY_EXISTS &&
+          !count_server_process()) {
         std::wstring dir = _GetRootDir();
         std::thread th([dir, this]() {
           ShellExecuteW(NULL, L"open", (dir + L"\\start_service.bat").c_str(),
