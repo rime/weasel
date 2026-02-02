@@ -114,6 +114,7 @@ void RimeWithWeaselHandler::Initialize() {
   rime_api->initialize(NULL);
   if (rime_api->start_maintenance(/*full_check = */ False)) {
     m_disabled = true;
+    rime_api->join_maintenance_thread();
   }
 
   RimeConfig config = {NULL};
