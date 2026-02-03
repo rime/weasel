@@ -71,7 +71,7 @@ struct D2D {
       }
       HR(m_pDWriteFactory->CreateTextFormat(
           _mainFontFace.c_str(), NULL, fontWeight, fontStyle,
-          DWRITE_FONT_STRETCH_NORMAL, font_point * m_dpiScaleFontPoint, L"",
+          DWRITE_FONT_STRETCH_NORMAL, font_point * 96 / 72.0, L"",
           reinterpret_cast<IDWriteTextFormat**>(
               _pTextFormat.ReleaseAndGetAddressOf())));
 
@@ -153,10 +153,8 @@ struct D2D {
     if (m_dpiY == 0)
       m_dpiX = m_dpiY = 96.0;
     auto dpiScaleFontPoint = m_dpiY / 72.0f;
-    bool ret = (dpiScaleFontPoint == m_dpiScaleFontPoint);
-    m_dpiScaleFontPoint = dpiScaleFontPoint;
     m_dpiScaleLayout = m_dpiX / 96.0f;
-    return ret;
+    return true;
   }
 
   void InitializeDirect2D() {
@@ -184,17 +182,48 @@ struct D2D {
     initialized = true;
   }
 
-  void Draw() {
-    if (!m_pRenderTarget)
+  void EnsureRenderTarget() {
+    const bool dpiUnchanged = GetDpi();
+    RECT newRect{};
+    ::GetClientRect(m_hWnd, &newRect);
+    const LONG newWidth = newRect.right - newRect.left;
+    const LONG newHeight = newRect.bottom - newRect.top;
+    const LONG curWidth = m_rect.right - m_rect.left;
+    const LONG curHeight = m_rect.bottom - m_rect.top;
+
+    if (!m_pRenderTarget) {
+      m_rect = newRect;
       InitializeDirect2D();
+      return;
+    }
+
+    if (!dpiUnchanged) {
+      const float dpi = m_dpiScaleLayout * 96.0f;
+      m_pRenderTarget->SetDpi(dpi, dpi);
+    }
+
+    if (newWidth != curWidth || newHeight != curHeight) {
+      m_rect = newRect;
+      m_pRenderTarget->Resize(D2D1::SizeU(static_cast<UINT>(newWidth),
+                                          static_cast<UINT>(newHeight)));
+    }
+  }
+
+  void Draw() {
+    EnsureRenderTarget();
+    const float dpiScale = (m_dpiScaleLayout == 0.0f) ? 1.0f : m_dpiScaleLayout;
+    const float widthDip =
+        static_cast<float>(m_rect.right - m_rect.left) / dpiScale;
+    const float heightDip =
+        static_cast<float>(m_rect.bottom - m_rect.top) / dpiScale;
+    const float marginDip = 10.0f;  // keep a small padding in DIPs
     m_pRenderTarget->BeginDraw();
     m_pRenderTarget->Clear(m_color);
     if (m_pTextFormat && !m_text.empty()) {
       m_pRenderTarget->DrawText(
           m_text.c_str(), static_cast<UINT32>(m_text.length()),
           m_pTextFormat.Get(),
-          D2D1::RectF(m_rect.left + 10, m_rect.top, m_rect.right - 10,
-                      m_rect.bottom),
+          D2D1::RectF(marginDip, 0.0f, widthDip - marginDip, heightDip),
           m_pBrush.Get(), D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
     }
     m_pRenderTarget->EndDraw();
@@ -208,7 +237,6 @@ struct D2D {
 
   D2D1::ColorF m_color = D2D1::ColorF::White;
   const wstring& m_text;
-  float m_dpiScaleFontPoint = 1.0f;
   float m_dpiScaleLayout = 1.0f;
   bool initialized = false;
   HWND m_hWnd;

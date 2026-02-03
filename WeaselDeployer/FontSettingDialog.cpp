@@ -175,6 +175,7 @@ LRESULT FontSettingDialog::OnDpiChanged(UINT,
                pNewRect->bottom - pNewRect->top, SWP_NOZORDER | SWP_NOACTIVATE);
   ScaleControlsAndFonts(newDpi);
   m_currentDpi = newDpi;
+  m_pD2D->m_pRenderTarget->SetDpi((FLOAT)newDpi, (FLOAT)newDpi);
   InvalidateRect(hDlg_, nullptr, true);
   return 0;
 }
@@ -325,6 +326,7 @@ void FontSettingDialog::UpdatePreview() {
     *m_font_point_ptr = std::stoi(font_point_str);
     m_text = GetTextOfEdit(m_hEditPreviewText);
     RemoveSpaceAround(*m_font_face_ptr);
+    m_pD2D->GetDpi();
     HR(m_pD2D->InitFontFormat(*m_font_face_ptr, *m_font_point_ptr));
     m_pD2D->Draw();
   }
