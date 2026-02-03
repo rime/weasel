@@ -32,6 +32,7 @@ enum WEASEL_IPC_COMMAND {
   WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE,
   WEASEL_IPC_HIGHLIGHT_CANDIDATE_ON_CURRENT_PAGE,
   WEASEL_IPC_CHANGE_PAGE,
+  WEASEL_IPC_GET_STATUS,
   WEASEL_IPC_LAST_COMMAND
 };
 
@@ -81,6 +82,7 @@ struct RequestHandler {
   virtual void EndMaintenance() {}
   virtual void SetOption(DWORD session_id, const std::string& opt, bool val) {}
   virtual void UpdateColorTheme(BOOL darkMode) {}
+  virtual bool GetStatus(EatLine eat) { return false; }
 };
 
 // 處理server端回應之物件
@@ -140,6 +142,8 @@ class Client {
   void FocusOut();
   // 托盤菜單
   void TrayCommand(UINT menuId);
+  // 獲取當前輸入法狀態
+  bool GetStatus();
   // 读取server返回的数据
   bool GetResponseData(ResponseHandler handler);
 

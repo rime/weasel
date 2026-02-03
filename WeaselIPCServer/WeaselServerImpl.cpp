@@ -358,6 +358,20 @@ DWORD ServerImpl::OnChangePage(WEASEL_IPC_COMMAND uMsg,
   return 0;
 }
 
+DWORD ServerImpl::OnGetStatus(WEASEL_IPC_COMMAND uMsg,
+                              DWORD wParam,
+                              DWORD lParam) {
+  if (m_pRequestHandler) {
+    auto eat = [this](std::wstring& msg) -> bool {
+      *channel << msg;
+      return true;
+    };
+    m_pRequestHandler->GetStatus(eat);
+    return 1;
+  }
+  return 0;
+}
+
 #define MAP_PIPE_MSG_HANDLE(__msg, __wParam, __lParam) \
   {                                                    \
     auto lParam = __lParam;                            \
@@ -397,6 +411,7 @@ void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, _Resp resp) {
                   OnHighlightCandidateOnCurrentPage);
   PIPE_MSG_HANDLE(WEASEL_IPC_CHANGE_PAGE, OnChangePage);
   PIPE_MSG_HANDLE(WEASEL_IPC_TRAY_COMMAND, OnCommand);
+  PIPE_MSG_HANDLE(WEASEL_IPC_GET_STATUS, OnGetStatus);
   END_MAP_PIPE_MSG_HANDLE(result);
 
   resp(result);
