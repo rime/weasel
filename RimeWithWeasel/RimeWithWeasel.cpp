@@ -22,6 +22,7 @@
 typedef enum { COLOR_ABGR = 0, COLOR_ARGB, COLOR_RGBA } ColorFormat;
 
 using namespace weasel;
+static bool hide_ime_mode_icon = false;
 
 static RimeApi* rime_api;
 WeaselSessionId _GenerateNewWeaselSessionId(SessionStatusMap sm, DWORD pid) {
@@ -901,6 +902,8 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
 
   // style
   if (!session_status.__synced) {
+    messages.push_back(std::string("config.hide_ime_mode_icon=") +
+                       std::to_string((int)hide_ime_mode_icon) + "\n");
     std::wstringstream ss;
     boost::archive::text_woarchive oa(ss);
     oa << session_status.style;
@@ -1180,6 +1183,7 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   _RimeGetIntStr(config, "style/font_point", style.font_point);
   if (style.font_point <= 0)
     style.font_point = 12;
+  _RimeGetBool(config, "hide_ime_mode_icon", initialize, hide_ime_mode_icon);
   _RimeGetIntStr(config, "style/label_font_point", style.label_font_point,
                  "style/font_point", 0, _abs);
   _RimeGetIntStr(config, "style/comment_font_point", style.comment_font_point,
