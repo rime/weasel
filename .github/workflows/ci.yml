@@ -1,17 +1,13 @@
-name: Commit CI
+name: CI
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - '*'
     tags:
-      - '![0-9]+.*'
-    paths:
-      - '**/**'
-      - '!*.md'
-      - '!.gitignore'
+      - '[0-9]+.*'
   pull_request:
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -21,6 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install clang-format 18
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           wget https://apt.llvm.org/llvm-snapshot.gpg.key
           sudo gpg --dearmor < llvm-snapshot.gpg.key > /usr/share/keyrings/llvm-archive-keyring.gpg
@@ -31,6 +28,7 @@ jobs:
           clang-format --version
 
       - name: Code style lint
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         shell: bash
         run: ./clang-format.sh -i
 
@@ -40,8 +38,11 @@ jobs:
     env:
       boost_version: 1.84.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
+      SDKVER: 10.0.19041.0
+    strategy:
+      matrix:
+        variant: [msbuild, xmake]
     steps:
-
       - name: Checkout last commit
         uses: actions/checkout@v4
         with:
@@ -74,7 +75,7 @@ jobs:
 
       - uses: ilammy/msvc-dev-cmd@v1
         with:
-          sdk: 10.0.19041.0
+          sdk: ${{ env.SDKVER }}
 
       # bundled winsparkle v0.9.2 to disable auto open ReleaseNoteUrl in default browser
       - name: cache bundled winsparkle
@@ -86,13 +87,16 @@ jobs:
             ${{ github.workspace }}\winsparkle\x64\Release\WinSparkle.lib
             ${{ github.workspace }}\winsparkle\Release\WinSparkle.dll
             ${{ github.workspace }}\winsparkle\Release\WinSparkle.lib
-          key: winsparkle-v0.9.2-bundled
+          key: ${{ runner.os }}-winsparkle-v0.9.2-bundled
+          restore-keys: |
+            winsparkle-v0.9.2-bundled
 
       - name: Build bundled winsparkle
         if: steps.cache-winsparkle.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          if (Test-Path winsparkle) { Remove-Item -Recurse -Force winsparkle }
           # Clone winsparkle repo v0.9.2
           git clone https://github.com/vslavik/winsparkle.git -b v0.9.2 --depth 1
           cd winsparkle
@@ -124,21 +128,32 @@ jobs:
           $ErrorActionPreference = 'Stop'
           .\build.bat data
 
+      - name: Setup xmake
+        if: matrix.variant == 'xmake'
+        uses: xmake-io/github-action-setup-xmake@v1
+
       - name: Build Weasel
         shell: pwsh
         id: build_weasel
+        env:
+          RELEASE_BUILD: ${{ (github.repository == 'rime/weasel' && startsWith(github.ref, 'refs/tags/')) && '1' || '' }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $env:SDKVER="10.0.19041.0"
-          .\build.bat arm64 installer
+          if ('${{ matrix.variant }}' -eq 'msbuild') {
+            .\build.bat arm64 installer
+          } else {
+            .\xbuild.bat arm64 installer
+          }
 
       - name: Compress Debug Symbols
+        if: matrix.variant == 'msbuild'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           output\7z.exe a -t7z "./output/archives/debug_symbols.7z" "output/*.pdb" -r
 
       - name: Upload artifacts
+        if: matrix.variant == 'msbuild'
         uses: actions/upload-artifact@v4
         with:
           name: weasel-artifact-${{ env.git_ref_name }}
@@ -147,105 +162,30 @@ jobs:
             .\output\archives\weasel*.exe
             .\output\archives\debug_symbols.7z
 
-  xbuild:
-    needs: lint
-    runs-on: windows-2022
-    env:
-      boost_version: 1.84.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
-    steps:
-
-      - name: Checkout last commit
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          fetch-depth: 0
-
-      - name: Fetch all tags
-        run: git fetch --tags
-
-      - name: Configure build environment
-        shell: bash
-        run: |
-          cp env.vs2022.bat env.bat
-          echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
-
-      - name: Cache Boost
-        id: cache-boost
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.BOOST_ROOT }}
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}
-
-      - name: Install Boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          ./install_boost.bat
-          ./build.bat boost arm64
-
-      # xmake 2.9.4 or later
-      - uses: xmake-io/github-action-setup-xmake@v1
-        with:
-          xmake-version: '2.9.4'
-
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          sdk: 10.0.19041.0
-
-      # bundled winsparkle v0.9.2 to disable auto open ReleaseNoteUrl in default browser
-      - name: cache bundled winsparkle
-        id: cache-winsparkle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ github.workspace }}\winsparkle\x64\Release\WinSparkle.dll
-            ${{ github.workspace }}\winsparkle\x64\Release\WinSparkle.lib
-            ${{ github.workspace }}\winsparkle\Release\WinSparkle.dll
-            ${{ github.workspace }}\winsparkle\Release\WinSparkle.lib
-          key: winsparkle-v0.9.2-bundled
-
-      - name: Build bundled winsparkle
-        if: steps.cache-winsparkle.outputs.cache-hit != 'true'
+      # Release-only steps (run on tags or master)
+      - name: Extract changelog
+        if: ${{ github.repository == 'rime/weasel' && startsWith(github.ref, 'refs/tags/') && matrix.variant == 'msbuild' }}
         shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          # Clone winsparkle repo v0.9.2
-          git clone https://github.com/vslavik/winsparkle.git -b v0.9.2 --depth 1
-          cd winsparkle
-          git submodule update --init --recursive
-          copy ..\bundled_winsparkle.patch .
-          git apply bundled_winsparkle.patch
-          nuget restore
-          msbuild -m -t:Build -p:Configuration=Release -p:Platform=x64 WinSparkle.sln
-          msbuild -m -t:Build -p:Configuration=Release -p:Platform=Win32 WinSparkle.sln
+        run: .\extract_changelog.ps1
 
-      - name: Install WinSparkle files
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          copy .\winsparkle\x64\Release\WinSparkle.dll .\output\
-          copy .\winsparkle\x64\Release\WinSparkle.lib .\lib64\
-          copy .\winsparkle\Release\WinSparkle.dll .\output\Win32\
-          copy .\winsparkle\Release\WinSparkle.lib .\lib\
+      - name: Create Nightly release
+        if: ${{ github.repository == 'rime/weasel' && github.ref == 'refs/heads/master' && matrix.variant == 'msbuild' }}
+        uses: 'marvinpinto/action-automatic-releases@latest'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest
+          prerelease: true
+          title: "Nightly Build"
+          files: |
+            ./output/archives/weasel*.exe
+            ./output/archives/debug_symbols.7z
 
-      - name: Get Rime files
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          .\get-rime.ps1 -use dev
-
-
-      - name: Build data
-        run: |
-          $ErrorActionPreference = 'Stop'
-          .\build.bat data
-
-      - name: Build Weasel
-        id: build_weasel
-        shell: cmd
-        run: |
-          set SDKVER=10.0.19041.0
-          .\xbuild.bat arm64 installer
-
+      - name: Release (stable)
+        if: ${{ github.repository == 'rime/weasel' && startsWith(github.ref, 'refs/tags/') && matrix.variant == 'msbuild' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
+            ./output/archives/weasel*.exe
+            ./output/archives/debug_symbols.7z
+          body_path: ${{ github.workspace }}/RELEASE_CHANGELOG.md
