@@ -76,6 +76,42 @@ jobs:
         with:
           sdk: 10.0.19041.0
 
+      # bundled winsparkle v0.9.2 to disable auto open ReleaseNoteUrl in default browser
+      - name: cache bundled winsparkle
+        id: cache-winsparkle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}\winsparkle\x64\Release\WinSparkle.dll
+            ${{ github.workspace }}\winsparkle\x64\Release\WinSparkle.lib
+            ${{ github.workspace }}\winsparkle\Release\WinSparkle.dll
+            ${{ github.workspace }}\winsparkle\Release\WinSparkle.lib
+          key: winsparkle-v0.9.2-bundled
+
+      - name: Build bundled winsparkle
+        if: steps.cache-winsparkle.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Clone winsparkle repo v0.9.2
+          git clone https://github.com/vslavik/winsparkle.git -b v0.9.2 --depth 1
+          cd winsparkle
+          git submodule update --init --recursive
+          copy ..\bundled_winsparkle.patch .
+          git apply bundled_winsparkle.patch
+          nuget restore
+          msbuild -m -t:Build -p:Configuration=Release -p:Platform=x64 WinSparkle.sln
+          msbuild -m -t:Build -p:Configuration=Release -p:Platform=Win32 WinSparkle.sln
+
+      - name: Install WinSparkle files
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          copy .\winsparkle\x64\Release\WinSparkle.dll .\output\
+          copy .\winsparkle\x64\Release\WinSparkle.lib .\lib64\
+          copy .\winsparkle\Release\WinSparkle.dll .\output\Win32\
+          copy .\winsparkle\Release\WinSparkle.lib .\lib\
+
       - name: Get Rime files
         shell: pwsh
         run: |
@@ -157,6 +193,42 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           sdk: 10.0.19041.0
+
+      # bundled winsparkle v0.9.2 to disable auto open ReleaseNoteUrl in default browser
+      - name: cache bundled winsparkle
+        id: cache-winsparkle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}\winsparkle\x64\Release\WinSparkle.dll
+            ${{ github.workspace }}\winsparkle\x64\Release\WinSparkle.lib
+            ${{ github.workspace }}\winsparkle\Release\WinSparkle.dll
+            ${{ github.workspace }}\winsparkle\Release\WinSparkle.lib
+          key: winsparkle-v0.9.2-bundled
+
+      - name: Build bundled winsparkle
+        if: steps.cache-winsparkle.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Clone winsparkle repo v0.9.2
+          git clone https://github.com/vslavik/winsparkle.git -b v0.9.2 --depth 1
+          cd winsparkle
+          git submodule update --init --recursive
+          copy ..\bundled_winsparkle.patch .
+          git apply bundled_winsparkle.patch
+          nuget restore
+          msbuild -m -t:Build -p:Configuration=Release -p:Platform=x64 WinSparkle.sln
+          msbuild -m -t:Build -p:Configuration=Release -p:Platform=Win32 WinSparkle.sln
+
+      - name: Install WinSparkle files
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          copy .\winsparkle\x64\Release\WinSparkle.dll .\output\
+          copy .\winsparkle\x64\Release\WinSparkle.lib .\lib64\
+          copy .\winsparkle\Release\WinSparkle.dll .\output\Win32\
+          copy .\winsparkle\Release\WinSparkle.lib .\lib\
 
       - name: Get Rime files
         shell: pwsh
