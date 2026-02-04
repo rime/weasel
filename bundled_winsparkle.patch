@@ -1,0 +1,20 @@
+diff --git a/src/ui.cpp b/src/ui.cpp
+index d401aca..61d58f4 100644
+--- a/src/ui.cpp
++++ b/src/ui.cpp
+@@ -1034,6 +1034,7 @@ void UpdateDialog::ShowReleaseNotes(const Appcast& info)
+         m_browserParent->SetSizer(sizer);
+ 
+         // Open all links in the default browser:
++        /*
+ 		m_webBrowser->Bind(wxEVT_WEBVIEW_NAVIGATING, [info](wxWebViewEvent& evt)
+ 			{
+ 				auto url = evt.GetURL();
+@@ -1043,6 +1044,7 @@ void UpdateDialog::ShowReleaseNotes(const Appcast& info)
+                     evt.Veto();
+                 }
+ 			});
++        */
+     }
+ 
+     if( !info.ReleaseNotesURL.empty() )
