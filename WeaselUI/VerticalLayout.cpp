@@ -6,43 +6,12 @@ using namespace weasel;
 void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   const int space = _style.hilite_spacing;
   int width = 0, height = real_margin_y;
+  MarkMetrics mark = ComputeMarkMetrics(pDWR);
+  int base_offset = mark.base_offset;
 
-  if ((_style.hilited_mark_color & 0xff000000)) {
-    CSize sg;
-    if (candidates_count) {
-      if (_style.mark_text.empty())
-        GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
-      else
-        GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
-                      pDWR->pTextFormat, pDWR, &sg);
-    }
-
-    mark_width = sg.cx;
-    mark_height = sg.cy;
-    if (_style.mark_text.empty()) {
-      mark_width = mark_height / 7;
-      if (_style.linespacing && _style.baseline)
-        mark_width =
-            (int)((float)mark_width / ((float)_style.linespacing / 100.0f));
-      mark_width = max(mark_width, 6);
-    }
-    mark_gap = (_style.mark_text.empty()) ? mark_width
-                                          : mark_width + _style.hilite_spacing;
-  }
-  int base_offset = ((_style.hilited_mark_color & 0xff000000)) ? mark_gap : 0;
-
-  // calc page indicator
-  CSize pgszl, pgszr;
-  if (!IsInlinePreedit()) {
-    GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
-    GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-  }
-  bool page_en = (_style.prevpage_color & 0xff000000) &&
-                 (_style.nextpage_color & 0xff000000);
-  int pgw = page_en ? pgszl.cx + pgszr.cx + _style.hilite_spacing +
-                          _style.hilite_padding_x * 2
-                    : 0;
-  int pgh = page_en ? max(pgszl.cy, pgszr.cy) : 0;
+  PagerMetrics pager = ComputePagerMetrics(pDWR);
+  int pgw = pager.pgw;
+  int pgh = pager.pgh;
 
   /*  preedit and auxiliary rectangle calc start */
   CSize size;
@@ -129,20 +98,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
       comment_width += size.cx * cmtFontValid;
       max_comment_width = max(max_comment_width, comment_width);
     }
-    int ol = 0, ot = 0, oc = 0;
-    if (_style.align_type == UIStyle::ALIGN_CENTER) {
-      ol = (max_height_curren_candidate - _candidateLabelRects[i].Height()) / 2;
-      ot = (max_height_curren_candidate - _candidateTextRects[i].Height()) / 2;
-      oc = (max_height_curren_candidate - _candidateCommentRects[i].Height()) /
-           2;
-    } else if (_style.align_type == UIStyle::ALIGN_BOTTOM) {
-      ol = (max_height_curren_candidate - _candidateLabelRects[i].Height());
-      ot = (max_height_curren_candidate - _candidateTextRects[i].Height());
-      oc = (max_height_curren_candidate - _candidateCommentRects[i].Height());
-    }
-    _candidateLabelRects[i].OffsetRect(0, ol);
-    _candidateTextRects[i].OffsetRect(0, ot);
-    _candidateCommentRects[i].OffsetRect(0, oc);
+    ReAdjustAlignment(static_cast<size_t>(max_height_curren_candidate), i);
 
     int hlTop = _candidateTextRects[i].top;
     int hlBot = _candidateTextRects[i].bottom;
@@ -214,19 +170,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
 
   _highlightRect = _candidateRects[id];
   // calc page indicator
-  if (page_en && candidates_count && !_style.inline_preedit) {
-    int _prex = _contentSize.cx - offsetX - real_margin_x +
-                _style.hilite_padding_x - pgw;
-    int _prey = (_preeditRect.top + _preeditRect.bottom) / 2 - pgszl.cy / 2;
-    _prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
-    _nextPageRect.SetRect(_prePageRect.right + _style.hilite_spacing, _prey,
-                          _prePageRect.right + _style.hilite_spacing + pgszr.cx,
-                          _prey + pgszr.cy);
-    if (ShouldDisplayStatusIcon()) {
-      _prePageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
-      _nextPageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
-    }
-  }
+  PlacePagerHorizontal(pager, _contentSize.cx, _contentSize.cy);
   // calc roundings start
   _contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
   // background rect prepare for Hemispherical calculation

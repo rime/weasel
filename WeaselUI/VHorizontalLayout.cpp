@@ -13,43 +13,12 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   CSize size;
   int height = offsetY, width = offsetX + real_margin_x;
   int h = offsetY + real_margin_y;
+  MarkMetrics mark = ComputeMarkMetrics(pDWR);
+  int base_offset = mark.base_offset;
 
-  if ((_style.hilited_mark_color & 0xff000000)) {
-    CSize sg;
-    if (candidates_count) {
-      if (_style.mark_text.empty())
-        GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
-      else
-        GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
-                      pDWR->pTextFormat, pDWR, &sg);
-    }
-
-    mark_width = sg.cx;
-    mark_height = sg.cy;
-    if (_style.mark_text.empty()) {
-      mark_height = mark_width / 7;
-      if (_style.linespacing && _style.baseline)
-        mark_height =
-            (int)((float)mark_height / ((float)_style.linespacing / 100.0f));
-      mark_height = max(mark_height, 6);
-    }
-    mark_gap = (_style.mark_text.empty()) ? mark_height
-                                          : mark_height + _style.hilite_spacing;
-  }
-  int base_offset = ((_style.hilited_mark_color & 0xff000000)) ? mark_gap : 0;
-
-  // calc page indicator
-  CSize pgszl, pgszr;
-  if (!IsInlinePreedit()) {
-    GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
-    GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-  }
-  bool page_en = (_style.prevpage_color & 0xff000000) &&
-                 (_style.nextpage_color & 0xff000000);
-  int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing +
-                          _style.hilite_padding_y * 2
-                    : 0;
-  int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
+  PagerMetrics pager = ComputePagerMetrics(pDWR);
+  int pgw = pager.pgw;
+  int pgh = pager.pgh;
 
   /* Preedit */
   if (!IsInlinePreedit() && !_context.preedit.str.empty()) {
@@ -139,27 +108,14 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   // reposition candidates
   if (candidates_count) {
     for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i) {
-      int ol = 0, ot = 0, oc = 0;
-      if (_style.align_type == UIStyle::ALIGN_CENTER) {
-        ol = (wids[i] - _candidateLabelRects[i].Width()) / 2;
-        ot = (wids[i] - _candidateTextRects[i].Width()) / 2;
-        oc = (wids[i] - _candidateCommentRects[i].Width()) / 2;
-      } else if ((_style.align_type == UIStyle::ALIGN_BOTTOM) &&
-                 _style.vertical_text_left_to_right) {
-        ol = (wids[i] - _candidateLabelRects[i].Width());
-        ot = (wids[i] - _candidateTextRects[i].Width());
-        oc = (wids[i] - _candidateCommentRects[i].Width());
-      } else if ((_style.align_type == UIStyle::ALIGN_TOP) &&
-                 (!_style.vertical_text_left_to_right)) {
-        ol = (wids[i] - _candidateLabelRects[i].Width());
-        ot = (wids[i] - _candidateTextRects[i].Width());
-        oc = (wids[i] - _candidateCommentRects[i].Width());
-      }
-      // offset rects
-      _candidateLabelRects[i].OffsetRect(ol, 0);
-      _candidateTextRects[i].OffsetRect(ot, 0);
+      bool alignToEnd = (_style.align_type == UIStyle::ALIGN_BOTTOM &&
+                         _style.vertical_text_left_to_right) ||
+                        (_style.align_type == UIStyle::ALIGN_TOP &&
+                         !_style.vertical_text_left_to_right);
+      bool endIsEnd = _style.vertical_text_left_to_right;
+      ReAdjustAlignment(static_cast<size_t>(wids[i]), i, alignToEnd, endIsEnd);
       _candidateCommentRects[i].OffsetRect(
-          oc, max_content_height + _style.hilite_spacing);
+          0, max_content_height + _style.hilite_spacing);
       // define  _candidateRects
       _candidateRects[i].left =
           min(_candidateLabelRects[i].left, _candidateTextRects[i].left);
@@ -230,19 +186,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   _contentSize.SetSize(width + offsetX, height + offsetY);
 
   // calc page indicator
-  if (page_en && candidates_count && !_style.inline_preedit) {
-    int _prey = _contentSize.cy - offsetY - real_margin_y +
-                _style.hilite_padding_y - pgh;
-    int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
-    _prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
-    _nextPageRect.SetRect(
-        _prex, _prePageRect.bottom + _style.hilite_spacing, _prex + pgszr.cx,
-        _prePageRect.bottom + _style.hilite_spacing + pgszr.cy);
-    if (ShouldDisplayStatusIcon()) {
-      _prePageRect.OffsetRect(0, -STATUS_ICON_SIZE);
-      _nextPageRect.OffsetRect(0, -STATUS_ICON_SIZE);
-    }
-  }
+  PlacePagerVerticalText(pager, _contentSize.cx, _contentSize.cy);
 
   _contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
   // background rect prepare for Hemispherical calculation
@@ -259,43 +203,12 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR) {
   CSize size;
   int height = offsetY, width = offsetX + real_margin_x;
   int h = offsetY + real_margin_y;
+  MarkMetrics mark = ComputeMarkMetrics(pDWR);
+  int base_offset = mark.base_offset;
 
-  if ((_style.hilited_mark_color & 0xff000000)) {
-    CSize sg;
-    if (candidates_count) {
-      if (_style.mark_text.empty())
-        GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
-      else
-        GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
-                      pDWR->pTextFormat, pDWR, &sg);
-    }
-
-    mark_width = sg.cx;
-    mark_height = sg.cy;
-    if (_style.mark_text.empty()) {
-      mark_height = mark_width / 7;
-      if (_style.linespacing && _style.baseline)
-        mark_height =
-            (int)((float)mark_height / ((float)_style.linespacing / 100.0f));
-      mark_height = max(mark_height, 6);
-    }
-    mark_gap = (_style.mark_text.empty()) ? mark_height
-                                          : mark_height + _style.hilite_spacing;
-  }
-  int base_offset = ((_style.hilited_mark_color & 0xff000000)) ? mark_gap : 0;
-
-  // calc page indicator
-  CSize pgszl, pgszr;
-  if (!IsInlinePreedit()) {
-    GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
-    GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-  }
-  bool page_en = (_style.prevpage_color & 0xff000000) &&
-                 (_style.nextpage_color & 0xff000000);
-  int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing +
-                          _style.hilite_padding_y * 2
-                    : 0;
-  int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
+  PagerMetrics pager = ComputePagerMetrics(pDWR);
+  int pgw = pager.pgw;
+  int pgh = pager.pgh;
 
   /* Preedit */
   if (!IsInlinePreedit() && !_context.preedit.str.empty()) {
@@ -410,37 +323,13 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR) {
                                  minleft_of_cols[col_of_candidate[i]] +
                                      width_of_cols[col_of_candidate[i]],
                                  _candidateCommentRects[i].bottom);
-      int ol = 0, ot = 0, oc = 0;
-      if (_style.align_type == UIStyle::ALIGN_CENTER) {
-        ol = (width_of_cols[col_of_candidate[i]] -
-              _candidateLabelRects[i].Width()) /
-             2;
-        ot = (width_of_cols[col_of_candidate[i]] -
-              _candidateTextRects[i].Width()) /
-             2;
-        oc = (width_of_cols[col_of_candidate[i]] -
-              _candidateCommentRects[i].Width()) /
-             2;
-      } else if ((_style.align_type == UIStyle::ALIGN_BOTTOM) &&
-                 _style.vertical_text_left_to_right) {
-        ol = (width_of_cols[col_of_candidate[i]] -
-              _candidateLabelRects[i].Width());
-        ot = (width_of_cols[col_of_candidate[i]] -
-              _candidateTextRects[i].Width());
-        oc = (width_of_cols[col_of_candidate[i]] -
-              _candidateCommentRects[i].Width());
-      } else if ((_style.align_type == UIStyle::ALIGN_TOP) &&
-                 (!_style.vertical_text_left_to_right)) {
-        ol = (width_of_cols[col_of_candidate[i]] -
-              _candidateLabelRects[i].Width());
-        ot = (width_of_cols[col_of_candidate[i]] -
-              _candidateTextRects[i].Width());
-        oc = (width_of_cols[col_of_candidate[i]] -
-              _candidateCommentRects[i].Width());
-      }
-      _candidateLabelRects[i].OffsetRect(ol, 0);
-      _candidateTextRects[i].OffsetRect(ot, 0);
-      _candidateCommentRects[i].OffsetRect(oc, 0);
+      bool alignToEnd = (_style.align_type == UIStyle::ALIGN_BOTTOM &&
+                         _style.vertical_text_left_to_right) ||
+                        (_style.align_type == UIStyle::ALIGN_TOP &&
+                         !_style.vertical_text_left_to_right);
+      bool endIsEnd = _style.vertical_text_left_to_right;
+      ReAdjustAlignment(static_cast<size_t>(width_of_cols[col_of_candidate[i]]),
+                        i, alignToEnd, endIsEnd);
       if ((i < candidates_count - 1 &&
            col_of_candidate[i] < col_of_candidate[i + 1]) ||
           (i == candidates_count - 1))
@@ -516,19 +405,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR) {
   _contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 
   // calc page indicator
-  if (page_en && candidates_count && !_style.inline_preedit) {
-    int _prey = _contentSize.cy - offsetY - real_margin_y +
-                _style.hilite_padding_y - pgh;
-    int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pgszl.cx / 2;
-    _prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
-    _nextPageRect.SetRect(
-        _prex, _prePageRect.bottom + _style.hilite_spacing, _prex + pgszr.cx,
-        _prePageRect.bottom + _style.hilite_spacing + pgszr.cy);
-    if (ShouldDisplayStatusIcon()) {
-      _prePageRect.OffsetRect(0, -STATUS_ICON_SIZE);
-      _nextPageRect.OffsetRect(0, -STATUS_ICON_SIZE);
-    }
-  }
+  PlacePagerVerticalText(pager, _contentSize.cx, _contentSize.cy);
 
   // prepare temp rect _bgRect for roundinfo calculation
   CopyRect(_bgRect, _contentRect);

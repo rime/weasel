@@ -7,44 +7,12 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   CSize size;
   int width = offsetX + real_margin_x, height = offsetY + real_margin_y;
   int w = offsetX + real_margin_x;
+  MarkMetrics mark = ComputeMarkMetrics(pDWR);
+  int base_offset = mark.base_offset;
 
-  /* calc mark_text sizes */
-  if ((_style.hilited_mark_color & 0xff000000)) {
-    CSize sg;
-    if (candidates_count) {
-      if (_style.mark_text.empty())
-        GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
-      else
-        GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
-                      pDWR->pTextFormat, pDWR, &sg);
-    }
-
-    mark_width = sg.cx;
-    mark_height = sg.cy;
-    if (_style.mark_text.empty()) {
-      mark_width = mark_height / 7;
-      if (_style.linespacing && _style.baseline)
-        mark_width =
-            (int)((float)mark_width / ((float)_style.linespacing / 100.0f));
-      mark_width = max(mark_width, 6);
-    }
-    mark_gap = (_style.mark_text.empty()) ? mark_width
-                                          : mark_width + _style.hilite_spacing;
-  }
-  int base_offset = ((_style.hilited_mark_color & 0xff000000)) ? mark_gap : 0;
-
-  // calc page indicator
-  CSize pgszl, pgszr;
-  if (!IsInlinePreedit()) {
-    GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
-    GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-  }
-  bool page_en = (_style.prevpage_color & 0xff000000) &&
-                 (_style.nextpage_color & 0xff000000);
-  int pgw = page_en ? (pgszl.cx + pgszr.cx + _style.hilite_spacing +
-                       _style.hilite_padding_x * 2)
-                    : 0;
-  int pgh = page_en ? max(pgszl.cy, pgszr.cy) : 0;
+  PagerMetrics pager = ComputePagerMetrics(pDWR);
+  int pgw = pager.pgw;
+  int pgh = pager.pgh;
 
   /* Preedit */
   if (!IsInlinePreedit() && !_context.preedit.str.empty()) {
@@ -172,28 +140,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
                                  _candidateCommentRects[i].right,
                                  mintop_of_rows[row_of_candidate[i]] +
                                      height_of_rows[row_of_candidate[i]]);
-      int ol = 0, ot = 0, oc = 0;
-      if (_style.align_type == UIStyle::ALIGN_CENTER) {
-        ol = (height_of_rows[row_of_candidate[i]] -
-              _candidateLabelRects[i].Height()) /
-             2;
-        ot = (height_of_rows[row_of_candidate[i]] -
-              _candidateTextRects[i].Height()) /
-             2;
-        oc = (height_of_rows[row_of_candidate[i]] -
-              _candidateCommentRects[i].Height()) /
-             2;
-      } else if (_style.align_type == UIStyle::ALIGN_BOTTOM) {
-        ol = (height_of_rows[row_of_candidate[i]] -
-              _candidateLabelRects[i].Height());
-        ot = (height_of_rows[row_of_candidate[i]] -
-              _candidateTextRects[i].Height());
-        oc = (height_of_rows[row_of_candidate[i]] -
-              _candidateCommentRects[i].Height());
-      }
-      _candidateLabelRects[i].OffsetRect(0, ol);
-      _candidateTextRects[i].OffsetRect(0, ot);
-      _candidateCommentRects[i].OffsetRect(0, oc);
+      ReAdjustAlignment(height_of_rows[row_of_candidate[i]], i);
     }
     height = mintop_of_rows[row_cnt] + height_of_rows[row_cnt] - offsetY;
     width = max(width, max_width_of_rows);
@@ -224,19 +171,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   _contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 
   // calc page indicator
-  if (page_en && candidates_count && !_style.inline_preedit) {
-    int _prex = _contentSize.cx - offsetX - real_margin_x +
-                _style.hilite_padding_x - pgw;
-    int _prey = (_preeditRect.top + _preeditRect.bottom) / 2 - pgszl.cy / 2;
-    _prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
-    _nextPageRect.SetRect(_prePageRect.right + _style.hilite_spacing, _prey,
-                          _prePageRect.right + _style.hilite_spacing + pgszr.cx,
-                          _prey + pgszr.cy);
-    if (ShouldDisplayStatusIcon()) {
-      _prePageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
-      _nextPageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
-    }
-  }
+  PlacePagerHorizontal(pager, _contentSize.cx, _contentSize.cy);
 
   // prepare temp rect _bgRect for roundinfo calculation
   CopyRect(_bgRect, _contentRect);

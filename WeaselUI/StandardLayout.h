@@ -59,6 +59,33 @@ class StandardLayout : public Layout {
 
  protected:
   /* Utility functions */
+  struct MarkMetrics {
+    int mark_width = 0;
+    int mark_height = 0;
+    int mark_gap = 0;
+    int base_offset = 0;
+  };
+
+  struct PagerMetrics {
+    CSize pgszl;
+    CSize pgszr;
+    int pgw = 0;
+    int pgh = 0;
+    bool page_en = false;
+  };
+
+  MarkMetrics ComputeMarkMetrics(PDWR pDWR);
+  PagerMetrics ComputePagerMetrics(PDWR pDWR);
+  void PlacePagerHorizontal(const PagerMetrics& pager,
+                            int contentWidth,
+                            int contentHeight);
+  void PlacePagerVerticalText(const PagerMetrics& pager,
+                              int contentWidth,
+                              int contentHeight);
+  void ReAdjustAlignment(size_t limit,
+                         int index,
+                         bool alignToEnd = false,
+                         bool endIsEnd = true);
   CSize GetPreeditSize(CDCHandle dc,
                        const weasel::Text& text,
                        ComPtr<IDWriteTextFormat1> pTextFormat = NULL,

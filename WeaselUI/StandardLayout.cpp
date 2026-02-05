@@ -3,6 +3,153 @@
 
 using namespace weasel;
 
+StandardLayout::MarkMetrics StandardLayout::ComputeMarkMetrics(PDWR pDWR) {
+  MarkMetrics m;
+  if ((_style.hilited_mark_color & 0xff000000)) {
+    CSize sg;
+    if (candidates_count) {
+      if (_style.mark_text.empty())
+        GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
+      else
+        GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
+                      pDWR->pTextFormat, pDWR, &sg);
+    }
+
+    m.mark_width = sg.cx;
+    m.mark_height = sg.cy;
+    if (_style.mark_text.empty()) {
+      if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
+        m.mark_height = m.mark_width / 7;
+        if (_style.linespacing && _style.baseline)
+          m.mark_height = (int)((float)m.mark_height /
+                                ((float)_style.linespacing / 100.0f));
+        m.mark_height = max(m.mark_height, 6);
+      } else {
+        m.mark_width = m.mark_height / 7;
+        if (_style.linespacing && _style.baseline)
+          m.mark_width =
+              (int)((float)m.mark_width / ((float)_style.linespacing / 100.0f));
+        m.mark_width = max(m.mark_width, 6);
+      }
+    }
+    const int base = (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+                         ? m.mark_height
+                         : m.mark_width;
+    m.mark_gap =
+        (_style.mark_text.empty())
+            ? base
+            : base + (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT
+                          ? _style.hilite_spacing
+                          : _style.hilite_spacing);
+    m.base_offset = m.mark_gap;
+  }
+
+  // keep member values in sync for downstream code
+  mark_width = m.mark_width;
+  mark_height = m.mark_height;
+  mark_gap = m.mark_gap;
+  return m;
+}
+
+StandardLayout::PagerMetrics StandardLayout::ComputePagerMetrics(PDWR pDWR) {
+  PagerMetrics pager;
+  if (!IsInlinePreedit()) {
+    GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR,
+                  &pager.pgszl);
+    GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR,
+                  &pager.pgszr);
+  }
+  pager.page_en = (_style.prevpage_color & 0xff000000) &&
+                  (_style.nextpage_color & 0xff000000);
+  if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
+    pager.pgh = pager.page_en
+                    ? pager.pgszl.cy + pager.pgszr.cy + _style.hilite_spacing +
+                          _style.hilite_padding_y * 2
+                    : 0;
+    pager.pgw = pager.page_en ? max(pager.pgszl.cx, pager.pgszr.cx) : 0;
+  } else {
+    pager.pgw = pager.page_en
+                    ? (pager.pgszl.cx + pager.pgszr.cx + _style.hilite_spacing +
+                       _style.hilite_padding_x * 2)
+                    : 0;
+    pager.pgh = pager.page_en ? max(pager.pgszl.cy, pager.pgszr.cy) : 0;
+  }
+  return pager;
+}
+
+void StandardLayout::PlacePagerHorizontal(const PagerMetrics& pager,
+                                          int contentWidth,
+                                          int contentHeight) {
+  if (!pager.page_en || !candidates_count || _style.inline_preedit)
+    return;
+  int _prex = contentWidth - offsetX - real_margin_x + _style.hilite_padding_x -
+              pager.pgw;
+  int _prey = (_preeditRect.top + _preeditRect.bottom) / 2 - pager.pgszl.cy / 2;
+  _prePageRect.SetRect(_prex, _prey, _prex + pager.pgszl.cx,
+                       _prey + pager.pgszl.cy);
+  _nextPageRect.SetRect(
+      _prePageRect.right + _style.hilite_spacing, _prey,
+      _prePageRect.right + _style.hilite_spacing + pager.pgszr.cx,
+      _prey + pager.pgszr.cy);
+  if (ShouldDisplayStatusIcon()) {
+    _prePageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
+    _nextPageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
+  }
+}
+
+void StandardLayout::PlacePagerVerticalText(const PagerMetrics& pager,
+                                            int contentWidth,
+                                            int contentHeight) {
+  if (!pager.page_en || !candidates_count || _style.inline_preedit)
+    return;
+  int _prey = contentHeight - offsetY - real_margin_y +
+              _style.hilite_padding_y - pager.pgh;
+  int _prex = (_preeditRect.left + _preeditRect.right) / 2 - pager.pgszl.cx / 2;
+  _prePageRect.SetRect(_prex, _prey, _prex + pager.pgszl.cx,
+                       _prey + pager.pgszl.cy);
+  _nextPageRect.SetRect(
+      _prex, _prePageRect.bottom + _style.hilite_spacing,
+      _prex + pager.pgszr.cx,
+      _prePageRect.bottom + _style.hilite_spacing + pager.pgszr.cy);
+  if (ShouldDisplayStatusIcon()) {
+    _prePageRect.OffsetRect(0, -STATUS_ICON_SIZE);
+    _nextPageRect.OffsetRect(0, -STATUS_ICON_SIZE);
+  }
+}
+
+void StandardLayout::ReAdjustAlignment(size_t limit,
+                                       int index,
+                                       bool alignToEnd,
+                                       bool endIsEnd) {
+  int ol = 0, ot = 0, oc = 0;
+  bool isVerticalText = (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT);
+  size_t textSpan = isVerticalText ? _candidateTextRects[index].Width()
+                                   : _candidateTextRects[index].Height();
+  size_t labelSpan = isVerticalText ? _candidateLabelRects[index].Width()
+                                    : _candidateLabelRects[index].Height();
+  size_t commentSpan = isVerticalText ? _candidateCommentRects[index].Width()
+                                      : _candidateCommentRects[index].Height();
+
+  const bool alignCenter = _style.align_type == UIStyle::ALIGN_CENTER;
+  const bool alignEnd =
+      ((endIsEnd && _style.align_type == UIStyle::ALIGN_BOTTOM) || alignToEnd);
+
+  if (alignCenter) {
+    ol = static_cast<int>((limit - labelSpan) / 2);
+    ot = static_cast<int>((limit - textSpan) / 2);
+    oc = static_cast<int>((limit - commentSpan) / 2);
+  } else if (alignEnd) {
+    ol = static_cast<int>(limit - labelSpan);
+    ot = static_cast<int>(limit - textSpan);
+    oc = static_cast<int>(limit - commentSpan);
+  }
+
+  int factor = isVerticalText ? 1 : 0;
+  _candidateLabelRects[index].OffsetRect(ol * factor, ol * (1 - factor));
+  _candidateTextRects[index].OffsetRect(ot * factor, ot * (1 - factor));
+  _candidateCommentRects[index].OffsetRect(oc * factor, oc * (1 - factor));
+}
+
 std::wstring StandardLayout::GetLabelText(const std::vector<Text>& labels,
                                           int id,
                                           const wchar_t* format) const {
