@@ -8,6 +8,7 @@
 #include <dwrite_2.h>
 #include <memory>
 #include <functional>
+#include <map>
 #include <WeaselUtility.h>
 
 namespace weasel {
@@ -164,5 +165,6 @@ class DirectWriteResources {
                       DWRITE_FONT_STYLE& fontStyle);
   void _SetFontFallback(ComPtr<IDWriteTextFormat1>& pTextFormat,
                         const std::vector<std::wstring>& fontVector);
+  std::map<std::wstring, ComPtr<IDWriteTextFormat1>> _textFormatCache;
 };
 }  // namespace weasel
