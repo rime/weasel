@@ -1,5 +1,11 @@
 #include "stdafx.h"
 #include "GdiplusBlur.h"
+#include <memory>  // For std::unique_ptr
+#ifdef _OPENMP
+#include <omp.h>  // For OpenMP parallelization
+#endif
+#include <windows.h>  // For BYTE, LONGLONG
+#include <gdiplus.h>  // For Gdiplus::Bitmap
 
 namespace weasel {
 /* start image gauss blur functions from
@@ -31,6 +37,8 @@ void boxBlurH_4(BYTE* scl,
                 int bpp,
                 int stride) {
   float iarr = (float)(1. / ((LONGLONG)r + r + 1));
+#pragma omp \
+    parallel for if (h > 64)  // Parallelize for images taller than 64 pixels
   for (int i = 0; i < h; ++i) {
     int ti1 = i * stride;
     int ti2 = i * stride + 1;
@@ -150,6 +158,8 @@ void boxBlurT_4(BYTE* scl,
                 int bpp,
                 int stride) {
   float iarr = (float)(1.0f / (r + r + 1.0f));
+#pragma omp \
+    parallel for if (w > 64)  // Parallelize for images wider than 64 pixels
   for (int i = 0; i < w; ++i) {
     int ti1 = i * bpp;
     int ti2 = i * bpp + 1;
@@ -295,26 +305,25 @@ void gaussBlur_4(BYTE* scl,
 }
 
 void DoGaussianBlur(Gdiplus::Bitmap* img, float radiusX, float radiusY) {
-  if (img == 0 || (radiusX == 0.0f && radiusY == 0.0f))
+  if (!img || (radiusX <= 0.0f && radiusY <= 0.0f))
     return;
 
   const int w = img->GetWidth();
   const int h = img->GetHeight();
 
-  if (radiusX > w / 2) {
-    radiusX = (float)(w / 2);
-  }
+  // Clamp radii to prevent excessive computation
+  if (radiusX > w / 2.0f)
+    radiusX = w / 2.0f;
+  if (radiusY > h / 2.0f)
+    radiusY = h / 2.0f;
 
-  if (radiusY > h / 2) {
-    radiusY = (float)(h / 2);
-  }
-
-  Gdiplus::Bitmap* temp = new Gdiplus::Bitmap(img->GetWidth(), img->GetHeight(),
-                                              img->GetPixelFormat());
+  // Use unique_ptr for automatic memory management
+  std::unique_ptr<Gdiplus::Bitmap> temp(
+      new Gdiplus::Bitmap(w, h, img->GetPixelFormat()));
 
   Gdiplus::BitmapData bitmapData1;
   Gdiplus::BitmapData bitmapData2;
-  Gdiplus::Rect rect(0, 0, img->GetWidth(), img->GetHeight());
+  Gdiplus::Rect rect(0, 0, w, h);
 
   if (Gdiplus::Ok ==
           img->LockBits(
@@ -324,10 +333,10 @@ void DoGaussianBlur(Gdiplus::Bitmap* img, float radiusX, float radiusY) {
           temp->LockBits(
               &rect, Gdiplus::ImageLockModeRead | Gdiplus::ImageLockModeWrite,
               temp->GetPixelFormat(), &bitmapData2)) {
-    BYTE* src = (BYTE*)bitmapData1.Scan0;
-    BYTE* dst = (BYTE*)bitmapData2.Scan0;
+    BYTE* src = static_cast<BYTE*>(bitmapData1.Scan0);
+    BYTE* dst = static_cast<BYTE*>(bitmapData2.Scan0);
 
-    const int bpp = 4;
+    constexpr int bpp = 4;
     const int stride = bitmapData1.Stride;
 
     gaussBlur_4(src, dst, w, h, radiusX, radiusY, bpp, stride);
@@ -335,26 +344,18 @@ void DoGaussianBlur(Gdiplus::Bitmap* img, float radiusX, float radiusY) {
     img->UnlockBits(&bitmapData1);
     temp->UnlockBits(&bitmapData2);
   }
-
-  delete temp;
+  // temp is automatically deleted here
 }
 
 void DoGaussianBlurPower(Gdiplus::Bitmap* img,
                          float radiusX,
                          float radiusY,
                          int nPower) {
-  Gdiplus::Bitmap* pBitmap =
-      img->Clone(0, 0, img->GetWidth(), img->GetHeight(), PixelFormat32bppARGB);
-  DoGaussianBlur(pBitmap, radiusX, radiusY);
-  Gdiplus::Graphics g(pBitmap);
-  for (int i = 0; i < 8; ++i) {
-    g.DrawImage(pBitmap, 0, 0);
-    if ((1 << i) & nPower) {
-      Gdiplus::Graphics g(img);
-      g.DrawImage(pBitmap, 0, 0);
-    }
+  // Optimized: Directly apply Gaussian blur multiple times on the original
+  // image Avoids cloning and GDI+ drawing overhead
+  for (int i = 0; i < nPower; ++i) {
+    DoGaussianBlur(img, radiusX, radiusY);
   }
-  delete pBitmap;
 }
 /* end  image gauss blur functions from https://github.com/kenjinote/DropShadow/
  */
