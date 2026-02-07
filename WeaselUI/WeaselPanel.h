@@ -150,4 +150,20 @@ class WeaselPanel
   int m_hoverIndex = -1;
   HMONITOR m_hMonitor = NULL;
   bool m_redraw_by_monitor_change = false;
+
+  struct CachedStyle {
+    int margin_x;
+    int margin_y;
+    int hilite_padding_x;
+    int hilite_padding_y;
+    int shadow_radius;
+    int shadow_offset_x;
+    int shadow_offset_y;
+    int round_corner;
+    int round_corner_ex;
+    int border;
+    int hilite_spacing;
+    int candidate_spacing;
+    int spacing;
+  } m_cachedStyle;
 };

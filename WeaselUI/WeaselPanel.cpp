@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "WeaselPanel.h"
 
 #include <memory>
@@ -151,8 +151,7 @@ void WeaselPanel::Refresh() {
        (m_ctx.empty() && should_show_icon));
   // show schema menu status: schema_id == L".default"
   bool show_schema_menu = m_status.schema_id == L".default";
-  bool margin_negative =
-      (DPI_SCALE(m_style.margin_x) < 0 || DPI_SCALE(m_style.margin_y) < 0);
+  bool margin_negative = m_style.margin_x < 0 || m_style.margin_y < 0;
   // when to hide_cadidates?
   // 1. margin_negative, and not in show tips mode( ascii switching / half-full
   // switching / simp-trad switching / error tips), and not in schema menu
@@ -197,6 +196,21 @@ void WeaselPanel::_InitFontRes(bool forced) {
   m_ostyle = m_style;
   dpi = dpiX;
   dpiScaleLayout = (float)dpi / 96.0f;
+
+  // Update cached style configuration
+  m_cachedStyle.margin_x = DPI_SCALE(m_style.margin_x);
+  m_cachedStyle.margin_y = DPI_SCALE(m_style.margin_y);
+  m_cachedStyle.hilite_padding_x = DPI_SCALE(m_style.hilite_padding_x);
+  m_cachedStyle.hilite_padding_y = DPI_SCALE(m_style.hilite_padding_y);
+  m_cachedStyle.shadow_radius = DPI_SCALE(m_style.shadow_radius);
+  m_cachedStyle.shadow_offset_x = DPI_SCALE(m_style.shadow_offset_x);
+  m_cachedStyle.shadow_offset_y = DPI_SCALE(m_style.shadow_offset_y);
+  m_cachedStyle.round_corner = DPI_SCALE(m_style.round_corner);
+  m_cachedStyle.round_corner_ex = DPI_SCALE(m_style.round_corner_ex);
+  m_cachedStyle.border = DPI_SCALE(m_style.border);
+  m_cachedStyle.hilite_spacing = DPI_SCALE(m_style.hilite_spacing);
+  m_cachedStyle.candidate_spacing = DPI_SCALE(m_style.candidate_spacing);
+  m_cachedStyle.spacing = DPI_SCALE(m_style.spacing);
 }
 
 static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect) {
@@ -284,8 +298,8 @@ LRESULT WeaselPanel::OnLeftClickedUp(UINT uMsg,
     CRect rect = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
     if (m_istorepos)
       rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-    rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                     DPI_SCALE(m_style.hilite_padding_y));
+    rect.InflateRect(m_cachedStyle.hilite_padding_x,
+                     m_cachedStyle.hilite_padding_y);
     if (rect.PtInRect(point)) {
       size_t i = m_ctx.cinfo.highlighted;
       if (_UICallback) {
@@ -319,36 +333,33 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
     CRect recth = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
     if (m_istorepos)
       recth.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-    recth.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                      DPI_SCALE(m_style.hilite_padding_y));
+    recth.InflateRect(m_cachedStyle.hilite_padding_x,
+                      m_cachedStyle.hilite_padding_y);
     // capture widow
     if (recth.PtInRect(point))
       _CaptureRect(recth);
     else {
       // if shadow_color transparent, decrease the capture rectangle size
       if (COLORTRANSPARENT(m_style.shadow_color) &&
-          DPI_SCALE(m_style.shadow_radius) != 0) {
+          m_style.shadow_radius != 0) {
         CRect crc(rcw);
-        int shadow_gap = (DPI_SCALE(m_style.shadow_offset_x) == 0 &&
-                          DPI_SCALE(m_style.shadow_offset_y) == 0)
-                             ? 2 * DPI_SCALE(m_style.shadow_radius)
-                             : DPI_SCALE(m_style.shadow_radius) +
-                                   DPI_SCALE(m_style.shadow_radius) / 2;
-        int ofx = DPI_SCALE(m_style.hilite_padding_x) +
-                              abs(DPI_SCALE(m_style.shadow_offset_x)) +
-                              shadow_gap >
-                          abs(DPI_SCALE(m_style.margin_x))
-                      ? DPI_SCALE(m_style.hilite_padding_x) +
-                            abs(DPI_SCALE(m_style.shadow_offset_x)) +
-                            shadow_gap - abs(DPI_SCALE(m_style.margin_x))
+        int shadow_gap =
+            (!m_style.shadow_offset_x && !m_style.shadow_offset_y)
+                ? 2 * m_cachedStyle.shadow_radius
+                : m_cachedStyle.shadow_radius + m_cachedStyle.shadow_radius / 2;
+        int ofx = m_cachedStyle.hilite_padding_x +
+                              abs(m_cachedStyle.shadow_offset_x) + shadow_gap >
+                          abs(m_cachedStyle.margin_x)
+                      ? m_cachedStyle.hilite_padding_x +
+                            abs(m_cachedStyle.shadow_offset_x) + shadow_gap -
+                            abs(m_cachedStyle.margin_x)
                       : 0;
-        int ofy = DPI_SCALE(m_style.hilite_padding_y) +
-                              abs(DPI_SCALE(m_style.shadow_offset_y)) +
-                              shadow_gap >
-                          abs(DPI_SCALE(m_style.margin_y))
-                      ? DPI_SCALE(m_style.hilite_padding_y) +
-                            abs(DPI_SCALE(m_style.shadow_offset_y)) +
-                            shadow_gap - abs(DPI_SCALE(m_style.margin_y))
+        int ofy = m_cachedStyle.hilite_padding_y +
+                              abs(m_cachedStyle.shadow_offset_y) + shadow_gap >
+                          abs(m_cachedStyle.margin_y)
+                      ? m_cachedStyle.hilite_padding_y +
+                            abs(m_cachedStyle.shadow_offset_y) + shadow_gap -
+                            abs(m_cachedStyle.margin_y)
                       : 0;
         crc.DeflateRect(m_layout->offsetX - ofx, m_layout->offsetY - ofy);
         _CaptureRect(crc);
@@ -393,8 +404,8 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
       CRect rect = m_layout->GetCandidateRect((int)i);
       if (m_istorepos)
         rect.OffsetRect(0, m_offsetys[i]);
-      rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                       DPI_SCALE(m_style.hilite_padding_y));
+      rect.InflateRect(m_cachedStyle.hilite_padding_x,
+                       m_cachedStyle.hilite_padding_y);
       if (rect.PtInRect(point)) {
         bar_scale_ = 0.8f;
         // modify highlighted
@@ -453,8 +464,8 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg,
     CRect rect = m_layout->GetCandidateRect((int)i);
     if (m_istorepos)
       rect.OffsetRect(0, m_offsetys[i]);
-    rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                     DPI_SCALE(m_style.hilite_padding_y));
+    rect.InflateRect(m_cachedStyle.hilite_padding_x,
+                     m_cachedStyle.hilite_padding_y);
     if (rect.PtInRect(point)) {
       if (i != m_ctx.cinfo.highlighted) {
         if (m_style.hover_type == UIStyle::HoverType::HILITE) {
@@ -501,8 +512,8 @@ void WeaselPanel::_HighlightText(Gdiplus::Graphics& g_back,
       NOT_FULLSCREENLAYOUT(m_style))
     hiliteBackPath = new GraphicsRoundRectPath(
         rc,
-        DPI_SCALE(m_style.round_corner_ex) -
-            (DPI_SCALE(m_style.border) % 2 ? DPI_SCALE(m_style.border) / 2 : 0),
+        m_cachedStyle.round_corner_ex -
+            (m_cachedStyle.border % 2 ? m_cachedStyle.border / 2 : 0),
         rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound,
         rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
   else  // background or current candidate background not out of window
@@ -510,12 +521,12 @@ void WeaselPanel::_HighlightText(Gdiplus::Graphics& g_back,
     hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 
   // 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-  if (DPI_SCALE(m_style.shadow_radius) && COLORNOTTRANSPARENT(shadowColor) &&
+  if (m_style.shadow_radius && COLORNOTTRANSPARENT(shadowColor) &&
       NOT_FULLSCREENLAYOUT(m_style)) {
-    CRect rect(blurMarginX + DPI_SCALE(m_style.shadow_offset_x),
-               blurMarginY + DPI_SCALE(m_style.shadow_offset_y),
-               rc.Width() + blurMarginX + DPI_SCALE(m_style.shadow_offset_x),
-               rc.Height() + blurMarginY + DPI_SCALE(m_style.shadow_offset_y));
+    CRect rect(blurMarginX + m_cachedStyle.shadow_offset_x,
+               blurMarginY + m_cachedStyle.shadow_offset_y,
+               rc.Width() + blurMarginX + m_cachedStyle.shadow_offset_x,
+               rc.Height() + blurMarginY + m_cachedStyle.shadow_offset_y);
     BYTE r = GetRValue(shadowColor);
     BYTE g = GetGValue(shadowColor);
     BYTE b = GetBValue(shadowColor);
@@ -529,17 +540,16 @@ void WeaselPanel::_HighlightText(Gdiplus::Graphics& g_back,
     Gdiplus::Graphics g_shadow(pBitmapDropShadow);
     g_shadow.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
     // dropshadow, draw a roundrectangle to blur
-    if (DPI_SCALE(m_style.shadow_offset_x) != 0 ||
-        DPI_SCALE(m_style.shadow_offset_y) != 0) {
+    if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0) {
       GraphicsRoundRectPath shadow_path(rect, radius);
       Gdiplus::SolidBrush shadow_brush(shadow_color);
       g_shadow.FillPath(&shadow_brush, &shadow_path);
     }
     // round shadow, draw multilines as base round line
     else {
-      int step = alpha / DPI_SCALE(m_style.shadow_radius) / 2;
+      int step = alpha / m_cachedStyle.shadow_radius / 2;
       Gdiplus::Pen pen_shadow(shadow_color, (Gdiplus::REAL)1);
-      for (int i = 0; i < DPI_SCALE(m_style.shadow_radius); i++) {
+      for (int i = 0; i < m_cachedStyle.shadow_radius; i++) {
         GraphicsRoundRectPath round_path(rect, radius + 1 + i);
         g_shadow.DrawPath(&pen_shadow, &round_path);
         shadow_color = Gdiplus::Color::MakeARGB(alpha - i * step, r, g, b);
@@ -547,8 +557,8 @@ void WeaselPanel::_HighlightText(Gdiplus::Graphics& g_back,
         rect.InflateRect(1, 1);
       }
     }
-    DoGaussianBlur(pBitmapDropShadow, (float)DPI_SCALE(m_style.shadow_radius),
-                   (float)DPI_SCALE(m_style.shadow_radius));
+    DoGaussianBlur(pBitmapDropShadow, (float)m_cachedStyle.shadow_radius,
+                   (float)m_cachedStyle.shadow_radius);
 
     g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX,
                      rc.top - blurMarginY);
@@ -565,13 +575,12 @@ void WeaselPanel::_HighlightText(Gdiplus::Graphics& g_back,
     g_back.FillPath(&back_brush, hiliteBackPath);
   }
   // draw border, for bordercolor not transparent and border valid
-  if (COLORNOTTRANSPARENT(bordercolor) && DPI_SCALE(m_style.border) > 0) {
+  if (COLORNOTTRANSPARENT(bordercolor) && m_style.border > 0) {
     Gdiplus::Color border_color = GDPCOLOR_FROM_COLORREF(bordercolor);
-    Gdiplus::Pen gPenBorder(border_color,
-                            (Gdiplus::REAL)DPI_SCALE(m_style.border));
+    Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_cachedStyle.border);
     // candidate window border
     if (type == BackType::BACKGROUND) {
-      GraphicsRoundRectPath bgPath(rc, DPI_SCALE(m_style.round_corner_ex));
+      GraphicsRoundRectPath bgPath(rc, m_cachedStyle.round_corner_ex);
       g_back.DrawPath(&gPenBorder, &bgPath);
     } else if (type !=
                BackType::TEXT)  // hilited_candidate_border / candidate_border
@@ -615,9 +624,9 @@ bool WeaselPanel::_DrawPreedit(const Text& text,
         _TextOut(rc_before, str_before.c_str(), str_before.length(),
                  m_style.text_color, txtFormat);
         if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-          y += beforeSz.cy + DPI_SCALE(m_style.hilite_spacing);
+          y += beforeSz.cy + m_cachedStyle.hilite_spacing;
         else
-          x += beforeSz.cx + DPI_SCALE(m_style.hilite_spacing);
+          x += beforeSz.cx + m_cachedStyle.hilite_spacing;
       }
       {
         // zzz[yyy]
@@ -632,9 +641,9 @@ bool WeaselPanel::_DrawPreedit(const Text& text,
         _TextOut(rc_hi, str_highlight.c_str(), str_highlight.length(),
                  m_style.hilited_text_color, txtFormat);
         if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-          y += rc_hi.Height() + DPI_SCALE(m_style.hilite_spacing);
+          y += rc_hi.Height() + m_cachedStyle.hilite_spacing;
         else
-          x += rc_hi.Width() + DPI_SCALE(m_style.hilite_spacing);
+          x += rc_hi.Width() + m_cachedStyle.hilite_spacing;
       }
       if (range.end < static_cast<int>(t.length())) {
         // zzz[yyy]xxx
@@ -698,9 +707,9 @@ bool WeaselPanel::_DrawPreeditBack(const Text& text,
 
       if (range.start > 0) {
         if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-          y += beforeSz.cy + DPI_SCALE(m_style.hilite_spacing);
+          y += beforeSz.cy + m_cachedStyle.hilite_spacing;
         else
-          x += beforeSz.cx + DPI_SCALE(m_style.hilite_spacing);
+          x += beforeSz.cx + m_cachedStyle.hilite_spacing;
       }
       {
         CRect rc_hi;
@@ -720,16 +729,16 @@ bool WeaselPanel::_DrawPreeditBack(const Text& text,
             rc_hi.InflateRect((STATUS_ICON_SIZE - hilitedSz.cx) / 2, 0);
         }
 
-        rc_hi.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                          DPI_SCALE(m_style.hilite_padding_y));
+        rc_hi.InflateRect(m_cachedStyle.hilite_padding_x,
+                          m_cachedStyle.hilite_padding_y);
         IsToRoundStruct rd = m_layout->GetTextRoundInfo();
         if (m_istorepos) {
           std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
           std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
         }
         _HighlightText(g_back, rc_hi, m_style.hilited_back_color,
-                       m_style.hilited_shadow_color,
-                       DPI_SCALE(m_style.round_corner), BackType::TEXT, rd);
+                       m_style.hilited_shadow_color, m_cachedStyle.round_corner,
+                       BackType::TEXT, rd);
       }
     }
     drawn = true;
@@ -767,10 +776,10 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
           rect.OffsetRect(0, m_offsetys[i]);
           ReconfigRoundInfo(rd, i, m_candidateCount);
         }
-        rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                         DPI_SCALE(m_style.hilite_padding_y));
+        rect.InflateRect(m_cachedStyle.hilite_padding_x,
+                         m_cachedStyle.hilite_padding_y);
         _HighlightText(g_back, rect, 0x00000000, m_style.candidate_shadow_color,
-                       DPI_SCALE(m_style.round_corner), bkType, rd);
+                       m_cachedStyle.round_corner, bkType, rd);
         drawn = true;
       }
     }
@@ -786,10 +795,10 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
           rect.OffsetRect(0, m_offsetys[i]);
           ReconfigRoundInfo(rd, i, m_candidateCount);
         }
-        rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                         DPI_SCALE(m_style.hilite_padding_y));
+        rect.InflateRect(m_cachedStyle.hilite_padding_x,
+                         m_cachedStyle.hilite_padding_y);
         _HighlightText(g_back, rect, m_style.candidate_back_color, 0x00000000,
-                       DPI_SCALE(m_style.round_corner), bkType, rd,
+                       m_cachedStyle.round_corner, bkType, rd,
                        m_style.candidate_border_color);
         drawn = true;
       }
@@ -802,12 +811,12 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
         rect.OffsetRect(0, m_offsetys[m_hoverIndex]);
         ReconfigRoundInfo(rd, m_hoverIndex, m_candidateCount);
       }
-      rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                       DPI_SCALE(m_style.hilite_padding_y));
+      rect.InflateRect(m_cachedStyle.hilite_padding_x,
+                       m_cachedStyle.hilite_padding_y);
       _HighlightText(g_back, rect,
                      HALF_ALPHA_COLOR(m_style.hilited_candidate_back_color),
                      HALF_ALPHA_COLOR(m_style.hilited_candidate_shadow_color),
-                     DPI_SCALE(m_style.round_corner), bkType, rd,
+                     m_cachedStyle.round_corner, bkType, rd,
                      HALF_ALPHA_COLOR(m_style.hilited_candidate_border_color));
     }
     // draw highlighted background and shadow
@@ -819,19 +828,18 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
         rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
         ReconfigRoundInfo(rd, m_ctx.cinfo.highlighted, m_candidateCount);
       }
-      rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                       DPI_SCALE(m_style.hilite_padding_y));
+      rect.InflateRect(m_cachedStyle.hilite_padding_x,
+                       m_cachedStyle.hilite_padding_y);
       _HighlightText(g_back, rect, m_style.hilited_candidate_back_color,
                      markSt ? m_style.hilited_candidate_shadow_color : 0,
-                     DPI_SCALE(m_style.round_corner), bkType, rd,
+                     m_cachedStyle.round_corner, bkType, rd,
                      m_style.hilited_candidate_border_color);
       if (m_style.mark_text.empty() &&
           COLORNOTTRANSPARENT(m_style.hilited_mark_color)) {
-        int height =
-            min(rect.Height() - DPI_SCALE(m_style.hilite_padding_y) * 2,
-                rect.Height() - DPI_SCALE(m_style.round_corner) * 2);
-        int width = min(rect.Width() - DPI_SCALE(m_style.hilite_padding_x) * 2,
-                        rect.Width() - DPI_SCALE(m_style.round_corner) * 2);
+        int height = min(rect.Height() - m_cachedStyle.hilite_padding_y * 2,
+                         rect.Height() - m_cachedStyle.round_corner * 2);
+        int width = min(rect.Width() - m_cachedStyle.hilite_padding_x * 2,
+                        rect.Width() - m_cachedStyle.round_corner * 2);
         width = min(width, static_cast<int>(rect.Width() * 0.618));
         height = min(height, static_cast<int>(rect.Height() * 0.618));
         if (bar_scale_ != 1.0f) {
@@ -908,8 +916,8 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
         CRect rc = m_layout->GetHighlightRect();
         if (m_istorepos)
           rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-        rc.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
-                       DPI_SCALE(m_style.hilite_padding_y));
+        rc.InflateRect(m_cachedStyle.hilite_padding_x,
+                       m_cachedStyle.hilite_padding_y);
         int vgap = m_layout->mark_height
                        ? (rc.Height() - m_layout->mark_height) / 2
                        : 0;
@@ -917,17 +925,15 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
             m_layout->mark_width ? (rc.Width() - m_layout->mark_width) / 2 : 0;
         CRect hlRc;
         if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-          hlRc = CRect(rc.left + hgap,
-                       rc.top + DPI_SCALE(m_style.hilite_padding_y),
-                       rc.left + hgap + m_layout->mark_width,
-                       rc.top + DPI_SCALE(m_style.hilite_padding_y) +
-                           m_layout->mark_height);
+          hlRc = CRect(
+              rc.left + hgap, rc.top + m_cachedStyle.hilite_padding_y,
+              rc.left + hgap + m_layout->mark_width,
+              rc.top + m_cachedStyle.hilite_padding_y + m_layout->mark_height);
         else
-          hlRc = CRect(rc.left + DPI_SCALE(m_style.hilite_padding_x),
-                       rc.top + vgap,
-                       rc.left + DPI_SCALE(m_style.hilite_padding_x) +
-                           m_layout->mark_width,
-                       rc.bottom - vgap);
+          hlRc = CRect(
+              rc.left + m_cachedStyle.hilite_padding_x, rc.top + vgap,
+              rc.left + m_cachedStyle.hilite_padding_x + m_layout->mark_width,
+              rc.bottom - vgap);
         _TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(),
                  m_style.hilited_mark_color, pDWR->pTextFormat.Get());
       }
@@ -980,7 +986,7 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
               btmys[m_candidateCount - i - 1] - base_gap - rects[i].bottom;
         else
           m_offsetys[i] = (rects[i - 1].top + m_offsetys[i - 1] -
-                           DPI_SCALE(m_style.candidate_spacing)) -
+                           m_cachedStyle.candidate_spacing) -
                           rects[i].bottom;
       }
     }
@@ -991,7 +997,7 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
         (m_style.inline_preedit && (m_candidateCount || !m_ctx.aux.empty()))) {
       CRect backrc = m_layout->GetContentRect();
       _HighlightText(g_back, backrc, m_style.back_color, m_style.shadow_color,
-                     DPI_SCALE(m_style.round_corner_ex), BackType::BACKGROUND,
+                     m_cachedStyle.round_corner_ex, BackType::BACKGROUND,
                      IsToRoundStruct(), m_style.border_color);
     }
     if (!m_ctx.aux.str.empty()) {
@@ -1194,13 +1200,13 @@ void WeaselPanel::_RepositionWindow(const bool& adj) {
   rcWorkArea.bottom -= height;
   int x = m_inputPos.left;
   int y = m_inputPos.bottom;
-  if (DPI_SCALE(m_style.shadow_radius)) {
-    x -= (DPI_SCALE(m_style.shadow_offset_x) >= 0 ||
+  if (m_style.shadow_radius) {
+    x -= (m_cachedStyle.shadow_offset_x >= 0 ||
           COLORTRANSPARENT(m_style.shadow_color))
              ? m_layout->offsetX
              : (m_layout->offsetX / 2);
     if (adj)
-      y -= (DPI_SCALE(m_style.shadow_offset_y) > 0 ||
+      y -= (m_cachedStyle.shadow_offset_y > 0 ||
             COLORTRANSPARENT(m_style.shadow_color))
                ? m_layout->offsetY
                : (m_layout->offsetY / 2);
@@ -1209,7 +1215,7 @@ void WeaselPanel::_RepositionWindow(const bool& adj) {
   if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT &&
       !m_style.vertical_text_left_to_right) {
     x += m_layout->offsetX - width;
-    if (DPI_SCALE(m_style.shadow_offset_x) < 0)
+    if (m_cachedStyle.shadow_offset_x < 0)
       x += m_layout->offsetX;
   }
   if (adj)
@@ -1223,13 +1229,12 @@ void WeaselPanel::_RepositionWindow(const bool& adj) {
     if (!m_sticky)
       m_sticky = true;
     y = m_inputPos.top - height - 6;  // over workarea bottom
-    if (DPI_SCALE(m_style.shadow_radius) &&
-        DPI_SCALE(m_style.shadow_offset_y) > 0)
-      y -= DPI_SCALE(m_style.shadow_offset_y);
+    if (m_style.shadow_radius && m_style.shadow_offset_y > 0)
+      y -= m_cachedStyle.shadow_offset_y;
     m_istorepos = (m_style.vertical_auto_reverse &&
                    m_style.layout_type == UIStyle::LAYOUT_VERTICAL);
-    if (DPI_SCALE(m_style.shadow_radius) > 0)
-      y += (DPI_SCALE(m_style.shadow_offset_y) < 0 ||
+    if (m_style.shadow_radius > 0)
+      y += (m_cachedStyle.shadow_offset_y < 0 ||
             COLORTRANSPARENT(m_style.shadow_color))
                ? m_layout->offsetY
                : (m_layout->offsetY / 2);
