@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "WeaselPanel.h"
 
+#include <memory>
 #include <utility>
 #include <ShellScalingApi.h>
 #include <VersionHelpers.hpp>
@@ -958,8 +959,8 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
     CRect auxrc = m_layout->GetAuxiliaryRect();
     CRect preeditrc = m_layout->GetPreeditRect();
     if (m_istorepos) {
-      CRect* rects = new CRect[m_candidateCount];
-      int* btmys = new int[m_candidateCount];
+      std::unique_ptr<CRect[]> rects(new CRect[m_candidateCount]);
+      std::unique_ptr<int[]> btmys(new int[m_candidateCount]);
       for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
         rects[i] = m_layout->GetCandidateRect(i);
         btmys[i] = rects[i].bottom;
@@ -989,8 +990,6 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
                            DPI_SCALE(m_style.candidate_spacing)) -
                           rects[i].bottom;
       }
-      delete[] rects;
-      delete[] btmys;
     }
     // background and candidates back, hilite back drawing start
     if ((!m_ctx.empty() && !m_style.inline_preedit) ||
