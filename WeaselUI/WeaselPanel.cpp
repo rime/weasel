@@ -231,12 +231,10 @@ static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect) {
   hMemDC = CreateCompatibleDC(hDC);
   hBitmap = CreateCompatibleBitmap(hDC, nWidth, nHeight);
   hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
-  StretchBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, nX, nY, nWidth, nHeight,
-             SRCCOPY);
+  BitBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, nX, nY, SRCCOPY);
   hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
 
   DeleteDC(hMemDC);
-  DeleteObject(hOldBitmap);
   return hBitmap;
 }
 
@@ -248,13 +246,15 @@ void WeaselPanel::_CaptureRect(CRect& rect) {
   rect.OffsetRect(WindowPosAtScreen);
   // capture input window
   if (OpenClipboard()) {
-    HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
     EmptyClipboard();
-    SetClipboardData(CF_BITMAP, bmp);
+    HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
+    if (bmp) {
+      if (!SetClipboardData(CF_BITMAP, bmp))
+        DeleteObject(bmp);
+    }
     CloseClipboard();
-    DeleteObject(bmp);
   }
-  ReleaseDC(ScreenDC);
+  ::ReleaseDC(NULL, ScreenDC);
 }
 
 LRESULT WeaselPanel::OnMouseActivate(UINT uMsg,
