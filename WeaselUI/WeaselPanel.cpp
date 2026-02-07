@@ -201,8 +201,8 @@ void WeaselPanel::_InitFontRes(bool forced) {
 static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect) {
   if (!hDC || !lpRect || IsRectEmpty(lpRect))
     return NULL;
-  HDC hMemDC;
-  HBITMAP hBitmap, hOldBitmap;
+  HDC hMemDC = NULL;
+  HBITMAP hBitmap = NULL, hOldBitmap = NULL;
   int nX, nY, nX2, nY2;
   int nWidth, nHeight;
 
@@ -214,14 +214,32 @@ static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect) {
   nHeight = nY2 - nY;
 
   hMemDC = CreateCompatibleDC(hDC);
-  hBitmap = CreateCompatibleBitmap(hDC, nWidth, nHeight);
-  hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
-  StretchBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, nX, nY, nWidth, nHeight,
-             SRCCOPY);
-  hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+  if (!hMemDC)
+    return NULL;
 
+  hBitmap = CreateCompatibleBitmap(hDC, nWidth, nHeight);
+  if (!hBitmap) {
+    DeleteDC(hMemDC);
+    return NULL;
+  }
+
+  hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
+  if (!hOldBitmap) {
+    DeleteObject(hBitmap);
+    DeleteDC(hMemDC);
+    return NULL;
+  }
+
+  if (!BitBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, nX, nY, SRCCOPY)) {
+    // restore and cleanup
+    SelectObject(hMemDC, hOldBitmap);
+    DeleteObject(hBitmap);
+    DeleteDC(hMemDC);
+    return NULL;
+  }
+
+  SelectObject(hMemDC, hOldBitmap);
   DeleteDC(hMemDC);
-  DeleteObject(hOldBitmap);
   return hBitmap;
 }
 
@@ -230,16 +248,29 @@ void WeaselPanel::_CaptureRect(CRect& rect) {
   CRect rc;
   GetWindowRect(&rc);
   POINT WindowPosAtScreen = {rc.left, rc.top};
-  rect.OffsetRect(WindowPosAtScreen);
-  // capture input window
-  if (OpenClipboard()) {
-    HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
-    EmptyClipboard();
-    SetClipboardData(CF_BITMAP, bmp);
-    CloseClipboard();
+  CRect captureRect = rect;
+  captureRect.OffsetRect(WindowPosAtScreen);
+  // create bitmap first (avoid holding clipboard while capturing)
+  HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(captureRect));
+  if (!bmp) {
+    ::ReleaseDC(NULL, ScreenDC);
+    return;
+  }
+
+  // capture input window to clipboard
+  if (!OpenClipboard()) {
+    DEBUG << "_CaptureRect: OpenClipord ailed";
+    DeleteObject(bmp);
+    ::ReleaseDC(NULL, ScreenDC);
+    return;
+  }
+  EmptyClipboard();
+  if (!SetClipboardData(CF_BITMAP, bmp)) {
+    DEBUG << "_CaptureRect: SetClipboardData failed";
     DeleteObject(bmp);
   }
-  ReleaseDC(ScreenDC);
+  CloseClipboard();
+  ::ReleaseDC(NULL, ScreenDC);
 }
 
 LRESULT WeaselPanel::OnMouseActivate(UINT uMsg,
