@@ -484,18 +484,14 @@ LRESULT WeaselPanel::OnMouseLeave(UINT uMsg,
   return 0;
 }
 
-void WeaselPanel::_HighlightText(CDCHandle& dc,
+void WeaselPanel::_HighlightText(Gdiplus::Graphics& g_back,
                                  const CRect& rc,
                                  const COLORREF& color,
                                  const COLORREF& shadowColor,
                                  const int& radius,
-                                 const BackType& type = BackType::TEXT,
-                                 const IsToRoundStruct& rd = IsToRoundStruct(),
-                                 const COLORREF& bordercolor = TRANS_COLOR) {
-  // Graphics obj with SmoothingMode
-  Gdiplus::Graphics g_back(dc);
-  g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
-
+                                 const BackType& type,
+                                 const IsToRoundStruct& rd,
+                                 const COLORREF& bordercolor) {
   // blur buffer
   int blurMarginX = m_layout->offsetX;
   int blurMarginY = m_layout->offsetY;
@@ -684,7 +680,7 @@ bool WeaselPanel::_DrawPreedit(const Text& text,
 
 // draw hilited back color, back only
 bool WeaselPanel::_DrawPreeditBack(const Text& text,
-                                   CDCHandle dc,
+                                   Gdiplus::Graphics& g_back,
                                    const CRect& rc) {
   bool drawn = false;
   std::wstring const& t = text.str;
@@ -731,7 +727,7 @@ bool WeaselPanel::_DrawPreeditBack(const Text& text,
           std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
           std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
         }
-        _HighlightText(dc, rc_hi, m_style.hilited_back_color,
+        _HighlightText(g_back, rc_hi, m_style.hilited_back_color,
                        m_style.hilited_shadow_color,
                        DPI_SCALE(m_style.round_corner), BackType::TEXT, rd);
       }
@@ -741,7 +737,7 @@ bool WeaselPanel::_DrawPreeditBack(const Text& text,
   return drawn;
 }
 
-bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
+bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
   bool drawn = false;
   const std::vector<Text>& candidates(m_ctx.cinfo.candies);
   const std::vector<Text>& comments(m_ctx.cinfo.comments);
@@ -773,7 +769,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
         }
         rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
                          DPI_SCALE(m_style.hilite_padding_y));
-        _HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color,
+        _HighlightText(g_back, rect, 0x00000000, m_style.candidate_shadow_color,
                        DPI_SCALE(m_style.round_corner), bkType, rd);
         drawn = true;
       }
@@ -792,7 +788,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
         }
         rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
                          DPI_SCALE(m_style.hilite_padding_y));
-        _HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000,
+        _HighlightText(g_back, rect, m_style.candidate_back_color, 0x00000000,
                        DPI_SCALE(m_style.round_corner), bkType, rd,
                        m_style.candidate_border_color);
         drawn = true;
@@ -808,7 +804,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
       }
       rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
                        DPI_SCALE(m_style.hilite_padding_y));
-      _HighlightText(dc, rect,
+      _HighlightText(g_back, rect,
                      HALF_ALPHA_COLOR(m_style.hilited_candidate_back_color),
                      HALF_ALPHA_COLOR(m_style.hilited_candidate_shadow_color),
                      DPI_SCALE(m_style.round_corner), bkType, rd,
@@ -825,7 +821,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
       }
       rect.InflateRect(DPI_SCALE(m_style.hilite_padding_x),
                        DPI_SCALE(m_style.hilite_padding_y));
-      _HighlightText(dc, rect, m_style.hilited_candidate_back_color,
+      _HighlightText(g_back, rect, m_style.hilited_candidate_back_color,
                      markSt ? m_style.hilited_candidate_shadow_color : 0,
                      DPI_SCALE(m_style.round_corner), bkType, rd,
                      m_style.hilited_candidate_border_color);
@@ -842,9 +838,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle& dc, bool back) {
           width = static_cast<int>(width * bar_scale_);
           height = static_cast<int>(height * bar_scale_);
         }
-        Gdiplus::Graphics g_back(dc);
-        g_back.SetSmoothingMode(
-            Gdiplus::SmoothingMode::SmoothingModeHighQuality);
         Gdiplus::Color mark_color =
             GDPCOLOR_FROM_COLORREF(m_style.hilited_mark_color);
         Gdiplus::SolidBrush mk_brush(mark_color);
@@ -992,25 +985,27 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
       }
     }
     // background and candidates back, hilite back drawing start
+    Gdiplus::Graphics g_back(memDC);
+    g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
     if ((!m_ctx.empty() && !m_style.inline_preedit) ||
         (m_style.inline_preedit && (m_candidateCount || !m_ctx.aux.empty()))) {
       CRect backrc = m_layout->GetContentRect();
-      _HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color,
+      _HighlightText(g_back, backrc, m_style.back_color, m_style.shadow_color,
                      DPI_SCALE(m_style.round_corner_ex), BackType::BACKGROUND,
                      IsToRoundStruct(), m_style.border_color);
     }
     if (!m_ctx.aux.str.empty()) {
       if (m_istorepos)
         auxrc.OffsetRect(0, m_offsety_aux);
-      drawn |= _DrawPreeditBack(m_ctx.aux, memDC, auxrc);
+      drawn |= _DrawPreeditBack(m_ctx.aux, g_back, auxrc);
     }
     if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty()) {
       if (m_istorepos)
         preeditrc.OffsetRect(0, m_offsety_preedit);
-      drawn |= _DrawPreeditBack(m_ctx.preedit, memDC, preeditrc);
+      drawn |= _DrawPreeditBack(m_ctx.preedit, g_back, preeditrc);
     }
     if (m_candidateCount)
-      drawn |= _DrawCandidates(memDC, true);
+      drawn |= _DrawCandidates(g_back, true);
     // background and candidates back, hilite back drawing end
 
     // begin  texts drawing, if pRenderTarget failed, force to reinit
@@ -1028,7 +1023,7 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
       drawn |= _DrawPreedit(m_ctx.preedit, memDC, preeditrc);
     // draw candidates string
     if (m_candidateCount)
-      drawn |= _DrawCandidates(memDC);
+      drawn |= _DrawCandidates(g_back);
     if (FAILED(pDWR->pRenderTarget->EndDraw())) {
       _InitFontRes(true);
       Refresh();

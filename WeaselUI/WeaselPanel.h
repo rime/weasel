@@ -85,16 +85,18 @@ class WeaselPanel
   void _ResizeWindow();
   void _RepositionWindow(const bool& adj = false);
   bool _DrawPreedit(const Text& text, CDCHandle dc, const CRect& rc);
-  bool _DrawPreeditBack(const Text& text, CDCHandle dc, const CRect& rc);
-  bool _DrawCandidates(CDCHandle& dc, bool back = false);
-  void _HighlightText(CDCHandle& dc,
+  bool _DrawPreeditBack(const Text& text,
+                        Gdiplus::Graphics& g_back,
+                        const CRect& rc);
+  bool _DrawCandidates(Gdiplus::Graphics& g_back, bool back = false);
+  void _HighlightText(Gdiplus::Graphics& g_back,
                       const CRect& rc,
                       const COLORREF& color,
                       const COLORREF& shadowColor,
                       const int& radius,
-                      const BackType& type,
-                      const IsToRoundStruct& rd,
-                      const COLORREF& bordercolor);
+                      const BackType& type = BackType::TEXT,
+                      const IsToRoundStruct& rd = IsToRoundStruct(),
+                      const COLORREF& bordercolor = 0);
   void _TextOut(const CRect& rc,
                 const std::wstring& psz,
                 const size_t& cch,
