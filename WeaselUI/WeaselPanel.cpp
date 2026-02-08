@@ -765,74 +765,61 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
   CRect rect;
   // draw back color and shadow color, with gdi+
   if (back) {
+    std::vector<CRect> cachedRects(m_candidateCount);
+    std::vector<IsToRoundStruct> cachedRounds(m_candidateCount);
+
+    for (int i = 0; i < m_candidateCount; ++i) {
+      cachedRects[i] = m_layout->GetCandidateRect(i);
+      cachedRounds[i] = m_layout->GetRoundInfo(i);
+      if (m_istorepos) {
+        cachedRects[i].OffsetRect(0, m_offsetys[i]);
+        ReconfigRoundInfo(cachedRounds[i], i, m_candidateCount);
+      }
+      cachedRects[i].InflateRect(m_cachedStyle.hilite_padding_x,
+                                 m_cachedStyle.hilite_padding_y);
+    }
+
     // if candidate_shadow_color not transparent, draw candidate shadow first
     if (COLORNOTTRANSPARENT(m_style.candidate_shadow_color)) {
-      for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+      for (int i = 0; i < m_candidateCount; ++i) {
         if (i == m_ctx.cinfo.highlighted || i == m_hoverIndex)
           continue;  // draw non hilited candidates only
-        rect = m_layout->GetCandidateRect((int)i);
-        IsToRoundStruct rd = m_layout->GetRoundInfo(i);
-        if (m_istorepos) {
-          rect.OffsetRect(0, m_offsetys[i]);
-          ReconfigRoundInfo(rd, i, m_candidateCount);
-        }
-        rect.InflateRect(m_cachedStyle.hilite_padding_x,
-                         m_cachedStyle.hilite_padding_y);
-        _HighlightText(g_back, rect, 0x00000000, m_style.candidate_shadow_color,
-                       m_cachedStyle.round_corner, bkType, rd);
+        _HighlightText(g_back, cachedRects[i], 0x00000000,
+                       m_style.candidate_shadow_color,
+                       m_cachedStyle.round_corner, bkType, cachedRounds[i]);
         drawn = true;
       }
     }
     // draw non highlighted candidates, without shadow
     if ((COLORNOTTRANSPARENT(m_style.candidate_back_color) ||
          COLORNOTTRANSPARENT(m_style.candidate_border_color))) {
-      for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+      for (int i = 0; i < m_candidateCount; ++i) {
         if (i == m_ctx.cinfo.highlighted || i == m_hoverIndex)
           continue;
-        rect = m_layout->GetCandidateRect((int)i);
-        IsToRoundStruct rd = m_layout->GetRoundInfo(i);
-        if (m_istorepos) {
-          rect.OffsetRect(0, m_offsetys[i]);
-          ReconfigRoundInfo(rd, i, m_candidateCount);
-        }
-        rect.InflateRect(m_cachedStyle.hilite_padding_x,
-                         m_cachedStyle.hilite_padding_y);
-        _HighlightText(g_back, rect, m_style.candidate_back_color, 0x00000000,
-                       m_cachedStyle.round_corner, bkType, rd,
-                       m_style.candidate_border_color);
+        _HighlightText(g_back, cachedRects[i], m_style.candidate_back_color,
+                       0x00000000, m_cachedStyle.round_corner, bkType,
+                       cachedRounds[i], m_style.candidate_border_color);
         drawn = true;
       }
     }
     // draw semi-hilite background and shadow
-    if (m_hoverIndex >= 0) {
-      rect = m_layout->GetCandidateRect(m_hoverIndex);
-      IsToRoundStruct rd = m_layout->GetRoundInfo(m_hoverIndex);
-      if (m_istorepos) {
-        rect.OffsetRect(0, m_offsetys[m_hoverIndex]);
-        ReconfigRoundInfo(rd, m_hoverIndex, m_candidateCount);
-      }
-      rect.InflateRect(m_cachedStyle.hilite_padding_x,
-                       m_cachedStyle.hilite_padding_y);
-      _HighlightText(g_back, rect,
+    if (m_hoverIndex >= 0 && m_hoverIndex < m_candidateCount) {
+      _HighlightText(g_back, cachedRects[m_hoverIndex],
                      HALF_ALPHA_COLOR(m_style.hilited_candidate_back_color),
                      HALF_ALPHA_COLOR(m_style.hilited_candidate_shadow_color),
-                     m_cachedStyle.round_corner, bkType, rd,
+                     m_cachedStyle.round_corner, bkType,
+                     cachedRounds[m_hoverIndex],
                      HALF_ALPHA_COLOR(m_style.hilited_candidate_border_color));
     }
     // draw highlighted background and shadow
-    {
-      rect = m_layout->GetHighlightRect();
+    if (m_ctx.cinfo.highlighted < m_candidateCount) {
+      const auto& rect = cachedRects[m_ctx.cinfo.highlighted];
       bool markSt = bar_scale_ == 1.0 || (!m_style.mark_text.empty());
-      IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
-      if (m_istorepos) {
-        rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
-        ReconfigRoundInfo(rd, m_ctx.cinfo.highlighted, m_candidateCount);
-      }
-      rect.InflateRect(m_cachedStyle.hilite_padding_x,
-                       m_cachedStyle.hilite_padding_y);
+
       _HighlightText(g_back, rect, m_style.hilited_candidate_back_color,
                      markSt ? m_style.hilited_candidate_shadow_color : 0,
-                     m_cachedStyle.round_corner, bkType, rd,
+                     m_cachedStyle.round_corner, bkType,
+                     cachedRounds[m_ctx.cinfo.highlighted],
                      m_style.hilited_candidate_border_color);
       if (m_style.mark_text.empty() &&
           COLORNOTTRANSPARENT(m_style.hilited_mark_color)) {
