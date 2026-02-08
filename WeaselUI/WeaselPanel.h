@@ -107,6 +107,7 @@ class WeaselPanel
                 IDWriteTextFormat1* const pTextFormat = NULL);
 
   void _LayerUpdate(const CRect& rc, CDCHandle dc);
+  void _OffsetRectIfIsToRepos(CRect& rect, int offsety);
 
   weasel::Layout* m_layout;
   weasel::Context& m_ctx;

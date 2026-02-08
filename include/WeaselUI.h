@@ -139,12 +139,16 @@ class DirectWriteResources {
     pRenderTarget->DrawTextLayout(point, pTextLayout.Get(), pBrush.Get(),
                                   D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
   }
-  HRESULT CreateBrush(const D2D1_COLOR_F& color) {
-    return pRenderTarget->CreateSolidColorBrush(
-        color, pBrush.ReleaseAndGetAddressOf());
-  }
   void ResetLayout() { pTextLayout.Reset(); }
-  void SetBrushColor(const D2D1_COLOR_F& color) { pBrush->SetColor(color); }
+  HRESULT SetBrushColor(const D2D1_COLOR_F& color) {
+    if (pBrush) {
+      pBrush->SetColor(color);
+      return S_OK;
+    } else {
+      return pRenderTarget->CreateSolidColorBrush(
+          color, pBrush.ReleaseAndGetAddressOf());
+    }
+  }
   void SetDpi(const UINT& dpi);
 
   float dpiScaleFontPoint, dpiScaleLayout;

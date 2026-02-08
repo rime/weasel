@@ -50,6 +50,11 @@ static inline void ReconfigRoundInfo(IsToRoundStruct& rd,
   }
 }
 
+void WeaselPanel::_OffsetRectIfIsToRepos(CRect& rect, int offsety) {
+  if (m_istorepos)
+    rect.OffsetRect(0, offsety);
+}
+
 WeaselPanel::WeaselPanel(weasel::UI& ui)
     : m_layout(NULL),
       m_ctx(ui.ctx()),
@@ -306,8 +311,7 @@ LRESULT WeaselPanel::OnLeftClickedUp(UINT uMsg,
   {
     // select by click
     CRect rect = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
-    if (m_istorepos)
-      rect.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
+    _OffsetRectIfIsToRepos(rect, m_offsetys[m_ctx.cinfo.highlighted]);
     rect.InflateRect(m_cachedStyle.hilite_padding_x,
                      m_cachedStyle.hilite_padding_y);
     if (rect.PtInRect(point)) {
@@ -341,8 +345,7 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
   // capture
   if (m_style.click_to_capture) {
     CRect recth = m_layout->GetCandidateRect((int)m_ctx.cinfo.highlighted);
-    if (m_istorepos)
-      recth.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
+    _OffsetRectIfIsToRepos(recth, m_offsetys[m_ctx.cinfo.highlighted]);
     recth.InflateRect(m_cachedStyle.hilite_padding_x,
                       m_cachedStyle.hilite_padding_y);
     // capture widow
@@ -385,8 +388,7 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
       // click prepage
       if (m_ctx.cinfo.currentPage != 0) {
         CRect prc = m_layout->GetPrepageRect();
-        if (m_istorepos)
-          prc.OffsetRect(0, m_offsety_preedit);
+        _OffsetRectIfIsToRepos(prc, m_offsety_preedit);
         if (prc.PtInRect(point)) {
           bool nextPage = false;
           if (_UICallback)
@@ -398,8 +400,7 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
       // click nextpage
       if (!m_ctx.cinfo.is_last_page) {
         CRect prc = m_layout->GetNextpageRect();
-        if (m_istorepos)
-          prc.OffsetRect(0, m_offsety_preedit);
+        _OffsetRectIfIsToRepos(prc, m_offsety_preedit);
         if (prc.PtInRect(point)) {
           bool nextPage = true;
           if (_UICallback)
@@ -412,8 +413,7 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
     // select by click relative actions
     for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
       CRect rect = m_layout->GetCandidateRect((int)i);
-      if (m_istorepos)
-        rect.OffsetRect(0, m_offsetys[i]);
+      _OffsetRectIfIsToRepos(rect, m_offsetys[i]);
       rect.InflateRect(m_cachedStyle.hilite_padding_x,
                        m_cachedStyle.hilite_padding_y);
       if (rect.PtInRect(point)) {
@@ -472,8 +472,7 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg,
 
   for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
     CRect rect = m_layout->GetCandidateRect((int)i);
-    if (m_istorepos)
-      rect.OffsetRect(0, m_offsetys[i]);
+    _OffsetRectIfIsToRepos(rect, m_offsetys[i]);
     rect.InflateRect(m_cachedStyle.hilite_padding_x,
                      m_cachedStyle.hilite_padding_y);
     if (rect.PtInRect(point)) {
@@ -680,16 +679,14 @@ bool WeaselPanel::_DrawPreedit(const Text& text,
       // clickable color / disabled color
       int color =
           m_ctx.cinfo.currentPage ? m_style.prevpage_color : m_style.text_color;
-      if (m_istorepos)
-        prc.OffsetRect(0, m_offsety_preedit);
+      _OffsetRectIfIsToRepos(prc, m_offsety_preedit);
       _TextOut(prc, pre.c_str(), pre.length(), color, txtFormat);
 
       CRect nrc = m_layout->GetNextpageRect();
       // clickable color / disabled color
       color = m_ctx.cinfo.is_last_page ? m_style.text_color
                                        : m_style.nextpage_color;
-      if (m_istorepos)
-        nrc.OffsetRect(0, m_offsety_preedit);
+      _OffsetRectIfIsToRepos(nrc, m_offsety_preedit);
       _TextOut(nrc, next.c_str(), next.length(), color, txtFormat);
     }
     drawn = true;
@@ -881,8 +878,7 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
           labels, (int)i, m_style.label_text_format.c_str());
       if (!label.empty()) {
         rect = m_layout->GetCandidateLabelRect((int)i);
-        if (m_istorepos)
-          rect.OffsetRect(0, m_offsetys[i]);
+        _OffsetRectIfIsToRepos(rect, m_offsetys[i]);
         _TextOut(rect, label.c_str(), label.length(), label_text_color,
                  labeltxtFormat.Get());
       }
@@ -890,8 +886,7 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
       std::wstring text = candidates.at(i).str;
       if (!text.empty()) {
         rect = m_layout->GetCandidateTextRect((int)i);
-        if (m_istorepos)
-          rect.OffsetRect(0, m_offsetys[i]);
+        _OffsetRectIfIsToRepos(rect, m_offsetys[i]);
         _TextOut(rect, text.c_str(), text.length(), candidate_text_color,
                  txtFormat.Get());
       }
@@ -899,8 +894,7 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
       std::wstring comment = comments.at(i).str;
       if (!comment.empty() && COLORNOTTRANSPARENT(comment_text_color)) {
         rect = m_layout->GetCandidateCommentRect((int)i);
-        if (m_istorepos)
-          rect.OffsetRect(0, m_offsetys[i]);
+        _OffsetRectIfIsToRepos(rect, m_offsetys[i]);
         _TextOut(rect, comment.c_str(), comment.length(), comment_text_color,
                  commenttxtFormat.Get());
       }
@@ -911,8 +905,7 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
       if (!m_style.mark_text.empty() &&
           COLORNOTTRANSPARENT(m_style.hilited_mark_color)) {
         CRect rc = m_layout->GetHighlightRect();
-        if (m_istorepos)
-          rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
+        _OffsetRectIfIsToRepos(rc, m_offsetys[m_ctx.cinfo.highlighted]);
         rc.InflateRect(m_cachedStyle.hilite_padding_x,
                        m_cachedStyle.hilite_padding_y);
         int vgap = m_layout->mark_height
@@ -952,11 +945,10 @@ bool WeaselPanel::_DrawStatusIcon(CDCHandle memDC) {
     LoadIconNecessary(m_current_full_icon, m_style.current_full_icon,
                       m_iconFull, IDI_FULL_SHAPE);
     CRect iconRect(m_layout->GetStatusIconRect());
-    if (m_istorepos && !m_ctx.aux.str.empty())
-      iconRect.OffsetRect(0, m_offsety_aux);
-    else if (m_istorepos && !m_layout->IsInlinePreedit() &&
-             !m_ctx.preedit.str.empty())
-      iconRect.OffsetRect(0, m_offsety_preedit);
+    if (!m_ctx.aux.str.empty())
+      _OffsetRectIfIsToRepos(iconRect, m_offsety_aux);
+    else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+      _OffsetRectIfIsToRepos(iconRect, m_offsety_preedit);
 
     CIcon& icon(m_status.disabled ? m_iconDisabled
                 : m_status.ascii_mode
@@ -1034,13 +1026,11 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
                      IsToRoundStruct(), m_style.border_color);
     }
     if (!m_ctx.aux.str.empty()) {
-      if (m_istorepos)
-        auxrc.OffsetRect(0, m_offsety_aux);
+      _OffsetRectIfIsToRepos(auxrc, m_offsety_aux);
       drawn |= _DrawPreeditBack(m_ctx.aux, g_back, auxrc);
     }
     if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty()) {
-      if (m_istorepos)
-        preeditrc.OffsetRect(0, m_offsety_preedit);
+      _OffsetRectIfIsToRepos(preeditrc, m_offsety_preedit);
       drawn |= _DrawPreeditBack(m_ctx.preedit, g_back, preeditrc);
     }
     if (m_candidateCount)
@@ -1265,12 +1255,7 @@ void WeaselPanel::_TextOut(const CRect& rc,
   float g = (float)(GetGValue(inColor)) / 255.0f;
   float b = (float)(GetBValue(inColor)) / 255.0f;
   float alpha = (float)((inColor >> 24) & 255) / 255.0f;
-  HRESULT hr = S_OK;
-  if (pDWR->pBrush == NULL) {
-    HR(pDWR->CreateBrush(D2D1::ColorF(r, g, b, alpha)));
-  } else
-    pDWR->SetBrushColor(D2D1::ColorF(r, g, b, alpha));
-
+  HR(pDWR->SetBrushColor(D2D1::ColorF(r, g, b, alpha)));
   HR(pDWR->CreateTextLayout(psz.c_str(), (int)cch, pTextFormat,
                             (float)rc.Width(), (float)rc.Height()));
   if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
