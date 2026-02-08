@@ -135,7 +135,8 @@ void WeaselPanel::_CreateLayout() {
 void WeaselPanel::Refresh() {
   bool should_show_icon =
       (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
-  m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
+  m_candidateCount =
+      min((BYTE)m_ctx.cinfo.candies.size(), (BYTE)MAX_CANDIDATES_COUNT);
   // When the candidate window changes from having content to having no content,
   // reset the sticky state
   if (m_lastCandidateCount > 0 && m_candidateCount == 0) {
@@ -929,6 +930,73 @@ bool WeaselPanel::_DrawCandidates(Gdiplus::Graphics& g_back, bool back) {
   return drawn;
 }
 
+bool WeaselPanel::_DrawStatusIcon(CDCHandle memDC) {
+  // status icon (I guess Metro IME stole my idea :)
+  if (m_layout->ShouldDisplayStatusIcon()) {
+    // decide if custom schema zhung icon to show
+    LoadIconNecessary(m_current_zhung_icon, m_style.current_zhung_icon,
+                      m_iconEnabled, IDI_ZH);
+    LoadIconNecessary(m_current_ascii_icon, m_style.current_ascii_icon,
+                      m_iconAlpha, IDI_EN);
+    LoadIconNecessary(m_current_half_icon, m_style.current_half_icon,
+                      m_iconHalf, IDI_HALF_SHAPE);
+    LoadIconNecessary(m_current_full_icon, m_style.current_full_icon,
+                      m_iconFull, IDI_FULL_SHAPE);
+    CRect iconRect(m_layout->GetStatusIconRect());
+    if (m_istorepos && !m_ctx.aux.str.empty())
+      iconRect.OffsetRect(0, m_offsety_aux);
+    else if (m_istorepos && !m_layout->IsInlinePreedit() &&
+             !m_ctx.preedit.str.empty())
+      iconRect.OffsetRect(0, m_offsety_preedit);
+
+    CIcon& icon(m_status.disabled ? m_iconDisabled
+                : m_status.ascii_mode
+                    ? m_iconAlpha
+                    : (m_status.type == SCHEMA
+                           ? m_iconEnabled
+                           : (m_status.full_shape ? m_iconFull : m_iconHalf)));
+    memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
+    return true;
+  }
+  return false;
+}
+
+void WeaselPanel::_UpdateOffsets(const CRect& auxrc, const CRect& preeditrc) {
+  if (m_istorepos) {
+    std::unique_ptr<CRect[]> rects(new CRect[m_candidateCount]);
+    std::unique_ptr<int[]> btmys(new int[m_candidateCount]);
+    for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+      rects[i] = m_layout->GetCandidateRect(i);
+      btmys[i] = rects[i].bottom;
+    }
+    if (m_candidateCount) {
+      if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+        m_offsety_preedit =
+            rects[m_candidateCount - 1].bottom - preeditrc.bottom;
+      if (!m_ctx.aux.str.empty())
+        m_offsety_aux = rects[m_candidateCount - 1].bottom - auxrc.bottom;
+    } else {
+      m_offsety_preedit = 0;
+      m_offsety_aux = 0;
+    }
+    int base_gap = 0;
+    if (!m_ctx.aux.str.empty())
+      base_gap = auxrc.Height() + m_style.spacing;
+    else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
+      base_gap = preeditrc.Height() + m_style.spacing;
+
+    for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+      if (i == 0)
+        m_offsetys[i] =
+            btmys[m_candidateCount - i - 1] - base_gap - rects[i].bottom;
+      else
+        m_offsetys[i] = (rects[i - 1].top + m_offsetys[i - 1] -
+                         m_cachedStyle.candidate_spacing) -
+                        rects[i].bottom;
+    }
+  }
+}
+
 // draw client area
 void WeaselPanel::DoPaint(CDCHandle dc) {
   // turn off WS_EX_TRANSPARENT, for better resp performance
@@ -940,43 +1008,12 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
   HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rcw.Width(), rcw.Height());
   ::SelectObject(memDC, memBitmap);
   ReleaseDC(hdc);
+
   bool drawn = false;
   if (!hide_candidates) {
     CRect auxrc = m_layout->GetAuxiliaryRect();
     CRect preeditrc = m_layout->GetPreeditRect();
-    if (m_istorepos) {
-      std::unique_ptr<CRect[]> rects(new CRect[m_candidateCount]);
-      std::unique_ptr<int[]> btmys(new int[m_candidateCount]);
-      for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-        rects[i] = m_layout->GetCandidateRect(i);
-        btmys[i] = rects[i].bottom;
-      }
-      if (m_candidateCount) {
-        if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
-          m_offsety_preedit =
-              rects[m_candidateCount - 1].bottom - preeditrc.bottom;
-        if (!m_ctx.aux.str.empty())
-          m_offsety_aux = rects[m_candidateCount - 1].bottom - auxrc.bottom;
-      } else {
-        m_offsety_preedit = 0;
-        m_offsety_aux = 0;
-      }
-      int base_gap = 0;
-      if (!m_ctx.aux.str.empty())
-        base_gap = auxrc.Height() + m_style.spacing;
-      else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
-        base_gap = preeditrc.Height() + m_style.spacing;
-
-      for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-        if (i == 0)
-          m_offsetys[i] =
-              btmys[m_candidateCount - i - 1] - base_gap - rects[i].bottom;
-        else
-          m_offsetys[i] = (rects[i - 1].top + m_offsetys[i - 1] -
-                           m_cachedStyle.candidate_spacing) -
-                          rects[i].bottom;
-      }
-    }
+    _UpdateOffsets(auxrc, preeditrc);
     // background and candidates back, hilite back drawing start
     Gdiplus::Graphics g_back(memDC);
     g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
@@ -1023,34 +1060,8 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
     }
     // end texts drawing
 
-    // status icon (I guess Metro IME stole my idea :)
-    if (m_layout->ShouldDisplayStatusIcon()) {
-      // decide if custom schema zhung icon to show
-      LoadIconNecessary(m_current_zhung_icon, m_style.current_zhung_icon,
-                        m_iconEnabled, IDI_ZH);
-      LoadIconNecessary(m_current_ascii_icon, m_style.current_ascii_icon,
-                        m_iconAlpha, IDI_EN);
-      LoadIconNecessary(m_current_half_icon, m_style.current_half_icon,
-                        m_iconHalf, IDI_HALF_SHAPE);
-      LoadIconNecessary(m_current_full_icon, m_style.current_full_icon,
-                        m_iconFull, IDI_FULL_SHAPE);
-      CRect iconRect(m_layout->GetStatusIconRect());
-      if (m_istorepos && !m_ctx.aux.str.empty())
-        iconRect.OffsetRect(0, m_offsety_aux);
-      else if (m_istorepos && !m_layout->IsInlinePreedit() &&
-               !m_ctx.preedit.str.empty())
-        iconRect.OffsetRect(0, m_offsety_preedit);
+    drawn |= _DrawStatusIcon(memDC);
 
-      CIcon& icon(
-          m_status.disabled ? m_iconDisabled
-          : m_status.ascii_mode
-              ? m_iconAlpha
-              : (m_status.type == SCHEMA
-                     ? m_iconEnabled
-                     : (m_status.full_shape ? m_iconFull : m_iconHalf)));
-      memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
-      drawn = true;
-    }
     /* Nothing drawn, hide candidate window */
     if (!drawn)
       ShowWindow(SW_HIDE);
