@@ -190,15 +190,19 @@ void WeaselPanel::_InitFontRes(bool forced) {
   UINT dpiX = 96, dpiY = 96;
   if (hMonitor)
     GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+
+  if (!forced && (pDWR != NULL) && !(m_ostyle != m_style) && (dpiX == dpi)) {
+    return;
+  }
+
   // prepare d2d1 resources
   // if style changed, or dpi changed, or pDWR NULL, re-initialize directwrite
   // resources
-  if (forced || (pDWR == NULL) || (m_ostyle != m_style) || (dpiX != dpi)) {
-    pDWR.reset();
-    pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
-    pDWR->pRenderTarget->SetTextAntialiasMode(
-        (D2D1_TEXT_ANTIALIAS_MODE)m_style.antialias_mode);
-  }
+  pDWR.reset();
+  pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
+  pDWR->pRenderTarget->SetTextAntialiasMode(
+      (D2D1_TEXT_ANTIALIAS_MODE)m_style.antialias_mode);
+
   m_ostyle = m_style;
   dpi = dpiX;
   dpiScaleLayout = (float)dpi / 96.0f;
