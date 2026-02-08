@@ -91,6 +91,7 @@ class WeaselPanel
   bool _DrawCandidates(Gdiplus::Graphics& g_back, bool back = false);
   bool _DrawStatusIcon(CDCHandle memDC);
   void _UpdateOffsets(const CRect& auxrc, const CRect& preeditrc);
+  bool _UpdateWindowVisibility();
   void _HighlightText(Gdiplus::Graphics& g_back,
                       const CRect& rc,
                       const COLORREF& color,

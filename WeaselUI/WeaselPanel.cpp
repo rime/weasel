@@ -131,8 +131,7 @@ void WeaselPanel::_CreateLayout() {
   m_layout = layout;
 }
 
-// 更新界面
-void WeaselPanel::Refresh() {
+bool WeaselPanel::_UpdateWindowVisibility() {
   bool should_show_icon =
       (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
   m_candidateCount =
@@ -161,6 +160,12 @@ void WeaselPanel::Refresh() {
       (m_style.inline_preedit && m_candidateCount == 0) && !show_tips;
   hide_candidates = inline_no_candidates ||
                     (margin_negative && !show_tips && !show_schema_menu);
+  return inline_no_candidates;
+}
+
+// 更新界面
+void WeaselPanel::Refresh() {
+  bool inline_no_candidates = _UpdateWindowVisibility();
 
   // only RedrawWindow if no need to hide candidates window, or
   // inline_no_candidates
