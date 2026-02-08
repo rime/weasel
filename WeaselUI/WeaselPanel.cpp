@@ -529,7 +529,7 @@ void WeaselPanel::_HighlightText(Gdiplus::Graphics& g_back,
         // background
     hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 
-  // 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
+  // 必须shadow_color都是非完全透明色才做绘制
   if (m_style.shadow_radius && COLORNOTTRANSPARENT(shadowColor) &&
       NOT_FULLSCREENLAYOUT(m_style)) {
     CRect rect(blurMarginX + m_cachedStyle.shadow_offset_x,
@@ -541,12 +541,12 @@ void WeaselPanel::_HighlightText(Gdiplus::Graphics& g_back,
     BYTE b = GetBValue(shadowColor);
     BYTE alpha = (BYTE)((shadowColor >> 24) & 255);
     Gdiplus::Color shadow_color = Gdiplus::Color::MakeARGB(alpha, r, g, b);
-    static Gdiplus::Bitmap* pBitmapDropShadow;
-    pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurMarginX * 2,
-                                            (INT)rc.Height() + blurMarginY * 2,
-                                            PixelFormat32bppPARGB);
+    std::unique_ptr<Gdiplus::Bitmap> pBitmapDropShadow =
+        std::make_unique<Gdiplus::Bitmap>((INT)rc.Width() + blurMarginX * 2,
+                                          (INT)rc.Height() + blurMarginY * 2,
+                                          PixelFormat32bppPARGB);
 
-    Gdiplus::Graphics g_shadow(pBitmapDropShadow);
+    Gdiplus::Graphics g_shadow(pBitmapDropShadow.get());
     g_shadow.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
     // dropshadow, draw a roundrectangle to blur
     if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0) {
@@ -566,15 +566,11 @@ void WeaselPanel::_HighlightText(Gdiplus::Graphics& g_back,
         rect.InflateRect(1, 1);
       }
     }
-    DoGaussianBlur(pBitmapDropShadow, (float)m_cachedStyle.shadow_radius,
+    DoGaussianBlur(pBitmapDropShadow.get(), (float)m_cachedStyle.shadow_radius,
                    (float)m_cachedStyle.shadow_radius);
 
-    g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX,
+    g_back.DrawImage(pBitmapDropShadow.get(), rc.left - blurMarginX,
                      rc.top - blurMarginY);
-
-    // free memory
-    delete pBitmapDropShadow;
-    pBitmapDropShadow = NULL;
   }
 
   // 必须back_color非完全透明才绘制
