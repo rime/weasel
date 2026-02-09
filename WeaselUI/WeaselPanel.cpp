@@ -71,7 +71,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
       dpi(96),
       hide_candidates(false),
       pDWR(ui.pdwr()),
-      _UICallback(ui.uiCallback()),
+      ui_callback_(ui.uiCallback()),
       _m_gdiplusToken(0) {
   m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE,
                            LR_DEFAULTCOLOR);
@@ -287,9 +287,9 @@ LRESULT WeaselPanel::OnMouseWheel(UINT uMsg,
                                   LPARAM lParam,
                                   BOOL& bHandled) {
   int delta = GET_WHEEL_DELTA_WPARAM(wParam);
-  if (_UICallback && delta != 0) {
+  if (ui_callback_ && delta != 0) {
     bool nextpage = delta < 0;
-    _UICallback(NULL, NULL, NULL, &nextpage);
+    ui_callback_(NULL, NULL, NULL, &nextpage);
   }
   bHandled = true;
   return 0;
@@ -318,9 +318,9 @@ LRESULT WeaselPanel::OnLeftClickedUp(UINT uMsg,
                      m_cachedStyle.hilite_padding_y);
     if (rect.PtInRect(point)) {
       size_t i = m_ctx.cinfo.highlighted;
-      if (_UICallback) {
+      if (ui_callback_) {
         m_mouse_entry = false;
-        _UICallback(&i, NULL, NULL, NULL);
+        ui_callback_(&i, NULL, NULL, NULL);
         if (!m_status.composing)
           DestroyWindow();
       }
@@ -393,8 +393,8 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
         _OffsetRectIfIsToRepos(prc, m_offsety_preedit);
         if (prc.PtInRect(point)) {
           bool nextPage = false;
-          if (_UICallback)
-            _UICallback(NULL, NULL, &nextPage, NULL);
+          if (ui_callback_)
+            ui_callback_(NULL, NULL, &nextPage, NULL);
           bHandled = true;
           return 0;
         }
@@ -405,8 +405,8 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
         _OffsetRectIfIsToRepos(prc, m_offsety_preedit);
         if (prc.PtInRect(point)) {
           bool nextPage = true;
-          if (_UICallback)
-            _UICallback(NULL, NULL, &nextPage, NULL);
+          if (ui_callback_)
+            ui_callback_(NULL, NULL, &nextPage, NULL);
           bHandled = true;
           return 0;
         }
@@ -422,8 +422,8 @@ LRESULT WeaselPanel::OnLeftClickedDown(UINT uMsg,
         bar_scale_ = 0.8f;
         // modify highlighted
         if (i != m_ctx.cinfo.highlighted) {
-          if (_UICallback)
-            _UICallback(NULL, &i, NULL, NULL);
+          if (ui_callback_)
+            ui_callback_(NULL, &i, NULL, NULL);
         } else {
           RedrawWindow();
         }
@@ -480,8 +480,8 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg,
     if (rect.PtInRect(point)) {
       if (i != m_ctx.cinfo.highlighted) {
         if (m_style.hover_type == UIStyle::HoverType::HILITE) {
-          if (_UICallback)
-            _UICallback(NULL, &i, NULL, NULL);
+          if (ui_callback_)
+            ui_callback_(NULL, &i, NULL, NULL);
         } else if (m_hoverIndex != i) {
           m_hoverIndex = static_cast<int>(i);
           InvalidateRect(&rcw, true);

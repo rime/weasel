@@ -22,6 +22,9 @@ class DirectWriteResources;
 template <class T>
 using an = std::shared_ptr<T>;
 
+using UICallback =
+    std::function<void(size_t* const, size_t* const, bool* const, bool* const)>;
+
 //
 // 输入法界面接口类
 //
@@ -62,16 +65,8 @@ class UI {
   bool GetIsReposition();
   bool& InServer() { return in_server_; }
 
-  std::function<void(size_t* const, size_t* const, bool* const, bool* const)>&
-  uiCallback() {
-    return _UICallback;
-  }
-  void SetUICallBack(
-      std::function<
-          void(size_t* const, size_t* const, bool* const, bool* const)> const&
-          func) {
-    _UICallback = func;
-  }
+  UICallback& uiCallback() { return ui_callback_; }
+  void SetUICallBack(UICallback const& func) { ui_callback_ = func; }
 
  private:
   UIImpl* pimpl_;
@@ -83,8 +78,7 @@ class UI {
   UIStyle style_;
   UIStyle ostyle_;
   bool in_server_;
-  std::function<void(size_t* const, size_t* const, bool* const, bool* const)>
-      _UICallback;
+  UICallback ui_callback_;
 };
 
 class DirectWriteResources {

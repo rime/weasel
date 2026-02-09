@@ -148,8 +148,7 @@ class WeaselPanel
   bool m_sticky;
   // for multi font_face & font_point
   DirectWriteResources* pDWR;
-  std::function<void(size_t* const, size_t* const, bool* const, bool* const)>&
-      _UICallback;
+  UICallback& ui_callback_;
   float bar_scale_ = 1.0;
   float dpiScaleLayout = 1.0f;
   int m_hoverIndex = -1;
