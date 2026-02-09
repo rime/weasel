@@ -175,7 +175,29 @@ void WeaselPanel::Refresh() {
   // only RedrawWindow if no need to hide candidates window, or
   // inline_no_candidates
   if (!hide_candidates || inline_no_candidates) {
-    _InitFontRes();
+    HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+    UINT dpiX = 96, dpiY = 96;
+    if (hMonitor)
+      GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+
+    bool context_changed = (m_ctx != m_octx);
+    bool style_changed = (m_ostyle != m_style);
+    bool dpi_changed = (dpi != dpiX);
+    bool layout_missing = (m_layout == NULL);
+
+    // If nothing changed, return
+    if (!layout_missing && !context_changed && !style_changed && !dpi_changed) {
+      if (!IS_FULLSCREENLAYOUT(m_style))
+        return;
+      // For fullscreen layout, we might need to check if work area changed
+      // (even if dpi same)
+      if (hMonitor == m_hMonitor)
+        return;
+    }
+
+    _InitFontRes(false, dpiX);
+    // Recreate layout if any state changed (passed the guard above)
+    // Layout depends on Context (counts), Style, DPI, and Monitor.
     _CreateLayout();
 
     CDCHandle dc = GetDC();
@@ -183,29 +205,35 @@ void WeaselPanel::Refresh() {
     ReleaseDC(dc);
     _ResizeWindow();
     _RepositionWindow();
-    if (m_ctx != m_octx) {
+
+    RedrawWindow();
+
+    if (context_changed) {
       m_octx = m_ctx;
-      RedrawWindow();
     }
   }
 }
 
-void WeaselPanel::_InitFontRes(bool forced) {
-  HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
-  UINT dpiX = 96, dpiY = 96;
-  if (hMonitor)
-    GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+void WeaselPanel::_InitFontRes(bool forced, UINT dpiX) {
+  if (dpiX == 0) {
+    HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+    dpiX = 96;
+    UINT dpiY = 96;
+    if (hMonitor)
+      GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+  }
 
   bool styleChanged = (m_ostyle != m_style);
   bool dpiChanged = (dpiX != dpi);
 
-  if (!forced && (pDWR != NULL) && !styleChanged && !dpiChanged) {
+  if (!forced && (pDWR != NULL) && !styleChanged && !dpiChanged &&
+      pDWR->pTextFormat != NULL) {
     return;
   }
 
-  // prepare d2d1 resources
-  // if style changed, or dpi changed, re-initialize directwrite resources
-  if (styleChanged || dpiChanged) {
+  // if style changed, or dpi changed, or pTextFormat null re-initialize
+  // directwrite resources
+  if (styleChanged || dpiChanged || !pDWR->pTextFormat) {
     pDWR->InitResources(m_style, dpiX);
   }
   pDWR->EnsureRenderTarget(m_style.antialias_mode);

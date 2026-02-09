@@ -79,7 +79,7 @@ class WeaselPanel
   int DPI_SCALE(T t) {
     return (int)(t * dpiScaleLayout);
   }
-  void _InitFontRes(bool forced = false);
+  void _InitFontRes(bool forced = false, UINT dpiX = 0);
   void _CaptureRect(CRect& rect);
   bool m_mouse_entry = false;
   void _CreateLayout();
