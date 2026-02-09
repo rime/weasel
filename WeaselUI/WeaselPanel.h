@@ -81,6 +81,7 @@ class WeaselPanel
   void _InitFontRes(bool forced = false);
   void _CaptureRect(CRect& rect);
   bool m_mouse_entry = false;
+  CPoint m_lastMousePos = {-1, -1};
   void _CreateLayout();
   void _ResizeWindow();
   void _RepositionWindow(const bool& adj = false);
