@@ -10,6 +10,6 @@ class VerticalLayout : public StandardLayout {
                  const Status& status,
                  DirectWriteResources* pDWR)
       : StandardLayout(style, context, status, pDWR) {}
-  virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL);
+  virtual void DoLayout(CDCHandle dc);
 };
 };  // namespace weasel

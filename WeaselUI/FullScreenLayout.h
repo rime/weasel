@@ -16,13 +16,10 @@ class FullScreenLayout : public StandardLayout {
         m_layout(layout) {}
   virtual ~FullScreenLayout() { delete m_layout; }
 
-  virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL);
+  virtual void DoLayout(CDCHandle dc);
 
  private:
-  bool AdjustFontPoint(CDCHandle dc,
-                       const CRect& workArea,
-                       int& step,
-                       DirectWriteResources* pDWR = NULL);
+  bool AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& step);
 
   const CRect& mr_inputPos;
   Layout* m_layout;

@@ -179,7 +179,7 @@ void WeaselPanel::Refresh() {
     _CreateLayout();
 
     CDCHandle dc = GetDC();
-    m_layout->DoLayout(dc, pDWR);
+    m_layout->DoLayout(dc);
     ReleaseDC(dc);
     _ResizeWindow();
     _RepositionWindow();

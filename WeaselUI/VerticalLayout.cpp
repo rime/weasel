@@ -3,14 +3,13 @@
 
 using namespace weasel;
 
-void weasel::VerticalLayout::DoLayout(CDCHandle dc,
-                                      DirectWriteResources* pDWR) {
+void weasel::VerticalLayout::DoLayout(CDCHandle dc) {
   const int space = _style.hilite_spacing;
   int width = 0, height = real_margin_y;
-  MarkMetrics mark = ComputeMarkMetrics(pDWR);
+  MarkMetrics mark = ComputeMarkMetrics();
   int base_offset = mark.base_offset;
 
-  PagerMetrics pager = ComputePagerMetrics(pDWR);
+  PagerMetrics pager = ComputePagerMetrics();
   int pgw = pager.pgw;
   int pgh = pager.pgh;
 
@@ -18,7 +17,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc,
   CSize size;
   /* Preedit */
   if (!IsInlinePreedit() && !_context.preedit.str.empty()) {
-    size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
+    size = GetPreeditSize(dc, _context.preedit, pDWR_->pPreeditTextFormat);
     int szx = pgw, szy = max(size.cy, pgh);
     // icon size higher then preedit text
     int yoffset = (STATUS_ICON_SIZE >= szy && ShouldDisplayStatusIcon())
@@ -35,7 +34,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc,
 
   /* Auxiliary */
   if (!_context.aux.str.empty()) {
-    size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat, pDWR);
+    size = GetPreeditSize(dc, _context.aux, pDWR_->pPreeditTextFormat);
     // icon size higher then auxiliary text
     int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon())
                       ? (STATUS_ICON_SIZE - size.cy) / 2
@@ -61,7 +60,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc,
     /* Label */
     std::wstring label =
         GetLabelText(labels, i, _style.label_text_format.c_str());
-    GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
+    GetTextSizeDW(label, label.length(), pDWR_->pLabelTextFormat, &size);
     _candidateLabelRects[i].SetRect(w, height, w + size.cx * labelFontValid,
                                     height + size.cy);
     _candidateLabelRects[i].OffsetRect(offsetX, offsetY);
@@ -71,7 +70,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc,
 
     /* Text */
     const std::wstring& text = candidates.at(i).str;
-    GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
+    GetTextSizeDW(text, text.length(), pDWR_->pTextFormat, &size);
     _candidateTextRects[i].SetRect(w, height, w + size.cx * textFontValid,
                                    height + size.cy);
     _candidateTextRects[i].OffsetRect(offsetX, offsetY);
@@ -89,7 +88,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc,
       comment_shift_width = max(comment_shift_width, w);
 
       const std::wstring& comment = comments.at(i).str;
-      GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR,
+      GetTextSizeDW(comment, comment.length(), pDWR_->pCommentTextFormat,
                     &size);
       _candidateCommentRects[i].SetRect(0, height, size.cx * cmtFontValid,
                                         height + size.cy);

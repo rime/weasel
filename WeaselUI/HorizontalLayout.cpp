@@ -3,20 +3,20 @@
 
 using namespace weasel;
 
-void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR) {
+void HorizontalLayout::DoLayout(CDCHandle dc) {
   CSize size;
   int width = offsetX + real_margin_x, height = offsetY + real_margin_y;
   int w = offsetX + real_margin_x;
-  MarkMetrics mark = ComputeMarkMetrics(pDWR);
+  MarkMetrics mark = ComputeMarkMetrics();
   int base_offset = mark.base_offset;
 
-  PagerMetrics pager = ComputePagerMetrics(pDWR);
+  PagerMetrics pager = ComputePagerMetrics();
   int pgw = pager.pgw;
   int pgh = pager.pgh;
 
   /* Preedit */
   if (!IsInlinePreedit() && !_context.preedit.str.empty()) {
-    size = GetPreeditSize(dc, _context.preedit, pDWR->pPreeditTextFormat, pDWR);
+    size = GetPreeditSize(dc, _context.preedit, pDWR_->pPreeditTextFormat);
     int szx = pgw, szy = max(size.cy, pgh);
     // icon size higher then preedit text
     int yoffset = (STATUS_ICON_SIZE >= szy && ShouldDisplayStatusIcon())
@@ -32,7 +32,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR) {
 
   /* Auxiliary */
   if (!_context.aux.str.empty()) {
-    size = GetPreeditSize(dc, _context.aux, pDWR->pPreeditTextFormat, pDWR);
+    size = GetPreeditSize(dc, _context.aux, pDWR_->pPreeditTextFormat);
     // icon size higher then auxiliary text
     int yoffset = (STATUS_ICON_SIZE >= size.cy && ShouldDisplayStatusIcon())
                       ? (STATUS_ICON_SIZE - size.cy) / 2
@@ -60,7 +60,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR) {
       /* Label */
       std::wstring label =
           GetLabelText(labels, i, _style.label_text_format.c_str());
-      GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
+      GetTextSizeDW(label, label.length(), pDWR_->pLabelTextFormat, &size);
       _candidateLabelRects[i].SetRect(w, height, w + size.cx * labelFontValid,
                                       height + size.cy);
       w += size.cx * labelFontValid;
@@ -69,7 +69,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR) {
       /* Text */
       w += _style.hilite_spacing;
       const std::wstring& text = candidates.at(i).str;
-      GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
+      GetTextSizeDW(text, text.length(), pDWR_->pTextFormat, &size);
       _candidateTextRects[i].SetRect(w, height, w + size.cx * textFontValid,
                                      height + size.cy);
       w += size.cx * textFontValid;
@@ -81,7 +81,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR) {
           (i != id && (_style.comment_text_color & 0xff000000));
       if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans) {
         const std::wstring& comment = comments.at(i).str;
-        GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR,
+        GetTextSizeDW(comment, comment.length(), pDWR_->pCommentTextFormat,
                       &size);
         w += _style.hilite_spacing;
         _candidateCommentRects[i].SetRect(w, height, w + size.cx * cmtFontValid,

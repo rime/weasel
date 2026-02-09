@@ -3,17 +3,16 @@
 
 using namespace weasel;
 
-StandardLayout::MarkMetrics StandardLayout::ComputeMarkMetrics(
-    DirectWriteResources* pDWR) {
+StandardLayout::MarkMetrics StandardLayout::ComputeMarkMetrics() {
   MarkMetrics m;
   if ((_style.hilited_mark_color & 0xff000000)) {
     CSize sg;
     if (candidates_count) {
       if (_style.mark_text.empty())
-        GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
+        GetTextSizeDW(L"|", 1, pDWR_->pTextFormat, &sg);
       else
         GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
-                      pDWR->pTextFormat, pDWR, &sg);
+                      pDWR_->pTextFormat, &sg);
     }
 
     m.mark_width = sg.cx;
@@ -52,14 +51,11 @@ StandardLayout::MarkMetrics StandardLayout::ComputeMarkMetrics(
   return m;
 }
 
-StandardLayout::PagerMetrics StandardLayout::ComputePagerMetrics(
-    DirectWriteResources* pDWR) {
+StandardLayout::PagerMetrics StandardLayout::ComputePagerMetrics() {
   PagerMetrics pager;
   if (!IsInlinePreedit()) {
-    GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR,
-                  &pager.pgszl);
-    GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR,
-                  &pager.pgszr);
+    GetTextSizeDW(pre, pre.length(), pDWR_->pPreeditTextFormat, &pager.pgszl);
+    GetTextSizeDW(next, next.length(), pDWR_->pPreeditTextFormat, &pager.pgszr);
   }
   pager.page_en = (_style.prevpage_color & 0xff000000) &&
                   (_style.nextpage_color & 0xff000000);
@@ -164,7 +160,6 @@ void weasel::StandardLayout::GetTextSizeDW(
     const std::wstring& text,
     size_t nCount,
     ComPtr<IDWriteTextFormat1>& pTextFormat,
-    DirectWriteResources* pDWR,
     LPSIZE lpSize) const {
   D2D1_SIZE_F sz;
   HRESULT hr = S_OK;
@@ -176,22 +171,23 @@ void weasel::StandardLayout::GetTextSizeDW(
   }
   // 创建文本布局
   if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                              0.0f, (float)_style.max_height));
+    HR(pDWR_->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                               0.0f, (float)_style.max_height));
   else
-    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                              (float)_style.max_width, 0));
+    HR(pDWR_->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                               (float)_style.max_width, 0));
 
   if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
     DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right
                                      ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
                                      : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
-    HR(pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
-    HR(pDWR->SetLayoutFlowDirection(flow));
+    HR(pDWR_->SetLayoutReadingDirection(
+        DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
+    HR(pDWR_->SetLayoutFlowDirection(flow));
   }
   // 获取文本尺寸
   DWRITE_TEXT_METRICS textMetrics;
-  HR(pDWR->GetLayoutMetrics(&textMetrics));
+  HR(pDWR_->GetLayoutMetrics(&textMetrics));
   sz = D2D1::SizeF(ceil(textMetrics.widthIncludingTrailingWhitespace),
                    ceil(textMetrics.height));
 
@@ -202,22 +198,23 @@ void weasel::StandardLayout::GetTextSizeDW(
     auto max_width = _style.max_width == 0
                          ? textMetrics.widthIncludingTrailingWhitespace
                          : _style.max_width;
-    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                              max_width, textMetrics.height));
+    HR(pDWR_->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                               max_width, textMetrics.height));
   } else {
     auto max_height =
         _style.max_height == 0 ? textMetrics.height : _style.max_height;
-    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                              textMetrics.widthIncludingTrailingWhitespace,
-                              max_height));
+    HR(pDWR_->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
+                               textMetrics.widthIncludingTrailingWhitespace,
+                               max_height));
   }
 
   if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
-    HR(pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
-    HR(pDWR->SetLayoutFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT));
+    HR(pDWR_->SetLayoutReadingDirection(
+        DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
+    HR(pDWR_->SetLayoutFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT));
   }
   DWRITE_OVERHANG_METRICS overhangMetrics;
-  HR(pDWR->GetLayoutOverhangMetrics(&overhangMetrics));
+  HR(pDWR_->GetLayoutOverhangMetrics(&overhangMetrics));
   {
     if (overhangMetrics.left > 0)
       lpSize->cx += (LONG)(overhangMetrics.left + 1);
@@ -232,8 +229,7 @@ void weasel::StandardLayout::GetTextSizeDW(
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc,
                                      const weasel::Text& text,
-                                     ComPtr<IDWriteTextFormat1> pTextFormat,
-                                     DirectWriteResources* pDWR) {
+                                     ComPtr<IDWriteTextFormat1> pTextFormat) {
   const std::wstring& preedit = text.str;
   const std::vector<weasel::TextAttribute>& attrs = text.attributes;
   CSize size(0, 0);
@@ -246,12 +242,10 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc,
       std::wstring before_str = preedit.substr(0, _range.start);
       std::wstring hilited_str = preedit.substr(_range.start, _range.end);
       std::wstring after_str = preedit.substr(_range.end);
-      GetTextSizeDW(before_str, before_str.length(), pTextFormat, pDWR,
-                    &_beforesz);
-      GetTextSizeDW(hilited_str, hilited_str.length(), pTextFormat, pDWR,
+      GetTextSizeDW(before_str, before_str.length(), pTextFormat, &_beforesz);
+      GetTextSizeDW(hilited_str, hilited_str.length(), pTextFormat,
                     &_hilitedsz);
-      GetTextSizeDW(after_str, after_str.length(), pTextFormat, pDWR,
-                    &_aftersz);
+      GetTextSizeDW(after_str, after_str.length(), pTextFormat, &_aftersz);
       auto width_max = 0, height_max = 0;
       if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
         width_max = max(width_max, _beforesz.cx);
@@ -273,7 +267,7 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc,
       size.cx = width_max;
       size.cy = height_max;
     } else
-      GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWR, &size);
+      GetTextSizeDW(preedit, preedit.length(), pTextFormat, &size);
   }
   return size;
 }

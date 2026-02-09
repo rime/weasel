@@ -3,8 +3,7 @@
 
 using namespace weasel;
 
-void weasel::FullScreenLayout::DoLayout(CDCHandle dc,
-                                        DirectWriteResources* pDWR) {
+void weasel::FullScreenLayout::DoLayout(CDCHandle dc) {
   if (_context.empty()) {
     int width = 0, height = 0;
     UpdateStatusIconLayout(&width, &height);
@@ -24,15 +23,15 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc,
 
   int step = 32;
   do {
-    m_layout->DoLayout(dc, pDWR);
+    m_layout->DoLayout(dc);
     if ((_style.hilited_mark_color & 0xff000000)) {
       CSize sg;
       if (candidates_count) {
         if (_style.mark_text.empty())
-          GetTextSizeDW(L"|", 1, pDWR->pTextFormat, pDWR, &sg);
+          GetTextSizeDW(L"|", 1, pDWR_->pTextFormat, &sg);
         else
           GetTextSizeDW(_style.mark_text, _style.mark_text.length(),
-                        pDWR->pTextFormat, pDWR, &sg);
+                        pDWR_->pTextFormat, &sg);
       }
       mark_width = sg.cx;
       mark_height = sg.cy;
@@ -47,7 +46,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc,
                      ? mark_width
                      : mark_width + _style.hilite_spacing;
     }
-  } while (AdjustFontPoint(dc, workArea, step, pDWR));
+  } while (AdjustFontPoint(dc, workArea, step));
 
   int offsetx = (workArea.Width() - m_layout->GetContentSize().cx) / 2;
   int offsety = (workArea.Height() - m_layout->GetContentSize().cy) / 2;
@@ -87,8 +86,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc,
 
 bool FullScreenLayout::AdjustFontPoint(CDCHandle dc,
                                        const CRect& workArea,
-                                       int& step,
-                                       DirectWriteResources* pDWR) {
+                                       int& step) {
   if (_context.empty() || step == 0)
     return false;
   {
@@ -96,19 +94,19 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc,
     int fontPoint;
     int fontPointComment;
 
-    if (pDWR->pLabelTextFormat != NULL)
-      fontPointLabel = (int)(pDWR->pLabelTextFormat->GetFontSize() /
-                             pDWR->dpiScaleFontPoint);
+    if (pDWR_->pLabelTextFormat != NULL)
+      fontPointLabel = (int)(pDWR_->pLabelTextFormat->GetFontSize() /
+                             pDWR_->dpiScaleFontPoint);
     else
       fontPointLabel = 0;
-    if (pDWR->pTextFormat != NULL)
+    if (pDWR_->pTextFormat != NULL)
       fontPoint =
-          (int)(pDWR->pTextFormat->GetFontSize() / pDWR->dpiScaleFontPoint);
+          (int)(pDWR_->pTextFormat->GetFontSize() / pDWR_->dpiScaleFontPoint);
     else
       fontPoint = 0;
-    if (pDWR->pCommentTextFormat != NULL)
-      fontPointComment = (int)(pDWR->pCommentTextFormat->GetFontSize() /
-                               pDWR->dpiScaleFontPoint);
+    if (pDWR_->pCommentTextFormat != NULL)
+      fontPointComment = (int)(pDWR_->pCommentTextFormat->GetFontSize() /
+                               pDWR_->dpiScaleFontPoint);
     else
       fontPointComment = 0;
     CSize sz = m_layout->GetContentSize();
@@ -120,7 +118,7 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc,
       fontPoint += step;
       fontPointLabel += step;
       fontPointComment += step;
-      pDWR->InitResources(_style, fontPointLabel, fontPoint, fontPointComment);
+      pDWR_->InitResources(_style, fontPointLabel, fontPoint, fontPointComment);
       return true;
     } else if (sz.cx <= (workArea.Width() - offsetX * 2) * 31 / 32 &&
                sz.cy <= (workArea.Height() - offsetY * 2) * 31 / 32) {
@@ -130,7 +128,7 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc,
       fontPoint += step;
       fontPointLabel += step;
       fontPointComment += step;
-      pDWR->InitResources(_style, fontPointLabel, fontPoint, fontPointComment);
+      pDWR_->InitResources(_style, fontPointLabel, fontPoint, fontPointComment);
       return true;
     }
 
