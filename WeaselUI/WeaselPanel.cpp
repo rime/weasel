@@ -204,7 +204,7 @@ void WeaselPanel::Refresh() {
     m_layout->DoLayout(dc);
     ReleaseDC(dc);
     _ResizeWindow();
-    _RepositionWindow();
+    _RepositionWindow(false, hMonitor);
 
     RedrawWindow();
 
@@ -1208,10 +1208,12 @@ void WeaselPanel::MoveTo(RECT const& rc) {
   }
 }
 
-void WeaselPanel::_RepositionWindow(const bool& adj) {
+void WeaselPanel::_RepositionWindow(const bool& adj, HMONITOR hMonitor) {
   RECT rcWorkArea;
   memset(&rcWorkArea, 0, sizeof(rcWorkArea));
-  HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+  if (hMonitor == NULL)
+    hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+
   if (hMonitor) {
     MONITORINFO info;
     info.cbSize = sizeof(MONITORINFO);

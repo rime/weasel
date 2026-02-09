@@ -84,7 +84,7 @@ class WeaselPanel
   bool m_mouse_entry = false;
   void _CreateLayout();
   void _ResizeWindow();
-  void _RepositionWindow(const bool& adj = false);
+  void _RepositionWindow(const bool& adj = false, HMONITOR hMonitor = NULL);
   bool _DrawPreedit(const Text& text, CDCHandle dc, const CRect& rc);
   bool _DrawPreeditBack(const Text& text,
                         Gdiplus::Graphics& g_back,
