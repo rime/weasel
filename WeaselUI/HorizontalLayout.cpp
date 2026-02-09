@@ -3,7 +3,7 @@
 
 using namespace weasel;
 
-void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
+void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR) {
   CSize size;
   int width = offsetX + real_margin_x, height = offsetY + real_margin_y;
   int w = offsetX + real_margin_x;

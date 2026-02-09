@@ -67,9 +67,9 @@ class Layout {
   Layout(const UIStyle& style,
          const Context& context,
          const Status& status,
-         PDWR pDWR);
+         DirectWriteResources* pDWR);
 
-  virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL) = 0;
+  virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL) = 0;
   /* All points in this class is based on the content area */
   /* The top-left corner of the content area is always (0, 0) */
   virtual CSize GetContentSize() const = 0;
@@ -99,7 +99,7 @@ class Layout {
   virtual void GetTextSizeDW(const std::wstring& text,
                              size_t nCount,
                              ComPtr<IDWriteTextFormat1>& pTextFormat,
-                             PDWR pDWR,
+                             DirectWriteResources* pDWR,
                              LPSIZE lpSize) const = 0;
 
   int offsetX = 0;

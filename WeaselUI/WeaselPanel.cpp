@@ -205,12 +205,7 @@ void WeaselPanel::_InitFontRes(bool forced) {
 
   // prepare d2d1 resources
   // if style changed, or dpi changed, re-initialize directwrite resources
-  bool needInit = false;
-  if (!pDWR) {
-    pDWR = std::make_shared<DirectWriteResources>();
-    needInit = true;
-  }
-  if (needInit || styleChanged || dpiChanged) {
+  if (styleChanged || dpiChanged) {
     pDWR->InitResources(m_style, dpiX);
   }
   pDWR->EnsureRenderTarget(m_style.antialias_mode);
@@ -1296,4 +1291,8 @@ void WeaselPanel::_TextOut(const CRect& rc,
     pDWR->DrawRect(&rectf);
 #endif
   }
+}
+
+DirectWriteResources* WeaselPanel::GetDWR() const {
+  return pDWR;
 }

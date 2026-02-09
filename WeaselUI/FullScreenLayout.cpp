@@ -3,7 +3,8 @@
 
 using namespace weasel;
 
-void weasel::FullScreenLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
+void weasel::FullScreenLayout::DoLayout(CDCHandle dc,
+                                        DirectWriteResources* pDWR) {
   if (_context.empty()) {
     int width = 0, height = 0;
     UpdateStatusIconLayout(&width, &height);
@@ -87,7 +88,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
 bool FullScreenLayout::AdjustFontPoint(CDCHandle dc,
                                        const CRect& workArea,
                                        int& step,
-                                       PDWR pDWR) {
+                                       DirectWriteResources* pDWR) {
   if (_context.empty() || step == 0)
     return false;
   {

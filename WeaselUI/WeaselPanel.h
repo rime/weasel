@@ -65,6 +65,7 @@ class WeaselPanel
   void DoPaint(CDCHandle dc);
   bool GetIsReposition() { return m_istorepos; }
   void RedrawWindow();
+  DirectWriteResources* GetDWR() const;
 
   static VOID CALLBACK OnTimer(_In_ HWND hwnd,
                                _In_ UINT uMsg,
@@ -146,7 +147,7 @@ class WeaselPanel
   bool hide_candidates;
   bool m_sticky;
   // for multi font_face & font_point
-  PDWR pDWR;
+  DirectWriteResources* pDWR;
   std::function<void(size_t* const, size_t* const, bool* const, bool* const)>&
       _UICallback;
   float bar_scale_ = 1.0;

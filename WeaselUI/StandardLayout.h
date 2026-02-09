@@ -15,12 +15,12 @@ class StandardLayout : public Layout {
   StandardLayout(const UIStyle& style,
                  const Context& context,
                  const Status& status,
-                 PDWR pDWR)
+                 DirectWriteResources* pDWR)
       : Layout(style, context, status, pDWR) {}
 
   /* Layout */
 
-  virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL) = 0;
+  virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL) = 0;
   virtual CSize GetContentSize() const { return _contentSize; }
   virtual CRect GetPreeditRect() const { return _preeditRect; }
   virtual CRect GetAuxiliaryRect() const { return _auxiliaryRect; }
@@ -54,7 +54,7 @@ class StandardLayout : public Layout {
   void GetTextSizeDW(const std::wstring& text,
                      size_t nCount,
                      ComPtr<IDWriteTextFormat1>& pTextFormat,
-                     PDWR pDWR,
+                     DirectWriteResources* pDWR,
                      LPSIZE lpSize) const;
 
  protected:
@@ -74,8 +74,8 @@ class StandardLayout : public Layout {
     bool page_en = false;
   };
 
-  MarkMetrics ComputeMarkMetrics(PDWR pDWR);
-  PagerMetrics ComputePagerMetrics(PDWR pDWR);
+  MarkMetrics ComputeMarkMetrics(DirectWriteResources* pDWR);
+  PagerMetrics ComputePagerMetrics(DirectWriteResources* pDWR);
   void PlacePagerHorizontal(const PagerMetrics& pager,
                             int contentWidth,
                             int contentHeight);
@@ -89,7 +89,7 @@ class StandardLayout : public Layout {
   CSize GetPreeditSize(CDCHandle dc,
                        const weasel::Text& text,
                        ComPtr<IDWriteTextFormat1> pTextFormat = NULL,
-                       PDWR pDWR = NULL);
+                       DirectWriteResources* pDWR = NULL);
   bool _IsHighlightOverCandidateWindow(CRect& rc, CDCHandle& dc);
   void _PrepareRoundInfo(CDCHandle& dc);
 

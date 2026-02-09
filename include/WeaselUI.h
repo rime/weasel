@@ -22,7 +22,6 @@ class DirectWriteResources;
 template <class T>
 using an = std::shared_ptr<T>;
 
-using PDWR = an<DirectWriteResources>;
 //
 // 输入法界面接口类
 //
@@ -30,13 +29,7 @@ class UI {
  public:
   UI() : pimpl_(0), in_server_(false) {}
 
-  virtual ~UI() {
-    if (pimpl_)
-      Destroy(true);
-    if (pDWR) {
-      pDWR.reset();
-    }
-  }
+  virtual ~UI();
 
   // 创建输入法界面
   bool Create(HWND parent);
@@ -65,7 +58,7 @@ class UI {
   Status& status() { return status_; }
   UIStyle& style() { return style_; }
   UIStyle& ostyle() { return ostyle_; }
-  PDWR pdwr() { return pDWR; }
+  DirectWriteResources* pdwr();
   bool GetIsReposition();
   bool& InServer() { return in_server_; }
 
@@ -82,7 +75,7 @@ class UI {
 
  private:
   UIImpl* pimpl_;
-  PDWR pDWR;
+  std::unique_ptr<DirectWriteResources> pDWR;
 
   Context ctx_;
   Context octx_;

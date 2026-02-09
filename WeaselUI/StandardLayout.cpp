@@ -3,7 +3,8 @@
 
 using namespace weasel;
 
-StandardLayout::MarkMetrics StandardLayout::ComputeMarkMetrics(PDWR pDWR) {
+StandardLayout::MarkMetrics StandardLayout::ComputeMarkMetrics(
+    DirectWriteResources* pDWR) {
   MarkMetrics m;
   if ((_style.hilited_mark_color & 0xff000000)) {
     CSize sg;
@@ -51,7 +52,8 @@ StandardLayout::MarkMetrics StandardLayout::ComputeMarkMetrics(PDWR pDWR) {
   return m;
 }
 
-StandardLayout::PagerMetrics StandardLayout::ComputePagerMetrics(PDWR pDWR) {
+StandardLayout::PagerMetrics StandardLayout::ComputePagerMetrics(
+    DirectWriteResources* pDWR) {
   PagerMetrics pager;
   if (!IsInlinePreedit()) {
     GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR,
@@ -162,7 +164,7 @@ void weasel::StandardLayout::GetTextSizeDW(
     const std::wstring& text,
     size_t nCount,
     ComPtr<IDWriteTextFormat1>& pTextFormat,
-    PDWR pDWR,
+    DirectWriteResources* pDWR,
     LPSIZE lpSize) const {
   D2D1_SIZE_F sz;
   HRESULT hr = S_OK;
@@ -231,7 +233,7 @@ void weasel::StandardLayout::GetTextSizeDW(
 CSize StandardLayout::GetPreeditSize(CDCHandle dc,
                                      const weasel::Text& text,
                                      ComPtr<IDWriteTextFormat1> pTextFormat,
-                                     PDWR pDWR) {
+                                     DirectWriteResources* pDWR) {
   const std::wstring& preedit = text.str;
   const std::vector<weasel::TextAttribute>& attrs = text.attributes;
   CSize size(0, 0);

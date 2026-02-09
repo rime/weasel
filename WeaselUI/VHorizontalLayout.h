@@ -8,11 +8,11 @@ class VHorizontalLayout : public StandardLayout {
   VHorizontalLayout(const UIStyle& style,
                     const Context& context,
                     const Status& status,
-                    PDWR pDWR)
+                    DirectWriteResources* pDWR)
       : StandardLayout(style, context, status, pDWR) {}
-  virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL);
+  virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL);
 
  private:
-  void DoLayoutWithWrap(CDCHandle dc, PDWR pDWR = NULL);
+  void DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDWR = NULL);
 };
 };  // namespace weasel

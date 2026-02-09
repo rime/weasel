@@ -8,8 +8,8 @@ class VerticalLayout : public StandardLayout {
   VerticalLayout(const UIStyle& style,
                  const Context& context,
                  const Status& status,
-                 PDWR pDWR)
+                 DirectWriteResources* pDWR)
       : StandardLayout(style, context, status, pDWR) {}
-  virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL);
+  virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL);
 };
 };  // namespace weasel

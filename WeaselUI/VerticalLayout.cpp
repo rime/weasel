@@ -3,7 +3,8 @@
 
 using namespace weasel;
 
-void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
+void weasel::VerticalLayout::DoLayout(CDCHandle dc,
+                                      DirectWriteResources* pDWR) {
   const int space = _style.hilite_spacing;
   int width = 0, height = real_margin_y;
   MarkMetrics mark = ComputeMarkMetrics(pDWR);

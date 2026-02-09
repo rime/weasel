@@ -177,3 +177,15 @@ void UI::Update(const Context& ctx, const Status& status) {
   }
   Refresh();
 }
+
+UI::~UI() {
+  if (pimpl_)
+    Destroy(true);
+}
+
+DirectWriteResources* UI::pdwr() {
+  if (!pDWR) {
+    pDWR = std::make_unique<DirectWriteResources>();
+  }
+  return pDWR.get();
+}
