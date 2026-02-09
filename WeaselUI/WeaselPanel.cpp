@@ -196,17 +196,24 @@ void WeaselPanel::_InitFontRes(bool forced) {
   if (hMonitor)
     GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
 
-  if (!forced && (pDWR != NULL) && !(m_ostyle != m_style) && (dpiX == dpi)) {
+  bool styleChanged = (m_ostyle != m_style);
+  bool dpiChanged = (dpiX != dpi);
+
+  if (!forced && (pDWR != NULL) && !styleChanged && !dpiChanged) {
     return;
   }
 
   // prepare d2d1 resources
-  // if style changed, or dpi changed, or pDWR NULL, re-initialize directwrite
-  // resources
-  pDWR.reset();
-  pDWR = std::make_shared<DirectWriteResources>(m_style, dpiX);
-  pDWR->pRenderTarget->SetTextAntialiasMode(
-      (D2D1_TEXT_ANTIALIAS_MODE)m_style.antialias_mode);
+  // if style changed, or dpi changed, re-initialize directwrite resources
+  bool needInit = false;
+  if (!pDWR) {
+    pDWR = std::make_shared<DirectWriteResources>();
+    needInit = true;
+  }
+  if (needInit || styleChanged || dpiChanged) {
+    pDWR->InitResources(m_style, dpiX);
+  }
+  pDWR->EnsureRenderTarget(m_style.antialias_mode);
 
   m_ostyle = m_style;
   dpi = dpiX;
@@ -1035,9 +1042,18 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
 
     // begin  texts drawing, if pRenderTarget failed, force to reinit
     // directwrite resources
-    if (FAILED(pDWR->pRenderTarget->BindDC(memDC, &rcw))) {
-      _InitFontRes(true);
-      pDWR->pRenderTarget->BindDC(memDC, &rcw);
+    if (FAILED(pDWR->EnsureRenderTarget(m_style.antialias_mode)) ||
+        FAILED(pDWR->pRenderTarget->BindDC(memDC, &rcw))) {
+      pDWR->ResetRenderTarget();
+      if (SUCCEEDED(pDWR->EnsureRenderTarget(m_style.antialias_mode)))
+        if (FAILED(pDWR->pRenderTarget->BindDC(memDC, &rcw))) {
+          ::MessageBoxW(NULL,
+                        L"Failed to bind DC to render target after reset.",
+                        L"Error", MB_ICONERROR);
+          // bad luck, still failed after reset, avoid infinite loop
+          throw std::runtime_error(
+              "Failed to bind DC to render target after reset.");
+        }
     }
     pDWR->pRenderTarget->BeginDraw();
     // draw auxiliary string
@@ -1050,7 +1066,7 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
     if (m_candidateCount)
       drawn |= _DrawCandidates(g_back);
     if (FAILED(pDWR->pRenderTarget->EndDraw())) {
-      _InitFontRes(true);
+      pDWR->ResetRenderTarget();
       Refresh();
     }
     // end texts drawing

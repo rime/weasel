@@ -96,17 +96,17 @@ class UI {
 
 class DirectWriteResources {
  public:
-  DirectWriteResources(weasel::UIStyle& style, UINT dpi);
+  DirectWriteResources();
   ~DirectWriteResources();
 
-  HRESULT InitResources(const std::wstring& label_font_face,
+  HRESULT InitResources(const UIStyle& style,
                         const int& label_font_point,
-                        const std::wstring& font_face,
                         const int& font_point,
-                        const std::wstring& comment_font_face,
-                        const int& comment_font_point,
-                        const bool& vertical_text = false);
+                        const int& comment_font_point);
   HRESULT InitResources(const UIStyle& style, const UINT& dpi);
+
+  HRESULT EnsureRenderTarget(int antialiasMode);
+  void ResetRenderTarget();
 
   HRESULT CreateTextLayout(const std::wstring& text,
                            const int& nCount,
@@ -149,7 +149,6 @@ class DirectWriteResources {
           color, pBrush.ReleaseAndGetAddressOf());
     }
   }
-  void SetDpi(const UINT& dpi);
 
   float dpiScaleFontPoint, dpiScaleLayout;
   ComPtr<ID2D1Factory> pD2d1Factory;
@@ -163,7 +162,6 @@ class DirectWriteResources {
   ComPtr<ID2D1SolidColorBrush> pBrush;
 
  private:
-  UIStyle& _style;
   void _ParseFontFace(const std::wstring& fontFaceStr,
                       DWRITE_FONT_WEIGHT& fontWeight,
                       DWRITE_FONT_STYLE& fontStyle);

@@ -119,9 +119,7 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc,
       fontPoint += step;
       fontPointLabel += step;
       fontPointComment += step;
-      pDWR->InitResources(_style.label_font_face, fontPointLabel,
-                          _style.font_face, fontPoint, _style.comment_font_face,
-                          fontPointComment);
+      pDWR->InitResources(_style, fontPointLabel, fontPoint, fontPointComment);
       return true;
     } else if (sz.cx <= (workArea.Width() - offsetX * 2) * 31 / 32 &&
                sz.cy <= (workArea.Height() - offsetY * 2) * 31 / 32) {
@@ -131,9 +129,7 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc,
       fontPoint += step;
       fontPointLabel += step;
       fontPointComment += step;
-      pDWR->InitResources(_style.label_font_face, fontPointLabel,
-                          _style.font_face, fontPoint, _style.comment_font_face,
-                          fontPointComment);
+      pDWR->InitResources(_style, fontPointLabel, fontPoint, fontPointComment);
       return true;
     }
 

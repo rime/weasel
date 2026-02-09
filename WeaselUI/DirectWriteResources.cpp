@@ -27,11 +27,9 @@ static vector<wstring> ws_split(const wstring& in, const wstring& delim) {
       std::wsregex_token_iterator()};
 }
 
-DirectWriteResources::DirectWriteResources(weasel::UIStyle& style,
-                                           UINT dpi = 96)
-    : _style(style),
-      dpiScaleFontPoint(0),
-      dpiScaleLayout(0),
+DirectWriteResources::DirectWriteResources()
+    : dpiScaleFontPoint(1.0f),
+      dpiScaleLayout(1.0f),
       pD2d1Factory(NULL),
       pDWFactory(NULL),
       pRenderTarget(NULL),
@@ -42,61 +40,60 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style,
       pLabelTextFormat(NULL),
       pCommentTextFormat(NULL) {
   // prepare d2d1 resources create factory
-  static const D2D1_TEXT_ANTIALIAS_MODE mode =
-      _style.antialias_mode <= 3
-          ? (D2D1_TEXT_ANTIALIAS_MODE)(_style.antialias_mode)
-          : D2D1_TEXT_ANTIALIAS_MODE_FORCE_DWORD;
   HR(::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED,
                          pD2d1Factory.ReleaseAndGetAddressOf()));
   // create IDWriteFactory
   HR(DWriteCreateFactory(
       DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
       reinterpret_cast<IUnknown**>(pDWFactory.ReleaseAndGetAddressOf())));
-  /* ID2D1HwndRenderTarget */
-  static const D2D1_PIXEL_FORMAT format = D2D1::PixelFormat(
-      DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
-  static const D2D1_RENDER_TARGET_PROPERTIES properties =
-      D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, format);
-  HR(pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget));
-  pRenderTarget->SetTextAntialiasMode(mode);
-  pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-  HR(pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f),
-                                          pBrush.ReleaseAndGetAddressOf()));
-  // get the dpi information
-  dpiScaleFontPoint = dpiScaleLayout = (float)dpi;
-  dpiScaleFontPoint /= 72.0f;
-  dpiScaleLayout /= 96.0f;
-
-  InitResources(style, dpi);
 }
 
 DirectWriteResources::~DirectWriteResources() {
   _textFormatCache.clear();
 }
 
-HRESULT DirectWriteResources::InitResources(const wstring& label_font_face,
+HRESULT DirectWriteResources::EnsureRenderTarget(int antialiasMode) {
+  if (pRenderTarget)
+    return S_OK;
+
+  static const D2D1_PIXEL_FORMAT format = D2D1::PixelFormat(
+      DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
+  static const D2D1_RENDER_TARGET_PROPERTIES properties =
+      D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, format);
+  HR(pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget));
+  pRenderTarget->SetTextAntialiasMode((D2D1_TEXT_ANTIALIAS_MODE)antialiasMode);
+  pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+  HR(pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f),
+                                          pBrush.ReleaseAndGetAddressOf()));
+  return S_OK;
+}
+
+void DirectWriteResources::ResetRenderTarget() {
+  pRenderTarget.Reset();
+  pBrush.Reset();
+}
+
+HRESULT DirectWriteResources::InitResources(const UIStyle& style,
                                             const int& label_font_point,
-                                            const wstring& font_face,
                                             const int& font_point,
-                                            const wstring& comment_font_face,
-                                            const int& comment_font_point,
-                                            const bool& vertical_text) {
+                                            const int& comment_font_point) {
   // prepare d2d1 resources
+  const bool vertical_text = style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT;
   const DWRITE_WORD_WRAPPING wrapping =
-      ((_style.max_width == 0 &&
-        _style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) ||
-       (_style.max_height == 0 &&
-        _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT))
+      ((style.max_width == 0 &&
+        style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) ||
+       (style.max_height == 0 &&
+        style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT))
           ? DWRITE_WORD_WRAPPING_NO_WRAP
           : DWRITE_WORD_WRAPPING_WHOLE_WORD;
   const DWRITE_WORD_WRAPPING wrapping_preedit =
-      ((_style.max_width == 0 &&
-        _style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) ||
-       (_style.max_height == 0 &&
-        _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT))
+      ((style.max_width == 0 &&
+        style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) ||
+       (style.max_height == 0 &&
+        style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT))
           ? DWRITE_WORD_WRAPPING_NO_WRAP
           : DWRITE_WORD_WRAPPING_CHARACTER;
-  const DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right
+  const DWRITE_FLOW_DIRECTION flow = style.vertical_text_left_to_right
                                          ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
                                          : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
 
@@ -105,9 +102,9 @@ HRESULT DirectWriteResources::InitResources(const wstring& label_font_face,
   DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
   DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
   // convert percentage to float
-  float linespacing = dpiScaleFontPoint * ((float)_style.linespacing / 100.0f);
-  float baseline = dpiScaleFontPoint * ((float)_style.baseline / 100.0f);
-  if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+  float linespacing = dpiScaleFontPoint * ((float)style.linespacing / 100.0f);
+  float baseline = dpiScaleFontPoint * ((float)style.baseline / 100.0f);
+  if (style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
     baseline = linespacing / 2;
 
   auto init_font = [&](const wstring& fontface, int fontpoint,
@@ -116,8 +113,9 @@ HRESULT DirectWriteResources::InitResources(const wstring& label_font_face,
     const wstring key = fontface + L"|" + std::to_wstring(fontpoint) + L"|" +
                         (vertical_text ? L"1" : L"0") + L"|" +
                         std::to_wstring((int)wrap) + L"|" +
-                        std::to_wstring(_style.linespacing) + L"|" +
-                        std::to_wstring(_style.baseline);
+                        std::to_wstring(style.linespacing) + L"|" +
+                        std::to_wstring(style.baseline) + L"|" +
+                        std::to_wstring(dpiScaleFontPoint);
     if (_textFormatCache.find(key) != _textFormatCache.end()) {
       _pTextFormat = _textFormatCache[key];
       return;
@@ -150,40 +148,30 @@ HRESULT DirectWriteResources::InitResources(const wstring& label_font_face,
           DWRITE_PARAGRAPH_ALIGNMENT_CENTER));
       HR(_pTextFormat->SetWordWrapping(wrap));
       _SetFontFallback(_pTextFormat, fontFaceStrVector);
-      if (_style.linespacing && _style.baseline)
+      if (style.linespacing && style.baseline)
         _pTextFormat->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM,
                                      fontpoint * linespacing,
                                      fontpoint * baseline);
       _textFormatCache[key] = _pTextFormat;
     }
   };
-  init_font(font_face, font_point, pTextFormat, wrapping);
-  init_font(font_face, font_point, pPreeditTextFormat, wrapping_preedit);
-  init_font(label_font_face, label_font_point, pLabelTextFormat, wrapping);
-  init_font(comment_font_face, comment_font_point, pCommentTextFormat,
+  init_font(style.font_face, font_point, pTextFormat, wrapping);
+  init_font(style.font_face, font_point, pPreeditTextFormat, wrapping_preedit);
+  init_font(style.label_font_face, label_font_point, pLabelTextFormat,
+            wrapping);
+  init_font(style.comment_font_face, comment_font_point, pCommentTextFormat,
             wrapping);
   return S_OK;
 }
 
 HRESULT DirectWriteResources::InitResources(const UIStyle& style,
                                             const UINT& dpi = 96) {
-  _style = style;
   if (dpi) {
     dpiScaleFontPoint = dpi / 72.0f;
     dpiScaleLayout = dpi / 96.0f;
   }
-  return InitResources(style.label_font_face, style.label_font_point,
-                       style.font_face, style.font_point,
-                       style.comment_font_face, style.comment_font_point,
-                       style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT);
-}
-
-void weasel::DirectWriteResources::SetDpi(const UINT& dpi) {
-  dpiScaleFontPoint = dpi / 72.0f;
-  dpiScaleLayout = dpi / 96.0f;
-
-  _textFormatCache.clear();
-  InitResources(_style);
+  return InitResources(style, style.label_font_point, style.font_point,
+                       style.comment_font_point);
 }
 
 static wstring _MatchWordsOutLowerCaseTrim1st(const wstring& wstr,
