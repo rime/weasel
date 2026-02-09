@@ -500,6 +500,13 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg,
   point.x = GET_X_LPARAM(lParam);
   point.y = GET_Y_LPARAM(lParam);
 
+  // Ignore if mouse screen position not changed
+  CPoint ptScreen = point;
+  ClientToScreen(&ptScreen);
+  if (ptScreen == m_lastMousePos)
+    return 0;
+  m_lastMousePos = ptScreen;
+
   for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
     CRect rect = m_layout->GetCandidateRect((int)i);
     _OffsetRectIfIsToRepos(rect, m_offsetys[i]);
