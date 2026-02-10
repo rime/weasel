@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include <logging.h>
 #include <RimeWithWeasel.h>
 #include <StringAlgorithm.hpp>
@@ -11,6 +11,10 @@
 #include <vector>
 #include <regex>
 #include <rime_api.h>
+
+// Assistant feature includes
+#include "../WeaselServer/AssistantPolicy.h"
+#include "../WeaselServer/AssistantGateway.h"
 
 #define TRANSPARENT_COLOR 0x00000000
 #define ARGB2ABGR(value)                                 \
@@ -1514,6 +1518,119 @@ void RimeWithWeaselHandler::_GetContext(Context& weasel_context,
     }
     rime_api->free_context(&ctx);
   }
+}
+
+std::string RimeWithWeaselHandler::_GetClientApp(WeaselSessionId ipc_id) {
+  RimeSessionId session_id = to_session_id(ipc_id);
+  char buf[256] = {0};
+  if (rime_api->get_property(session_id, "client_app", buf, sizeof(buf))) {
+    return std::string(buf);
+  }
+  return std::string();
+}
+
+bool RimeWithWeaselHandler::_IsChatApp(std::string const& app_name) {
+  if (app_name.empty())
+    return false;
+  // Match common IM executables (lowercase, set during _ReadClientInfo)
+  return app_name.find("wechat") != std::string::npos ||
+         app_name.find("weixin") != std::string::npos ||
+         app_name.find("qq.exe") != std::string::npos ||
+         app_name.find("tim.exe") != std::string::npos ||
+         app_name.find("dingtalk") != std::string::npos ||
+         app_name.find("feishu") != std::string::npos ||
+         app_name.find("lark") != std::string::npos ||
+         app_name.find("slack") != std::string::npos ||
+         app_name.find("telegram") != std::string::npos;
+}
+
+bool RimeWithWeaselHandler::AnalyzeText(AiAnalyzeRequest const& request,
+                                        DWORD session_id,
+                                        EatLine eat) {
+  if (!m_assistant_enabled) {
+    std::wstring resp = L"ai_analyze.ok=0\nai_analyze.error_code=403\n"
+                        L"ai_analyze.explanation=assistant disabled\n.\n";
+    eat(resp);
+    return true;
+  }
+
+  // Run policy engine to classify scene
+  AssistantContext policy_ctx;
+  policy_ctx.current_text = request.text;
+  // Parse context lines if present
+  if (!request.context.empty()) {
+    size_t begin = 0;
+    while (begin < request.context.size()) {
+      size_t end = request.context.find(L'\n', begin);
+      if (end == std::wstring::npos) {
+        policy_ctx.recent_context.push_back(request.context.substr(begin));
+        break;
+      }
+      policy_ctx.recent_context.push_back(
+          request.context.substr(begin, end - begin));
+      begin = end + 1;
+    }
+  }
+  auto policy = ClassifyPolicy(policy_ctx);
+
+  // Determine provider from config (default to OpenAI for now)
+  AssistantProvider provider = AssistantProvider::OpenAI;
+  if (!request.scene.empty()) {
+    provider = ParseAssistantProvider(request.scene);
+    if (provider == AssistantProvider::Unknown)
+      provider = AssistantProvider::OpenAI;
+  }
+
+  // For now, we don't have real HTTP calls — the gateway expects a raw
+  // response string. In a real implementation, we'd call WinHTTP here
+  // with the provider's request body and get back a raw JSON response.
+  // For this wiring stage, we return a "not implemented" response that
+  // indicates the pipeline is connected but HTTP is not yet wired.
+  std::wstring resp;
+  resp.reserve(512);
+  resp.append(L"ai_analyze.ok=0\n");
+  resp.append(L"ai_analyze.error_code=501\n");
+  resp.append(L"ai_analyze.explanation=HTTP transport not yet implemented\n");
+  resp.append(L"ai_analyze.scene=");
+  switch (policy.scene) {
+    case SceneType::WorkReport:
+      resp.append(L"WorkReport");
+      break;
+    case SceneType::QuestionAnswer:
+      resp.append(L"QuestionAnswer");
+      break;
+    default:
+      resp.append(L"CasualChat");
+      break;
+  }
+  resp.append(L"\n");
+  resp.append(L"ai_analyze.timeout_ms=")
+      .append(std::to_wstring(policy.timeout_ms))
+      .append(L"\n");
+  resp.append(L".\n");
+  eat(resp);
+  return true;
+}
+
+bool RimeWithWeaselHandler::ApplySuggestion(AiApplyRequest const& request,
+                                            DWORD session_id,
+                                            EatLine eat) {
+  if (!m_assistant_enabled) {
+    std::wstring resp =
+        L"ai_apply.ok=0\nai_apply.error_code=403\n.\n";
+    eat(resp);
+    return true;
+  }
+
+  // For now, just echo back the suggestion text as applied_text
+  std::wstring resp;
+  resp.reserve(256);
+  resp.append(L"ai_apply.ok=1\n");
+  resp.append(L"ai_apply.error_code=0\n");
+  resp.append(L"ai_apply.applied_text=").append(request.suggestion_text).append(L"\n");
+  resp.append(L".\n");
+  eat(resp);
+  return true;
 }
 
 void RimeWithWeaselHandler::_UpdateInlinePreeditStatus(WeaselSessionId ipc_id) {

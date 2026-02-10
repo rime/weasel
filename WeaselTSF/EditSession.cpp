@@ -16,6 +16,9 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec) {
   _UpdateLanguageBar(_status);
 
   if (ok) {
+    // Capture config for assistant feature
+    _config = config;
+
     if (!commit.empty()) {
       // For auto-selecting, commit and preedit can both exist.
       // Commit and close the original composition first.
@@ -26,6 +29,8 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec) {
       _InsertText(_pEditSessionContext, commit);
       _EndComposition(_pEditSessionContext, false);
       _committed = TRUE;
+      // Capture committed text for send-intent quality check
+      _last_committed_text = commit;
     } else {
       _committed = FALSE;
     }

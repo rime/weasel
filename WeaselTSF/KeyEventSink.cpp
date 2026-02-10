@@ -2,6 +2,7 @@
 #include "WeaselIPC.h"
 #include "WeaselTSF.h"
 #include <KeyEvent.h>
+#include <WeaselIPCData.h>
 #include "CandidateList.h"
 
 static weasel::KeyEvent prevKeyEvent;
@@ -36,6 +37,21 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
     }
     if (!keyCountToSimulate)
       *pfEaten = (BOOL)m_client.ProcessKeyEvent(ke);
+
+    // Send-intent detection for quality assistant
+    // When Enter passes through (not eaten) and we recently committed text,
+    // in a chat app this means "send message". Trigger async AI analysis.
+    if (_config.assistant_enabled && !*pfEaten &&
+        (ke.keycode == ibus::Return || ke.keycode == ibus::KP_Enter) &&
+        !(ke.mask & ibus::RELEASE_MASK) && !_last_committed_text.empty()) {
+      weasel::AiAnalyzeRequest ai_request;
+      ai_request.text = _last_committed_text;
+      ai_request.timeout_ms = 500;
+      // Fire-and-forget: don't block the Enter key from reaching the app.
+      // In a future version, this could intercept and delay the send.
+      m_client.AnalyzeText(ai_request);
+      _last_committed_text.clear();
+    }
 
     if (ke.keycode == ibus::Caps_Lock) {
       if (prevKeyEvent.keycode == ibus::Caps_Lock && prevfEaten == TRUE &&

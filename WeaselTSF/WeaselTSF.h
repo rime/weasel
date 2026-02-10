@@ -233,4 +233,8 @@ class WeaselTSF : public ITfTextInputProcessorEx,
   BOOL _async_edit = false;
   BOOL _committed = false;
   BOOL _isToOpenClose = false;
+
+  /* Send Quality Assistant */
+  weasel::Config _config;
+  std::wstring _last_committed_text;  // text committed in last DoEditSession
 };

@@ -10,6 +10,7 @@
 void run_policy_tests();
 void run_assistant_gateway_tests();
 void run_credential_store_tests();
+void run_send_intent_tests();
 
 void test_1() {
   WCHAR resp[] = L"action=noop\n";
@@ -143,5 +144,6 @@ int _tmain(int argc, _TCHAR* argv[]) {
   run_policy_tests();
   run_assistant_gateway_tests();
   run_credential_store_tests();
+  run_send_intent_tests();
   return boost::report_errors();
 }

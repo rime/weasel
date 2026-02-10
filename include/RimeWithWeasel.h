@@ -62,6 +62,12 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
                          const std::string& opt,
                          bool val);
   virtual void UpdateColorTheme(BOOL darkMode);
+  virtual bool AnalyzeText(weasel::AiAnalyzeRequest const& request,
+                           DWORD session_id,
+                           EatLine eat) override;
+  virtual bool ApplySuggestion(weasel::AiApplyRequest const& request,
+                               DWORD session_id,
+                               EatLine eat) override;
 
   void OnUpdateUI(std::function<void()> const& cb);
 
@@ -84,6 +90,8 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
   void _UpdateShowNotifications(RimeConfig* config, bool initialize = false);
 
   void _UpdateInlinePreeditStatus(WeaselSessionId ipc_id);
+  std::string _GetClientApp(WeaselSessionId ipc_id);
+  bool _IsChatApp(std::string const& app_name);
 
   RimeSessionId to_session_id(WeaselSessionId ipc_id) {
     return m_session_status_map[ipc_id].session_id;
