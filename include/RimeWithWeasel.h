@@ -118,6 +118,8 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
   SessionStatusMap m_session_status_map;
   bool m_current_dark_mode;
   bool m_global_ascii_mode;
+  bool m_assistant_enabled;
+  int m_assistant_quality;
   int m_show_notifications_time;
   DWORD m_pid;
 };

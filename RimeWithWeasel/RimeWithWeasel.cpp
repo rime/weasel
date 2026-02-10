@@ -24,6 +24,7 @@ typedef enum { COLOR_ABGR = 0, COLOR_ARGB, COLOR_RGBA } ColorFormat;
 using namespace weasel;
 
 static RimeApi* rime_api;
+
 WeaselSessionId _GenerateNewWeaselSessionId(SessionStatusMap sm, DWORD pid) {
   if (sm.empty())
     return (WeaselSessionId)(pid + 1);
@@ -40,6 +41,8 @@ RimeWithWeaselHandler::RimeWithWeaselHandler(UI* ui)
       m_disabled(true),
       m_current_dark_mode(false),
       m_global_ascii_mode(false),
+      m_assistant_enabled(false),
+      m_assistant_quality(0),
       m_show_notifications_time(1200),
       _UpdateUICallback(NULL) {
   m_ui->InServer() = true;
@@ -118,6 +121,8 @@ void RimeWithWeaselHandler::Initialize() {
   }
 
   RimeConfig config = {NULL};
+  m_assistant_enabled = false;
+  m_assistant_quality = 0;
   if (rime_api->config_open("weasel", &config)) {
     if (m_ui) {
       _UpdateUIStyle(&config, m_ui, true);
@@ -140,6 +145,13 @@ void RimeWithWeaselHandler::Initialize() {
     if (!rime_api->config_get_int(&config, "show_notifications_time",
                                   &m_show_notifications_time))
       m_show_notifications_time = 1200;
+    Bool assistant_enabled = False;
+    if (rime_api->config_get_bool(&config, "assistant/enabled",
+                                  &assistant_enabled))
+      m_assistant_enabled = !!assistant_enabled;
+    if (!rime_api->config_get_int(&config, "assistant/quality",
+                                  &m_assistant_quality))
+      m_assistant_quality = 0;
     _LoadAppOptions(&config, m_app_options);
     rime_api->config_close(&config);
   }
@@ -897,6 +909,12 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
   actions.push_back("config");
   body.append(L"config.inline_preedit=")
       .append(std::to_wstring((int)session_status.style.inline_preedit))
+      .append(L"\n")
+      .append(L"config.assistant_enabled=")
+      .append(std::to_wstring((int)m_assistant_enabled))
+      .append(L"\n")
+      .append(L"config.assistant_quality=")
+      .append(std::to_wstring(m_assistant_quality))
       .append(L"\n");
 
   // style

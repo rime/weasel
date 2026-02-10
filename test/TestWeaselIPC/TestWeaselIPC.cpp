@@ -7,6 +7,7 @@
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 using namespace boost::interprocess;
+#include <boost/core/lightweight_test.hpp>
 
 #include <iostream>
 #include <memory>
@@ -16,6 +17,7 @@ CAppModule _Module;
 int console_main();
 int client_main();
 int server_main();
+int selftest_main();
 
 // usage: TestWeaselIPC.exe [/start | /stop | /console]
 
@@ -36,9 +38,33 @@ int _tmain(int argc, _TCHAR* argv[]) {
   } else if (argc > 1 && !wcscmp(L"/console", argv[1])) {
     return console_main();
     return 0;
+  } else if (argc > 1 && !wcscmp(L"/selftest", argv[1])) {
+    return selftest_main();
   }
 
   return -1;
+}
+
+int selftest_main() {
+  weasel::AiAnalyzeRequest request;
+  request.text = L"hello";
+  request.context = L"world";
+  request.timeout_ms = 500;
+
+  weasel::AiApplyRequest apply_request;
+  apply_request.original_text = L"old";
+  apply_request.suggestion_text = L"new";
+  apply_request.suggestion_index = 0;
+
+  weasel::Client client;
+  bool sent_analyze = client.AnalyzeText(request);
+  bool sent_apply = client.ApplySuggestion(apply_request);
+
+  BOOST_TEST(WEASEL_IPC_AI_ANALYZE < WEASEL_IPC_LAST_COMMAND);
+  BOOST_TEST(WEASEL_IPC_AI_APPLY < WEASEL_IPC_LAST_COMMAND);
+  BOOST_TEST(!sent_analyze);
+  BOOST_TEST(!sent_apply);
+  return boost::report_errors();
 }
 
 bool launch_server() {

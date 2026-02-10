@@ -187,9 +187,62 @@ struct Status {
 
 // 用於向前端告知設置信息
 struct Config {
-  Config() : inline_preedit(false) {}
-  void reset() { inline_preedit = false; }
+  Config()
+      : inline_preedit(false), assistant_enabled(false), assistant_quality(0) {}
+  void reset() {
+    inline_preedit = false;
+    assistant_enabled = false;
+    assistant_quality = 0;
+  }
   bool inline_preedit;
+  bool assistant_enabled;
+  int assistant_quality;
+};
+
+struct AiRisk {
+  std::wstring text;
+  std::wstring reason;
+  int severity = 0;
+};
+
+struct AiSuggestion {
+  std::wstring text;
+  std::wstring reason;
+};
+
+struct AiAnalyzeRequest {
+  std::wstring text;
+  std::wstring context;
+  std::wstring scene;
+  int timeout_ms = 500;
+};
+
+struct AiApplyRequest {
+  std::wstring original_text;
+  std::wstring suggestion_text;
+  int suggestion_index = -1;
+};
+
+struct AiAnalyzeResponse {
+  bool ok = false;
+  int error_code = 0;
+  std::wstring explanation;
+  std::vector<AiRisk> risks;
+  std::vector<AiSuggestion> suggestions;
+
+  void reset() {
+    ok = false;
+    error_code = 0;
+    explanation.clear();
+    risks.clear();
+    suggestions.clear();
+  }
+};
+
+struct AiApplyResponse {
+  bool ok = false;
+  int error_code = 0;
+  std::wstring applied_text;
 };
 
 struct UIStyle {
@@ -525,6 +578,54 @@ void serialize(Archive& ar,
                const unsigned int version) {
   ar & s.range;
   ar & s.type;
+}
+template <typename Archive>
+void serialize(Archive& ar, weasel::AiRisk& s, const unsigned int version) {
+  ar & s.text;
+  ar & s.reason;
+  ar & s.severity;
+}
+template <typename Archive>
+void serialize(Archive& ar,
+               weasel::AiSuggestion& s,
+               const unsigned int version) {
+  ar & s.text;
+  ar & s.reason;
+}
+template <typename Archive>
+void serialize(Archive& ar,
+               weasel::AiAnalyzeRequest& s,
+               const unsigned int version) {
+  ar & s.text;
+  ar & s.context;
+  ar & s.scene;
+  ar & s.timeout_ms;
+}
+template <typename Archive>
+void serialize(Archive& ar,
+               weasel::AiApplyRequest& s,
+               const unsigned int version) {
+  ar & s.original_text;
+  ar & s.suggestion_text;
+  ar & s.suggestion_index;
+}
+template <typename Archive>
+void serialize(Archive& ar,
+               weasel::AiAnalyzeResponse& s,
+               const unsigned int version) {
+  ar & s.ok;
+  ar & s.error_code;
+  ar & s.explanation;
+  ar & s.risks;
+  ar & s.suggestions;
+}
+template <typename Archive>
+void serialize(Archive& ar,
+               weasel::AiApplyResponse& s,
+               const unsigned int version) {
+  ar & s.ok;
+  ar & s.error_code;
+  ar & s.applied_text;
 }
 template <typename Archive>
 void serialize(Archive& ar, weasel::TextRange& s, const unsigned int version) {

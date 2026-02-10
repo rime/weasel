@@ -328,7 +328,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\WeaselServer\AssistantGateway.cpp" />
+    <ClCompile Include="..\..\WeaselServer\ProviderAdapters\AnthropicAdapter.cpp" />
+    <ClCompile Include="..\..\WeaselServer\CredentialStore.cpp" />
+    <ClCompile Include="..\..\WeaselServer\ProviderAdapters\DeepSeekAdapter.cpp" />
+    <ClCompile Include="..\..\WeaselServer\ProviderAdapters\OpenAIAdapter.cpp" />
+    <ClCompile Include="..\..\WeaselServer\AssistantPolicy.cpp" />
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="TestAssistantGateway.cpp" />
+    <ClCompile Include="TestCredentialStore.cpp" />
+    <ClCompile Include="TestPolicyEngine.cpp" />
     <ClCompile Include="TestResponseParser.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -479,6 +479,12 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AssistantGateway.cpp" />
+    <ClCompile Include="AssistantPolicy.cpp" />
+    <ClCompile Include="CredentialStore.cpp" />
+    <ClCompile Include="ProviderAdapters\AnthropicAdapter.cpp" />
+    <ClCompile Include="ProviderAdapters\DeepSeekAdapter.cpp" />
+    <ClCompile Include="ProviderAdapters\OpenAIAdapter.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
@@ -496,6 +502,9 @@
     <ClCompile Include="WeaselTrayIcon.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AssistantGateway.h" />
+    <ClInclude Include="AssistantPolicy.h" />
+    <ClInclude Include="CredentialStore.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SystemTraySDK.h" />

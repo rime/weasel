@@ -4,6 +4,48 @@
 
 using namespace weasel;
 
+namespace {
+std::wstring EscapeField(std::wstring const& value) {
+  std::wstring out;
+  out.reserve(value.size());
+  for (wchar_t ch : value) {
+    if (ch == L'\\') {
+      out.append(L"\\\\");
+    } else if (ch == L'\n') {
+      out.append(L"\\n");
+    } else if (ch == L'=') {
+      out.append(L"\\=");
+    } else {
+      out.push_back(ch);
+    }
+  }
+  return out;
+}
+
+std::wstring EncodeAnalyzeRequest(AiAnalyzeRequest const& request) {
+  std::wstring payload;
+  payload.append(L"text=").append(EscapeField(request.text)).append(L"\n");
+  payload.append(L"context=")
+      .append(EscapeField(request.context))
+      .append(L"\n");
+  payload.append(L"scene=").append(EscapeField(request.scene)).append(L"\n");
+  payload.append(L"timeout_ms=").append(std::to_wstring(request.timeout_ms));
+  return payload;
+}
+
+std::wstring EncodeApplyRequest(AiApplyRequest const& request) {
+  std::wstring payload;
+  payload.append(L"original=")
+      .append(EscapeField(request.original_text))
+      .append(L"\n");
+  payload.append(L"suggestion=")
+      .append(EscapeField(request.suggestion_text))
+      .append(L"\n");
+  payload.append(L"index=").append(std::to_wstring(request.suggestion_index));
+  return payload;
+}
+}  // namespace
+
 ClientImpl::ClientImpl()
     : session_id(0), channel(GetPipeName()), is_ime(false) {
   _InitializeClientInfo();
@@ -100,6 +142,22 @@ bool ClientImpl::ChangePage(bool backward) {
   if (!_Active())
     return false;
   LRESULT ret = _SendMessage(WEASEL_IPC_CHANGE_PAGE, backward, session_id);
+  return ret != 0;
+}
+
+bool ClientImpl::AnalyzeText(AiAnalyzeRequest const& request) {
+  if (!_Active())
+    return false;
+  channel << EncodeAnalyzeRequest(request);
+  LRESULT ret = _SendMessage(WEASEL_IPC_AI_ANALYZE, 0, session_id);
+  return ret != 0;
+}
+
+bool ClientImpl::ApplySuggestion(AiApplyRequest const& request) {
+  if (!_Active())
+    return false;
+  channel << EncodeApplyRequest(request);
+  LRESULT ret = _SendMessage(WEASEL_IPC_AI_APPLY, 0, session_id);
   return ret != 0;
 }
 
@@ -242,6 +300,14 @@ bool Client::HighlightCandidateOnCurrentPage(size_t index) {
 
 bool Client::ChangePage(bool backward) {
   return m_pImpl->ChangePage(backward);
+}
+
+bool Client::AnalyzeText(AiAnalyzeRequest const& request) {
+  return m_pImpl->AnalyzeText(request);
+}
+
+bool Client::ApplySuggestion(AiApplyRequest const& request) {
+  return m_pImpl->ApplySuggestion(request);
 }
 
 void Client::UpdateInputPosition(RECT const& rc) {

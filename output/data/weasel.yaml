@@ -17,6 +17,10 @@ show_notifications_time: 1200
 # use global ascii status
 global_ascii: false
 
+assistant:
+  enabled: false
+  quality: 0
+
 style:
   antialias_mode: default
   ascii_tip_follow_cursor: false

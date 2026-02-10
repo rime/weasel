@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "AssistantPolicy.h"
 #include "WeaselServerApp.h"
 #include <filesystem>
 
@@ -13,6 +14,10 @@ WeaselServerApp::WeaselServerApp()
 WeaselServerApp::~WeaselServerApp() {}
 
 int WeaselServerApp::Run() {
+  AssistantContext assistant_context;
+  auto assistant_policy = ClassifyPolicy(assistant_context);
+  (void)assistant_policy;
+
   if (!m_server.Start())
     return -1;
 

@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "WeaselServerImpl.h"
 #include <mutex>
+#include <map>
 #include <Windows.h>
 #include <resource.h>
 #include <WeaselUtility.h>
@@ -25,6 +26,73 @@ class PipeServer : public PipeChannel<DWORD, PipeMessage> {
 }  // namespace weasel
 
 using namespace weasel;
+
+namespace {
+std::wstring ReadPayloadBounded(char* receive_buffer) {
+  if (!receive_buffer) {
+    return L"";
+  }
+  wchar_t const* raw = reinterpret_cast<wchar_t const*>(receive_buffer);
+  constexpr size_t kMaxChars = 32768;
+  size_t len = 0;
+  while (len < kMaxChars && raw[len] != L'\0') {
+    ++len;
+  }
+  return std::wstring(raw, len);
+}
+
+std::map<std::wstring, std::wstring> ParsePayload(std::wstring const& payload) {
+  std::map<std::wstring, std::wstring> fields;
+  auto unescape = [](std::wstring const& value) {
+    std::wstring out;
+    out.reserve(value.size());
+    bool escaped = false;
+    for (wchar_t ch : value) {
+      if (escaped) {
+        if (ch == L'n') {
+          out.push_back(L'\n');
+        } else {
+          out.push_back(ch);
+        }
+        escaped = false;
+        continue;
+      }
+      if (ch == L'\\') {
+        escaped = true;
+      } else {
+        out.push_back(ch);
+      }
+    }
+    if (escaped) {
+      out.push_back(L'\\');
+    }
+    return out;
+  };
+  size_t begin = 0;
+  while (begin < payload.size()) {
+    size_t end = payload.find(L'\n', begin);
+    std::wstring line =
+        payload.substr(begin, end == std::wstring::npos ? end : end - begin);
+    size_t eq = line.find(L'=');
+    if (eq != std::wstring::npos) {
+      fields[line.substr(0, eq)] = unescape(line.substr(eq + 1));
+    }
+    if (end == std::wstring::npos) {
+      break;
+    }
+    begin = end + 1;
+  }
+  return fields;
+}
+
+int ToIntOrDefault(std::wstring const& value, int default_value) {
+  try {
+    return std::stoi(value);
+  } catch (...) {
+    return default_value;
+  }
+}
+}  // namespace
 
 extern CAppModule _Module;
 
@@ -358,6 +426,43 @@ DWORD ServerImpl::OnChangePage(WEASEL_IPC_COMMAND uMsg,
   return 0;
 }
 
+DWORD ServerImpl::OnAiAnalyze(WEASEL_IPC_COMMAND uMsg,
+                              DWORD wParam,
+                              DWORD lParam) {
+  if (!m_pRequestHandler)
+    return 0;
+  std::wstring payload = ReadPayloadBounded(channel->ReceiveBuffer());
+  auto fields = ParsePayload(payload);
+  AiAnalyzeRequest request;
+  request.text = fields[L"text"];
+  request.context = fields[L"context"];
+  request.scene = fields[L"scene"];
+  request.timeout_ms = ToIntOrDefault(fields[L"timeout_ms"], 500);
+  auto eat = [this](std::wstring& msg) -> bool {
+    *channel << msg;
+    return true;
+  };
+  return m_pRequestHandler->AnalyzeText(request, lParam, eat) ? 1 : 0;
+}
+
+DWORD ServerImpl::OnAiApply(WEASEL_IPC_COMMAND uMsg,
+                            DWORD wParam,
+                            DWORD lParam) {
+  if (!m_pRequestHandler)
+    return 0;
+  std::wstring payload = ReadPayloadBounded(channel->ReceiveBuffer());
+  auto fields = ParsePayload(payload);
+  AiApplyRequest request;
+  request.original_text = fields[L"original"];
+  request.suggestion_text = fields[L"suggestion"];
+  request.suggestion_index = ToIntOrDefault(fields[L"index"], -1);
+  auto eat = [this](std::wstring& msg) -> bool {
+    *channel << msg;
+    return true;
+  };
+  return m_pRequestHandler->ApplySuggestion(request, lParam, eat) ? 1 : 0;
+}
+
 #define MAP_PIPE_MSG_HANDLE(__msg, __wParam, __lParam) \
   {                                                    \
     auto lParam = __lParam;                            \
@@ -396,6 +501,8 @@ void ServerImpl::HandlePipeMessage(PipeMessage pipe_msg, _Resp resp) {
   PIPE_MSG_HANDLE(WEASEL_IPC_HIGHLIGHT_CANDIDATE_ON_CURRENT_PAGE,
                   OnHighlightCandidateOnCurrentPage);
   PIPE_MSG_HANDLE(WEASEL_IPC_CHANGE_PAGE, OnChangePage);
+  PIPE_MSG_HANDLE(WEASEL_IPC_AI_ANALYZE, OnAiAnalyze);
+  PIPE_MSG_HANDLE(WEASEL_IPC_AI_APPLY, OnAiApply);
   PIPE_MSG_HANDLE(WEASEL_IPC_TRAY_COMMAND, OnCommand);
   END_MAP_PIPE_MSG_HANDLE(result);
 
