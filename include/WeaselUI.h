@@ -16,6 +16,12 @@ enum ClientCapabilities {
   INLINE_PREEDIT_CAPABLE = 1,
 };
 
+enum class AssistantAction {
+  ApplyItem = 0,
+  ReplaceAll,
+  IgnoreAndSend,
+};
+
 class UIImpl;
 class DirectWriteResources;
 template <class T>
@@ -58,6 +64,10 @@ class UI {
 
   // 更新界面显示内容
   void Update(Context const& ctx, Status const& status);
+  void UpdateAssistant(AiAnalyzeResponse const& response);
+  void ClearAssistant();
+  bool HasAssistant() const;
+  void HandleAssistantAction(AssistantAction action, size_t index = 0);
 
   Context& ctx() { return ctx_; }
   Context& octx() { return octx_; }
@@ -67,6 +77,7 @@ class UI {
   PDWR pdwr() { return pDWR; }
   bool GetIsReposition();
   bool& InServer() { return in_server_; }
+  AiAnalyzeResponse const& assistant_response() const { return assistant_response_; }
 
   std::function<void(size_t* const, size_t* const, bool* const, bool* const)>&
   uiCallback() {
@@ -77,6 +88,13 @@ class UI {
           void(size_t* const, size_t* const, bool* const, bool* const)> const&
           func) {
     _UICallback = func;
+  }
+  std::function<void(AssistantAction, size_t)>& assistantCallback() {
+    return _assistantCallback;
+  }
+  void SetAssistantCallback(
+      std::function<void(AssistantAction, size_t)> const& func) {
+    _assistantCallback = func;
   }
 
  private:
@@ -89,8 +107,11 @@ class UI {
   UIStyle style_;
   UIStyle ostyle_;
   bool in_server_;
+  bool has_assistant_response_ = false;
+  AiAnalyzeResponse assistant_response_;
   std::function<void(size_t* const, size_t* const, bool* const, bool* const)>
       _UICallback;
+  std::function<void(AssistantAction, size_t)> _assistantCallback;
 };
 
 class DirectWriteResources {

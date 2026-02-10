@@ -133,6 +133,93 @@ void test_6() {
   BOOST_TEST(WEASEL_IPC_AI_APPLY < WEASEL_IPC_LAST_COMMAND);
 }
 
+void test_7_parse_ai_payloads() {
+  std::wstring analyze_payload =
+      L"ai_analyze.ok=1\n"
+      L"ai_analyze.error_code=0\n"
+      L"ai_analyze.explanation=表达更清晰\n"
+      L"ai_analyze.risk.0.text=今天完成了\n"
+      L"ai_analyze.risk.0.reason=缺少量化结果\n"
+      L"ai_analyze.risk.0.severity=2\n"
+      L"ai_analyze.suggest.0.text=今天完成接口联调3项\n"
+      L"ai_analyze.suggest.0.reason=补充量化\n"
+      L".\n";
+
+  weasel::AiAnalyzeResponse analyze;
+  BOOST_TEST(ParseAiAnalyzeResponsePayload(analyze_payload, &analyze));
+  BOOST_TEST(analyze.ok);
+  BOOST_TEST_EQ(0, analyze.error_code);
+  BOOST_TEST(analyze.explanation == L"表达更清晰");
+  BOOST_TEST_EQ(1u, analyze.risks.size());
+  BOOST_TEST_EQ(1u, analyze.suggestions.size());
+  if (!analyze.risks.empty()) {
+    BOOST_TEST(analyze.risks[0].text == L"今天完成了");
+    BOOST_TEST(analyze.risks[0].reason == L"缺少量化结果");
+    BOOST_TEST_EQ(2, analyze.risks[0].severity);
+  }
+  if (!analyze.suggestions.empty()) {
+    BOOST_TEST(analyze.suggestions[0].text == L"今天完成接口联调3项");
+    BOOST_TEST(analyze.suggestions[0].reason == L"补充量化");
+  }
+
+  std::wstring apply_payload =
+      L"ai_apply.ok=1\n"
+      L"ai_apply.error_code=0\n"
+      L"ai_apply.applied_text=今天完成接口联调3项\n"
+      L".\n";
+
+  weasel::AiApplyResponse apply;
+  BOOST_TEST(ParseAiApplyResponsePayload(apply_payload, &apply));
+  BOOST_TEST(apply.ok);
+  BOOST_TEST_EQ(0, apply.error_code);
+  BOOST_TEST(apply.applied_text == L"今天完成接口联调3项");
+}
+
+void test_8_parse_ai_payload_escapes() {
+  std::wstring analyze_payload =
+      L"ai_analyze.ok=1\n"
+      L"ai_analyze.error_code=0\n"
+      L"ai_analyze.explanation=line1\\nline2\\=ok\\\\x\n"
+      L"ai_analyze.risk.1.text=R1\n"
+      L"ai_analyze.risk.1.reason=A\\=B\n"
+      L"ai_analyze.risk.1.severity=3\n"
+      L"ai_analyze.risk.0.text=R0\n"
+      L"ai_analyze.risk.0.reason=C\\nD\n"
+      L"ai_analyze.risk.0.severity=1\n"
+      L"ai_analyze.suggest.0.text=S0\\\\ok\n"
+      L"ai_analyze.suggest.0.reason=why\\=not\n"
+      L".\n";
+
+  weasel::AiAnalyzeResponse analyze;
+  BOOST_TEST(ParseAiAnalyzeResponsePayload(analyze_payload, &analyze));
+  BOOST_TEST(analyze.ok);
+  BOOST_TEST(analyze.explanation == L"line1\nline2=ok\\x");
+  BOOST_TEST_EQ(2u, analyze.risks.size());
+  BOOST_TEST_EQ(1u, analyze.suggestions.size());
+  if (analyze.risks.size() >= 2) {
+    BOOST_TEST(analyze.risks[0].text == L"R0");
+    BOOST_TEST(analyze.risks[0].reason == L"C\nD");
+    BOOST_TEST_EQ(1, analyze.risks[0].severity);
+    BOOST_TEST(analyze.risks[1].text == L"R1");
+    BOOST_TEST(analyze.risks[1].reason == L"A=B");
+    BOOST_TEST_EQ(3, analyze.risks[1].severity);
+  }
+  if (!analyze.suggestions.empty()) {
+    BOOST_TEST(analyze.suggestions[0].text == L"S0\\ok");
+    BOOST_TEST(analyze.suggestions[0].reason == L"why=not");
+  }
+
+  std::wstring apply_payload =
+      L"ai_apply.ok=1\n"
+      L"ai_apply.error_code=0\n"
+      L"ai_apply.applied_text=A\\=B\\nC\\\\D\n"
+      L".\n";
+  weasel::AiApplyResponse apply;
+  BOOST_TEST(ParseAiApplyResponsePayload(apply_payload, &apply));
+  BOOST_TEST(apply.ok);
+  BOOST_TEST(apply.applied_text == L"A=B\nC\\D");
+}
+
 int _tmain(int argc, _TCHAR* argv[]) {
   test_1();
   test_2();
@@ -141,6 +228,8 @@ int _tmain(int argc, _TCHAR* argv[]) {
   // accesses vec[2] after checking only vec.size() < 2 (needs < 3)
   test_5();
   test_6();
+  test_7_parse_ai_payloads();
+  test_8_parse_ai_payload_escapes();
   run_policy_tests();
   run_assistant_gateway_tests();
   run_credential_store_tests();

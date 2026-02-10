@@ -199,6 +199,10 @@ STDMETHODIMP CCandidateList::FinalizeExactCompositionString() {
 }
 
 void CCandidateList::UpdateUI(const Context& ctx, const Status& status) {
+  if (status.composing || !ctx.preedit.empty() || !ctx.cinfo.empty()) {
+    _ui->ClearAssistant();
+  }
+
   if (_ui->style().inline_preedit) {
     _ui->style().client_caps |= weasel::INLINE_PREEDIT_CAPABLE;
   } else {
@@ -216,6 +220,19 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status) {
     Show(_pbShow);
   else
     Show(FALSE);
+}
+
+void CCandidateList::UpdateAssistant(const weasel::AiAnalyzeResponse& response) {
+  _ui->UpdateAssistant(response);
+  if (_pbShow) {
+    _ui->Show();
+  }
+  _UpdateUIElement();
+}
+
+void CCandidateList::ClearAssistant() {
+  _ui->ClearAssistant();
+  _UpdateUIElement();
 }
 
 void CCandidateList::UpdateStyle(const UIStyle& sty) {
@@ -303,6 +320,11 @@ void CCandidateList::StartUI() {
                               bool* const next, bool* const scroll_next) {
       _tsf->HandleUICallback(sel, hov, next, scroll_next);
     });
+  if (!_ui->assistantCallback())
+    _ui->SetAssistantCallback(
+        [this](weasel::AssistantAction action, size_t index) {
+          _tsf->HandleAssistantAction(static_cast<int>(action), index);
+        });
   pUIElementMgr->BeginUIElement(this, &_pbShow, &uiid);
   // pUIElementMgr->UpdateUIElement(uiid);
   if (_pbShow) {
@@ -439,4 +461,53 @@ void WeaselTSF::HandleUICallback(size_t* const sel,
     _HandleMouseHoverEvent(*hov);
   else if (next || scroll_next)
     _HandleMousePageEvent(next, scroll_next);
+}
+
+void WeaselTSF::HandleAssistantAction(int action, size_t index) {
+  if (!_has_ai_analyze_response) {
+    return;
+  }
+
+  if (action == static_cast<int>(weasel::AssistantAction::IgnoreAndSend)) {
+    _has_ai_analyze_response = false;
+    _last_ai_analyze_response.reset();
+    _last_analyzed_text.clear();
+    _cand->ClearAssistant();
+    return;
+  }
+
+  if (_last_ai_analyze_response.suggestions.empty()) {
+    return;
+  }
+
+  weasel::AiApplyRequest apply;
+  apply.original_text = _last_analyzed_text;
+  if (action == static_cast<int>(weasel::AssistantAction::ReplaceAll)) {
+    apply.suggestion_index = -1;
+    apply.suggestion_text = _last_ai_analyze_response.suggestions[0].text;
+  } else {
+    size_t safe_index =
+        (index < _last_ai_analyze_response.suggestions.size()) ? index : 0;
+    apply.suggestion_index = static_cast<int>(safe_index);
+    apply.suggestion_text = _last_ai_analyze_response.suggestions[safe_index].text;
+  }
+
+  if (!m_client.ApplySuggestion(apply)) {
+    return;
+  }
+
+  weasel::AiApplyResponse apply_response;
+  m_client.GetResponseData([&apply_response](LPWSTR buffer, DWORD length) {
+    (void)length;
+    std::wstring payload(buffer);
+    ParseAiApplyResponsePayload(payload, &apply_response);
+    return true;
+  });
+
+  if (apply_response.ok) {
+    _has_ai_analyze_response = false;
+    _last_ai_analyze_response.reset();
+    _last_analyzed_text.clear();
+    _cand->ClearAssistant();
+  }
 }

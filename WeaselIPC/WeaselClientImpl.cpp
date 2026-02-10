@@ -22,6 +22,80 @@ std::wstring EscapeField(std::wstring const& value) {
   return out;
 }
 
+std::wstring UnescapeField(std::wstring const& value) {
+  std::wstring out;
+  out.reserve(value.size());
+  bool escaped = false;
+  for (wchar_t ch : value) {
+    if (escaped) {
+      if (ch == L'n') {
+        out.push_back(L'\n');
+      } else {
+        out.push_back(ch);
+      }
+      escaped = false;
+      continue;
+    }
+    if (ch == L'\\') {
+      escaped = true;
+      continue;
+    }
+    out.push_back(ch);
+  }
+  if (escaped) {
+    out.push_back(L'\\');
+  }
+  return out;
+}
+
+bool SplitKeyValue(std::wstring const& line, std::wstring* key, std::wstring* value) {
+  if (!key || !value) {
+    return false;
+  }
+  bool escaped = false;
+  for (size_t i = 0; i < line.size(); ++i) {
+    wchar_t ch = line[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch == L'\\') {
+      escaped = true;
+      continue;
+    }
+    if (ch == L'=') {
+      *key = line.substr(0, i);
+      *value = UnescapeField(line.substr(i + 1));
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ParseIndexField(std::wstring const& key,
+                     std::wstring const& prefix,
+                     size_t* index,
+                     std::wstring* field) {
+  if (!index || !field) {
+    return false;
+  }
+  if (!starts_with(key, prefix)) {
+    return false;
+  }
+  size_t start = prefix.size();
+  size_t dot = key.find(L'.', start);
+  if (dot == std::wstring::npos) {
+    return false;
+  }
+  try {
+    *index = static_cast<size_t>(std::stoul(key.substr(start, dot - start)));
+  } catch (...) {
+    return false;
+  }
+  *field = key.substr(dot + 1);
+  return true;
+}
+
 std::wstring EncodeAnalyzeRequest(AiAnalyzeRequest const& request) {
   std::wstring payload;
   payload.append(L"text=").append(EscapeField(request.text)).append(L"\n");
@@ -45,6 +119,101 @@ std::wstring EncodeApplyRequest(AiApplyRequest const& request) {
   return payload;
 }
 }  // namespace
+
+bool weasel::ParseAiAnalyzeResponsePayload(std::wstring const& payload,
+                                           AiAnalyzeResponse* response) {
+  if (!response) {
+    return false;
+  }
+  response->reset();
+
+  std::wstringstream ss(payload);
+  std::wstring line;
+  while (std::getline(ss, line)) {
+    if (line == L"." || line.empty()) {
+      continue;
+    }
+    std::wstring key;
+    std::wstring value;
+    if (!SplitKeyValue(line, &key, &value)) {
+      continue;
+    }
+
+    if (key == L"ai_analyze.ok") {
+      response->ok = (value == L"1" || value == L"true");
+      continue;
+    }
+    if (key == L"ai_analyze.error_code") {
+      response->error_code = _wtoi(value.c_str());
+      continue;
+    }
+    if (key == L"ai_analyze.explanation") {
+      response->explanation = value;
+      continue;
+    }
+
+    size_t idx = 0;
+    std::wstring field;
+    if (ParseIndexField(key, L"ai_analyze.risk.", &idx, &field)) {
+      if (response->risks.size() <= idx) {
+        response->risks.resize(idx + 1);
+      }
+      if (field == L"text") {
+        response->risks[idx].text = value;
+      } else if (field == L"reason") {
+        response->risks[idx].reason = value;
+      } else if (field == L"severity") {
+        response->risks[idx].severity = _wtoi(value.c_str());
+      }
+      continue;
+    }
+
+    if (ParseIndexField(key, L"ai_analyze.suggest.", &idx, &field)) {
+      if (response->suggestions.size() <= idx) {
+        response->suggestions.resize(idx + 1);
+      }
+      if (field == L"text") {
+        response->suggestions[idx].text = value;
+      } else if (field == L"reason") {
+        response->suggestions[idx].reason = value;
+      }
+      continue;
+    }
+  }
+
+  return true;
+}
+
+bool weasel::ParseAiApplyResponsePayload(std::wstring const& payload,
+                                         AiApplyResponse* response) {
+  if (!response) {
+    return false;
+  }
+  response->ok = false;
+  response->error_code = 0;
+  response->applied_text.clear();
+
+  std::wstringstream ss(payload);
+  std::wstring line;
+  while (std::getline(ss, line)) {
+    if (line == L"." || line.empty()) {
+      continue;
+    }
+    std::wstring key;
+    std::wstring value;
+    if (!SplitKeyValue(line, &key, &value)) {
+      continue;
+    }
+    if (key == L"ai_apply.ok") {
+      response->ok = (value == L"1" || value == L"true");
+    } else if (key == L"ai_apply.error_code") {
+      response->error_code = _wtoi(value.c_str());
+    } else if (key == L"ai_apply.applied_text") {
+      response->applied_text = value;
+    }
+  }
+  return true;
+}
 
 ClientImpl::ClientImpl()
     : session_id(0), channel(GetPipeName()), is_ime(false) {

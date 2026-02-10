@@ -98,6 +98,11 @@ struct RequestHandler {
 // 處理server端回應之物件
 typedef std::function<bool(LPWSTR buffer, DWORD length)> ResponseHandler;
 
+bool ParseAiAnalyzeResponsePayload(std::wstring const& payload,
+                                   AiAnalyzeResponse* response);
+bool ParseAiApplyResponsePayload(std::wstring const& payload,
+                                 AiApplyResponse* response);
+
 // 事件處理函數
 typedef std::function<bool()> CommandHandler;
 

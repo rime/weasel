@@ -282,6 +282,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AssistantPanel.cpp" />
     <ClCompile Include="DirectWriteResources.cpp" />
     <ClCompile Include="FullScreenLayout.cpp" />
     <ClCompile Include="GdiplusBlur.cpp" />
@@ -304,6 +305,7 @@
     <ClCompile Include="WeaselUI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AssistantPanel.h" />
     <ClInclude Include="FullScreenLayout.h" />
     <ClInclude Include="GdiplusBlur.h" />
     <ClInclude Include="HorizontalLayout.h" />

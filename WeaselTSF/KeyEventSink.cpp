@@ -47,9 +47,27 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
       weasel::AiAnalyzeRequest ai_request;
       ai_request.text = _last_committed_text;
       ai_request.timeout_ms = 500;
+      _last_analyzed_text = _last_committed_text;
       // Fire-and-forget: don't block the Enter key from reaching the app.
       // In a future version, this could intercept and delay the send.
-      m_client.AnalyzeText(ai_request);
+      if (m_client.AnalyzeText(ai_request)) {
+        m_client.GetResponseData([this](LPWSTR buffer, DWORD length) {
+          (void)length;
+          std::wstring payload(buffer);
+          _has_ai_analyze_response =
+              ParseAiAnalyzeResponsePayload(payload, &_last_ai_analyze_response);
+          if (_has_ai_analyze_response && _cand) {
+            bool has_content = !_last_ai_analyze_response.risks.empty() ||
+                               !_last_ai_analyze_response.suggestions.empty();
+            if (_last_ai_analyze_response.ok && has_content) {
+              _cand->UpdateAssistant(_last_ai_analyze_response);
+            } else {
+              _cand->ClearAssistant();
+            }
+          }
+          return true;
+        });
+      }
       _last_committed_text.clear();
     }
 

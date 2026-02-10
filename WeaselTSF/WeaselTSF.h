@@ -151,6 +151,7 @@ class WeaselTSF : public ITfTextInputProcessorEx,
                         size_t* const hov,
                         bool* const next,
                         bool* const scroll_next);
+  void HandleAssistantAction(int action, size_t index);
 
  private:
   /* ui callback functions private */
@@ -237,4 +238,7 @@ class WeaselTSF : public ITfTextInputProcessorEx,
   /* Send Quality Assistant */
   weasel::Config _config;
   std::wstring _last_committed_text;  // text committed in last DoEditSession
+  std::wstring _last_analyzed_text;   // text sent to AnalyzeText
+  weasel::AiAnalyzeResponse _last_ai_analyze_response;
+  bool _has_ai_analyze_response = false;
 };

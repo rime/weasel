@@ -1,24 +1,33 @@
 #include "stdafx.h"
 #include <WeaselUI.h>
 #include "WeaselPanel.h"
+#include "AssistantPanel.h"
 
 using namespace weasel;
 
 class weasel::UIImpl {
  public:
   WeaselPanel panel;
+  AssistantPanel assistant_panel;
+  weasel::UI& ui;
 
-  UIImpl(weasel::UI& ui) : panel(ui), shown(false) {}
+  UIImpl(weasel::UI& ui_ref)
+      : panel(ui_ref), assistant_panel(ui_ref), ui(ui_ref), shown(false) {}
   ~UIImpl() {}
   void Refresh() {
-    if (!panel.IsWindow())
+    if (!panel.IsWindow() || !assistant_panel.IsWindow())
       return;
     if (timer) {
       Hide();
       KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
       timer = 0;
     }
-    panel.Refresh();
+    if (ui.HasAssistant()) {
+      assistant_panel.SetData(ui.assistant_response());
+      assistant_panel.Refresh();
+    } else {
+      panel.Refresh();
+    }
   }
   void Show();
   void Hide();
@@ -37,9 +46,15 @@ class weasel::UIImpl {
 UINT_PTR UIImpl::timer = 0;
 
 void UIImpl::Show() {
-  if (!panel.IsWindow())
+  if (!panel.IsWindow() || !assistant_panel.IsWindow())
     return;
-  panel.ShowWindow(SW_SHOWNA);
+  if (ui.HasAssistant()) {
+    assistant_panel.ShowWindow(SW_SHOWNA);
+    panel.ShowWindow(SW_HIDE);
+  } else {
+    panel.ShowWindow(SW_SHOWNA);
+    assistant_panel.ShowWindow(SW_HIDE);
+  }
   shown = true;
   if (timer) {
     KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
@@ -48,9 +63,10 @@ void UIImpl::Show() {
 }
 
 void UIImpl::Hide() {
-  if (!panel.IsWindow())
+  if (!panel.IsWindow() || !assistant_panel.IsWindow())
     return;
   panel.ShowWindow(SW_HIDE);
+  assistant_panel.ShowWindow(SW_HIDE);
   shown = false;
   if (timer) {
     KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
@@ -59,10 +75,16 @@ void UIImpl::Hide() {
 }
 
 void UIImpl::ShowWithTimeout(size_t millisec) {
-  if (!panel.IsWindow())
+  if (!panel.IsWindow() || !assistant_panel.IsWindow())
     return;
   DLOG(INFO) << "ShowWithTimeout: " << millisec;
-  panel.ShowWindow(SW_SHOWNA);
+  if (ui.HasAssistant()) {
+    assistant_panel.ShowWindow(SW_SHOWNA);
+    panel.ShowWindow(SW_HIDE);
+  } else {
+    panel.ShowWindow(SW_SHOWNA);
+    assistant_panel.ShowWindow(SW_HIDE);
+  }
   shown = true;
   SetTimer(panel.m_hWnd, AUTOHIDE_TIMER, static_cast<UINT>(millisec),
            &UIImpl::OnTimer);
@@ -88,6 +110,10 @@ bool UI::Create(HWND parent) {
         parent, 0, 0, WS_POPUP,
         WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,
         0U, 0);
+    pimpl_->assistant_panel.Create(
+        parent, 0, 0, WS_POPUP,
+        WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,
+        0U, 0);
     return true;
   }
 
@@ -99,6 +125,10 @@ bool UI::Create(HWND parent) {
       parent, 0, 0, WS_POPUP,
       WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,
       0U, 0);
+  pimpl_->assistant_panel.Create(
+      parent, 0, 0, WS_POPUP,
+      WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,
+      0U, 0);
   return true;
 }
 
@@ -107,6 +137,9 @@ void UI::Destroy(bool full) {
     // destroy panel
     if (pimpl_->panel.IsWindow()) {
       pimpl_->panel.DestroyWindow();
+    }
+    if (pimpl_->assistant_panel.IsWindow()) {
+      pimpl_->assistant_panel.DestroyWindow();
     }
     if (full) {
       delete pimpl_;
@@ -158,6 +191,44 @@ void UI::Refresh() {
 void UI::UpdateInputPosition(RECT const& rc) {
   if (pimpl_ && pimpl_->panel.IsWindow()) {
     pimpl_->panel.MoveTo(rc);
+    if (pimpl_->assistant_panel.IsWindow()) {
+      RECT assistant_rc = rc;
+      assistant_rc.top = rc.bottom + 6;
+      assistant_rc.bottom = assistant_rc.top + 120;
+      assistant_rc.right = assistant_rc.left + 420;
+      pimpl_->assistant_panel.MoveTo(assistant_rc);
+    }
+  }
+}
+
+void UI::UpdateAssistant(AiAnalyzeResponse const& response) {
+  assistant_response_ = response;
+  has_assistant_response_ = true;
+  if (pimpl_ && pimpl_->assistant_panel.IsWindow()) {
+    pimpl_->assistant_panel.SetData(response);
+    pimpl_->assistant_panel.Refresh();
+  }
+}
+
+void UI::ClearAssistant() {
+  has_assistant_response_ = false;
+  assistant_response_.reset();
+  if (pimpl_ && pimpl_->assistant_panel.IsWindow()) {
+    pimpl_->assistant_panel.ClearData();
+    pimpl_->assistant_panel.ShowWindow(SW_HIDE);
+  }
+}
+
+bool UI::HasAssistant() const {
+  return has_assistant_response_;
+}
+
+void UI::HandleAssistantAction(AssistantAction action, size_t index) {
+  if (_assistantCallback) {
+    _assistantCallback(action, index);
+  }
+  if (action == AssistantAction::IgnoreAndSend) {
+    ClearAssistant();
   }
 }
 
