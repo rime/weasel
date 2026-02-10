@@ -1547,12 +1547,31 @@ bool RimeWithWeaselHandler::_IsChatApp(std::string const& app_name) {
 bool RimeWithWeaselHandler::AnalyzeText(AiAnalyzeRequest const& request,
                                         DWORD session_id,
                                         EatLine eat) {
+  (void)session_id;
+  ULONGLONG start_ms = GetTickCount64();
   if (!m_assistant_enabled) {
     std::wstring resp = L"ai_analyze.ok=0\nai_analyze.error_code=403\n"
                         L"ai_analyze.explanation=assistant disabled\n.\n";
     eat(resp);
     return true;
   }
+
+  auto escape_field = [](std::wstring const& value) {
+    std::wstring out;
+    out.reserve(value.size());
+    for (wchar_t ch : value) {
+      if (ch == L'\\') {
+        out.append(L"\\\\");
+      } else if (ch == L'\n') {
+        out.append(L"\\n");
+      } else if (ch == L'=') {
+        out.append(L"\\=");
+      } else {
+        out.push_back(ch);
+      }
+    }
+    return out;
+  };
 
   // Run policy engine to classify scene
   AssistantContext policy_ctx;
@@ -1573,24 +1592,66 @@ bool RimeWithWeaselHandler::AnalyzeText(AiAnalyzeRequest const& request,
   }
   auto policy = ClassifyPolicy(policy_ctx);
 
-  // Determine provider from config (default to OpenAI for now)
+  // Choose provider from quality config for now.
   AssistantProvider provider = AssistantProvider::OpenAI;
-  if (!request.scene.empty()) {
-    provider = ParseAssistantProvider(request.scene);
-    if (provider == AssistantProvider::Unknown)
-      provider = AssistantProvider::OpenAI;
+  const wchar_t* provider_name = L"openai";
+  AssistantProvider requested_provider = ParseAssistantProvider(request.scene);
+  if (requested_provider != AssistantProvider::Unknown) {
+    provider = requested_provider;
+    if (provider == AssistantProvider::Anthropic) {
+      provider_name = L"anthropic";
+    } else if (provider == AssistantProvider::DeepSeek) {
+      provider_name = L"deepseek";
+    }
+  } else {
+    if (m_assistant_quality == 1) {
+      provider = AssistantProvider::Anthropic;
+      provider_name = L"anthropic";
+    } else if (m_assistant_quality >= 2) {
+      provider = AssistantProvider::DeepSeek;
+      provider_name = L"deepseek";
+    }
   }
 
-  // For now, we don't have real HTTP calls — the gateway expects a raw
-  // response string. In a real implementation, we'd call WinHTTP here
-  // with the provider's request body and get back a raw JSON response.
-  // For this wiring stage, we return a "not implemented" response that
-  // indicates the pipeline is connected but HTTP is not yet wired.
+  weasel::AiAnalyzeRequest gateway_request = request;
+  if (gateway_request.timeout_ms <= 0) {
+    gateway_request.timeout_ms = policy.timeout_ms;
+  } else {
+    gateway_request.timeout_ms = std::min(gateway_request.timeout_ms, policy.timeout_ms);
+  }
+
+  AssistantGateway gateway;
+  // HTTP transport not yet integrated; call gateway with empty raw response.
+  // Gateway degrades parse failures to non-blocking fallback.
+  auto gateway_response = gateway.Analyze(provider, gateway_request, L"");
+  if (!gateway_response.ok) {
+    // Never block send path; degrade to no-op or risk-only.
+    gateway_response.ok = true;
+    if (gateway_response.error_code == 401) {
+      gateway_response.explanation = L"degraded: missing credential";
+    } else {
+      gateway_response.explanation = L"degraded: assistant unavailable";
+    }
+    if (gateway_response.risks.empty() && !request.text.empty()) {
+      weasel::AiRisk risk;
+      risk.text = request.text;
+      risk.reason = L"fallback mode";
+      risk.severity = 1;
+      gateway_response.risks.push_back(risk);
+    }
+  }
+
   std::wstring resp;
-  resp.reserve(512);
-  resp.append(L"ai_analyze.ok=0\n");
-  resp.append(L"ai_analyze.error_code=501\n");
-  resp.append(L"ai_analyze.explanation=HTTP transport not yet implemented\n");
+  resp.reserve(1024);
+  resp.append(L"ai_analyze.ok=")
+      .append(gateway_response.ok ? L"1" : L"0")
+      .append(L"\n");
+  resp.append(L"ai_analyze.error_code=")
+      .append(std::to_wstring(gateway_response.error_code))
+      .append(L"\n");
+  resp.append(L"ai_analyze.explanation=")
+      .append(escape_field(gateway_response.explanation))
+      .append(L"\n");
   resp.append(L"ai_analyze.scene=");
   switch (policy.scene) {
     case SceneType::WorkReport:
@@ -1605,16 +1666,51 @@ bool RimeWithWeaselHandler::AnalyzeText(AiAnalyzeRequest const& request,
   }
   resp.append(L"\n");
   resp.append(L"ai_analyze.timeout_ms=")
-      .append(std::to_wstring(policy.timeout_ms))
+      .append(std::to_wstring(gateway_request.timeout_ms))
       .append(L"\n");
+  for (size_t i = 0; i < gateway_response.risks.size(); ++i) {
+    resp.append(L"ai_analyze.risk.")
+        .append(std::to_wstring(i))
+        .append(L".text=")
+        .append(escape_field(gateway_response.risks[i].text))
+        .append(L"\n");
+    resp.append(L"ai_analyze.risk.")
+        .append(std::to_wstring(i))
+        .append(L".reason=")
+        .append(escape_field(gateway_response.risks[i].reason))
+        .append(L"\n");
+    resp.append(L"ai_analyze.risk.")
+        .append(std::to_wstring(i))
+        .append(L".severity=")
+        .append(std::to_wstring(gateway_response.risks[i].severity))
+        .append(L"\n");
+  }
+  for (size_t i = 0; i < gateway_response.suggestions.size(); ++i) {
+    resp.append(L"ai_analyze.suggest.")
+        .append(std::to_wstring(i))
+        .append(L".text=")
+        .append(escape_field(gateway_response.suggestions[i].text))
+        .append(L"\n");
+    resp.append(L"ai_analyze.suggest.")
+        .append(std::to_wstring(i))
+        .append(L".reason=")
+        .append(escape_field(gateway_response.suggestions[i].reason))
+        .append(L"\n");
+  }
   resp.append(L".\n");
   eat(resp);
+
+  ULONGLONG elapsed_ms = GetTickCount64() - start_ms;
+  DLOG(INFO) << "assistant.telemetry event=analyze provider="
+             << wtou8(provider_name) << " error_code="
+             << gateway_response.error_code << " elapsed_ms=" << elapsed_ms;
   return true;
 }
 
 bool RimeWithWeaselHandler::ApplySuggestion(AiApplyRequest const& request,
                                             DWORD session_id,
                                             EatLine eat) {
+  (void)session_id;
   if (!m_assistant_enabled) {
     std::wstring resp =
         L"ai_apply.ok=0\nai_apply.error_code=403\n.\n";
@@ -1622,12 +1718,31 @@ bool RimeWithWeaselHandler::ApplySuggestion(AiApplyRequest const& request,
     return true;
   }
 
+  auto escape_field = [](std::wstring const& value) {
+    std::wstring out;
+    out.reserve(value.size());
+    for (wchar_t ch : value) {
+      if (ch == L'\\') {
+        out.append(L"\\\\");
+      } else if (ch == L'\n') {
+        out.append(L"\\n");
+      } else if (ch == L'=') {
+        out.append(L"\\=");
+      } else {
+        out.push_back(ch);
+      }
+    }
+    return out;
+  };
+
   // For now, just echo back the suggestion text as applied_text
   std::wstring resp;
   resp.reserve(256);
   resp.append(L"ai_apply.ok=1\n");
   resp.append(L"ai_apply.error_code=0\n");
-  resp.append(L"ai_apply.applied_text=").append(request.suggestion_text).append(L"\n");
+  resp.append(L"ai_apply.applied_text=")
+      .append(escape_field(request.suggestion_text))
+      .append(L"\n");
   resp.append(L".\n");
   eat(resp);
   return true;

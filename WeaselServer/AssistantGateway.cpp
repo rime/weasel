@@ -86,6 +86,22 @@ weasel::AiAnalyzeResponse AssistantGateway::Analyze(
     return no_credential;
   }
 
+  // Strict budget: degrade early when timeout window is too tight
+  if (request.timeout_ms > 0 && request.timeout_ms < 100) {
+    weasel::AiAnalyzeResponse degraded;
+    degraded.ok = true;
+    degraded.error_code = 408;
+    degraded.explanation = L"degraded: timeout";
+    if (!request.text.empty()) {
+      weasel::AiRisk risk;
+      risk.text = request.text;
+      risk.reason = L"timeout budget exceeded, fallback mode";
+      risk.severity = 1;
+      degraded.risks.push_back(risk);
+    }
+    return degraded;
+  }
+
   switch (provider) {
     case AssistantProvider::OpenAI:
       ok = ExtractOpenAIText(raw_response, &content);
@@ -101,11 +117,18 @@ weasel::AiAnalyzeResponse AssistantGateway::Analyze(
   }
 
   if (!ok) {
-    weasel::AiAnalyzeResponse failed;
-    failed.ok = false;
-    failed.error_code = 1;
-    failed.explanation = L"failed to parse provider response";
-    return failed;
+    weasel::AiAnalyzeResponse degraded;
+    degraded.ok = true;
+    degraded.error_code = 408;
+    degraded.explanation = L"degraded: parse failure";
+    if (!request.text.empty()) {
+      weasel::AiRisk risk;
+      risk.text = request.text;
+      risk.reason = L"provider unavailable, fallback mode";
+      risk.severity = 1;
+      degraded.risks.push_back(risk);
+    }
+    return degraded;
   }
   return NormalizeContent(content);
 }

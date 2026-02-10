@@ -77,6 +77,9 @@ void test_gateway_deepseek_normalization() {
 void test_gateway_request_body_escapes() {
   weasel::AiAnalyzeRequest request;
   request.text = L"A\"B\\C\nD";
+  request.context = L"ctx line 1\nctx line 2";
+  request.scene = L"WorkReport";
+  request.timeout_ms = 420;
 
   auto openai = BuildOpenAIRequestBody(request);
   auto anthropic = BuildAnthropicRequestBody(request);
@@ -85,6 +88,76 @@ void test_gateway_request_body_escapes() {
   BOOST_TEST(openai.find(L"A\\\"B\\\\C\\nD") != std::wstring::npos);
   BOOST_TEST(anthropic.find(L"A\\\"B\\\\C\\nD") != std::wstring::npos);
   BOOST_TEST(deepseek.find(L"A\\\"B\\\\C\\nD") != std::wstring::npos);
+
+  BOOST_TEST(openai.find(L"ctx line 1\\nctx line 2") != std::wstring::npos);
+  BOOST_TEST(anthropic.find(L"ctx line 1\\nctx line 2") != std::wstring::npos);
+  BOOST_TEST(deepseek.find(L"ctx line 1\\nctx line 2") != std::wstring::npos);
+
+  BOOST_TEST(openai.find(L"WorkReport") != std::wstring::npos);
+  BOOST_TEST(anthropic.find(L"WorkReport") != std::wstring::npos);
+  BOOST_TEST(deepseek.find(L"WorkReport") != std::wstring::npos);
+
+  BOOST_TEST(openai.find(L"420") != std::wstring::npos);
+  BOOST_TEST(anthropic.find(L"420") != std::wstring::npos);
+  BOOST_TEST(deepseek.find(L"420") != std::wstring::npos);
+}
+
+void test_gateway_degrade_on_parse_failure() {
+  AssistantGateway gateway;
+  weasel::AiAnalyzeRequest request;
+  request.text = L"请尽快处理";
+  request.timeout_ms = 500;
+  EnsureCredential(L"assistant/openai");
+
+  // malformed provider JSON => should degrade to no-op/risk-only path
+  std::wstring raw = L"{malformed";
+  auto response = gateway.Analyze(AssistantProvider::OpenAI, request, raw);
+
+  BOOST_TEST(response.ok);
+  BOOST_TEST_EQ(408, response.error_code);
+  BOOST_TEST(response.explanation == L"degraded: parse failure");
+}
+
+void test_gateway_degrade_on_timeout_budget() {
+  AssistantGateway gateway;
+  weasel::AiAnalyzeRequest request;
+  request.text = L"请尽快处理";
+  request.timeout_ms = 80;
+  EnsureCredential(L"assistant/openai");
+
+  // strict timeout budget path (no provider call)
+  auto response = gateway.Analyze(AssistantProvider::OpenAI, request, L"");
+
+  BOOST_TEST(response.ok);
+  BOOST_TEST_EQ(408, response.error_code);
+  BOOST_TEST(response.explanation == L"degraded: timeout");
+  BOOST_TEST_EQ(1u, response.risks.size());
+}
+
+void test_gateway_missing_credential_returns_401() {
+  AssistantGateway gateway;
+  weasel::AiAnalyzeRequest request;
+  request.text = L"你好";
+  request.timeout_ms = 500;
+
+  CredentialStore store;
+  store.Remove(L"assistant/openai");
+
+  auto response = gateway.Analyze(AssistantProvider::OpenAI, request,
+                                  L"{\"choices\":[{\"message\":{\"content\":\"EXPLAIN|ok\"}}]}");
+  BOOST_TEST(!response.ok);
+  BOOST_TEST_EQ(401, response.error_code);
+  BOOST_TEST(response.explanation == L"missing provider credential");
+
+  EnsureCredential(L"assistant/openai");
+}
+
+void test_parse_assistant_provider_case_insensitive() {
+  BOOST_TEST(ParseAssistantProvider(L"openai") == AssistantProvider::OpenAI);
+  BOOST_TEST(ParseAssistantProvider(L"OpenAI") == AssistantProvider::OpenAI);
+  BOOST_TEST(ParseAssistantProvider(L"ANTHROPIC") == AssistantProvider::Anthropic);
+  BOOST_TEST(ParseAssistantProvider(L"DeepSeek") == AssistantProvider::DeepSeek);
+  BOOST_TEST(ParseAssistantProvider(L"unknown") == AssistantProvider::Unknown);
 }
 
 void run_assistant_gateway_tests() {
@@ -92,4 +165,8 @@ void run_assistant_gateway_tests() {
   test_gateway_anthropic_normalization();
   test_gateway_deepseek_normalization();
   test_gateway_request_body_escapes();
+  test_gateway_degrade_on_parse_failure();
+  test_gateway_degrade_on_timeout_budget();
+  test_gateway_missing_credential_returns_401();
+  test_parse_assistant_provider_case_insensitive();
 }

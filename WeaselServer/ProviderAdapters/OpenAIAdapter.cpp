@@ -57,8 +57,20 @@ std::wstring ExtractJsonStringAfterToken(std::wstring const& text,
 }  // namespace
 
 std::wstring BuildOpenAIRequestBody(weasel::AiAnalyzeRequest const& request) {
-  std::wstring body = L"{\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"";
-  body.append(EscapeJson(request.text));
+  std::wstring prompt;
+  prompt.reserve(request.text.size() + request.context.size() + request.scene.size() + 64);
+  prompt.append(L"TEXT:\n").append(request.text);
+  if (!request.context.empty()) {
+    prompt.append(L"\n\nCONTEXT:\n").append(request.context);
+  }
+  if (!request.scene.empty()) {
+    prompt.append(L"\n\nSCENE:\n").append(request.scene);
+  }
+
+  std::wstring body = L"{\"model\":\"gpt-4o-mini\",\"timeout_ms\":";
+  body.append(std::to_wstring(request.timeout_ms));
+  body.append(L",\"messages\":[{\"role\":\"user\",\"content\":\"");
+  body.append(EscapeJson(prompt));
   body.append(L"\"}]}" );
   return body;
 }

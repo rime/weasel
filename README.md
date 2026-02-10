@@ -47,6 +47,14 @@
 
 定製 Rime 的方法，請參考 Wiki [《定製指南》](https://github.com/rime/home/wiki/CustomizationGuide)。如需定製 Weasel 獨有的樣式和行為，請參考本倉庫 [Wiki 頁面](https://github.com/rime/weasel/wiki)。
 
+IME 助手文檔
+------------
+
+本分支新增了 Windows 端「Send Quality Assistant」能力，說明見：
+
+- `docs/assistant/windows-usage.md`
+- `docs/assistant/provider-config.md`
+
 致謝
 ----
 
