@@ -1015,9 +1015,9 @@ void WeaselPanel::_UpdateOffsets(const CRect& auxrc, const CRect& preeditrc) {
     }
     int base_gap = 0;
     if (!m_ctx.aux.str.empty())
-      base_gap = auxrc.Height() + m_style.spacing;
+      base_gap = auxrc.Height() + m_cachedStyle.spacing;
     else if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
-      base_gap = preeditrc.Height() + m_style.spacing;
+      base_gap = preeditrc.Height() + m_cachedStyle.spacing;
 
     for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
       if (i == 0)
