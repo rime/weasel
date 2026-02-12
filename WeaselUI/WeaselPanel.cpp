@@ -234,6 +234,7 @@ void WeaselPanel::_InitFontRes(bool forced, UINT dpiX) {
   // if style changed, or dpi changed, or pTextFormat null re-initialize
   // directwrite resources
   if (styleChanged || dpiChanged || !pDWR->pTextFormat) {
+    pDWR->ClearTextFormatCache();
     pDWR->InitResources(m_style, dpiX);
   }
   pDWR->EnsureRenderTarget(m_style.antialias_mode);

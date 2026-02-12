@@ -136,6 +136,7 @@ class DirectWriteResources {
           color, pBrush.ReleaseAndGetAddressOf());
     }
   }
+  void ClearTextFormatCache() { _textFormatCache.clear(); }
 
   float dpiScaleFontPoint, dpiScaleLayout;
   ComPtr<ID2D1Factory> pD2d1Factory;
