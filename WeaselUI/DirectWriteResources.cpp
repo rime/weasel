@@ -53,8 +53,13 @@ DirectWriteResources::~DirectWriteResources() {
 }
 
 HRESULT DirectWriteResources::EnsureRenderTarget(int antialiasMode) {
-  if (pRenderTarget)
+  if (pRenderTarget) {
+    if (pRenderTarget->GetTextAntialiasMode() !=
+        (D2D1_TEXT_ANTIALIAS_MODE)antialiasMode)
+      pRenderTarget->SetTextAntialiasMode(
+          (D2D1_TEXT_ANTIALIAS_MODE)antialiasMode);
     return S_OK;
+  }
 
   static const D2D1_PIXEL_FORMAT format = D2D1::PixelFormat(
       DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
