@@ -483,8 +483,11 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg,
   // Ignore if mouse screen position not changed
   CPoint ptScreen = point;
   ClientToScreen(&ptScreen);
-  if (ptScreen == m_lastMousePos)
+  if (ptScreen == m_lastMousePos || m_lastMousePos.x == -1) {
+    if (m_lastMousePos.x == -1)
+      m_lastMousePos = ptScreen;
     return 0;
+  }
   m_lastMousePos = ptScreen;
 
   for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
@@ -1151,6 +1154,7 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg,
                                LPARAM lParam,
                                BOOL& bHandled) {
   m_hoverIndex = -1;
+  m_lastMousePos = {-1, -1};
   m_sticky = false;
   delete m_layout;
   m_layout = NULL;
