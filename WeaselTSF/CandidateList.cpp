@@ -209,8 +209,7 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status) {
   /// if it is owned by active view window
   //_UpdateOwner();
   _ui->Update(ctx, status);
-  if (_pbShow == FALSE)
-    _UpdateUIElement();
+  _UpdateUIElement();
 
   if (status.composing)
     Show(_pbShow);
