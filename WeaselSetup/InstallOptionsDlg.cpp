@@ -7,27 +7,61 @@
 int uninstall(bool silent);
 
 InstallOptionsDialog::InstallOptionsDialog()
-    : installed(false), hant(false), user_dir() {}
+    : installed(false), profile(L"hans"), user_dir() {}
 
 InstallOptionsDialog::~InstallOptionsDialog() {}
 
 LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
-  cn_.Attach(GetDlgItem(IDC_RADIO_CN));
-  tw_.Attach(GetDlgItem(IDC_RADIO_TW));
+  profile_.Attach(GetDlgItem(IDC_COMBO_PROFILE));
   remove_.Attach(GetDlgItem(IDC_REMOVE));
   default_dir_.Attach(GetDlgItem(IDC_RADIO_DEFAULT_DIR));
   custom_dir_.Attach(GetDlgItem(IDC_RADIO_CUSTOM_DIR));
   dir_.Attach(GetDlgItem(IDC_EDIT_DIR));
 
-  CheckRadioButton(IDC_RADIO_CN, IDC_RADIO_TW,
-                   (hant ? IDC_RADIO_TW : IDC_RADIO_CN));
+  struct ProfileOption {
+    const wchar_t* value;
+    const wchar_t* zhHansText;
+    const wchar_t* zhHantText;
+    const wchar_t* enText;
+  };
+  const ProfileOption options[] = {
+      {L"hans", L"中文（简体，中国大陆）", L"中文（簡體，中國大陸）",
+       L"Chinese (Simplified, China)"},
+      {L"hant", L"中文（繁体，中国台湾）", L"中文（繁體，中國臺灣）",
+       L"Chinese (Traditional, Taiwan)"},
+      {L"hongkong", L"中文（繁体，中国香港）", L"中文（繁體，中國香港）",
+       L"Chinese (Traditional, Hong Kong)"},
+      {L"macau", L"中文（繁体，中国澳门）", L"中文（繁體，中國澳門）",
+       L"Chinese (Traditional, Macao)"},
+      {L"singapore", L"中文（简体，新加坡）", L"中文（簡體，新加坡）",
+       L"Chinese (Simplified, Singapore)"},
+  };
+  const auto uiLang = PRIMARYLANGID(GetThreadUILanguage());
+  const auto uiSubLang = SUBLANGID(GetThreadUILanguage());
+
+  int selected = 0;
+  for (int i = 0; i < static_cast<int>(_countof(options)); ++i) {
+    const wchar_t* label = options[i].enText;
+    if (uiLang == LANG_CHINESE) {
+      const bool isTraditional = (uiSubLang == SUBLANG_CHINESE_TRADITIONAL ||
+                                  uiSubLang == SUBLANG_CHINESE_HONGKONG ||
+                                  uiSubLang == SUBLANG_CHINESE_MACAU);
+      label = isTraditional ? options[i].zhHantText : options[i].zhHansText;
+    }
+    int index = profile_.AddString(label);
+    profile_.SetItemData(index, i);
+    if (profile == options[i].value) {
+      selected = index;
+    }
+  }
+  profile_.SetCurSel(selected);
+
   CheckRadioButton(
       IDC_RADIO_DEFAULT_DIR, IDC_RADIO_CUSTOM_DIR,
       (user_dir.empty() ? IDC_RADIO_DEFAULT_DIR : IDC_RADIO_CUSTOM_DIR));
   dir_.SetWindowTextW(user_dir.c_str());
 
-  cn_.EnableWindow(!installed);
-  tw_.EnableWindow(!installed);
+  profile_.EnableWindow(!installed);
   remove_.EnableWindow(installed);
   dir_.EnableWindow(user_dir.empty() ? FALSE : TRUE);
 
@@ -51,7 +85,27 @@ LRESULT InstallOptionsDialog::OnClose(UINT, WPARAM, LPARAM, BOOL&) {
 }
 
 LRESULT InstallOptionsDialog::OnOK(WORD, WORD code, HWND, BOOL&) {
-  hant = (IsDlgButtonChecked(IDC_RADIO_TW) == BST_CHECKED);
+  int selected = profile_.GetCurSel();
+  if (selected == CB_ERR) {
+    selected = 0;
+  }
+  switch (static_cast<int>(profile_.GetItemData(selected))) {
+    case 1:
+      profile = L"hant";
+      break;
+    case 2:
+      profile = L"hongkong";
+      break;
+    case 3:
+      profile = L"macau";
+      break;
+    case 4:
+      profile = L"singapore";
+      break;
+    default:
+      profile = L"hans";
+      break;
+  }
   if (IsDlgButtonChecked(IDC_RADIO_CUSTOM_DIR) == BST_CHECKED) {
     CStringW text;
     dir_.GetWindowTextW(text);
@@ -70,8 +124,7 @@ LRESULT InstallOptionsDialog::OnRemove(WORD, WORD code, HWND, BOOL&) {
   CString str;
   str.LoadStringW(IDS_STRING_INSTALL);
   ok_.SetWindowTextW(str);
-  cn_.EnableWindow(!installed);
-  tw_.EnableWindow(!installed);
+  profile_.EnableWindow(!installed);
   remove_.EnableWindow(installed);
   return 0;
 }

@@ -25,6 +25,7 @@
 #define IDS_STR_MODIFY_SUCCESS_INFO     146
 #define IDS_STR_MODIFY_SUCCESS_CAP      147
 #define IDS_STR_HELP                    148
+#define IDS_STR_ERR_WRITE_PROFILE       149
 #define IDD_INSTALL_OPTIONS             201
 #define IDD_DIALOG1                     203
 #define IDC_RADIO_CN                    1000
@@ -36,6 +37,7 @@
 #define IDC_CHECK1                      1006
 #define IDC_CHECK_INSTIME               1006
 #define IDC_BUTTON_CUSTOM_DIR           1007
+#define IDC_COMBO_PROFILE               1008
 
 // Next default values for new objects
 // 
@@ -43,7 +45,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        205
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1008
+#define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

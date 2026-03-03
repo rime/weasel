@@ -75,7 +75,7 @@ class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
   ~InstallOptionsDialog();
 
   bool installed;
-  bool hant;
+  std::wstring profile;
   std::wstring user_dir;
 
  protected:
@@ -96,8 +96,7 @@ class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
   LRESULT OnUseDefaultDir(WORD, WORD code, HWND, BOOL&);
   LRESULT OnUseCustomDir(WORD, WORD code, HWND, BOOL&);
 
-  CButton cn_;
-  CButton tw_;
+  CComboBox profile_;
   CButton remove_;
   CButton default_dir_;
   CButton custom_dir_;

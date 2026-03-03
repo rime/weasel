@@ -58,8 +58,12 @@ BOOL RegisterProfiles() {
   }
   BOOL hansEnable = (profile == L"hans");
   BOOL hantEnable = (profile == L"hant");
+  BOOL hkEnable = (profile == L"hongkong");
+  BOOL macauEnable = (profile == L"macau");
+  BOOL sgEnable = (profile == L"singapore");
   // fallback hans enable
-  hansEnable = hansEnable || (!hantEnable && !hansEnable);
+  hansEnable = hansEnable || (!hantEnable && !hansEnable && !hkEnable &&
+                              !macauEnable && !sgEnable);
 
   const auto text_service_desc = get_weasel_ime_name();
   const WCHAR* text_service_desc_str = text_service_desc.c_str();
@@ -80,10 +84,9 @@ BOOL RegisterProfiles() {
   const auto hkl_hant = FindIME(TEXTSERVICE_LANGID_HANT);
   CHECK_HR(register_profile(TEXTSERVICE_LANGID_HANS, hkl_hans, hansEnable));
   CHECK_HR(register_profile(TEXTSERVICE_LANGID_HANT, hkl_hant, hantEnable));
-  // WeaselIME not support these languages, so HKL is NULL
-  CHECK_HR(register_profile(TEXTSERVICE_LANGID_HONGKONG, NULL, false));
-  CHECK_HR(register_profile(TEXTSERVICE_LANGID_MACAU, NULL, false));
-  CHECK_HR(register_profile(TEXTSERVICE_LANGID_SINGAPORE, NULL, false));
+  CHECK_HR(register_profile(TEXTSERVICE_LANGID_HONGKONG, NULL, hkEnable));
+  CHECK_HR(register_profile(TEXTSERVICE_LANGID_MACAU, NULL, macauEnable));
+  CHECK_HR(register_profile(TEXTSERVICE_LANGID_SINGAPORE, NULL, sgEnable));
 #undef CHECK_HR
 
   return TRUE;
