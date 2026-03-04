@@ -179,6 +179,9 @@ static int Run(LPTSTR lpCmdLine) {
           L"/i             - Install Weasel\n"
           L"/s             - Install Weasel (Simplified Chinese)\n"
           L"/t             - Install Weasel (Traditional Chinese)\n"
+          L"/hk            - Install Weasel (Traditional Chinese, Hong Kong)\n"
+          L"/mc            - Install Weasel (Traditional Chinese, Macao)\n"
+          L"/sg            - Install Weasel (Simplified Chinese, Singapore)\n"
           L"/ls            - Set Weasel language to Simplified Chinese\n"
           L"/lt            - Set Weasel language to Traditional Chinese\n"
           L"/le            - Set Weasel language to English\n"
@@ -253,6 +256,15 @@ static int Run(LPTSTR lpCmdLine) {
   bool hant = !wcscmp(L"/t", lpCmdLine);
   if (hant)
     return install(L"hant", silent);
+  bool hongkong = !wcscmp(L"/hk", lpCmdLine);
+  if (hongkong)
+    return install(L"hongkong", silent);
+  bool macau = !wcscmp(L"/mc", lpCmdLine);
+  if (macau)
+    return install(L"macau", silent);
+  bool singapore = !wcscmp(L"/sg", lpCmdLine);
+  if (singapore)
+    return install(L"singapore", silent);
   bool installing = !wcscmp(L"/i", lpCmdLine);
   return CustomInstall(installing);
 }
