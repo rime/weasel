@@ -164,6 +164,8 @@ LRESULT InstallOptionsDialog::OnUseCustomDir(WORD, WORD code, HWND, BOOL&) {
       }
     }
   }
+  dir_.EnableWindow(TRUE);
+  button_custom_dir_.EnableWindow(TRUE);
   ok_.SetFocus();
   return 0;
 }
