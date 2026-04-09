@@ -187,9 +187,9 @@ struct Status {
 
 // 用於向前端告知設置信息
 struct Config {
-  Config() : inline_preedit(false) {}
-  void reset() { inline_preedit = false; }
-  bool inline_preedit;
+  Config() : commit_langid(0) {}
+  void reset() { commit_langid = 0; }
+  int commit_langid;
 };
 
 struct UIStyle {
