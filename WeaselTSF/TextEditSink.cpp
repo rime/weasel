@@ -17,9 +17,9 @@ static BOOL IsRangeCovered(TfEditCookie ec,
   return TRUE;
 }
 
-STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext,
-                            TfEditCookie ecReadOnly,
-                            ITfEditRecord* pEditRecord) {
+STDMETHODIMP WeaselTSF::OnEndEdit(ITfContext* pContext,
+                                  TfEditCookie ecReadOnly,
+                                  ITfEditRecord* pEditRecord) {
   BOOL fSelectionChanged;
   IEnumTfRanges* pEnumTextChanges;
   ITfRange* pRange;
@@ -56,9 +56,9 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext* pContext,
   return S_OK;
 }
 
-STDAPI WeaselTSF::OnLayoutChange(ITfContext* pContext,
-                                 TfLayoutCode lcode,
-                                 ITfContextView* pContextView) {
+STDMETHODIMP WeaselTSF::OnLayoutChange(ITfContext* pContext,
+                                       TfLayoutCode lcode,
+                                       ITfContextView* pContextView) {
   if (!_IsComposing())
     return S_OK;
 

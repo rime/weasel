@@ -1,16 +1,16 @@
 #include "stdafx.h"
 #include "WeaselTSF.h"
 
-STDAPI WeaselTSF::OnInitDocumentMgr(ITfDocumentMgr* pDocMgr) {
+STDMETHODIMP WeaselTSF::OnInitDocumentMgr(ITfDocumentMgr* pDocMgr) {
   return S_OK;
 }
 
-STDAPI WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr* pDocMgr) {
+STDMETHODIMP WeaselTSF::OnUninitDocumentMgr(ITfDocumentMgr* pDocMgr) {
   return S_OK;
 }
 
-STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr* pDocMgrFocus,
-                             ITfDocumentMgr* pDocMgrPrevFocus) {
+STDMETHODIMP WeaselTSF::OnSetFocus(ITfDocumentMgr* pDocMgrFocus,
+                                   ITfDocumentMgr* pDocMgrPrevFocus) {
   _InitTextEditSink(pDocMgrFocus);
 
   com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
@@ -27,11 +27,11 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr* pDocMgrFocus,
   return S_OK;
 }
 
-STDAPI WeaselTSF::OnPushContext(ITfContext* pContext) {
+STDMETHODIMP WeaselTSF::OnPushContext(ITfContext* pContext) {
   return S_OK;
 }
 
-STDAPI WeaselTSF::OnPopContext(ITfContext* pContext) {
+STDMETHODIMP WeaselTSF::OnPopContext(ITfContext* pContext) {
   return S_OK;
 }
 

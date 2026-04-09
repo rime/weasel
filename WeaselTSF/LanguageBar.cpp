@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include <resource.h>
 #include <thread>
 #include <shellapi.h>
@@ -70,7 +70,7 @@ CLangBarItemButton::~CLangBarItemButton() {
   DllRelease();
 }
 
-STDAPI CLangBarItemButton::QueryInterface(REFIID riid, void** ppvObject) {
+STDMETHODIMP CLangBarItemButton::QueryInterface(REFIID riid, void** ppvObject) {
   if (ppvObject == NULL)
     return E_INVALIDARG;
 
@@ -88,11 +88,11 @@ STDAPI CLangBarItemButton::QueryInterface(REFIID riid, void** ppvObject) {
   return E_NOINTERFACE;
 }
 
-STDAPI_(ULONG) CLangBarItemButton::AddRef() {
+STDMETHODIMP_(ULONG) CLangBarItemButton::AddRef() {
   return ++_cRef;
 }
 
-STDAPI_(ULONG) CLangBarItemButton::Release() {
+STDMETHODIMP_(ULONG) CLangBarItemButton::Release() {
   LONG cr = --_cRef;
   assert(_cRef >= 0);
   if (_cRef == 0)
@@ -100,7 +100,7 @@ STDAPI_(ULONG) CLangBarItemButton::Release() {
   return cr;
 }
 
-STDAPI CLangBarItemButton::GetInfo(TF_LANGBARITEMINFO* pInfo) {
+STDMETHODIMP CLangBarItemButton::GetInfo(TF_LANGBARITEMINFO* pInfo) {
   pInfo->clsidService = c_clsidTextService;
   pInfo->guidItem = _guid;
   pInfo->dwStyle = TF_LBI_STYLE_BTN_BUTTON | TF_LBI_STYLE_BTN_MENU |
@@ -110,12 +110,12 @@ STDAPI CLangBarItemButton::GetInfo(TF_LANGBARITEMINFO* pInfo) {
   return S_OK;
 }
 
-STDAPI CLangBarItemButton::GetStatus(DWORD* pdwStatus) {
+STDMETHODIMP CLangBarItemButton::GetStatus(DWORD* pdwStatus) {
   *pdwStatus = _status;
   return S_OK;
 }
 
-STDAPI CLangBarItemButton::Show(BOOL fShow) {
+STDMETHODIMP CLangBarItemButton::Show(BOOL fShow) {
   SetLangbarStatus(TF_LBI_STATUS_HIDDEN, fShow ? FALSE : TRUE);
   return S_OK;
 }
@@ -135,7 +135,7 @@ static LANGID GetActiveProfileLangId() {
   return profile.langid;
 }
 
-STDAPI CLangBarItemButton::GetTooltipString(BSTR* pbstrToolTip) {
+STDMETHODIMP CLangBarItemButton::GetTooltipString(BSTR* pbstrToolTip) {
   LANGID langid = get_language_id();
   if (langid == TEXTSERVICE_LANGID_HANS) {
     *pbstrToolTip = SysAllocString(L"左键切换模式，右键打开菜单");
@@ -149,9 +149,9 @@ STDAPI CLangBarItemButton::GetTooltipString(BSTR* pbstrToolTip) {
   return (*pbstrToolTip == NULL) ? E_OUTOFMEMORY : S_OK;
 }
 
-STDAPI CLangBarItemButton::OnClick(TfLBIClick click,
-                                   POINT pt,
-                                   const RECT* prcArea) {
+STDMETHODIMP CLangBarItemButton::OnClick(TfLBIClick click,
+                                         POINT pt,
+                                         const RECT* prcArea) {
   if (click == TF_LBI_CLK_LEFT) {
     _pTextService->_HandleLangBarMenuSelect(
         ascii_mode ? ID_WEASELTRAY_DISABLE_ASCII : ID_WEASELTRAY_ENABLE_ASCII);
@@ -183,7 +183,7 @@ STDAPI CLangBarItemButton::OnClick(TfLBIClick click,
   return S_OK;
 }
 
-STDAPI CLangBarItemButton::InitMenu(ITfMenu* pMenu) {
+STDMETHODIMP CLangBarItemButton::InitMenu(ITfMenu* pMenu) {
   HMENU menu = LoadMenuW(g_hInst, MAKEINTRESOURCE(IDR_MENU_POPUP));
   HMENU popupMenu = GetSubMenu(menu, 0);
   HMENU2ITfMenu(popupMenu, pMenu);
@@ -191,12 +191,12 @@ STDAPI CLangBarItemButton::InitMenu(ITfMenu* pMenu) {
   return S_OK;
 }
 
-STDAPI CLangBarItemButton::OnMenuSelect(UINT wID) {
+STDMETHODIMP CLangBarItemButton::OnMenuSelect(UINT wID) {
   _pTextService->_HandleLangBarMenuSelect(wID);
   return S_OK;
 }
 
-STDAPI CLangBarItemButton::GetIcon(HICON* phIcon) {
+STDMETHODIMP CLangBarItemButton::GetIcon(HICON* phIcon) {
   if (ascii_mode) {
     if (_style.current_ascii_icon.empty())
       *phIcon = (HICON)LoadImageW(g_hInst, MAKEINTRESOURCEW(IDI_EN), IMAGE_ICON,
@@ -221,14 +221,14 @@ STDAPI CLangBarItemButton::GetIcon(HICON* phIcon) {
   return (*phIcon == NULL) ? E_FAIL : S_OK;
 }
 
-STDAPI CLangBarItemButton::GetText(BSTR* pbstrText) {
+STDMETHODIMP CLangBarItemButton::GetText(BSTR* pbstrText) {
   *pbstrText = SysAllocString(L"WeaselTSF Button");
   return (*pbstrText == NULL) ? E_OUTOFMEMORY : S_OK;
 }
 
-STDAPI CLangBarItemButton::AdviseSink(REFIID riid,
-                                      IUnknown* punk,
-                                      DWORD* pdwCookie) {
+STDMETHODIMP CLangBarItemButton::AdviseSink(REFIID riid,
+                                            IUnknown* punk,
+                                            DWORD* pdwCookie) {
   if (!IsEqualIID(riid, IID_ITfLangBarItemSink))
     return CONNECT_E_CANNOTCONNECT;
   if (_pLangBarItemSink != NULL)
@@ -243,7 +243,7 @@ STDAPI CLangBarItemButton::AdviseSink(REFIID riid,
   return S_OK;
 }
 
-STDAPI CLangBarItemButton::UnadviseSink(DWORD dwCookie) {
+STDMETHODIMP CLangBarItemButton::UnadviseSink(DWORD dwCookie) {
   if (dwCookie != LANGBARITEMSINK_COOKIE || _pLangBarItemSink == NULL)
     return CONNECT_E_NOCONNECTION;
   _pLangBarItemSink = NULL;

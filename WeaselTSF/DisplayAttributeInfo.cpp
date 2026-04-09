@@ -30,8 +30,9 @@ CDisplayAttributeInfoInput::~CDisplayAttributeInfoInput() {
   DllRelease();
 }
 
-STDAPI CDisplayAttributeInfoInput::QueryInterface(REFIID riid,
-                                                  _Outptr_ void** ppvObj) {
+STDMETHODIMP CDisplayAttributeInfoInput::QueryInterface(
+    REFIID riid,
+    _Outptr_ void** ppvObj) {
   if (ppvObj == nullptr)
     return E_INVALIDARG;
 
@@ -66,7 +67,7 @@ ULONG CDisplayAttributeInfoInput::Release(void) {
   return cr;
 }
 
-STDAPI CDisplayAttributeInfoInput::GetGUID(_Out_ GUID* pguid) {
+STDMETHODIMP CDisplayAttributeInfoInput::GetGUID(_Out_ GUID* pguid) {
   if (pguid == nullptr)
     return E_INVALIDARG;
 
@@ -78,7 +79,7 @@ STDAPI CDisplayAttributeInfoInput::GetGUID(_Out_ GUID* pguid) {
   return S_OK;
 }
 
-STDAPI CDisplayAttributeInfoInput::GetDescription(_Out_ BSTR* pbstrDesc) {
+STDMETHODIMP CDisplayAttributeInfoInput::GetDescription(_Out_ BSTR* pbstrDesc) {
   BSTR tempDesc;
 
   if (pbstrDesc == nullptr) {
@@ -96,7 +97,7 @@ STDAPI CDisplayAttributeInfoInput::GetDescription(_Out_ BSTR* pbstrDesc) {
   return S_OK;
 }
 
-STDAPI CDisplayAttributeInfoInput::GetAttributeInfo(
+STDMETHODIMP CDisplayAttributeInfoInput::GetAttributeInfo(
     _Out_ TF_DISPLAYATTRIBUTE* ptfDisplayAttr) {
   if (ptfDisplayAttr == nullptr) {
     return E_INVALIDARG;
@@ -107,11 +108,11 @@ STDAPI CDisplayAttributeInfoInput::GetAttributeInfo(
   return S_OK;
 }
 
-STDAPI CDisplayAttributeInfoInput::SetAttributeInfo(
+STDMETHODIMP CDisplayAttributeInfoInput::SetAttributeInfo(
     _In_ const TF_DISPLAYATTRIBUTE* /*ptfDisplayAttr*/) {
   return E_NOTIMPL;
 }
 
-STDAPI CDisplayAttributeInfoInput::Reset() {
+STDMETHODIMP CDisplayAttributeInfoInput::Reset() {
   return SetAttributeInfo(_pDisplayAttribute);
 }

@@ -24,7 +24,7 @@ class CStartCompositionEditSession : public CEditSession {
   BOOL _inlinePreeditEnabled;
 };
 
-STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
+STDMETHODIMP CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
   HRESULT hr = E_FAIL;
   com_ptr<ITfInsertAtSelection> pInsertAtSelection;
   com_ptr<ITfRange> pRangeComposition;
@@ -102,7 +102,7 @@ class CEndCompositionEditSession : public CEditSession {
   BOOL _clear;
 };
 
-STDAPI CEndCompositionEditSession::DoEditSession(TfEditCookie ec) {
+STDMETHODIMP CEndCompositionEditSession::DoEditSession(TfEditCookie ec) {
   /* Clear the dummy text we set before, if any. */
   if (_pComposition == nullptr)
     return S_OK;
@@ -158,7 +158,7 @@ class CGetTextExtentEditSession : public CEditSession {
   bool _enhancedPosition;
 };
 
-STDAPI CGetTextExtentEditSession::DoEditSession(TfEditCookie ec) {
+STDMETHODIMP CGetTextExtentEditSession::DoEditSession(TfEditCookie ec) {
   com_ptr<ITfInsertAtSelection> pInsertAtSelection;
   com_ptr<ITfRange> pRangeComposition;
   ITfRange* pRange;
@@ -265,7 +265,7 @@ class CInlinePreeditEditSession : public CEditSession {
   const std::shared_ptr<weasel::Context> _context;
 };
 
-STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec) {
+STDMETHODIMP CInlinePreeditEditSession::DoEditSession(TfEditCookie ec) {
   std::wstring preedit = _context->preedit.str;
 
   com_ptr<ITfRange> pRangeComposition;
@@ -393,8 +393,8 @@ void WeaselTSF::_UpdateComposition(com_ptr<ITfContext> pContext) {
 }
 
 /* Composition State */
-STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite,
-                                          ITfComposition* pComposition) {
+STDMETHODIMP WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite,
+                                                ITfComposition* pComposition) {
   // NOTE:
   // This will be called when an edit session ended up with an empty composition
   // string, Even if it is closed normally. Silly M$.

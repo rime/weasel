@@ -3,7 +3,7 @@
 #include "CandidateList.h"
 #include "ResponseParser.h"
 
-STDAPI WeaselTSF::DoEditSession(TfEditCookie ec) {
+STDMETHODIMP WeaselTSF::DoEditSession(TfEditCookie ec) {
   // get commit string from server
   std::wstring commit;
   weasel::Config config;

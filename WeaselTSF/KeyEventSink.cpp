@@ -62,7 +62,7 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
   }
 }
 
-STDAPI WeaselTSF::OnSetFocus(BOOL fForeground) {
+STDMETHODIMP WeaselTSF::OnSetFocus(BOOL fForeground) {
   if (fForeground)
     m_client.FocusIn();
   else {
@@ -83,10 +83,10 @@ STDAPI WeaselTSF::OnSetFocus(BOOL fForeground) {
  *  and for OnKeyDown() to check if the key has already been sent to the server.
  */
 
-STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext,
-                                WPARAM wParam,
-                                LPARAM lParam,
-                                BOOL* pfEaten) {
+STDMETHODIMP WeaselTSF::OnTestKeyDown(ITfContext* pContext,
+                                      WPARAM wParam,
+                                      LPARAM lParam,
+                                      BOOL* pfEaten) {
   _fTestKeyUpPending = FALSE;
   if (_fTestKeyDownPending) {
     *pfEaten = TRUE;
@@ -99,10 +99,10 @@ STDAPI WeaselTSF::OnTestKeyDown(ITfContext* pContext,
   return S_OK;
 }
 
-STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext,
-                            WPARAM wParam,
-                            LPARAM lParam,
-                            BOOL* pfEaten) {
+STDMETHODIMP WeaselTSF::OnKeyDown(ITfContext* pContext,
+                                  WPARAM wParam,
+                                  LPARAM lParam,
+                                  BOOL* pfEaten) {
   _fTestKeyUpPending = FALSE;
   if (_fTestKeyDownPending) {
     _fTestKeyDownPending = FALSE;
@@ -114,10 +114,10 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext* pContext,
   return S_OK;
 }
 
-STDAPI WeaselTSF::OnTestKeyUp(ITfContext* pContext,
-                              WPARAM wParam,
-                              LPARAM lParam,
-                              BOOL* pfEaten) {
+STDMETHODIMP WeaselTSF::OnTestKeyUp(ITfContext* pContext,
+                                    WPARAM wParam,
+                                    LPARAM lParam,
+                                    BOOL* pfEaten) {
   _fTestKeyDownPending = FALSE;
   if (_fTestKeyUpPending) {
     *pfEaten = TRUE;
@@ -130,10 +130,10 @@ STDAPI WeaselTSF::OnTestKeyUp(ITfContext* pContext,
   return S_OK;
 }
 
-STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext,
-                          WPARAM wParam,
-                          LPARAM lParam,
-                          BOOL* pfEaten) {
+STDMETHODIMP WeaselTSF::OnKeyUp(ITfContext* pContext,
+                                WPARAM wParam,
+                                LPARAM lParam,
+                                BOOL* pfEaten) {
   _fTestKeyDownPending = FALSE;
   if (_fTestKeyUpPending) {
     _fTestKeyUpPending = FALSE;
@@ -146,9 +146,9 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext* pContext,
   return S_OK;
 }
 
-STDAPI WeaselTSF::OnPreservedKey(ITfContext* pContext,
-                                 REFGUID rguid,
-                                 BOOL* pfEaten) {
+STDMETHODIMP WeaselTSF::OnPreservedKey(ITfContext* pContext,
+                                       REFGUID rguid,
+                                       BOOL* pfEaten) {
   *pfEaten = FALSE;
   return S_OK;
 }

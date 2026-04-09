@@ -4,7 +4,7 @@
 #include "EnumDisplayAttributeInfo.h"
 #include "DisplayAttributeInfo.h"
 
-STDAPI WeaselTSF::EnumDisplayAttributeInfo(
+STDMETHODIMP WeaselTSF::EnumDisplayAttributeInfo(
     __RPC__deref_out_opt IEnumTfDisplayAttributeInfo** ppEnum) {
   CEnumDisplayAttributeInfo* pAttributeEnum = nullptr;
 
@@ -24,7 +24,7 @@ STDAPI WeaselTSF::EnumDisplayAttributeInfo(
   return S_OK;
 }
 
-STDAPI WeaselTSF::GetDisplayAttributeInfo(
+STDMETHODIMP WeaselTSF::GetDisplayAttributeInfo(
     __RPC__in REFGUID guidInfo,
     __RPC__deref_out_opt ITfDisplayAttributeInfo** ppInfo) {
   if (ppInfo == nullptr) {
