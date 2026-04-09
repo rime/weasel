@@ -124,6 +124,10 @@ class WeaselPanel
   CIcon m_iconAlpha;
   CIcon m_iconFull;
   CIcon m_iconHalf;
+  CIcon m_customIconEnabled;
+  CIcon m_customIconAlpha;
+  CIcon m_customIconFull;
+  CIcon m_customIconHalf;
   std::wstring m_current_zhung_icon;
   std::wstring m_current_ascii_icon;
   std::wstring m_current_half_icon;
