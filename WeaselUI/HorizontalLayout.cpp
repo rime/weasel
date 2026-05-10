@@ -76,8 +76,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
   }
 
   if (_style.grid_layout && candidates_count) {
-    int columns = _style.grid_columns > 0 ? _style.grid_columns : 3;
-    columns = min(columns, MAX_CANDIDATES_COUNT);
+    int columns = min(max(_style.grid_columns, 1), MAX_CANDIDATES_COUNT);
     int rows = (candidates_count + columns - 1) / columns;
     int cell_width = _style.grid_cell_width;
     int cell_height = _style.grid_cell_height;

@@ -20,7 +20,6 @@
   (((value & 0xff) << 24) | ((value & 0xff000000) >> 24) | \
    ((value & 0x00ff0000) >> 8) | ((value & 0x0000ff00) << 8))
 typedef enum { COLOR_ABGR = 0, COLOR_ARGB, COLOR_RGBA } ColorFormat;
-static constexpr int GRID_VISIBLE_ROWS = 5;
 
 using namespace weasel;
 
@@ -489,10 +488,8 @@ void RimeWithWeaselHandler::_GetCandidateInfo(CandidateInfo& cinfo,
     return;
   }
 
-  const int columns = session_status.style.grid_columns > 0
-                          ? session_status.style.grid_columns
-                          : 5;
-  const int visible_rows = GRID_VISIBLE_ROWS;
+  const int columns = session_status.style.grid_columns;
+  const int visible_rows = session_status.style.grid_visible_rows;
   const int visible_count = columns * visible_rows;
   const int highlighted = ctx.menu.page_no * ctx.menu.page_size +
                           ctx.menu.highlighted_candidate_index;
@@ -563,9 +560,8 @@ bool RimeWithWeaselHandler::_HandleGridKeyEvent(KeyEvent keyEvent,
     return false;
   }
 
-  const int columns = session_status.style.grid_columns > 0
-                          ? session_status.style.grid_columns
-                          : 5;
+  const int columns = session_status.style.grid_columns;
+  const int visible_rows = session_status.style.grid_visible_rows;
   const bool no_command_modifier =
       (keyEvent.mask &
        (ibus::Modifier::CONTROL_MASK | ibus::Modifier::ALT_MASK |
@@ -586,9 +582,9 @@ bool RimeWithWeaselHandler::_HandleGridKeyEvent(KeyEvent keyEvent,
     if (has_next_row) {
       session_status.grid_row_offset = next_row_offset;
       if (session_status.grid_row_offset >=
-          session_status.grid_window_row_offset + GRID_VISIBLE_ROWS) {
+          session_status.grid_window_row_offset + visible_rows) {
         session_status.grid_window_row_offset =
-            session_status.grid_row_offset - GRID_VISIBLE_ROWS + 1;
+            session_status.grid_row_offset - visible_rows + 1;
       }
     }
     rime_api->highlight_candidate(session_id,
@@ -1447,6 +1443,12 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   _RimeGetBool(config, "style/layout/grid", false, style.grid_layout);
   _RimeGetIntStr(config, "style/layout/grid_columns", style.grid_columns, 0, 0,
                  _abs);
+  if (style.grid_columns <= 0)
+    style.grid_columns = UIStyle::DEFAULT_GRID_COLUMNS;
+  _RimeGetIntStr(config, "style/layout/grid_visible_rows",
+                 style.grid_visible_rows, 0, 0, _abs);
+  if (style.grid_visible_rows <= 0)
+    style.grid_visible_rows = UIStyle::DEFAULT_GRID_VISIBLE_ROWS;
   _RimeGetIntStr(config, "style/layout/grid_cell_width", style.grid_cell_width,
                  0, 0, _abs);
   _RimeGetIntStr(config, "style/layout/grid_cell_height",
