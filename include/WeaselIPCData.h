@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <string>
 #include <vector>
@@ -255,6 +255,10 @@ struct UIStyle {
   int margin_y;
   int spacing;
   int candidate_spacing;
+  bool grid_layout;
+  int grid_columns;
+  int grid_cell_width;
+  int grid_cell_height;
   int hilite_spacing;
   int hilite_padding_x;
   int hilite_padding_y;
@@ -328,6 +332,10 @@ struct UIStyle {
         margin_y(0),
         spacing(0),
         candidate_spacing(0),
+        grid_layout(false),
+        grid_columns(0),
+        grid_cell_width(0),
+        grid_cell_height(0),
         hilite_spacing(0),
         hilite_padding_x(0),
         hilite_padding_y(0),
@@ -390,6 +398,9 @@ struct UIStyle {
         border != st.border || margin_x != st.margin_x ||
         margin_y != st.margin_y || spacing != st.spacing ||
         candidate_spacing != st.candidate_spacing ||
+        grid_layout != st.grid_layout || grid_columns != st.grid_columns ||
+        grid_cell_width != st.grid_cell_width ||
+        grid_cell_height != st.grid_cell_height ||
         hilite_spacing != st.hilite_spacing ||
         hilite_padding_x != st.hilite_padding_x ||
         hilite_padding_y != st.hilite_padding_y ||
@@ -464,6 +475,10 @@ void serialize(Archive& ar, weasel::UIStyle& s, const unsigned int version) {
   ar & s.margin_y;
   ar & s.spacing;
   ar & s.candidate_spacing;
+  ar & s.grid_layout;
+  ar & s.grid_columns;
+  ar & s.grid_cell_width;
+  ar & s.grid_cell_height;
   ar & s.hilite_spacing;
   ar & s.hilite_padding_x;
   ar & s.hilite_padding_y;

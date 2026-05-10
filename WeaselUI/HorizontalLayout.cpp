@@ -75,6 +75,128 @@ void HorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR) {
     width = max(width, real_margin_x * 2 + size.cx);
   }
 
+  if (_style.grid_layout && candidates_count) {
+    int columns = _style.grid_columns > 0 ? _style.grid_columns : 3;
+    columns = min(columns, MAX_CANDIDATES_COUNT);
+    int rows = (candidates_count + columns - 1) / columns;
+    int cell_width = _style.grid_cell_width;
+    int cell_height = _style.grid_cell_height;
+
+    for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i) {
+      int natural_width = 0;
+      int natural_height = 0;
+
+      std::wstring label =
+          GetLabelText(labels, i, _style.label_text_format.c_str());
+      GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
+      _candidateLabelRects[i].SetRect(0, 0, size.cx * labelFontValid, size.cy);
+      natural_width += size.cx * labelFontValid;
+      natural_height = max(natural_height, size.cy);
+
+      const std::wstring& text = candidates.at(i).str;
+      GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
+      _candidateTextRects[i].SetRect(0, 0, size.cx * textFontValid, size.cy);
+      natural_width += (size.cx + _style.hilite_spacing) * textFontValid;
+      natural_height = max(natural_height, size.cy);
+
+      bool cmtFontNotTrans =
+          (i == id && (_style.hilited_comment_text_color & 0xff000000)) ||
+          (i != id && (_style.comment_text_color & 0xff000000));
+      if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans) {
+        const std::wstring& comment = comments.at(i).str;
+        GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR,
+                      &size);
+        _candidateCommentRects[i].SetRect(0, 0, size.cx * cmtFontValid,
+                                          size.cy);
+        natural_width += (size.cx + _style.hilite_spacing) * cmtFontValid;
+        natural_height = max(natural_height, size.cy);
+      } else {
+        _candidateCommentRects[i].SetRect(0, 0, 0, natural_height);
+      }
+
+      if (i == id)
+        natural_width += base_offset;
+      cell_width = max(cell_width, natural_width);
+      cell_height = max(cell_height, natural_height);
+    }
+
+    cell_width = max(cell_width, 1);
+    cell_height = max(cell_height, 1);
+
+    for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i) {
+      int col = i % columns;
+      int row = i / columns;
+      int cell_left = offsetX + real_margin_x +
+                      col * (cell_width + _style.candidate_spacing);
+      int cell_top = height + row * (cell_height + _style.candidate_spacing);
+      int x = cell_left + (i == id ? base_offset : 0);
+
+      _candidateLabelRects[i].OffsetRect(x, cell_top);
+      x = _candidateLabelRects[i].right + _style.hilite_spacing;
+      _candidateTextRects[i].OffsetRect(x, cell_top);
+      x = _candidateTextRects[i].right;
+      if (!_candidateCommentRects[i].IsRectEmpty()) {
+        x += _style.hilite_spacing;
+        _candidateCommentRects[i].OffsetRect(x, cell_top);
+      } else {
+        _candidateCommentRects[i].OffsetRect(x, cell_top);
+      }
+
+      int ol = 0, ot = 0, oc = 0;
+      if (_style.align_type == UIStyle::ALIGN_CENTER) {
+        ol = (cell_height - _candidateLabelRects[i].Height()) / 2;
+        ot = (cell_height - _candidateTextRects[i].Height()) / 2;
+        oc = (cell_height - _candidateCommentRects[i].Height()) / 2;
+      } else if (_style.align_type == UIStyle::ALIGN_BOTTOM) {
+        ol = cell_height - _candidateLabelRects[i].Height();
+        ot = cell_height - _candidateTextRects[i].Height();
+        oc = cell_height - _candidateCommentRects[i].Height();
+      }
+      _candidateLabelRects[i].OffsetRect(0, ol);
+      _candidateTextRects[i].OffsetRect(0, ot);
+      _candidateCommentRects[i].OffsetRect(0, oc);
+
+      _candidateRects[i].SetRect(cell_left, cell_top, cell_left + cell_width,
+                                 cell_top + cell_height);
+    }
+
+    width = max(width, offsetX + real_margin_x + columns * cell_width +
+                           max(0, columns - 1) * _style.candidate_spacing);
+    height += rows * cell_height + max(0, rows - 1) * _style.candidate_spacing -
+              offsetY;
+    width += real_margin_x;
+    height += real_margin_y;
+
+    width = max(width, _style.min_width);
+    height = max(height, _style.min_height);
+
+    _highlightRect = _candidateRects[id];
+    UpdateStatusIconLayout(&width, &height);
+    _contentSize.SetSize(width + offsetX, height + 2 * offsetY);
+    _contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
+
+    if (page_en && !_style.inline_preedit) {
+      int _prex = _contentSize.cx - offsetX - real_margin_x +
+                  _style.hilite_padding_x - pgw;
+      int _prey = (_preeditRect.top + _preeditRect.bottom) / 2 - pgszl.cy / 2;
+      _prePageRect.SetRect(_prex, _prey, _prex + pgszl.cx, _prey + pgszl.cy);
+      _nextPageRect.SetRect(
+          _prePageRect.right + _style.hilite_spacing, _prey,
+          _prePageRect.right + _style.hilite_spacing + pgszr.cx,
+          _prey + pgszr.cy);
+      if (ShouldDisplayStatusIcon()) {
+        _prePageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
+        _nextPageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
+      }
+    }
+
+    CopyRect(_bgRect, _contentRect);
+    _bgRect.DeflateRect(offsetX + 1, offsetY + 1);
+    _PrepareRoundInfo(dc);
+    _contentRect.DeflateRect(offsetX, offsetY);
+    return;
+  }
+
   int row_cnt = 0;
   int max_width_of_rows = 0;
   int height_of_rows[MAX_CANDIDATES_COUNT] = {0};    // height of every row
