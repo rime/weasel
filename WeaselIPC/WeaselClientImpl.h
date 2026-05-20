@@ -16,6 +16,7 @@ class ClientImpl {
   void EndSession();
   void StartMaintenance();
   void EndMaintenance();
+  void ShowNotification(DWORD notification);
   bool Echo();
   bool ProcessKeyEvent(KeyEvent const& keyEvent);
   bool CommitComposition();

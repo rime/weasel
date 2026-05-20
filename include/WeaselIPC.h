@@ -32,7 +32,17 @@ enum WEASEL_IPC_COMMAND {
   WEASEL_IPC_SELECT_CANDIDATE_ON_CURRENT_PAGE,
   WEASEL_IPC_HIGHLIGHT_CANDIDATE_ON_CURRENT_PAGE,
   WEASEL_IPC_CHANGE_PAGE,
+  WEASEL_IPC_SHOW_NOTIFICATION,
   WEASEL_IPC_LAST_COMMAND
+};
+
+enum WEASEL_IPC_NOTIFICATION {
+  WEASEL_IPC_NOTIFY_DEPLOYING = 1,
+  WEASEL_IPC_NOTIFY_DEPLOYED,
+  WEASEL_IPC_NOTIFY_RECOVERING,
+  WEASEL_IPC_NOTIFY_RECOVERED,
+  WEASEL_IPC_NOTIFY_RESTARTED,
+  WEASEL_IPC_NOTIFY_RECOVERY_FAILED
 };
 
 namespace weasel {
@@ -81,6 +91,7 @@ struct RequestHandler {
   virtual void EndMaintenance() {}
   virtual void SetOption(DWORD session_id, const std::string& opt, bool val) {}
   virtual void UpdateColorTheme(BOOL darkMode) {}
+  virtual void ShowNotification(DWORD notification) {}
 };
 
 // 處理server端回應之物件
@@ -118,6 +129,8 @@ class Client {
   void StartMaintenance();
   // 退出維護模式
   void EndMaintenance();
+  // 显示服务状态提示
+  void ShowNotification(DWORD notification);
   // 测试连接
   bool Echo();
   // 请求服务处理按键消息

@@ -59,6 +59,9 @@ class ServerImpl : public CWindowImpl<ServerImpl, CWindow, ServerWinTraits>
                               DWORD lParam);
   DWORD OnStartMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam);
   DWORD OnEndMaintenance(WEASEL_IPC_COMMAND uMsg, DWORD wParam, DWORD lParam);
+  DWORD OnShowNotification(WEASEL_IPC_COMMAND uMsg,
+                           DWORD wParam,
+                           DWORD lParam);
   DWORD OnCommitComposition(WEASEL_IPC_COMMAND uMsg,
                             DWORD wParam,
                             DWORD lParam);

@@ -62,12 +62,17 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
                          const std::string& opt,
                          bool val);
   virtual void UpdateColorTheme(BOOL darkMode);
+  virtual void ShowNotification(DWORD notification);
 
   void OnUpdateUI(std::function<void()> const& cb);
 
  private:
   void _Setup();
   bool _IsDeployerRunning();
+  bool _EnsureReady(bool notify = false);
+  bool _IsValidSession(WeaselSessionId ipc_id);
+  bool _TryResumeService(bool notify = false);
+  void _ShowServiceMessage(DWORD notification);
   void _UpdateUI(WeaselSessionId ipc_id);
   void _LoadSchemaSpecificSettings(WeaselSessionId ipc_id,
                                    const std::string& schema_id);
@@ -85,9 +90,8 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
 
   void _UpdateInlinePreeditStatus(WeaselSessionId ipc_id);
 
-  RimeSessionId to_session_id(WeaselSessionId ipc_id) {
-    return m_session_status_map[ipc_id].session_id;
-  }
+  RimeSessionId to_session_id(WeaselSessionId ipc_id) const;
+  bool try_session_id(WeaselSessionId ipc_id, RimeSessionId* session_id) const;
   SessionStatus& get_session_status(WeaselSessionId ipc_id) {
     return m_session_status_map[ipc_id];
   }

@@ -166,6 +166,10 @@ void ClientImpl::EndMaintenance() {
   session_id = 0;
 }
 
+void ClientImpl::ShowNotification(DWORD notification) {
+  _SendMessage(WEASEL_IPC_SHOW_NOTIFICATION, notification, 0);
+}
+
 bool ClientImpl::Echo() {
   if (!_Active())
     return false;
@@ -270,6 +274,10 @@ void Client::StartMaintenance() {
 
 void Client::EndMaintenance() {
   m_pImpl->EndMaintenance();
+}
+
+void Client::ShowNotification(DWORD notification) {
+  m_pImpl->ShowNotification(notification);
 }
 
 void Client::TrayCommand(UINT menuId) {

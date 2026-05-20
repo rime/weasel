@@ -116,6 +116,7 @@ void RimeWithWeaselHandler::Initialize() {
     m_disabled = true;
     rime_api->join_maintenance_thread();
   }
+  m_disabled = false;
 
   RimeConfig config = {NULL};
   if (rime_api->config_open("weasel", &config)) {
@@ -154,23 +155,80 @@ void RimeWithWeaselHandler::Finalize() {
   rime_api->finalize();
 }
 
+RimeSessionId RimeWithWeaselHandler::to_session_id(
+    WeaselSessionId ipc_id) const {
+  RimeSessionId session_id = 0;
+  try_session_id(ipc_id, &session_id);
+  return session_id;
+}
+
+bool RimeWithWeaselHandler::try_session_id(WeaselSessionId ipc_id,
+                                           RimeSessionId* session_id) const {
+  auto it = m_session_status_map.find(ipc_id);
+  if (it == m_session_status_map.end() || !it->second.session_id)
+    return false;
+  if (session_id)
+    *session_id = it->second.session_id;
+  return true;
+}
+
+bool RimeWithWeaselHandler::_EnsureReady(bool notify) {
+  if (!m_disabled)
+    return true;
+  return _TryResumeService(notify);
+}
+
+bool RimeWithWeaselHandler::_IsValidSession(WeaselSessionId ipc_id) {
+  if (!ipc_id || m_disabled)
+    return false;
+  RimeSessionId session_id = 0;
+  if (!try_session_id(ipc_id, &session_id))
+    return false;
+  return !!rime_api->find_session(session_id);
+}
+
+bool RimeWithWeaselHandler::_TryResumeService(bool notify) {
+  if (!m_disabled)
+    return true;
+  if (_IsDeployerRunning())
+    return false;
+
+  if (notify)
+    _ShowServiceMessage(WEASEL_IPC_NOTIFY_RECOVERING);
+  Initialize();
+  if (!m_disabled) {
+    if (notify)
+      _ShowServiceMessage(WEASEL_IPC_NOTIFY_RECOVERED);
+    return true;
+  }
+  if (notify)
+    _ShowServiceMessage(WEASEL_IPC_NOTIFY_RECOVERY_FAILED);
+  return false;
+}
+
 DWORD RimeWithWeaselHandler::FindSession(WeaselSessionId ipc_id) {
-  if (m_disabled)
+  if (!_EnsureReady(true))
     return 0;
-  Bool found = rime_api->find_session(to_session_id(ipc_id));
-  DLOG(INFO) << "Find session: session_id = " << to_session_id(ipc_id)
+  RimeSessionId session_id = 0;
+  if (!try_session_id(ipc_id, &session_id)) {
+    DLOG(INFO) << "Find session: ipc_id = " << ipc_id
+               << ", missing local session";
+    return 0;
+  }
+  Bool found = rime_api->find_session(session_id);
+  DLOG(INFO) << "Find session: session_id = " << session_id
              << ", found = " << found;
+  if (!found)
+    m_session_status_map.erase(ipc_id);
   return found ? (ipc_id) : 0;
 }
 
 DWORD RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat) {
-  if (m_disabled) {
-    DLOG(INFO) << "Trying to resume service.";
-    EndMaintenance();
-    if (m_disabled)
-      return 0;
-  }
+  if (!_EnsureReady(true))
+    return 0;
   RimeSessionId session_id = (RimeSessionId)rime_api->create_session();
+  if (!session_id)
+    return 0;
   if (m_global_ascii_mode) {
     for (const auto& pair : m_session_status_map) {
       if (pair.first) {
@@ -219,9 +277,12 @@ DWORD RimeWithWeaselHandler::RemoveSession(WeaselSessionId ipc_id) {
     m_ui->Hide();
   if (m_disabled)
     return 0;
-  DLOG(INFO) << "Remove session: session_id = " << to_session_id(ipc_id);
+  RimeSessionId session_id = 0;
+  if (!try_session_id(ipc_id, &session_id))
+    return 0;
+  DLOG(INFO) << "Remove session: session_id = " << session_id;
   // TODO: force committing? otherwise current composition would be lost
-  rime_api->destroy_session(to_session_id(ipc_id));
+  rime_api->destroy_session(session_id);
   m_session_status_map.erase(ipc_id);
   m_active_session = 0;
   return 0;
@@ -249,7 +310,9 @@ void RimeWithWeaselHandler::UpdateColorTheme(BOOL darkMode) {
 
   for (auto& pair : m_session_status_map) {
     RIME_STRUCT(RimeStatus, status);
-    if (rime_api->get_status(to_session_id(pair.first), &status)) {
+    RimeSessionId session_id = pair.second.session_id;
+    if (session_id && rime_api->find_session(session_id) &&
+        rime_api->get_status(session_id, &status)) {
       _LoadSchemaSpecificSettings(pair.first, std::string(status.schema_id));
       _LoadAppInlinePreeditSet(pair.first, true);
       _UpdateInlinePreeditStatus(pair.first);
@@ -258,7 +321,11 @@ void RimeWithWeaselHandler::UpdateColorTheme(BOOL darkMode) {
       rime_api->free_status(&status);
     }
   }
-  m_ui->style() = get_session_status(m_active_session).style;
+  if (m_active_session && m_session_status_map.find(m_active_session) !=
+                              m_session_status_map.end())
+    m_ui->style() = get_session_status(m_active_session).style;
+  else
+    m_ui->style() = m_base_style;
 }
 
 BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent,
@@ -266,9 +333,11 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent,
                                             EatLine eat) {
   DLOG(INFO) << "Process key event: keycode = " << keyEvent.keycode
              << ", mask = " << keyEvent.mask << ", ipc_id = " << ipc_id;
-  if (m_disabled)
+  if (!_EnsureReady(true))
     return FALSE;
-  RimeSessionId session_id = to_session_id(ipc_id);
+  RimeSessionId session_id = 0;
+  if (!_IsValidSession(ipc_id) || !try_session_id(ipc_id, &session_id))
+    return FALSE;
   Bool handled = rime_api->process_key(session_id, keyEvent.keycode,
                                        expand_ibus_modifier(keyEvent.mask));
   // vim_mode when keydown only
@@ -295,7 +364,10 @@ void RimeWithWeaselHandler::CommitComposition(WeaselSessionId ipc_id) {
   DLOG(INFO) << "Commit composition: ipc_id = " << ipc_id;
   if (m_disabled)
     return;
-  rime_api->commit_composition(to_session_id(ipc_id));
+  RimeSessionId session_id = 0;
+  if (!_IsValidSession(ipc_id) || !try_session_id(ipc_id, &session_id))
+    return;
+  rime_api->commit_composition(session_id);
   _UpdateUI(ipc_id);
   m_active_session = ipc_id;
 }
@@ -304,7 +376,10 @@ void RimeWithWeaselHandler::ClearComposition(WeaselSessionId ipc_id) {
   DLOG(INFO) << "Clear composition: ipc_id = " << ipc_id;
   if (m_disabled)
     return;
-  rime_api->clear_composition(to_session_id(ipc_id));
+  RimeSessionId session_id = 0;
+  if (!_IsValidSession(ipc_id) || !try_session_id(ipc_id, &session_id))
+    return;
+  rime_api->clear_composition(session_id);
   _UpdateUI(ipc_id);
   m_active_session = ipc_id;
 }
@@ -316,7 +391,10 @@ void RimeWithWeaselHandler::SelectCandidateOnCurrentPage(
              << ", index = " << index;
   if (m_disabled)
     return;
-  rime_api->select_candidate_on_current_page(to_session_id(ipc_id), index);
+  RimeSessionId session_id = 0;
+  if (!_IsValidSession(ipc_id) || !try_session_id(ipc_id, &session_id))
+    return;
+  rime_api->select_candidate_on_current_page(session_id, index);
 }
 
 bool RimeWithWeaselHandler::HighlightCandidateOnCurrentPage(
@@ -325,8 +403,12 @@ bool RimeWithWeaselHandler::HighlightCandidateOnCurrentPage(
     EatLine eat) {
   DLOG(INFO) << "highlight candidate on current page, ipc_id = " << ipc_id
              << ", index = " << index;
-  bool res = rime_api->highlight_candidate_on_current_page(
-      to_session_id(ipc_id), index);
+  if (!_EnsureReady(true))
+    return false;
+  RimeSessionId session_id = 0;
+  if (!_IsValidSession(ipc_id) || !try_session_id(ipc_id, &session_id))
+    return false;
+  bool res = rime_api->highlight_candidate_on_current_page(session_id, index);
   _Respond(ipc_id, eat);
   _UpdateUI(ipc_id);
   return res;
@@ -337,7 +419,12 @@ bool RimeWithWeaselHandler::ChangePage(bool backward,
                                        EatLine eat) {
   DLOG(INFO) << "change page, ipc_id = " << ipc_id
              << (backward ? "backward" : "foreward");
-  bool res = rime_api->change_page(to_session_id(ipc_id), backward);
+  if (!_EnsureReady(true))
+    return false;
+  RimeSessionId session_id = 0;
+  if (!_IsValidSession(ipc_id) || !try_session_id(ipc_id, &session_id))
+    return false;
+  bool res = rime_api->change_page(session_id, backward);
   _Respond(ipc_id, eat);
   _UpdateUI(ipc_id);
   return res;
@@ -346,7 +433,9 @@ bool RimeWithWeaselHandler::ChangePage(bool backward,
 void RimeWithWeaselHandler::FocusIn(DWORD client_caps, WeaselSessionId ipc_id) {
   DLOG(INFO) << "Focus in: ipc_id = " << ipc_id
              << ", client_caps = " << client_caps;
-  if (m_disabled)
+  if (!_EnsureReady(true))
+    return;
+  if (!_IsValidSession(ipc_id))
     return;
   _UpdateUI(ipc_id);
   m_active_session = ipc_id;
@@ -367,6 +456,8 @@ void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc,
   if (m_ui)
     m_ui->UpdateInputPosition(rc);
   if (m_disabled)
+    return;
+  if (!_IsValidSession(ipc_id))
     return;
   if (m_active_session != ipc_id) {
     _UpdateUI(ipc_id);
@@ -473,6 +564,7 @@ void RimeWithWeaselHandler::_GetCandidateInfo(CandidateInfo& cinfo,
 }
 
 void RimeWithWeaselHandler::StartMaintenance() {
+  _ShowServiceMessage(WEASEL_IPC_NOTIFY_DEPLOYING);
   m_session_status_map.clear();
   Finalize();
   _UpdateUI(0);
@@ -484,21 +576,38 @@ void RimeWithWeaselHandler::EndMaintenance() {
     _UpdateUI(0);
   }
   m_session_status_map.clear();
+  if (!m_disabled)
+    _ShowServiceMessage(WEASEL_IPC_NOTIFY_DEPLOYED);
+}
+
+void RimeWithWeaselHandler::ShowNotification(DWORD notification) {
+  _ShowServiceMessage(notification);
 }
 
 void RimeWithWeaselHandler::SetOption(WeaselSessionId ipc_id,
                                       const std::string& opt,
                                       bool val) {
+  if (!_EnsureReady(true))
+    return;
   // from no-session client, not actual typing session
   if (!ipc_id) {
     if (m_global_ascii_mode && opt == "ascii_mode") {
-      for (auto& pair : m_session_status_map)
-        rime_api->set_option(to_session_id(pair.first), "ascii_mode", val);
+      for (auto& pair : m_session_status_map) {
+        RimeSessionId session_id = pair.second.session_id;
+        if (session_id && rime_api->find_session(session_id))
+          rime_api->set_option(session_id, "ascii_mode", val);
+      }
     } else {
-      rime_api->set_option(to_session_id(m_active_session), opt.c_str(), val);
+      RimeSessionId session_id = 0;
+      if (try_session_id(m_active_session, &session_id) &&
+          rime_api->find_session(session_id))
+        rime_api->set_option(session_id, opt.c_str(), val);
     }
   } else {
-    rime_api->set_option(to_session_id(ipc_id), opt.c_str(), val);
+    RimeSessionId session_id = 0;
+    if (try_session_id(ipc_id, &session_id) &&
+        rime_api->find_session(session_id))
+      rime_api->set_option(session_id, opt.c_str(), val);
   }
 }
 
@@ -525,8 +634,27 @@ void RimeWithWeaselHandler::_UpdateUI(WeaselSessionId ipc_id) {
 
   RimeSessionId session_id = to_session_id(ipc_id);
 
-  if (ipc_id == 0)
+  if (ipc_id == 0) {
     weasel_status.disabled = m_disabled;
+    if (_ShowMessage(weasel_context, weasel_status)) {
+      std::lock_guard<std::mutex> lock(m_notifier_mutex);
+      m_message_type.clear();
+      m_message_value.clear();
+      m_message_label.clear();
+      m_option_name.clear();
+      if (_UpdateUICallback)
+        _UpdateUICallback();
+      return;
+    }
+    m_ui->Hide();
+    m_ui->Update(weasel_context, weasel_status);
+    if (_UpdateUICallback)
+      _UpdateUICallback();
+    return;
+  }
+
+  if (!session_id || m_disabled)
+    return;
 
   _GetStatus(weasel_status, ipc_id, weasel_context);
 
@@ -697,6 +825,28 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
             L"There is an error, please check the logs "
             L"%TEMP%\\rime.weasel\\rime.weasel.*.INFO";
     }
+  } else if (m_message_type == "service") {
+    if (m_message_value == "recovering") {
+      if (GetThreadUILanguage() == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US))
+        tips = L"Recovering RIME";
+      else
+        tips = L"正在恢复算法";
+    } else if (m_message_value == "recovered") {
+      if (GetThreadUILanguage() == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US))
+        tips = L"RIME recovered";
+      else
+        tips = L"算法恢复成功";
+    } else if (m_message_value == "restarted") {
+      if (GetThreadUILanguage() == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US))
+        tips = L"RIME restarted";
+      else
+        tips = L"算法重启成功";
+    } else if (m_message_value == "recovery_failure") {
+      if (GetThreadUILanguage() == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US))
+        tips = L"RIME recovery failed";
+      else
+        tips = L"算法恢复失败，请重启算法";
+    }
   } else if (m_message_type == "schema") {
     tips = /*L"【" + */ status.schema_name /* + L"】"*/;
   } else if (m_message_type == "option") {
@@ -712,13 +862,14 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
       status.type = FULL_SHAPE;
   }
   auto counter = m_ui->IsCountingDown();
-  if (!show_icon && counter)
+  if (!show_icon && counter && m_message_type != "deploy" &&
+      m_message_type != "service")
     return counter;
   auto foption = m_show_notifications.find(m_option_name);
   auto falways = m_show_notifications.find("always");
   if ((!add_session && (foption != m_show_notifications.end() ||
                         falways != m_show_notifications.end())) ||
-      m_message_type == "deploy") {
+      m_message_type == "deploy" || m_message_type == "service") {
     m_ui->Update(ctx, status);
     if (m_show_notifications_time)
       m_ui->ShowWithTimeout(m_show_notifications_time);
@@ -726,6 +877,49 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
   } else {
     return m_ui->IsCountingDown();
   }
+}
+
+void RimeWithWeaselHandler::_ShowServiceMessage(DWORD notification) {
+  if (!m_ui)
+    return;
+
+  const char* value = nullptr;
+  switch (notification) {
+    case WEASEL_IPC_NOTIFY_DEPLOYING:
+      value = "start";
+      break;
+    case WEASEL_IPC_NOTIFY_DEPLOYED:
+      value = "success";
+      break;
+    case WEASEL_IPC_NOTIFY_RECOVERING:
+      value = "recovering";
+      break;
+    case WEASEL_IPC_NOTIFY_RECOVERED:
+      value = "recovered";
+      break;
+    case WEASEL_IPC_NOTIFY_RESTARTED:
+      value = "restarted";
+      break;
+    case WEASEL_IPC_NOTIFY_RECOVERY_FAILED:
+      value = "recovery_failure";
+      break;
+    default:
+      return;
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(m_notifier_mutex);
+    if (notification == WEASEL_IPC_NOTIFY_DEPLOYING ||
+        notification == WEASEL_IPC_NOTIFY_DEPLOYED) {
+      m_message_type = "deploy";
+    } else {
+      m_message_type = "service";
+    }
+    m_message_value = value;
+    m_message_label.clear();
+    m_option_name.clear();
+  }
+  _UpdateUI(0);
 }
 inline std::string _GetLabelText(const std::vector<Text>& labels,
                                  int id,
@@ -775,9 +969,11 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
     if (m_global_ascii_mode &&
         (session_status.status.is_ascii_mode != status.is_ascii_mode)) {
       for (auto& pair : m_session_status_map) {
-        if (pair.first != ipc_id)
-          rime_api->set_option(to_session_id(pair.first), "ascii_mode",
+        if (pair.first != ipc_id && pair.second.session_id &&
+            rime_api->find_session(pair.second.session_id)) {
+          rime_api->set_option(pair.second.session_id, "ascii_mode",
                                !!status.is_ascii_mode);
+        }
       }
     }
     session_status.status = status;

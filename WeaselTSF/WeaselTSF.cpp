@@ -266,6 +266,9 @@ bool WeaselTSF::_EnsureServerConnected() {
           // wait 500ms, then reconnect
           std::this_thread::sleep_for(std::chrono::milliseconds(500));
           _Reconnect();
+          if (m_client.Echo()) {
+            m_client.ShowNotification(WEASEL_IPC_NOTIFY_RESTARTED);
+          }
         });
         th.detach();
       }
