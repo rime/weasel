@@ -1156,6 +1156,8 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg,
   m_hoverIndex = -1;
   m_lastMousePos = {-1, -1};
   m_sticky = false;
+  m_lastWindowPos = {-1, -1};
+  m_hasLastWindowPos = false;
   delete m_layout;
   m_layout = NULL;
   return 0;
@@ -1287,6 +1289,11 @@ void WeaselPanel::_RepositionWindow(const bool& adj) {
     y = rcWorkArea.top;  // over workarea top
   // memorize adjusted position (to avoid window bouncing on height change)
   m_inputPos.bottom = y;
+  if (m_hasLastWindowPos && m_lastWindowPos.x == x && m_lastWindowPos.y == y &&
+      !m_redraw_by_monitor_change)
+    return;
+  m_lastWindowPos = {x, y};
+  m_hasLastWindowPos = true;
   SetWindowPos(HWND_TOPMOST, x, y, 0, 0,
                SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREDRAW);
 }
