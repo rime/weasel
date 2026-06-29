@@ -1,8 +1,78 @@
 #include "stdafx.h"
 #include <WeaselUI.h>
+#include <ShellScalingApi.h>
 #include "WeaselPanel.h"
 
+#pragma comment(lib, "Shcore.lib")
+
 using namespace weasel;
+
+static UINT GetDefaultDpiForPrewarm() {
+  RECT rc = {};
+  HMONITOR hMonitor = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
+  UINT dpiX = 96, dpiY = 96;
+  if (hMonitor) {
+    GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+  }
+  return dpiX;
+}
+
+static bool WarmUpDwrEndDraw(PDWR& pDWR) {
+  if (!pDWR || !pDWR->pRenderTarget) {
+    return false;
+  }
+
+  constexpr int kWidth = 96;
+  constexpr int kHeight = 32;
+  HDC screen_dc = ::GetDC(NULL);
+  HDC mem_dc = screen_dc ? ::CreateCompatibleDC(screen_dc) : NULL;
+  HBITMAP bitmap =
+      screen_dc ? ::CreateCompatibleBitmap(screen_dc, kWidth, kHeight) : NULL;
+  HGDIOBJ old_bitmap = NULL;
+  bool ok = false;
+
+  if (mem_dc && bitmap) {
+    old_bitmap = ::SelectObject(mem_dc, bitmap);
+    RECT rc = {0, 0, kWidth, kHeight};
+    HRESULT hr = pDWR->pRenderTarget->BindDC(mem_dc, &rc);
+    if (SUCCEEDED(hr)) {
+      pDWR->pRenderTarget->BeginDraw();
+      if (!pDWR->pBrush) {
+        pDWR->CreateBrush(D2D1::ColorF(0, 0, 0, 1));
+      } else {
+        pDWR->SetBrushColor(D2D1::ColorF(0, 0, 0, 1));
+      }
+
+      IDWriteTextFormat1* format = pDWR->pTextFormat.Get();
+      if (!format) {
+        format = pDWR->pPreeditTextFormat.Get();
+      }
+      if (format) {
+        hr = pDWR->CreateTextLayout(L"warm", 4, format, kWidth, kHeight);
+        if (SUCCEEDED(hr) && pDWR->pTextLayout) {
+          pDWR->DrawTextLayoutAt({0, 0});
+        }
+      }
+      ok = SUCCEEDED(pDWR->pRenderTarget->EndDraw());
+      pDWR->ResetLayout();
+    }
+  }
+
+  if (old_bitmap) {
+    ::SelectObject(mem_dc, old_bitmap);
+  }
+  if (bitmap) {
+    ::DeleteObject(bitmap);
+  }
+  if (mem_dc) {
+    ::DeleteDC(mem_dc);
+  }
+  if (screen_dc) {
+    ::ReleaseDC(NULL, screen_dc);
+  }
+
+  return ok;
+}
 
 class weasel::UIImpl {
  public:
@@ -102,6 +172,32 @@ bool UI::Create(HWND parent) {
   return true;
 }
 
+bool UI::Prewarm() {
+  UINT dpi = GetDefaultDpiForPrewarm();
+  UINT cached_dpi =
+      pDWR ? static_cast<UINT>(pDWR->dpiScaleLayout * 96.0f + 0.5f) : 0;
+  bool need_rebuild = !pDWR || (ostyle_ != style_) || (cached_dpi != dpi);
+
+  if (!need_rebuild) {
+    if (!dwr_warm_drawn_) {
+      dwr_warm_drawn_ = WarmUpDwrEndDraw(pDWR);
+    }
+    return true;
+  }
+
+  pDWR.reset();
+  dwr_warm_drawn_ = false;
+  pDWR = std::make_shared<DirectWriteResources>(style_, dpi);
+  if (pDWR && pDWR->pRenderTarget) {
+    pDWR->pRenderTarget->SetTextAntialiasMode(
+        (D2D1_TEXT_ANTIALIAS_MODE)style_.antialias_mode);
+  }
+  ostyle_ = style_;
+  dwr_warm_drawn_ = WarmUpDwrEndDraw(pDWR);
+
+  return pDWR != nullptr;
+}
+
 void UI::Destroy(bool full) {
   if (pimpl_) {
     // destroy panel
@@ -112,6 +208,7 @@ void UI::Destroy(bool full) {
       delete pimpl_;
       pimpl_ = 0;
       pDWR.reset();
+      dwr_warm_drawn_ = false;
     }
   }
 }
