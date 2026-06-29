@@ -42,6 +42,9 @@ class ClientImpl {
   UINT session_id;
   std::wstring app_name;
   bool is_ime;
+  bool has_last_input_position = false;
+  UINT last_input_position_session = 0;
+  DWORD last_input_position_rect = 0;
 
   PipeChannel<PipeMessage> channel;
 };
