@@ -268,9 +268,18 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
                          GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)) {
     BOOL isOpen = _IsKeyboardOpen();
     if (isOpen) {
-      weasel::ResponseParser parser(NULL, NULL, &_status, NULL,
-                                    &_cand->style());
-      bool ok = m_client.GetResponseData(std::ref(parser));
+      DWORD convMode = 0;
+      _GetCompartmentDWORD(convMode,
+                           GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
+      bool desiredAsciiMode = !(convMode & TF_CONVERSIONMODE_NATIVE);
+      if (desiredAsciiMode != _status.ascii_mode) {
+        _status.ascii_mode = desiredAsciiMode;
+        _HandleLangBarMenuSelect(_status.ascii_mode
+                                     ? ID_WEASELTRAY_ENABLE_ASCII
+                                     : ID_WEASELTRAY_DISABLE_ASCII);
+        if (_pEditSessionContext)
+          m_client.ClearComposition();
+      }
       _UpdateLanguageBar(_status);
     }
   }
