@@ -63,6 +63,7 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
 }
 
 STDAPI WeaselTSF::OnSetFocus(BOOL fForeground) {
+  _hasLastCompositionPosition = false;
   if (fForeground)
     m_client.FocusIn();
   else {

@@ -72,6 +72,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
 
 void WeaselTSF::_StartComposition(com_ptr<ITfContext> pContext,
                                   BOOL fCUASWorkaroundEnabled) {
+  _hasLastCompositionPosition = FALSE;
   com_ptr<CStartCompositionEditSession> pStartCompositionEditSession;
   pStartCompositionEditSession.Attach(new CStartCompositionEditSession(
       this, pContext, fCUASWorkaroundEnabled, _cand->style().inline_preedit));
@@ -239,6 +240,17 @@ void WeaselTSF::_SetCompositionPosition(const RECT& rc) {
       return;
     }
   }
+  BOOL same_position = _hasLastCompositionPosition &&
+                       _lastCompositionPosition.left == rc.left &&
+                       _lastCompositionPosition.top == rc.top &&
+                       _lastCompositionPosition.right == rc.right &&
+                       _lastCompositionPosition.bottom == rc.bottom;
+  if (same_position) {
+    return;
+  }
+  _lastCompositionPosition = rc;
+  _hasLastCompositionPosition = TRUE;
+
   RECT _rc;
   _rc.left = _rc.right = rc.left;
   _rc.top = _rc.bottom = rc.bottom;
@@ -404,6 +416,7 @@ STDAPI WeaselTSF::OnCompositionTerminated(TfEditCookie ecWrite,
 }
 
 void WeaselTSF::_AbortComposition(bool clear) {
+  _hasLastCompositionPosition = FALSE;
   m_client.ClearComposition();
   if (_IsComposing()) {
     _EndComposition(_pEditSessionContext, clear);

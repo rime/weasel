@@ -126,15 +126,24 @@ void ClientImpl::UpdateInputPosition(RECT const& rc) {
   int height = max(0, min(127, (rc.bottom - rc.top) >> hi_res));
   DWORD compressed_rect = ((hi_res & 0x01) << 31) | ((height & 0x7f) << 24) |
                           ((top & 0xfff) << 12) | (left & 0xfff);
+  if (has_last_input_position && last_input_position_session == session_id &&
+      last_input_position_rect == compressed_rect) {
+    return;
+  }
+  has_last_input_position = true;
+  last_input_position_session = session_id;
+  last_input_position_rect = compressed_rect;
   _SendMessage(WEASEL_IPC_UPDATE_INPUT_POS, compressed_rect, session_id);
 }
 
 void ClientImpl::FocusIn() {
+  has_last_input_position = false;
   DWORD client_caps = 0; /* TODO */
   _SendMessage(WEASEL_IPC_FOCUS_IN, client_caps, session_id);
 }
 
 void ClientImpl::FocusOut() {
+  has_last_input_position = false;
   _SendMessage(WEASEL_IPC_FOCUS_OUT, 0, session_id);
 }
 
@@ -149,21 +158,25 @@ void ClientImpl::StartSession() {
   _WriteClientInfo();
   UINT ret = _SendMessage(WEASEL_IPC_START_SESSION, 0, 0);
   session_id = ret;
+  has_last_input_position = false;
 }
 
 void ClientImpl::EndSession() {
   _SendMessage(WEASEL_IPC_END_SESSION, 0, session_id);
   session_id = 0;
+  has_last_input_position = false;
 }
 
 void ClientImpl::StartMaintenance() {
   _SendMessage(WEASEL_IPC_START_MAINTENANCE, 0, 0);
   session_id = 0;
+  has_last_input_position = false;
 }
 
 void ClientImpl::EndMaintenance() {
   _SendMessage(WEASEL_IPC_END_MAINTENANCE, 0, 0);
   session_id = 0;
+  has_last_input_position = false;
 }
 
 bool ClientImpl::Echo() {
