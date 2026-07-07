@@ -53,6 +53,7 @@ STDAPI CStartCompositionEditSession::DoEditSession(TfEditCookie ec) {
      */
     if (!_inlinePreeditEnabled) {
       pRangeComposition->SetText(ec, TF_ST_CORRECTION, L" ", 1);
+      _pTextService->_SetRangeLanguage(ec, _pContext, pRangeComposition);
     }
 
     /* set selection */
@@ -278,6 +279,8 @@ STDAPI CInlinePreeditEditSession::DoEditSession(TfEditCookie ec) {
                                   static_cast<LONG>(preedit.length()))) != S_OK)
     return E_FAIL;
 
+  _pTextService->_SetRangeLanguage(ec, _pContext, pRangeComposition);
+
   /* TODO: Check the availability and correctness of these values */
   int sel_cursor = -1;
   for (size_t i = 0; i < _context->preedit.attributes.size(); i++) {
@@ -353,6 +356,8 @@ STDMETHODIMP CInsertTextEditSession::DoEditSession(TfEditCookie ec) {
   if (FAILED(pRange->SetText(ec, 0, _text.c_str(),
                              static_cast<LONG>(_text.length()))))
     return E_FAIL;
+
+  _pTextService->_SetRangeLanguage(ec, _pContext, pRange);
 
   /* update the selection to an insertion point just past the inserted text. */
   pRange->Collapse(ec, TF_ANCHOR_END);

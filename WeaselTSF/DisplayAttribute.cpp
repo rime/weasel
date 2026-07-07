@@ -52,6 +52,26 @@ BOOL WeaselTSF::_SetCompositionDisplayAttributes(TfEditCookie ec,
   return (hr == S_OK);
 }
 
+BOOL WeaselTSF::_SetRangeLanguage(TfEditCookie ec,
+                                  _In_ ITfContext* pContext,
+                                  ITfRange* pRange) {
+  if (!pRange || !_textLangId)
+    return FALSE;
+
+  ITfProperty* pLangIdProperty = nullptr;
+  HRESULT hr = E_FAIL;
+
+  if (SUCCEEDED(pContext->GetProperty(GUID_PROP_LANGID, &pLangIdProperty))) {
+    VARIANT var;
+    var.vt = VT_I4;
+    var.lVal = _textLangId;
+    hr = pLangIdProperty->SetValue(ec, pRange, &var);
+    pLangIdProperty->Release();
+  }
+
+  return hr == S_OK;
+}
+
 BOOL WeaselTSF::_InitDisplayAttributeGuidAtom() {
   ITfCategoryMgr* pCategoryMgr = nullptr;
   HRESULT hr =

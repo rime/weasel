@@ -144,6 +144,9 @@ class WeaselTSF : public ITfTextInputProcessorEx,
   BOOL _SetCompositionDisplayAttributes(TfEditCookie ec,
                                         _In_ ITfContext* pContext,
                                         ITfRange* pRangeComposition);
+  BOOL _SetRangeLanguage(TfEditCookie ec,
+                         _In_ ITfContext* pContext,
+                         ITfRange* pRange);
   BOOL _InitDisplayAttributeGuidAtom();
 
   com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
@@ -227,6 +230,7 @@ class WeaselTSF : public ITfTextInputProcessorEx,
 
   /* IME status */
   weasel::Status _status;
+  LANGID _textLangId = 0;
 
   // guidatom for the display attibute.
   TfGuidAtom _gaDisplayAttributeInput;

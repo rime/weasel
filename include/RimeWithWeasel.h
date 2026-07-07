@@ -23,10 +23,15 @@ typedef std::map<std::string, AppOptions, CaseInsensitiveCompare>
     AppOptionsByAppName;
 
 struct SessionStatus {
-  SessionStatus() : style(weasel::UIStyle()), __synced(false), session_id(0) {
+  SessionStatus()
+      : style(weasel::UIStyle()),
+        commit_langid(0),
+        __synced(false),
+        session_id(0) {
     RIME_STRUCT(RimeStatus, status);
   }
   weasel::UIStyle style;
+  int commit_langid;
   RimeStatus status;
   bool __synced;
   RimeSessionId session_id;
@@ -70,6 +75,8 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
   bool _IsDeployerRunning();
   void _UpdateUI(WeaselSessionId ipc_id);
   void _LoadSchemaSpecificSettings(WeaselSessionId ipc_id,
+                                   const std::string& schema_id);
+  void _LoadLanguageOverrideConfig(WeaselSessionId ipc_id,
                                    const std::string& schema_id);
   void _LoadAppInlinePreeditSet(WeaselSessionId ipc_id,
                                 bool ignore_app_name = false);

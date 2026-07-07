@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include <logging.h>
 #include <RimeWithWeasel.h>
 #include <StringAlgorithm.hpp>
@@ -24,6 +24,31 @@ typedef enum { COLOR_ABGR = 0, COLOR_ARGB, COLOR_RGBA } ColorFormat;
 using namespace weasel;
 
 static RimeApi* rime_api;
+
+namespace {
+bool TryGetLangIdFromConfig(RimeConfig* config,
+                            const char* key,
+                            int* commit_langid) {
+  if (!config || !key || !commit_langid)
+    return false;
+
+  char buffer[LOCALE_NAME_MAX_LENGTH] = {0};
+  if (!rime_api->config_get_string(config, key, buffer, sizeof(buffer) - 1))
+    return false;
+
+  const auto locale_name = u8tow(buffer);
+  if (locale_name.empty())
+    return false;
+
+  const LCID lcid =
+      LocaleNameToLCID(locale_name.c_str(), LOCALE_ALLOW_NEUTRAL_NAMES);
+  if (!lcid)
+    return false;
+
+  *commit_langid = LANGIDFROMLCID(lcid);
+  return true;
+}
+
 WeaselSessionId _GenerateNewWeaselSessionId(SessionStatusMap sm, DWORD pid) {
   if (sm.empty())
     return (WeaselSessionId)(pid + 1);
@@ -33,6 +58,7 @@ WeaselSessionId _GenerateNewWeaselSessionId(SessionStatusMap sm, DWORD pid) {
 int expand_ibus_modifier(int m) {
   return (m & 0xff) | ((m & 0xff00) << 16);
 }
+}  // namespace
 
 RimeWithWeaselHandler::RimeWithWeaselHandler(UI* ui)
     : m_ui(ui),
@@ -195,6 +221,7 @@ DWORD RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat) {
     std::string schema_id = status.schema_id;
     m_last_schema_id = schema_id;
     _LoadSchemaSpecificSettings(ipc_id, schema_id);
+    _LoadLanguageOverrideConfig(ipc_id, schema_id);
     _LoadAppInlinePreeditSet(ipc_id, true);
     _UpdateInlinePreeditStatus(ipc_id);
     _RefreshTrayIcon(session_id, _UpdateUICallback);
@@ -617,6 +644,41 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(
   rime_api->config_close(&config);
 }
 
+void RimeWithWeaselHandler::_LoadLanguageOverrideConfig(
+    WeaselSessionId ipc_id,
+    const std::string& schema_id) {
+  SessionStatus& session_status = get_session_status(ipc_id);
+  session_status.commit_langid = 0;
+
+  const auto load_global_fallback = [&]() {
+    RimeConfig weasel_config = {};
+    if (!rime_api->config_open("weasel", &weasel_config))
+      return;
+
+    int commit_langid = 0;
+    if (TryGetLangIdFromConfig(&weasel_config, "commit_locale",
+                               &commit_langid)) {
+      session_status.commit_langid = commit_langid;
+    }
+    rime_api->config_close(&weasel_config);
+  };
+
+  RimeConfig schema_config = {};
+  if (!schema_id.empty() &&
+      rime_api->schema_open(schema_id.c_str(), &schema_config)) {
+    int commit_langid = 0;
+    if (TryGetLangIdFromConfig(&schema_config, "schema/commit_locale",
+                               &commit_langid)) {
+      session_status.commit_langid = commit_langid;
+    } else {
+      load_global_fallback();
+    }
+    rime_api->config_close(&schema_config);
+  } else {
+    load_global_fallback();
+  }
+}
+
 void RimeWithWeaselHandler::_LoadAppInlinePreeditSet(WeaselSessionId ipc_id,
                                                      bool ignore_app_name) {
   SessionStatus& session_status = get_session_status(ipc_id);
@@ -895,8 +957,8 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
 
   // configuration information
   actions.push_back("config");
-  body.append(L"config.inline_preedit=")
-      .append(std::to_wstring((int)session_status.style.inline_preedit))
+  body.append(L"config.commit_langid=")
+      .append(std::to_wstring(session_status.commit_langid))
       .append(L"\n");
 
   // style
@@ -1451,6 +1513,7 @@ void RimeWithWeaselHandler::_GetStatus(Status& stat,
     if (schema_id != m_last_schema_id) {
       session_status.__synced = false;
       m_last_schema_id = schema_id;
+      _LoadLanguageOverrideConfig(ipc_id, schema_id);
       if (schema_id != ".default") {  // don't load for schema select menu
         bool inline_preedit = session_status.style.inline_preedit;
         _LoadSchemaSpecificSettings(ipc_id, schema_id);
