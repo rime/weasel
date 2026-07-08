@@ -131,64 +131,11 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status stat) {
 BOOL _updatingLanguageBar = false;
 ```
 
-### 从 blind toggle 改为值驱动：修复 Windows 11 不兼容
+### 为什么用 blind toggle 而非读取 compartment 值
 
-blind toggle 方案在 Windows 10 下验证通过（见下方旧日志），但在 Windows 11 下失效。
+曾尝试读取 compartment 值来推导目标模式（`_GetCompartmentDWORD` → 检查 `TF_CONVERSIONMODE_NATIVE` 位 → 与 `_status.ascii_mode` 比对）。但 TSF 的 `OnChange` 通知时机可能导致 `GetValue` 返回旧值。blind toggle 避免了这一时序问题，且与 `OPENCLOSE` handler 的 else 分支（Shift 按键路径）完全一致。
 
-**Windows 11 失效原因**：
-
-blind toggle 依赖 `_updatingLanguageBar` 布尔守卫拦截 `_UpdateLanguageBar` 引起的自触发 `OnChange`。此守卫仅在 `OnChange` **同步**回调时有效。Windows 11 的 TSF 基础设施（TextInputHost.exe）可能：
-
-1. **异步投递 `OnChange`**：`_UpdateLanguageBar` 设置 `_updatingLanguageBar=true` → 写 compartment → 守卫复位为 `false` → 异步 `OnChange` 到达 → 守卫已失效 → 额外 toggle
-2. **系统注入额外 compartment 写入**：Windows 11 的文本输入框架可能在外部写入后自行同步 compartment，触发未被守卫覆盖的 `OnChange`
-
-结果：toggle 次数从偶数（Windows 10）变为奇数（Windows 11），`ascii_mode` 翻转到错误状态。
-
-**值驱动方案**：
-
-将 blind toggle 替换为读取 compartment 实际值并与 `_status.ascii_mode` 比对：
-
-```cpp
-} else if (IsEqualGUID(guidCompartment,
-                       GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)) {
-  if (_updatingLanguageBar)
-    return S_OK;
-  DWORD convMode = 0;
-  _GetCompartmentDWORD(convMode,
-                       GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
-  bool desiredAsciiMode = !(convMode & TF_CONVERSIONMODE_NATIVE);
-  if (desiredAsciiMode != _status.ascii_mode) {
-    _status.ascii_mode = desiredAsciiMode;
-    _SetKeyboardOpen(true);
-    if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
-      _EnableLanguageBar(true);
-    _HandleLangBarMenuSelect(_status.ascii_mode
-                                 ? ID_WEASELTRAY_ENABLE_ASCII
-                                 : ID_WEASELTRAY_DISABLE_ASCII);
-    if (_pEditSessionContext)
-      m_client.ClearComposition();
-    _UpdateLanguageBar(_status);
-  }
-}
-```
-
-**值驱动方案的天然幂等性**：即使 `_updatingLanguageBar` 守卫失效（异步回调 / 系统注入），重新读取 compartment 值会得到与当前 `_status.ascii_mode` 一致的结果（因为 `_UpdateLanguageBar` 已将正确值写入），`desiredAsciiMode == _status.ascii_mode` → 跳过。不会产生额外翻转。
-
-**与 blind toggle 方案的对比**：
-
-| 项目 | blind toggle (f14f2a7) | 值驱动 (当前) |
-|------|----------------------|--------------|
-| 回调次数依赖 | 严格依赖偶数次 `OnChange` | 幂等，不依赖回调次数 |
-| 重入守卫 | 唯一防线，异步回调下失效 | 第一防线；值比对是第二防线 |
-| Windows 10 | 正常 | 正常 |
-| Windows 11 | 失效（奇数次 toggle） | 正常（幂等跳过） |
-| stale value 风险 | 无 | 若 `GetValue` 返回旧值则静默跳过（安全失败） |
-
-### im-control 侧修复：OPENCLOSE 跳过未变化的写入
-
-im-control 的 `hook.cpp` 原先对 `GUID_COMPARTMENT_KEYBOARD_OPENCLOSE` 无条件 `SetValue`，即使值未变。这会触发 Weasel 的 OPENCLOSE handler（`_isToOpenClose=false` 时为 blind toggle），产生不必要的 `ascii_mode` 翻转。
-
-修复：写入前先 `GetValue` 比对，仅在值变化时 `SetValue`，与 CONVERSION 的已有逻辑一致。
+外部工具（如 im-control）只在 `newMode != oldMode` 时才调用 `SetValue`，所以每次 `OnChange` 通知都代表一次真实的模式切换请求，blind toggle 语义正确。
 
 ## 验证
 
@@ -197,7 +144,23 @@ im-control 的 `hook.cpp` 原先对 `GUID_COMPARTMENT_KEYBOARD_OPENCLOSE` 无条
 - 前台进程：Windows Terminal (x64)
 - 外部工具：[im-control](https://github.com/VimWei/im-control) —— 通过 `SetWindowsHookEx` 注入 hook DLL 到前台进程，在目标线程内调用 `ITfCompartment::SetValue`
 
-### Windows 10 blind toggle 方案旧日志（已弃用）
+### 测试结果
+
+```
+# 中文状态下切英文
+im-control -g              → open native
+im-control -c alphanumeric → (成功)
+im-control -g              → open alphanumeric
+
+# 英文状态下切中文
+im-control -g              → open alphanumeric
+im-control -c native       → (成功)
+im-control -g              → open native
+```
+
+### 调试日志验证
+
+在 `_HandleCompartment` 和 `_UpdateLanguageBar` 中加入 `OutputDebugStringW` 日志，确认完整链路：
 
 ```
 [05:38:09.417] CONVERSION fired, compartment=0xF49BE320 (NATIVE=0), ascii_mode(before)=0, _updatingLanguageBar=0
@@ -209,7 +172,7 @@ im-control 的 `hook.cpp` 原先对 `GUID_COMPARTMENT_KEYBOARD_OPENCLOSE` 无条
 [05:38:09.433] CONVERSION skipped (re-entrant from _UpdateLanguageBar)   # 重入守卫生效
 ```
 
-此日志中重入守卫同步生效，仅在 Windows 10 下成立。
+链路完整：hook 写入 compartment → sink 触发 → toggle ascii_mode → 通知 RIME 引擎 → `_UpdateLanguageBar` 写回 compartment → 重入守卫跳过自触发。
 
 ## 相关链接
 
