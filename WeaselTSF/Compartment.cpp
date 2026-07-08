@@ -272,9 +272,8 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
     _SetKeyboardOpen(true);
     if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
       _EnableLanguageBar(true);
-    _HandleLangBarMenuSelect(_status.ascii_mode
-                                 ? ID_WEASELTRAY_ENABLE_ASCII
-                                 : ID_WEASELTRAY_DISABLE_ASCII);
+    _HandleLangBarMenuSelect(_status.ascii_mode ? ID_WEASELTRAY_ENABLE_ASCII
+                                                : ID_WEASELTRAY_DISABLE_ASCII);
     if (_pEditSessionContext)
       m_client.ClearComposition();
     _UpdateLanguageBar(_status);
