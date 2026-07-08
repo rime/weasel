@@ -9,14 +9,22 @@
 
 ## 根因
 
-blind toggle（`_status.ascii_mode = !_status.ascii_mode`）依赖 `_updatingLanguageBar` 布尔守卫拦截 `_UpdateLanguageBar` 引起的自触发 `OnChange`。此守卫仅在 `OnChange` **同步**回调时有效。
+经 Windows 11 实测发现，问题有**两个独立的层面**：
 
-Windows 11 的 TSF 基础设施（TextInputHost.exe / InputApp.exe）与 Windows 10 行为不同：
+### 层面 1：im-control 使用 TF_CLIENTID_NULL 调用 SetValue，Win11 不触发 OnChange
 
-1. **异步投递 `OnChange`**：`_UpdateLanguageBar` 设置 `_updatingLanguageBar=true` → 写 compartment → 守卫复位为 `false` → 异步 `OnChange` 到达 → 守卫已失效 → 额外 toggle
-2. **系统注入额外 compartment 写入**：Windows 11 的文本输入框架可能在外部写入后自行同步 compartment，触发未被守卫覆盖的 `OnChange`
+im-control 的 hook DLL 调用 `ITfCompartment::SetValue(0, ...)`（`TfClientId = TF_CLIENTID_NULL`）。WeaselTSF 自身的 `_SetCompartmentDWORD` 使用 `SetValue(_tfClientId, ...)`（通过 `ITfThreadMgr::Activate` 获取的有效非零 ID）。
 
-结果：toggle 次数从偶数（Windows 10）变为奇数（Windows 11），`ascii_mode` 翻转到错误状态。
+**Windows 10**：不区分 `TfClientId`，所有 `SetValue` 都触发 `OnChange`。
+**Windows 11**：仅为已激活客户端（非零 `TfClientId`）的写入触发 `OnChange`。`TF_CLIENTID_NULL` 的写入不触发通知。
+
+这解释了实测现象：
+- Shift 键切换正常：`_UpdateLanguageBar` → `_SetCompartmentDWORD` 用 `_tfClientId` → `OnChange` 触发 → CONVERSION handler 执行 → 值匹配 → 跳过 ✓
+- im-control 外部写入失效：hook 用 `0` → Win11 不触发 `OnChange` → CONVERSION handler 不执行 → RIME 保持原状 ✗
+
+### 层面 2：blind toggle 依赖同步 OnChange 回调（已被值驱动修复）
+
+即使 `OnChange` 正确触发，blind toggle 方案在 Windows 11 仍有异步回调问题（详见下文）。此层面已由值驱动修复解决。
 
 ### Windows 10 vs Windows 11 回调时序对比
 
@@ -37,7 +45,23 @@ Windows 11（异步 OnChange）：
 
 ## 修复方案
 
-### 1. Weasel：CONVERSION handler 改为值驱动
+### 1. im-control：使用有效 TfClientId 调用 SetValue（根因修复）
+
+**修改文件：** `injector/hook.cpp`
+
+im-control 的 hook 在 `SetValue` 时使用 `TF_CLIENTID_NULL`（0），Windows 11 不为此类写入触发 `OnChange`。
+
+修复：调用 `ITfThreadMgr::Activate` 获取有效 `TfClientId`，用于所有 `SetValue` 调用，完成后 `Deactivate`：
+
+```cpp
+TfClientId clientId = TF_CLIENTID_NULL;
+// ... 创建 pThreadMgr 后 ...
+pThreadMgr->Activate(&clientId);
+// ... SetValue(clientId, ...) 替代 SetValue(0, ...) ...
+pThreadMgr->Deactivate();
+```
+
+### 2. Weasel：CONVERSION handler 改为值驱动（防御层）
 
 **修改文件：** `WeaselTSF/Compartment.cpp`
 
@@ -70,7 +94,7 @@ Windows 11（异步 OnChange）：
 
 **天然幂等性**：即使 `_updatingLanguageBar` 守卫失效（异步回调 / 系统注入），重新读取 compartment 值会得到与当前 `_status.ascii_mode` 一致的结果（因为 `_UpdateLanguageBar` 已将正确值写入），`desiredAsciiMode == _status.ascii_mode` → 跳过。不会产生额外翻转。
 
-### 2. im-control：OPENCLOSE 跳过未变化的写入（防御性优化）
+### 3. im-control：OPENCLOSE 跳过未变化的写入（防御性优化）
 
 **修改文件：** `injector/hook.cpp`
 
