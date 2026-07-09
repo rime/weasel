@@ -3,9 +3,53 @@
 #include "Compartment.h"
 #include <resource.h>
 #include <functional>
+#include <cstdio>
+#include <cstdarg>
 #include "ResponseParser.h"
 #include "CandidateList.h"
 #include "LanguageBar.h"
+
+// Debug logging to file (enabled via session GUID env override)
+static bool s_dbgEnabled = false;
+static FILE* s_dbgFile = nullptr;
+static CRITICAL_SECTION s_dbgLock;
+static bool s_dbgLockInit = false;
+static const char* s_dbgPath = "C:\\Users\\Public\\weasel-compartment-debug.log";
+
+void _DbgInit() {
+  if (!s_dbgLockInit) {
+    InitializeCriticalSection(&s_dbgLock);
+    s_dbgLockInit = true;
+  }
+  if (!s_dbgFile) {
+    s_dbgFile = fopen(s_dbgPath, "a");
+    if (s_dbgFile) {
+      s_dbgEnabled = true;
+      SYSTEMTIME st;
+      GetLocalTime(&st);
+      fprintf(s_dbgFile, "\n=== WeaselTSF compartment debug session @ %04d-%02d-%02d %02d:%02d:%02d.%03d ===\n",
+              st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+      fflush(s_dbgFile);
+      OutputDebugStringW(L"[WeaselTSF] compartment debug log opened");
+    }
+  }
+}
+
+void _DbgLog(const char* fmt, ...) {
+  if (!s_dbgEnabled || !s_dbgFile) return;
+  EnterCriticalSection(&s_dbgLock);
+  SYSTEMTIME st;
+  GetLocalTime(&st);
+  fprintf(s_dbgFile, "[%04d-%02d-%02d %02d:%02d:%02d.%03d] ",
+          st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(s_dbgFile, fmt, args);
+  va_end(args);
+  fputc('\n', s_dbgFile);
+  fflush(s_dbgFile);
+  LeaveCriticalSection(&s_dbgLock);
+}
 
 STDAPI CCompartmentEventSink::QueryInterface(REFIID riid,
                                              _Outptr_ void** ppvObj) {
@@ -242,13 +286,11 @@ void WeaselTSF::_UninitCompartment() {
 }
 
 HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
+  _DbgInit();
   if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_OPENCLOSE)) {
     BOOL isOpenDbg = _IsKeyboardOpen();
-    {
-      wchar_t buf[256];
-      swprintf_s(buf, 256, L"[WeaselTSF] OPENCLOSE OnChange: isOpen=%d, isToOpenClose=%d, ascii_mode=%d\n", isOpenDbg, _isToOpenClose, _status.ascii_mode);
-      OutputDebugStringW(buf);
-    }
+    _DbgLog("OPENCLOSE OnChange: isOpen=%d, isToOpenClose=%d, ascii_mode=%d",
+            isOpenDbg, _isToOpenClose, _status.ascii_mode);
     if (_isToOpenClose) {
       BOOL isOpen = _IsKeyboardOpen();
       // clear composition when close keyboard
@@ -259,6 +301,8 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
       _EnableLanguageBar(isOpen);
       _UpdateLanguageBar(_status);
     } else {
+      _DbgLog("OPENCLOSE else branch: toggle ascii_mode %d -> %d",
+              _status.ascii_mode, !_status.ascii_mode);
       _status.ascii_mode = !_status.ascii_mode;
       _SetKeyboardOpen(true);
       if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
@@ -269,6 +313,7 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
       if (_pEditSessionContext)
         m_client.ClearComposition();
       _UpdateLanguageBar(_status);
+      _DbgLog("OPENCLOSE else branch done: ascii_mode=%d", _status.ascii_mode);
     }
   } else if (IsEqualGUID(guidCompartment,
                          GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)) {
@@ -276,21 +321,17 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
     _GetCompartmentDWORD(convMode,
                          GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
     bool desiredAsciiMode = !(convMode & TF_CONVERSIONMODE_NATIVE);
-    {
-      wchar_t buf[512];
-      swprintf_s(buf, 512,
-        L"[WeaselTSF] CONVERSION OnChange: convMode=0x%lX (NATIVE=%d), desiredAscii=%d, statusAscii=%d, updatingLangBar=%d\n",
-        convMode, (convMode & TF_CONVERSIONMODE_NATIVE) ? 1 : 0,
-        desiredAsciiMode ? 1 : 0, _status.ascii_mode ? 1 : 0,
-        _updatingLanguageBar ? 1 : 0);
-      OutputDebugStringW(buf);
-    }
+    _DbgLog("CONVERSION OnChange: convMode=0x%lX (NATIVE=%d), desiredAscii=%d, statusAscii=%d, updatingLangBar=%d",
+            convMode, (convMode & TF_CONVERSIONMODE_NATIVE) ? 1 : 0,
+            desiredAsciiMode ? 1 : 0, _status.ascii_mode ? 1 : 0,
+            _updatingLanguageBar ? 1 : 0);
     if (_updatingLanguageBar) {
-      OutputDebugStringW(L"[WeaselTSF] CONVERSION: skipped (updatingLanguageBar)\n");
+      _DbgLog("CONVERSION: skipped (updatingLanguageBar)");
       return S_OK;
     }
     if (desiredAsciiMode != _status.ascii_mode) {
-      OutputDebugStringW(L"[WeaselTSF] CONVERSION: processing -> switching mode\n");
+      _DbgLog("CONVERSION: processing -> switching mode (ascii %d -> %d)",
+              _status.ascii_mode, desiredAsciiMode);
       _status.ascii_mode = desiredAsciiMode;
       _SetKeyboardOpen(true);
       if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
@@ -301,8 +342,9 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
       if (_pEditSessionContext)
         m_client.ClearComposition();
       _UpdateLanguageBar(_status);
+      _DbgLog("CONVERSION done: ascii_mode=%d", _status.ascii_mode);
     } else {
-      OutputDebugStringW(L"[WeaselTSF] CONVERSION: skipped (value matches state)\n");
+      _DbgLog("CONVERSION: skipped (value matches state)");
     }
   }
   return S_OK;
