@@ -9,66 +9,77 @@
 
 ## 根因
 
-经 Windows 11 实测发现，问题有**两个独立的层面**：
+经 Windows 11 实测和日志分析，问题有**三个独立的层面**：
 
-### 层面 1：im-control 使用 TF_CLIENTID_NULL 调用 SetValue，Win11 不触发 OnChange
+### 层面 1：CoCreateInstance(CLSID_TF_ThreadMgr) 在 Win11 返回新实例
 
-im-control 的 hook DLL 调用 `ITfCompartment::SetValue(0, ...)`（`TfClientId = TF_CLIENTID_NULL`）。WeaselTSF 自身的 `_SetCompartmentDWORD` 使用 `SetValue(_tfClientId, ...)`（通过 `ITfThreadMgr::Activate` 获取的有效非零 ID）。
+im-control 的 hook 用 `CoCreateInstance(CLSID_TF_ThreadMgr)` 获取 ThreadMgr。Windows 10 返回 per-thread 单例（与 WeaselTSF 注册 sink 的实例相同），Windows 11 返回**新实例**——compartment 写入到了不同实例，WeaselTSF 的 sink 收不到 OnChange。
+
+**日志证据**：im-control `SetValue` 返回 `S_OK`，但 Weasel 日志中 `_HandleCompartment` 完全没有被调用。
+
+### 层面 2：TF_CLIENTID_NULL 的 SetValue 在 Win11 不触发 OnChange
+
+im-control 的 hook 用 `SetValue(0, ...)`（`TF_CLIENTID_NULL`）。WeaselTSF 自身用 `SetValue(_tfClientId, ...)`（有效非零 ID）。
 
 **Windows 10**：不区分 `TfClientId`，所有 `SetValue` 都触发 `OnChange`。
-**Windows 11**：仅为已激活客户端（非零 `TfClientId`）的写入触发 `OnChange`。`TF_CLIENTID_NULL` 的写入不触发通知。
+**Windows 11**：仅为已激活客户端（非零 `TfClientId`）的写入触发 `OnChange`。
 
-这解释了实测现象：
-- Shift 键切换正常：`_UpdateLanguageBar` → `_SetCompartmentDWORD` 用 `_tfClientId` → `OnChange` 触发 → CONVERSION handler 执行 → 值匹配 → 跳过 ✓
-- im-control 外部写入失效：hook 用 `0` → Win11 不触发 `OnChange` → CONVERSION handler 不执行 → RIME 保持原状 ✗
+### 层面 3：CONVERSION handler 的 _SetKeyboardOpen(true) 引发级联反转
 
-### 层面 2：blind toggle 依赖同步 OnChange 回调（已被值驱动修复）
+CONVERSION handler 调用 `_SetKeyboardOpen(true)` 写 OPENCLOSE=1，触发 OPENCLOSE handler 的 else 分支（`_isToOpenClose=false`，为 Shift 键设计的 blind toggle），将 CONVERSION 刚设置好的 `ascii_mode` 反转。
 
-即使 `OnChange` 正确触发，blind toggle 方案在 Windows 11 仍有异步回调问题（详见下文）。此层面已由值驱动修复解决。
-
-### Windows 10 vs Windows 11 回调时序对比
-
+**日志证据**：
 ```
-Windows 10（同步 OnChange）：
-  SetValue ──→ OnChange(同步) ──→ _UpdateLanguageBar ──→ SetValue ──→ OnChange(同步, 守卫=true, 跳过)
-  toggle 次数: 1（_UpdateLanguageBar 的自触发被守卫拦截）
-  ✗ 但 OPENCLOSE handler 也会 toggle，凑成偶数 → 结果正确
+CONVERSION: processing -> switching mode (ascii 0 -> 1)     ← 正确
+OPENCLOSE OnChange: isOpen=1 -> toggle ascii_mode 1 -> 0    ← 级联反转
+CONVERSION done: ascii_mode=0                                ← 结果中文（错）
+```
 
-Windows 11（异步 OnChange）：
-  SetValue ──→ OnChange(异步, 稍后) ──→ _UpdateLanguageBar ──→ SetValue ──→ OnChange(异步, 稍后)
-  ......守卫已复位......
-  OnChange #1 到达 → toggle #1
-  OnChange #2 到达 → toggle #2（守卫已失效）
-  OnChange #3 到达 → toggle #3（系统注入的额外写入）
-  toggle 次数: 奇数 → 结果错误
+移除 `_SetKeyboardOpen(true)` 后：
+```
+CONVERSION: processing -> switching mode (ascii 0 -> 1)     ← 正确
+CONVERSION done: ascii_mode=1                                ← 结果英文（对）
 ```
 
 ## 修复方案
 
-### 1. im-control：使用有效 TfClientId 调用 SetValue（根因修复）
+### 1. im-control：使用 TF_GetThreadMgr 获取 per-thread 单例
 
 **修改文件：** `injector/hook.cpp`
 
-im-control 的 hook 在 `SetValue` 时使用 `TF_CLIENTID_NULL`（0），Windows 11 不为此类写入触发 `OnChange`。
+用 msctf.dll 导出的 `TF_GetThreadMgr` 替代 `CoCreateInstance(CLSID_TF_ThreadMgr)`，确保获取与 WeaselTSF 相同的 ThreadMgr 实例：
 
-修复：调用 `ITfThreadMgr::Activate` 获取有效 `TfClientId`，用于所有 `SetValue` 调用，完成后 `Deactivate`：
+```cpp
+typedef HRESULT(WINAPI* PFN_TF_GetThreadMgr)(ITfThreadMgr**);
+static ITfThreadMgr* GetThreadMgrSingleton() {
+    HMODULE hMsctf = GetModuleHandleW(L"msctf.dll");
+    // ... GetProcAddress("TF_GetThreadMgr") ...
+    ITfThreadMgr* pThreadMgr = nullptr;
+    pfn(&pThreadMgr);
+    return pThreadMgr;
+}
+```
+
+### 2. im-control：使用有效 TfClientId 调用 SetValue
+
+**修改文件：** `injector/hook.cpp`
+
+调用 `ITfThreadMgr::Activate` 获取有效 `TfClientId`，用于所有 `SetValue` 调用，完成后 `Deactivate`：
 
 ```cpp
 TfClientId clientId = TF_CLIENTID_NULL;
-// ... 创建 pThreadMgr 后 ...
 pThreadMgr->Activate(&clientId);
 // ... SetValue(clientId, ...) 替代 SetValue(0, ...) ...
 pThreadMgr->Deactivate();
 ```
 
-### 2. Weasel：CONVERSION handler 改为值驱动（防御层）
+### 3. Weasel：CONVERSION handler 改为值驱动
 
 **修改文件：** `WeaselTSF/Compartment.cpp`
 
 将 blind toggle 替换为读取 compartment 实际值并与 `_status.ascii_mode` 比对：
 
 ```cpp
-// 修复后
 } else if (IsEqualGUID(guidCompartment,
                        GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)) {
   if (_updatingLanguageBar)
@@ -79,7 +90,7 @@ pThreadMgr->Deactivate();
   bool desiredAsciiMode = !(convMode & TF_CONVERSIONMODE_NATIVE);
   if (desiredAsciiMode != _status.ascii_mode) {
     _status.ascii_mode = desiredAsciiMode;
-    _SetKeyboardOpen(true);
+    // 注意：不调用 _SetKeyboardOpen(true)，避免触发 OPENCLOSE 级联
     if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
       _EnableLanguageBar(true);
     _HandleLangBarMenuSelect(_status.ascii_mode
@@ -92,17 +103,38 @@ pThreadMgr->Deactivate();
 }
 ```
 
-**天然幂等性**：即使 `_updatingLanguageBar` 守卫失效（异步回调 / 系统注入），重新读取 compartment 值会得到与当前 `_status.ascii_mode` 一致的结果（因为 `_UpdateLanguageBar` 已将正确值写入），`desiredAsciiMode == _status.ascii_mode` → 跳过。不会产生额外翻转。
+**天然幂等性**：即使 `_updatingLanguageBar` 守卫失效（异步回调 / 系统注入），重新读取 compartment 值会得到与当前 `_status.ascii_mode` 一致的结果，`desiredAsciiMode == _status.ascii_mode` → 跳过。
 
-### 3. im-control：OPENCLOSE 跳过未变化的写入（防御性优化）
+### 4. Weasel：从 CONVERSION handler 移除 _SetKeyboardOpen(true)
+
+**修改文件：** `WeaselTSF/Compartment.cpp`
+
+CONVERSION handler 不再调用 `_SetKeyboardOpen(true)`。两个 compartment 完全解耦：
+- **OPENCLOSE**：管理 IME 启用/禁用（由 OPENCLOSE handler 处理，为 Ctrl+Space 和 Shift 设计）
+- **CONVERSION**：管理中/英文模式（由 CONVERSION handler 处理，为外部工具和系统切换设计）
+
+### 5. im-control：OPENCLOSE 跳过未变化的写入
 
 **修改文件：** `injector/hook.cpp`
 
-im-control 原先对 `GUID_COMPARTMENT_KEYBOARD_OPENCLOSE` 无条件 `SetValue`，即使值未变。这会触发 Weasel 的 OPENCLOSE handler（`_isToOpenClose=false` 时仍为 blind toggle），产生不必要的 `ascii_mode` 翻转。
+写入前先 `GetValue` 比对，仅在值变化时 `SetValue`，避免不必要地触发 OPENCLOSE handler。
 
-修复：写入前先 `GetValue` 比对，仅在值变化时 `SetValue`，与 CONVERSION 的已有逻辑一致。
+### 6. vim 插件：去掉 -k open，只写 CONVERSION
 
-> 此改动非 Windows 11 兼容性修复的必要条件——Weasel 的 CONVERSION 值驱动修复已能校正 OPENCLOSE handler 的错误 toggle。但消除不必要的 OPENCLOSE 写入可以避免 RIME 引擎收到一错一对的 TrayCommand，减少时序问题。
+**修改文件：** `autoload/im_select.vim`
+
+`im_control_set_mode()` 从 `[im-control, '-k', 'open', '-c', 'native']` 改为 `[im-control, '-c', 'native']`，两个 compartment 完全解耦。
+
+## 设计原则
+
+遵循 Weasel 开发者的指导：
+
+> GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION 和 GUID_COMPARTMENT_KEYBOARD_OPENCLOSE 是不一样的消息，作用要区分。输入功能是主功能，外部消息控制是辅助，不能因为要引入辅助功能导致主功能失效是基本要求。
+
+我们的修改完全符合此原则：
+- CONVERSION handler 不再触碰 OPENCLOSE compartment
+- OPENCLOSE handler 未改动（Shift/Ctrl+Space 主功能不受影响）
+- 外部工具只写 CONVERSION 切换中英文，不写 OPENCLOSE
 
 ## 方案对比
 
@@ -110,19 +142,15 @@ im-control 原先对 `GUID_COMPARTMENT_KEYBOARD_OPENCLOSE` 无条件 `SetValue`�
 |------|--------------------------|------------------|
 | 回调次数依赖 | 严格依赖偶数次 `OnChange` | 幂等，不依赖回调次数 |
 | 重入守卫 | 唯一防线，异步回调下失效 | 第一防线；值比对是第二防线 |
+| compartment 耦合 | CONVERSION 写 OPENCLOSE（级联反转） | 完全解耦 |
 | Windows 10 | 正常 | 正常 |
-| Windows 11 | 失效（奇数次 toggle） | 正常（幂等跳过） |
-| stale value 风险 | 无 | 若 `GetValue` 返回旧值则静默跳过（安全失败） |
-
-## 为什么不改 OPENCLOSE handler
-
-OPENCLOSE handler 的 else 分支（`_isToOpenClose=false`）使用 blind toggle 是**为 Ctrl+Space 设计的**——每次 Ctrl+Space 切换 OPENCLOSE 值，Weasel 对应翻转 `ascii_mode`。改为值驱动会破坏此行为。
-
-OPENCLOSE 值（open/close）与 `ascii_mode`（中/英）没有直接映射关系：OPENCLOSE=true 表示 IME 激活（可能是中文也可能是英文），OPENCLOSE=false 表示 IME 关闭（英文直通）。因此无法像 CONVERSION 那样从 compartment 值推导 `ascii_mode`。
-
-通过 im-control 侧跳过未变化的 OPENCLOSE 写入，避免从外部触发此 handler，是最小侵入的解决方案。
+| Windows 11 | 失效 | 正常 |
 
 ## 部署
+
+### 重要：部署后需重启所有使用 RIME 的应用
+
+`weasel.dll` 由 TSF 框架在进程启动时加载。部署新 DLL 后，已运行的进程仍使用内存中的旧 DLL。必须重启 Windows Terminal、Total Commander、gvim 等应用（或重启 Windows）才能加载新版本。
 
 ### 编译
 
@@ -145,9 +173,7 @@ Copy-Item output\weaselx64.dll C:\Windows\system32\weasel.dll -Force
 Copy-Item output\weasel.dll C:\Windows\SysWOW64\weasel.dll -Force
 ```
 
-> TSF 框架从系统路径加载 DLL，详见 [原始修复文档](conversion-compartment-fix-analysis.md#2-dll-部署位置)。
-
-### 编译部署 im-control（可选）
+### 编译部署 im-control
 
 ```
 cd C:\Apps\git-kb\repos\VimWei\im-control
@@ -160,6 +186,10 @@ cmake --install build --prefix bin --config RelWithDebInfo
 ```powershell
 Copy-Item bin\* "C:\Apps\VimReader\lib\utils\im-control\" -Force
 ```
+
+### vim 插件
+
+vim-im-select 插件为纯脚本，无需编译，pull 后 reload vim 配置即可。
 
 ## 相关文档
 
