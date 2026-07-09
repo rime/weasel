@@ -333,7 +333,6 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
       _DbgLog("CONVERSION: processing -> switching mode (ascii %d -> %d)",
               _status.ascii_mode, desiredAsciiMode);
       _status.ascii_mode = desiredAsciiMode;
-      _SetKeyboardOpen(true);
       if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
         _EnableLanguageBar(true);
       _HandleLangBarMenuSelect(_status.ascii_mode
