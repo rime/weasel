@@ -412,6 +412,14 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status stat) {
     flags |= TF_CONVERSIONMODE_FULLSHAPE;
   else
     flags &= (~TF_CONVERSIONMODE_FULLSHAPE);
+  {
+    wchar_t buf[256];
+    swprintf_s(buf, 256,
+      L"[WeaselTSF] _UpdateLanguageBar: ascii=%d, flags=0x%lX (NATIVE=%d), updatingLangBar set=true\n",
+      stat.ascii_mode ? 1 : 0, flags,
+      (flags & TF_CONVERSIONMODE_NATIVE) ? 1 : 0);
+    OutputDebugStringW(buf);
+  }
   _updatingLanguageBar = true;
   _SetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
   _updatingLanguageBar = false;

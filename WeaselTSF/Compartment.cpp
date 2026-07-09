@@ -243,6 +243,12 @@ void WeaselTSF::_UninitCompartment() {
 
 HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
   if (IsEqualGUID(guidCompartment, GUID_COMPARTMENT_KEYBOARD_OPENCLOSE)) {
+    BOOL isOpenDbg = _IsKeyboardOpen();
+    {
+      wchar_t buf[256];
+      swprintf_s(buf, 256, L"[WeaselTSF] OPENCLOSE OnChange: isOpen=%d, isToOpenClose=%d, ascii_mode=%d\n", isOpenDbg, _isToOpenClose, _status.ascii_mode);
+      OutputDebugStringW(buf);
+    }
     if (_isToOpenClose) {
       BOOL isOpen = _IsKeyboardOpen();
       // clear composition when close keyboard
@@ -266,13 +272,25 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
     }
   } else if (IsEqualGUID(guidCompartment,
                          GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)) {
-    if (_updatingLanguageBar)
-      return S_OK;
     DWORD convMode = 0;
     _GetCompartmentDWORD(convMode,
                          GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
     bool desiredAsciiMode = !(convMode & TF_CONVERSIONMODE_NATIVE);
+    {
+      wchar_t buf[512];
+      swprintf_s(buf, 512,
+        L"[WeaselTSF] CONVERSION OnChange: convMode=0x%lX (NATIVE=%d), desiredAscii=%d, statusAscii=%d, updatingLangBar=%d\n",
+        convMode, (convMode & TF_CONVERSIONMODE_NATIVE) ? 1 : 0,
+        desiredAsciiMode ? 1 : 0, _status.ascii_mode ? 1 : 0,
+        _updatingLanguageBar ? 1 : 0);
+      OutputDebugStringW(buf);
+    }
+    if (_updatingLanguageBar) {
+      OutputDebugStringW(L"[WeaselTSF] CONVERSION: skipped (updatingLanguageBar)\n");
+      return S_OK;
+    }
     if (desiredAsciiMode != _status.ascii_mode) {
+      OutputDebugStringW(L"[WeaselTSF] CONVERSION: processing -> switching mode\n");
       _status.ascii_mode = desiredAsciiMode;
       _SetKeyboardOpen(true);
       if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
@@ -283,6 +301,8 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
       if (_pEditSessionContext)
         m_client.ClearComposition();
       _UpdateLanguageBar(_status);
+    } else {
+      OutputDebugStringW(L"[WeaselTSF] CONVERSION: skipped (value matches state)\n");
     }
   }
   return S_OK;
