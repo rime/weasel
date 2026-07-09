@@ -5,7 +5,7 @@
 通过 TSF compartment 程序化切换中英文模式（如 `ITfCompartment::SetValue(GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)`）对 Weasel（小狼毫）无效。外部工具写入 compartment 后，Weasel 不切换模式，且 compartment 值被恢复原状。
 
 此问题在 Windows 10 和 Windows 11 上表现不同：
-- **Windows 10**：compartment 写入能触发 `OnChange`，但 CONVERSION handler 逻辑缺陷导致外部变更被撤销
+- **Windows 10**：compartment 写入能触发 `OnChange`，但 CONVERSION handler 逻辑缺陷导致外部变更被撤销；gvim ESC 关闭键盘后无人重开，导致 RIME 被禁用
 - **Windows 11**：compartment 写入根本不触发 `OnChange`，且 CONVERSION handler 存在级联反转问题
 
 ## 架构背景
@@ -23,9 +23,18 @@ ImmSetConversionStatus(IME_CMODE_NATIVE)
 - **GUID_COMPARTMENT_KEYBOARD_OPENCLOSE**：管理 IME 启用/禁用（对应 Ctrl+Space、`-k open/close`）
 - **GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION**：管理中/英文模式（对应 Shift 切换、`-c native/alphanumeric`）
 
+### Weasel 配置 `ToggleImeOnOpenClose`
+
+注册表 `HKCU\Software\Rime\weasel\ToggleImeOnOpenClose` 控制 OPENCLOSE handler 的行为分支，是 Win10/Win11 差异的根源：
+
+| 配置值 | `_isToOpenClose` | OPENCLOSE handler 行为 | 典型场景 |
+|--------|-------------------|------------------------|----------|
+| `yes`  | `true`  | **if 分支**：OPENCLOSE=0 真正关闭键盘，OPENCLOSE=1 真正打开；不 toggle ascii_mode | Win10 |
+| `no`   | `false` | **else 分支**：blind toggle ascii_mode；始终 `_SetKeyboardOpen(true)` 自动重开键盘 | Win11 |
+
 ## 根因
 
-经 Windows 10 和 Windows 11 实测和日志分析，问题有**四个独立的层面**：
+经 Windows 10 和 Windows 11 实测和日志分析，问题有**五个独立的层面**：
 
 ### 1. CONVERSION handler 撤销外部变更（Windows 10）
 
@@ -59,8 +68,6 @@ ImmSetConversionStatus(IME_CMODE_NATIVE)
 
 im-control 的 hook 用 `CoCreateInstance(CLSID_TF_ThreadMgr)` 获取 ThreadMgr。Windows 10 返回 per-thread 单例（与 WeaselTSF 注册 sink 的实例相同），Windows 11 返回**新实例**——compartment 写入到了不同实例，WeaselTSF 的 sink 收不到 OnChange。
 
-**日志证据**：im-control `SetValue` 返回 `S_OK`，但 Weasel 日志中 `_HandleCompartment` 完全没有被调用。
-
 ### 3. TF_CLIENTID_NULL 的 SetValue 在 Win11 不触发 OnChange
 
 im-control 的 hook 用 `SetValue(0, ...)`（`TF_CLIENTID_NULL`）。WeaselTSF 自身用 `SetValue(_tfClientId, ...)`（有效非零 ID）。
@@ -68,22 +75,15 @@ im-control 的 hook 用 `SetValue(0, ...)`（`TF_CLIENTID_NULL`）。WeaselTSF �
 **Windows 10**：不区分 `TfClientId`，所有 `SetValue` 都触发 `OnChange`。
 **Windows 11**：仅为已激活客户端（非零 `TfClientId`）的写入触发 `OnChange`。
 
-### 4. CONVERSION handler 的 _SetKeyboardOpen(true) 引发级联反转
+### 4. CONVERSION handler 的 _SetKeyboardOpen(true) 引发级联反转（Windows 11）
 
 CONVERSION handler 调用 `_SetKeyboardOpen(true)` 写 OPENCLOSE=1，触发 OPENCLOSE handler 的 else 分支（`_isToOpenClose=false`，为 Shift 键设计的 blind toggle），将 CONVERSION 刚设置好的 `ascii_mode` 反转。
 
-**日志证据**：
-```
-CONVERSION: processing -> switching mode (ascii 0 -> 1)     ← 正确
-OPENCLOSE OnChange: isOpen=1 -> toggle ascii_mode 1 -> 0    ← 级联反转
-CONVERSION done: ascii_mode=0                                ← 结果中文（错）
-```
+### 5. gvim ESC 关闭键盘后无人重开（Windows 10）
 
-移除 `_SetKeyboardOpen(true)` 后：
-```
-CONVERSION: processing -> switching mode (ascii 0 -> 1)     ← 正确
-CONVERSION done: ascii_mode=1                                ← 结果英文（对）
-```
+gvim 在退出 insert mode 时会写 OPENCLOSE=0 关闭键盘。在 `_isToOpenClose=true`（Win10）时，OPENCLOSE handler 的 if 分支只做 `_EnableLanguageBar(isOpen)` 和 `_UpdateLanguageBar`，**不重开键盘**。如果此时 im-control 的 CONVERSION 写入因值未变而跳过 SetValue（`newMode == oldMode`），则 CONVERSION OnChange 不触发，键盘一直关闭，RIME 被禁用。
+
+**Windows 11** 不受此问题影响：`_isToOpenClose=false` 的 else 分支始终调用 `_SetKeyboardOpen(true)` 自动重开。
 
 ## 修复方案
 
@@ -104,30 +104,32 @@ CONVERSION done: ascii_mode=1                                ← 结果英文（
   bool desiredAsciiMode = !(convMode & TF_CONVERSIONMODE_NATIVE);
   if (desiredAsciiMode != _status.ascii_mode) {
     _status.ascii_mode = desiredAsciiMode;
-    // 注意：不调用 _SetKeyboardOpen(true)，避免触发 OPENCLOSE 级联
-    if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
-      _EnableLanguageBar(true);
-    _HandleLangBarMenuSelect(_status.ascii_mode
-                                 ? ID_WEASELTRAY_ENABLE_ASCII
-                                 : ID_WEASELTRAY_DISABLE_ASCII);
-    if (_pEditSessionContext)
-      m_client.ClearComposition();
+    if (_isToOpenClose && !_IsKeyboardOpen()) {
+      _SetKeyboardOpen(true);
+    }
+    // ... 通知 RIME、同步 UI ...
     _UpdateLanguageBar(_status);
+  } else {
+    if (_isToOpenClose && !_IsKeyboardOpen()) {
+      _SetKeyboardOpen(true);
+      // ... 启用 LanguageBar ...
+    }
   }
 }
 ```
 
 **天然幂等性**：即使 `_updatingLanguageBar` 守卫失效（异步回调 / 系统注入），重新读取 compartment 值会得到与当前 `_status.ascii_mode` 一致的结果，`desiredAsciiMode == _status.ascii_mode` → 跳过。不会产生额外翻转。
 
-`_HandleLangBarMenuSelect` → `TrayCommand` IPC → RIME 后端的 `SetOption("ascii_mode")`，与 Shift 按键切换走同一路径，确保行为和配置（如 `global_ascii_mode`）一致。
-
-### 2. Weasel：从 CONVERSION handler 移除 _SetKeyboardOpen(true)
+### 2. Weasel：CONVERSION handler 按 `_isToOpenClose` 条件调用 `_SetKeyboardOpen(true)`
 
 **修改文件：** `WeaselTSF/Compartment.cpp`
 
-CONVERSION handler 不再调用 `_SetKeyboardOpen(true)`。两个 compartment 完全解耦：
-- **OPENCLOSE**：管理 IME 启用/禁用（由 OPENCLOSE handler 处理，为 Ctrl+Space 和 Shift 设计）
-- **CONVERSION**：管理中/英文模式（由 CONVERSION handler 处理，为外部工具和系统切换设计）
+`_SetKeyboardOpen(true)` 的调用由 `_isToOpenClose` 控制，避免在错误场景下触发级联反转：
+
+| `_isToOpenClose` | CONVERSION handler 调用 `_SetKeyboardOpen(true)`？ | 原因 |
+|-------------------|---------------------------------------------------|------|
+| `true` (Win10)    | **是** — 键盘关闭时重开                              | OPENCLOSE if 分支不自动重开，需要 CONVERSION handler 补救 |
+| `false` (Win11)   | **否** — 不触碰 OPENCLOSE                           | OPENCLOSE else 分支自己 `_SetKeyboardOpen(true)` + blind toggle，CONVERSION 写 OPENCLOSE 会触发级联反转 |
 
 ### 3. Weasel：重入守卫
 
@@ -155,31 +157,13 @@ BOOL _updatingLanguageBar = false;
 
 **修改文件：** `injector/hook.cpp`
 
-用 msctf.dll 导出的 `TF_GetThreadMgr` 替代 `CoCreateInstance(CLSID_TF_ThreadMgr)`，确保获取与 WeaselTSF 相同的 ThreadMgr 实例：
-
-```cpp
-typedef HRESULT(WINAPI* PFN_TF_GetThreadMgr)(ITfThreadMgr**);
-static ITfThreadMgr* GetThreadMgrSingleton() {
-    HMODULE hMsctf = GetModuleHandleW(L"msctf.dll");
-    // ... GetProcAddress("TF_GetThreadMgr") ...
-    ITfThreadMgr* pThreadMgr = nullptr;
-    pfn(&pThreadMgr);
-    return pThreadMgr;
-}
-```
+用 msctf.dll 导出的 `TF_GetThreadMgr` 替代 `CoCreateInstance(CLSID_TF_ThreadMgr)`，确保获取与 WeaselTSF 相同的 ThreadMgr 实例。
 
 ### 5. im-control：使用有效 TfClientId 调用 SetValue
 
 **修改文件：** `injector/hook.cpp`
 
-调用 `ITfThreadMgr::Activate` 获取有效 `TfClientId`，用于所有 `SetValue` 调用，完成后 `Deactivate`：
-
-```cpp
-TfClientId clientId = TF_CLIENTID_NULL;
-pThreadMgr->Activate(&clientId);
-// ... SetValue(clientId, ...) 替代 SetValue(0, ...) ...
-pThreadMgr->Deactivate();
-```
+调用 `ITfThreadMgr::Activate` 获取有效 `TfClientId`，用于所有 `SetValue` 调用，完成后 `Deactivate`。
 
 ### 6. im-control：OPENCLOSE 跳过未变化的写入
 
@@ -187,7 +171,30 @@ pThreadMgr->Deactivate();
 
 写入前先 `GetValue` 比对，仅在值变化时 `SetValue`，避免不必要地触发 OPENCLOSE handler。
 
-### 7. vim 插件：去掉 -k open，只写 CONVERSION
+### 7. im-control：读注册表条件重开 OPENCLOSE
+
+**修改文件：** `injector/hook.cpp`
+
+hook DLL 在 `DllMain` 时读取注册表 `HKCU\Software\Rime\weasel\ToggleImeOnOpenClose`，缓存到全局变量 `g_isToOpenClose`。CONVERSION 写入后，仅在 `g_isToOpenClose=true` 且 `keyboardOpenClose` 未设置且 OPENCLOSE 当前为 0 时，重开键盘：
+
+```cpp
+// DllMain DLL_PROCESS_ATTACH:
+g_isToOpenClose = ReadToggleImeOnOpenClose();
+
+// hook 触发，CONVERSION 写入后:
+if (g_isToOpenClose && g_pSharedData->conversionModeNative && !g_pSharedData->keyboardOpenClose) {
+    // 读 OPENCLOSE 当前值，仅当 == 0 时 SetValue(1) 重开
+}
+```
+
+| `ToggleImeOnOpenClose` | hook 行为 | 原因 |
+|------------------------|-----------|------|
+| `yes` (Win10)          | 检查并重开 OPENCLOSE | OPENCLOSE if 分支不自动重开，gvim ESC 关键盘后需要 hook 补救 |
+| `no` (Win11)           | **不干预** OPENCLOSE | OPENCLOSE else 分支自动重开，hook 干预会导致级联反转 |
+
+**与 Weasel 侧修复的协同**：Weasel CONVERSION handler 也在 `_isToOpenClose=true` 时重开键盘。两者互为保底——任一方先触发即可重开，另一方检测到已打开则跳过（幂等）。
+
+### 8. vim 插件：去掉 -k open，只写 CONVERSION
 
 **修改文件：** `autoload/im_select.vim`（vim-im-select）
 
@@ -199,19 +206,30 @@ pThreadMgr->Deactivate();
 
 > GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION 和 GUID_COMPARTMENT_KEYBOARD_OPENCLOSE 是不一样的消息，作用要区分。在 GUID_COMPARTMENT_KEYBOARD_OPENCLOSE 的情况下 GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION 的消息不应该再作任何响应，否则就是对旧功能的 break。需要明确的是，输入功能是主功能，外部消息控制是辅助，不能因为要引入辅助功能导致主功能失效是基本要求。
 
-我们的修改完全符合此原则：
-- CONVERSION handler 不再触碰 OPENCLOSE compartment
+修复完全符合此原则：
 - OPENCLOSE handler 未改动（Shift/Ctrl+Space 主功能不受影响）
-- 外部工具只写 CONVERSION 切换中英文，不写 OPENCLOSE
+- CONVERSION handler 对 OPENCLOSE 的干预由 `_isToOpenClose` 严格控制：仅在 OPENCLOSE handler 自身不重开键盘的配置下才介入
+- 外部工具只写 CONVERSION 切换中英文，不写 OPENCLOSE（除 `g_isToOpenClose=true` 时的保底重开）
+
+## Win10/Win11 差异总结
+
+| 维度 | Windows 10 (`ToggleImeOnOpenClose=yes`) | Windows 11 (`ToggleImeOnOpenClose=no`) |
+|------|------------------------------------------|------------------------------------------|
+| `_isToOpenClose` | `true` | `false` |
+| OPENCLOSE handler | if 分支：真正开/关键盘，不 toggle ascii | else 分支：blind toggle ascii + 自动重开键盘 |
+| gvim ESC 关键盘 | 键盘保持关闭，需要外部重开 | else 分支自动 `_SetKeyboardOpen(true)` 重开 |
+| CONVERSION handler `_SetKeyboardOpen` | **调用**（重开键盘） | **不调用**（避免级联反转） |
+| im-control hook OPENCLOSE 重开 | **启用**（读注册表 `yes`） | **禁用**（读注册表 `no`） |
+| 级联反转风险 | 无（if 分支不 toggle） | 有（else 分支 blind toggle） |
 
 ## 方案对比
 
-| 项目 | 原始代码 (93eec2d) | blind toggle (f14f2a7) | 值驱动（最终） |
-|------|---------------------|------------------------|----------------|
+| 项目 | 原始代码 (93eec2d) | blind toggle (f14f2a7) | 值驱动 + `_isToOpenClose` 分支（最终） |
+|------|---------------------|------------------------|----------------------------------------|
 | 响应方式 | 查询后端→写回（撤销外部变更） | blind toggle | 读取值→比对→切换 |
 | 回调次数依赖 | N/A | 严格依赖偶数次 OnChange | 幂等，不依赖回调次数 |
-| compartment 耦合 | 无 | CONVERSION 写 OPENCLOSE（级联反转） | 完全解耦 |
-| 重入守卫 | 无 | 唯一防线，异步回调下失效 | 第一防线；值比对是第二防线 |
+| `_SetKeyboardOpen(true)` | 无 | 无条件调用（Win11 级联反转） | 按 `_isToOpenClose` 条件调用 |
+| OPENCLOSE 重开 | 无 | 无 | Weasel + im-control 双重保底 |
 | Windows 10 | 失效 | 正常 | 正常 |
 | Windows 11 | 失效 | 失效 | 正常 |
 
@@ -277,16 +295,19 @@ vim-im-select 插件为纯脚本，无需编译，pull 后 reload vim 配置即�
 
 ### 测试环境
 
-- 操作系统：Windows 10 和 Windows 11
+- 操作系统：Windows 10 pro 19045.7417 和 Windows 11 home 26200.8655
 - 前台进程：gvim 9.2.0735、Windows Terminal、Total Commander
 - 外部工具：im-control —— 通过 `SetWindowsHookEx` 注入 hook DLL 到前台进程，在目标线程内调用 `ITfCompartment::SetValue`
 
 ### 测试结果
 
 Windows 10 和 Windows 11 下均通过：
-- gvim：进入/离开 insert/command mode 切换英文，Shift 切中文后 ESC 回 normal mode 自动恢复英文
+- gvim 或 terminal vim: normal 英文 → i → edit, RIME 保持英文
+- gvim 或 terminal vim: edit 英文 → ESC → normal, RIME 保持英文，不被禁用
+- gvim 或 terminal vim: edit 中文 → ESC → normal, RIME 自动切回英文
+- gvim 或 terminal vim: 进入/离开 command mode 与 insert mode 行为一致
+- Shift 切换中英文、Ctrl+Space 启停 IME 均正常
 - Windows Terminal / Total Commander：AppIME 进入窗口自动切英文，8 秒空闲后自动切回英文
-- 用户 Shift 键切换中英文、Ctrl+Space 启停 IME 均正常
 
 ## 相关链接
 

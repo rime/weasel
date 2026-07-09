@@ -266,14 +266,18 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
     }
   } else if (IsEqualGUID(guidCompartment,
                          GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)) {
-    if (_updatingLanguageBar)
+    if (_updatingLanguageBar) {
       return S_OK;
+    }
     DWORD convMode = 0;
     _GetCompartmentDWORD(convMode,
                          GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
     bool desiredAsciiMode = !(convMode & TF_CONVERSIONMODE_NATIVE);
     if (desiredAsciiMode != _status.ascii_mode) {
       _status.ascii_mode = desiredAsciiMode;
+      if (_isToOpenClose && !_IsKeyboardOpen()) {
+        _SetKeyboardOpen(true);
+      }
       if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
         _EnableLanguageBar(true);
       _HandleLangBarMenuSelect(_status.ascii_mode
@@ -282,6 +286,12 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
       if (_pEditSessionContext)
         m_client.ClearComposition();
       _UpdateLanguageBar(_status);
+    } else {
+      if (_isToOpenClose && !_IsKeyboardOpen()) {
+        _SetKeyboardOpen(true);
+        if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
+          _EnableLanguageBar(true);
+      }
     }
   }
   return S_OK;
