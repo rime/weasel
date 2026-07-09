@@ -7,10 +7,6 @@
 #include "CandidateList.h"
 #include <WeaselUtility.h>
 
-// debug logger (defined in Compartment.cpp)
-extern void _DbgInit();
-extern void _DbgLog(const char* fmt, ...);
-
 static const DWORD LANGBARITEMSINK_COOKIE = 0x42424242;
 
 static void HMENU2ITfMenu(HMENU hMenu, ITfMenu* pTfMenu) {
@@ -406,7 +402,6 @@ void WeaselTSF::_UninitLanguageBar() {
 void WeaselTSF::_UpdateLanguageBar(weasel::Status stat) {
   if (!_pLangBarButton)
     return;
-  _DbgInit();
   DWORD flags;
   _GetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
   if (stat.ascii_mode)
@@ -417,13 +412,9 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status stat) {
     flags |= TF_CONVERSIONMODE_FULLSHAPE;
   else
     flags &= (~TF_CONVERSIONMODE_FULLSHAPE);
-  _DbgLog("_UpdateLanguageBar: ascii=%d, flags=0x%lX (NATIVE=%d), setting guard=true",
-          stat.ascii_mode ? 1 : 0, flags,
-          (flags & TF_CONVERSIONMODE_NATIVE) ? 1 : 0);
   _updatingLanguageBar = true;
   _SetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
   _updatingLanguageBar = false;
-  _DbgLog("_UpdateLanguageBar: done, guard=false");
 
   _pLangBarButton->UpdateWeaselStatus(stat);
 }

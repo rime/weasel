@@ -4,16 +4,11 @@
 #include <thread>
 #include <shellapi.h>
 #include <tlhelp32.h>
-#include <cstdio>
 #include "WeaselTSF.h"
 #include "CandidateList.h"
 #include "LanguageBar.h"
 #include "Compartment.h"
 #include "ResponseParser.h"
-
-// debug logger (defined in Compartment.cpp)
-extern void _DbgInit();
-extern void _DbgLog(const char* fmt, ...);
 
 static void error_message(const WCHAR* msg) {
   static DWORD next_tick = 0;
@@ -133,10 +128,6 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr,
 
   _pThreadMgr = pThreadMgr;
   _tfClientId = tfClientId;
-
-  _DbgInit();
-  _DbgLog("ActivateEx: pThreadMgr=%p, tfClientId=%lu, threadId=%lu",
-          (void*)pThreadMgr, tfClientId, GetCurrentThreadId());
 
   if (!_InitThreadMgrEventSink())
     goto ExitError;
