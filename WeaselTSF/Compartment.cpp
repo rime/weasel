@@ -9,12 +9,24 @@
 #include "CandidateList.h"
 #include "LanguageBar.h"
 
-// Debug logging to file (enabled via session GUID env override)
+// Debug logging to file
 static bool s_dbgEnabled = false;
 static FILE* s_dbgFile = nullptr;
 static CRITICAL_SECTION s_dbgLock;
 static bool s_dbgLockInit = false;
-static const char* s_dbgPath = "C:\\Users\\Public\\weasel-compartment-debug.log";
+static char s_dbgPath[MAX_PATH] = {0};
+
+static void _DbgInitPath() {
+  if (s_dbgPath[0] != 0) return;
+  char tempPath[MAX_PATH] = {0};
+  DWORD len = GetTempPathA(MAX_PATH, tempPath);
+  if (len == 0 || len >= MAX_PATH) {
+    strcpy_s(s_dbgPath, MAX_PATH, "C:\\weasel-compartment-debug.log");
+    return;
+  }
+  strcpy_s(s_dbgPath, MAX_PATH, tempPath);
+  strcat_s(s_dbgPath, MAX_PATH, "weasel-compartment-debug.log");
+}
 
 void _DbgInit() {
   if (!s_dbgLockInit) {
@@ -22,13 +34,15 @@ void _DbgInit() {
     s_dbgLockInit = true;
   }
   if (!s_dbgFile) {
+    _DbgInitPath();
     s_dbgFile = fopen(s_dbgPath, "a");
     if (s_dbgFile) {
       s_dbgEnabled = true;
       SYSTEMTIME st;
       GetLocalTime(&st);
-      fprintf(s_dbgFile, "\n=== WeaselTSF compartment debug session @ %04d-%02d-%02d %02d:%02d:%02d.%03d ===\n",
-              st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+      fprintf(s_dbgFile, "\n=== WeaselTSF compartment debug session @ %04d-%02d-%02d %02d:%02d:%02d.%03d pid=%lu ===\n",
+              st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
+              GetCurrentProcessId());
       fflush(s_dbgFile);
       OutputDebugStringW(L"[WeaselTSF] compartment debug log opened");
     }
