@@ -177,6 +177,7 @@ class WeaselTSF : public ITfTextInputProcessorEx,
   BOOL _InitLanguageBar();
   void _UninitLanguageBar();
   void _UpdateLanguageBar(weasel::Status stat);
+  void _ReconcileCompartment();
   void _ShowLanguageBar(BOOL show);
   void _EnableLanguageBar(BOOL enable);
 
@@ -184,12 +185,20 @@ class WeaselTSF : public ITfTextInputProcessorEx,
 
   void _DeleteCandidateList();
 
+  friend class CUpdateLangBarEditSession;
   BOOL _InitCompartment();
   void _UninitCompartment();
   HRESULT _HandleCompartment(REFGUID guidCompartment);
 
   void _Reconnect();
   std::wstring _GetRootDir();
+  BOOL _InitDeferredWindow();
+  void _UninitDeferredWindow();
+  static LRESULT CALLBACK _DeferredWndProc(HWND hWnd,
+                                           UINT msg,
+                                           WPARAM wParam,
+                                           LPARAM lParam);
+  HWND _hDeferredMsgWnd;
 
   bool isImmersive() const {
     return (_activateFlags & TF_TMF_IMMERSIVEMODE) != 0;

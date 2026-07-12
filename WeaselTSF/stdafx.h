@@ -14,6 +14,7 @@
 #include <OleCtl.h>
 #include <msctf.h>
 #include <assert.h>
+#include <strsafe.h>
 
 #include <atlcomcli.h> 
 
