@@ -13,6 +13,11 @@ STDAPI WeaselTSF::DoEditSession(TfEditCookie ec) {
 
   bool ok = m_client.GetResponseData(std::ref(parser));
 
+  if (config.hide_ime_mode_icon != _config.hide_ime_mode_icon) {
+    _config = config;
+    _UninitLanguageBar();
+    _InitLanguageBar();
+  }
   _UpdateLanguageBar(_status);
 
   if (ok) {
