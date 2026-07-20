@@ -1,0 +1,18 @@
+patch:
+  app_options:
+    chrome.exe:
+      inline_preedit: true
+    msedge.exe:
+      inline_preedit: true
+    firefox.exe:
+      inline_preedit: true
+    opera.exe:
+      inline_preedit: true
+    brave.exe:
+      inline_preedit: true
+
+  style:
+    horizontal: true
+    candidate_list_layout: linear
+    font_point: 14
+    display_tray_icon: true
