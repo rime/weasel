@@ -13,6 +13,5 @@ patch:
 
   style:
     horizontal: true
-    candidate_list_layout: linear
     font_point: 14
-    display_tray_icon: true
+
