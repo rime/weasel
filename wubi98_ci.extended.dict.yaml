@@ -1,0 +1,34 @@
+# Rime dictionary: wubi98_ci.extended
+# encoding: utf-8
+
+---
+name: wubi98_ci.extended
+version: "2.0"
+sort: by_weight
+import_tables:
+  - wubi98_ci
+columns:
+  - text
+  - code
+  - weight
+  - stem
+encoder:
+  exclude_patterns:
+    - '^z.*$'
+  rules:
+    - length_equal: 2
+      formula: "AaAbBaBb"
+    - length_equal: 3
+      formula: "AaBaCaCb"
+    - length_in_range: [4, 90]
+      formula: "AaBaCaZa"
+...
+
+春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少
+红豆生南国，春来发几枝。愿君多采撷，此物最相思
+向晚意不适，驱车登古原。夕阳无限好，只是近黄昏
+故人西辞黄鹤楼，烟花三月下扬州。孤帆远影碧空尽，唯见长江天际流
+北京市海淀区清华大学医学科学楼	addr
+tsps_e@tsinghua.edu.cn	mail
+13552888888	tel
+

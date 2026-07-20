@@ -1,0 +1,2 @@
+patch:
+  "translator/dictionary": wubi98_ci.extended #开启扩展词库wubi98_ci.extended.dict.yaml，在其中进行细胞词库的设定。

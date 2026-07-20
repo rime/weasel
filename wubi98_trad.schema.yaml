@@ -1,0 +1,113 @@
+# Rime schema settings
+# encoding: utf-8
+
+schema:
+  schema_id: wubi98_trad
+  name: "98五笔简入繁出"
+  version: "1.0"
+  author:
+    - 创始人 王永民先生
+  description:
+    98五笔拼音混合版，2023年8月02日 18:00
+  dependencies:
+    - pinyin_simp
+
+switches:
+#  - name: ascii_mode
+#    reset: 0
+#    states: [ 中文, 英文 ]
+  - name: zh_trad
+    reset: 1    # 初始状态为 0: 简 -> 简 1: 简 -> 繁
+    states: [ 简体, 繁体 ]
+  - name: full_shape
+    states: [ 半角, 全角 ]
+  - name: extended_charset
+    states: [ 常用, 扩展 ]
+  - name: ascii_punct
+    states: [ 。，, ．， ]
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - reverse_lookup_translator
+    - table_translator
+    - lua_translator@date_translator # 自定义系统变量输出
+  filters:
+    - simplifier@tradition
+    # - lua_filter@single_char_first_filter # 单字优先方法
+
+speller:
+  max_code_length: 4                    # 四码上屏
+  auto_select: true                     # 四码唯一时，自动上屏
+  auto_clear: max_length                # 空码时自动清空
+
+translator:
+  dictionary: wubi98_ci                 # 翻译器将调取此字典文件
+  enable_charset_filter: true           # 开启字符集过滤
+  enable_completion: true               # 是否显示编码未输入完整的词条
+  enable_sentence: false                # 句子输入模式
+  enable_user_dict: false               # 是否开启用户词典（用户词典记录动态字词频，用户词）
+  enable_encoder: false
+  encode_commit_history: false          # 是否对已上屏词自动成词（仅 table_translator 有效）
+  preedit_format:                       # 上屏码自定义
+#    - xform/.+//
+  comment_format:                       # 提示码自定义
+    - xform/.+//                        # 当前默认不提示编码，消除所有候选词后的提示码
+
+
+# 简入繁出 通过 OpenCC 支持 github地址：https://github.com/BYVoid/OpenCC
+# 已集成在输入法程序中，在输入法程序目录的 opencc 目录下
+# 输入法程序中使用 OpenCC 简转繁的过程是这样：
+# 1. 先从简转繁体
+# 2. 如果配置了台湾繁体，就会将上一步生成的繁体进一步处理
+# 3. 根据这个文件：https://github.com/BYVoid/OpenCC/blob/master/data/dictionary/TWVariants.txt 把台湾与正常繁体不同的地方转成台湾版本的字，比如 “床”
+
+tradition:
+  #  opencc_config: s2t.json  # 简 -> 繁
+  opencc_config: s2hk.json  # 繁 -> 香港
+  #  opencc_config: t2s.json   # 繁 -> 简
+  #  opencc_config: t2tw.json  # 繁 -> 台湾
+  #  opencc_config: t2hk.json  # 繁 -> 香港
+  #  opencc_config: s2tw.json  # 簡 -> 臺灣標準
+  #  opencc_config: s2twp.json  # 簡 -> 臺灣片語
+  option_name: zh_trad
+
+reverse_lookup:
+  dictionary: pinyin_simp  # 反查使用的拼音词库
+  prefix: "z"              # 反查前缀，以它为起点
+  suffix: "'"              # 反查后缀，以它为结点
+  tips: [拼音]              # 反查时的提示信息
+
+  preedit_format:
+    - xform/([nl])v/$1ü/
+    - xform/([nl])ue/$1üe/
+    - xform/([jqxy])v/$1u/
+punctuator:
+  import_preset: default
+#  import_preset: symbols
+# 开始快捷输入符号功能，前面留两个空格
+# 对应需要将下面 recognizer -> patterns 下面的 punct 字段的注释去掉
+
+key_binder:
+  import_preset: default
+
+recognizer:
+  import_preset: default
+  patterns:
+#    punct: "^/([0-9]+[a-z]*|[a-z]+)$" # 注意前方需要有4个空格，跟下面对齐
+    reverse_lookup: "^z[a-z]*'?$" # 反查词条的正则

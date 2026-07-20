@@ -1,0 +1,243 @@
+schema:
+  schema_id: wubi98_ci
+  name: "含词"
+  version: "6.0"
+  author:
+    - 發明人 王永民
+  description: |
+    五笔98版
+    碼表源自 yanhuacuo
+    敲 z 鍵進入拼音反查
+  dependencies:
+    - pinyin_simp
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 中,英 ]    
+  - name: zh_trad
+    reset: 0    # 初始状态为 0: 简 -> 简 1: 简 -> 繁
+    states: [ 简,繁 ]
+  - name: new_spelling
+    reset: 1
+    states: [ 隐,显 ]
+  - name: rvl_zhuyin
+    reset: 1
+    states: [ 形,拼 ]
+  - name: GB2312
+    reset: 0
+    states: [ 扩,常 ]
+  - name: new_hide_pinyin
+    reset: 1
+    states: [ 音,哑 ]
+  - name: single_char
+    reset: 0
+    states: [ 词,单 ]
+  - name: ascii_punct
+    reset: 0
+    states: [ 。，,．， ]
+  - name: full_shape
+    reset: 0
+    states: [ 半,全 ]
+engine:
+  filters:
+    - simplifier
+    - lua_filter@single_char
+    - "reverse_lookup_filter@ci_reverse_lookup"
+    - lua_filter@new_spelling@spelling
+    - uniquifier
+  processors:
+    - ascii_composer
+    - lua_processor@submit_text_processor
+    - lua_processor@switch_processor
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - "affix_segmentor@mkst"
+    - "affix_segmentor@rvl_zhuyin"
+    - "affix_segmentor@rvlk1"
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - reverse_lookup_translator
+    - "table_translator@rvlk1"
+    - table_translator
+    - "table_translator@fixed"
+    - "table_translator@mkst"
+    - "table_translator@rvl_zhuyin"
+    - "history_translator@history"
+    - "lua_translator@helper"
+    - "lua_translator@time_date"
+speller:
+  auto_select: true
+  auto_clear: max_length
+  delimiter: "`"
+  max_code_length: 4
+translator:
+  dictionary: wubi98_ci.extended
+  db_class: tabledb
+  initial_quality: 100000
+  enable_charset_filter: false
+  enable_sentence: false
+  enable_encoder: false
+  encode_commit_history: false
+  max_phrase_length: 4
+  enable_completion: false
+  enable_user_dict: false
+  disable_user_dict_for_patterns:
+    - "^z.*$"
+tradition:
+  #  opencc_config: s2t.json  # 简 -> 繁
+  opencc_config: s2hk.json  # 繁 -> 香港
+  #  opencc_config: t2s.json   # 繁 -> 简
+  #  opencc_config: t2tw.json  # 繁 -> 台湾
+  #  opencc_config: t2hk.json  # 繁 -> 香港
+  #  opencc_config: s2tw.json  # 簡 -> 臺灣標準
+  #  opencc_config: s2twp.json  # 簡 -> 臺灣片語
+  option_name: zh_trad
+
+fixed:
+  db_class: tabledb
+  dictionary: wubi98_ci.extended
+  disable_user_dict_for_patterns:
+    - "^z.*$"
+  enable_charset_filter: false
+  enable_completion: false
+  enable_encoder: true
+  enable_sentence: false
+  enable_user_dict: true
+  encode_commit_history: false
+  initial_quality: 1000
+  max_phrase_length: 4
+mkst:
+  db_class: tabledb
+  dictionary: wubi98_ci.extended
+  disable_user_dict_for_patterns:
+    - "^z.*$"
+  enable_charset_filter: false
+  enable_completion: false
+  enable_encoder: false
+  enable_sentence: true
+  enable_user_dict: false
+  encode_commit_history: false
+  initial_quality: 10
+  max_phrase_length: 4
+  prefix: "`"
+  tag: mkst
+  tips: "〔精准造词〕"
+rvl_zhuyin:
+  db_class: tabledb
+  dictionary: wubi98_ci.extended
+  disable_user_dict_for_patterns:
+    - "^z.*$"
+  enable_charset_filter: false
+  enable_completion: false
+  enable_encoder: false
+  enable_sentence: true
+  enable_user_dict: false
+  encode_commit_history: false
+  initial_quality: 10
+  max_phrase_length: 4
+  prefix: "~"
+  tag: zhuyin
+  tips: "〔以形查音〕"
+reverse_lookup:
+  db_class: tabledb
+  dictionary: py
+  disable_user_dict_for_patterns:
+    - "^z.*$"
+  enable_charset_filter: false
+  enable_completion: false
+  enable_encoder: false
+  enable_sentence: false
+  enable_user_dict: false
+  encode_commit_history: false
+  initial_quality: 100000
+  max_phrase_length: 4
+  preedit_format:
+    - "xform/([nl])v/$1ü/"
+    - "xform/([nl])ue/$1üe/"
+    - "xform/([jqxy])v/$1u/"
+  tag: rvlk2
+  tips: "〔拼音反查〕"
+rvlk1:
+  db_class: tabledb
+  dictionary: py
+  disable_user_dict_for_patterns:
+    - "^z.*$"
+  enable_charset_filter: false
+  enable_completion: false
+  enable_encoder: false
+  enable_sentence: false
+  enable_user_dict: false
+  encode_commit_history: false
+  extra_tags:
+    - rvlk2
+  initial_quality: 100000
+  max_phrase_length: 4
+  preedit_format:
+    - "xform/([nl])v/$1ü/"
+    - "xform/([nl])ue/$1üe/"
+    - "xform/([jqxy])v/$1u/"
+  prefix: z
+  tag: rvlk1
+  tips: "〔拼音反查〕"
+ci_reverse_lookup:
+  dictionary: wubi98_ci.extended
+  tips: "〔五笔滤镜〕"
+  tags:
+    - rvlk2
+simplifier:
+  opencc_config: s2t.json
+  option_name: zh_trad
+lua_reverse_db:
+  spelling: wb_spelling
+  code: wb_spelling
+recognizer:
+  import_preset: default
+  patterns:
+    email: "^[A-Za-z][-_.0-9A-Za-z]*@.*$"
+    mkst: "^[a-y]*`[a-y`]*$"
+    punct: "^/([0-9]0?|[A-Za-z]+)$"
+    rvlk1: "^z[a-z]*$"
+    rvlk2: "^z[a-z]*$"
+    uppercase: "[A-Z][-_+.'0-9A-Za-z]*$"
+    url: "^(www[.]|https?:|ftp[.:]|mailto:|file:).*$|^[a-z]+[.].+$"
+    zhuyin: "~[a-y]*?$"
+    helper: '^help$'
+history:
+  input: z
+  size: 1
+  initial_quality: 1
+key_binder:
+  bindings:
+    - {send: Up, accept: Left, when: has_menu}
+    - {send: Down, accept: Right, when: has_menu}
+    - {send: Page_Up, accept: minus, when: has_menu}
+    - {send: Page_Down, accept: equal, when: has_menu}
+    - {send: Escape, accept: space, when: composing}
+    - {send: space, accept: space, when: has_menu}
+    - {toggle: zh_trad, accept: "Control+Shift+4", when: always}
+    - {toggle: zh_trad, accept: "Control+Shift+dollar", when: always}
+    - {toggle: zh_trad, accept: "Control+Shift+F", when: always}
+    - {toggle: new_spelling, accept: "Control+Shift+H", when: always}
+    - {toggle: new_hide_pinyin, accept: "Control+Shift+J", when: always}
+    - {toggle: single_char, accept: "Control+Shift+K", when: always}
+    - {toggle: GB2312, accept: "Control+Shift+U", when: always}
+    - {accept: Return, send: Escape, when: composing}
+    - {accept: Return, send: Escape, when: has_menu}
+    - {accept: semicolon, send: 2, when: has_menu}
+    - {accept: apostrophe, send: 3, when: has_menu}
+punctuator:
+  import_preset: symbols
+menu:
+  page_size: 9
