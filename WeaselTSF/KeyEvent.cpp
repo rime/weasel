@@ -1,9 +1,109 @@
 ﻿#include "stdafx.h"
 #include <KeyEvent.h>
 
+UINT RemapKeyByLayout(UINT vkey, UINT scanCode, LPCWSTR layout) {
+  if (!layout)
+    return vkey;
+
+  // Set 1 scan codes for the alphabetic section of a standard PC keyboard.
+  if (_wcsicmp(layout, L"colemak") == 0) {
+    // Unlisted positions have the same meaning in QWERTY and Colemak.
+    switch (scanCode) {
+      case 0x12: return 'F';
+      case 0x13: return 'P';
+      case 0x14: return 'G';
+      case 0x15: return 'J';
+      case 0x16: return 'L';
+      case 0x17: return 'U';
+      case 0x18: return 'Y';
+      case 0x19: return VK_OEM_1;
+      case 0x1f: return 'R';
+      case 0x20: return 'S';
+      case 0x21: return 'T';
+      case 0x22: return 'D';
+      case 0x24: return 'N';
+      case 0x25: return 'E';
+      case 0x26: return 'I';
+      case 0x27: return 'O';
+      case 0x31: return 'K';
+      default: return vkey;
+    }
+  }
+
+  if (_wcsicmp(layout, L"dvorak") == 0) {
+    switch (scanCode) {
+      case 0x10: return VK_OEM_7;       // '
+      case 0x11: return VK_OEM_COMMA;   // ,
+      case 0x12: return VK_OEM_PERIOD;  // .
+      case 0x13: return 'P';
+      case 0x14: return 'Y';
+      case 0x15: return 'F';
+      case 0x16: return 'G';
+      case 0x17: return 'C';
+      case 0x18: return 'R';
+      case 0x19: return 'L';
+      case 0x1a: return VK_OEM_2;       // /
+      case 0x1b: return VK_OEM_PLUS;    // =
+      case 0x1e: return 'A';
+      case 0x1f: return 'O';
+      case 0x20: return 'E';
+      case 0x21: return 'U';
+      case 0x22: return 'I';
+      case 0x23: return 'D';
+      case 0x24: return 'H';
+      case 0x25: return 'T';
+      case 0x26: return 'N';
+      case 0x27: return 'S';
+      case 0x28: return VK_OEM_MINUS;  // -
+      case 0x2c: return VK_OEM_1;     // ;
+      case 0x2d: return 'Q';
+      case 0x2e: return 'J';
+      case 0x2f: return 'K';
+      case 0x30: return 'X';
+      case 0x31: return 'B';
+      case 0x32: return 'M';
+      case 0x33: return 'W';
+      case 0x34: return 'V';
+      case 0x35: return 'Z';
+      default: return vkey;
+    }
+  }
+
+  if (_wcsicmp(layout, L"workman") == 0) {
+    // Unlisted positions have the same meaning in QWERTY and Workman.
+    switch (scanCode) {
+      case 0x11: return 'D';
+      case 0x12: return 'R';
+      case 0x13: return 'W';
+      case 0x14: return 'B';
+      case 0x15: return 'J';
+      case 0x16: return 'F';
+      case 0x17: return 'U';
+      case 0x18: return 'P';
+      case 0x19: return VK_OEM_1;
+      case 0x20: return 'H';
+      case 0x21: return 'T';
+      case 0x23: return 'Y';
+      case 0x24: return 'N';
+      case 0x25: return 'E';
+      case 0x26: return 'O';
+      case 0x27: return 'I';
+      case 0x2e: return 'M';
+      case 0x2f: return 'C';
+      case 0x30: return 'V';
+      case 0x31: return 'K';
+      case 0x32: return 'L';
+      default: return vkey;
+    }
+  }
+
+  return vkey;
+}
+
 bool ConvertKeyEvent(UINT vkey,
                      KeyInfo kinfo,
                      const LPBYTE keyState,
+                     LPCWSTR keyboardLayout,
                      weasel::KeyEvent& result) {
   const BYTE KEY_DOWN = 0x80;
   const BYTE TOGGLED = 0x01;
@@ -41,6 +141,8 @@ bool ConvertKeyEvent(UINT vkey,
     return true;
   }
 
+  vkey = RemapKeyByLayout(vkey, kinfo.scanCode, keyboardLayout);
+
   const int buf_len = 8;
   static WCHAR buf[buf_len];
   static BYTE table[256];
@@ -48,7 +150,8 @@ bool ConvertKeyEvent(UINT vkey,
   memcpy(table, keyState, sizeof(table));
   table[VK_CONTROL] = 0;
   table[VK_MENU] = 0;
-  int ret = ToUnicodeEx(vkey, UINT(kinfo), table, buf, buf_len, 0, NULL);
+  int ret = ToUnicodeEx(vkey, MapVirtualKeyW(vkey, MAPVK_VK_TO_VSC), table, buf,
+                        buf_len, 0, NULL);
   if (ret == 1) {
     result.keycode = UINT(buf[0]);
     return true;

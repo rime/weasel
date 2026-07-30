@@ -181,6 +181,8 @@ class WeaselTSF : public ITfTextInputProcessorEx,
   void _EnableLanguageBar(BOOL enable);
 
   BOOL _InsertText(com_ptr<ITfContext> pContext, const std::wstring& ext);
+  BOOL _InsertTextAtSelection(com_ptr<ITfContext> pContext,
+                              const std::wstring& text);
 
   void _DeleteCandidateList();
 
@@ -227,10 +229,12 @@ class WeaselTSF : public ITfTextInputProcessorEx,
 
   /* IME status */
   weasel::Status _status;
+  weasel::Config _config;
 
   // guidatom for the display attibute.
   TfGuidAtom _gaDisplayAttributeInput;
   BOOL _async_edit = false;
   BOOL _committed = false;
+  std::wstring _pendingAsciiText;
   BOOL _isToOpenClose = false;
 };

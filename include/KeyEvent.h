@@ -30,7 +30,11 @@ struct KeyEvent {
 bool ConvertKeyEvent(UINT vkey,
                      KeyInfo kinfo,
                      const LPBYTE keyState,
+                     LPCWSTR keyboardLayout,
                      weasel::KeyEvent& result);
+
+// Remap a physical key position to the virtual key produced by a named layout.
+UINT RemapKeyByLayout(UINT vkey, UINT scanCode, LPCWSTR layout);
 
 namespace ibus {
 // keycodes

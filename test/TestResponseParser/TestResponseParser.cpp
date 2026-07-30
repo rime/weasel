@@ -85,11 +85,25 @@ void test_4() {
   BOOST_TEST_EQ(1, c.totalPages);
 }
 
+void test_config() {
+  WCHAR resp[] =
+      L"action=config\n"
+      L"config.inline_preedit=1\n"
+      L"config.keyboard_layout=colemak\n";
+  DWORD len = wcslen(resp);
+  weasel::Config config;
+  weasel::ResponseParser parser(nullptr, nullptr, nullptr, &config);
+  parser(resp, len);
+  BOOST_TEST(config.inline_preedit);
+  BOOST_TEST(config.keyboard_layout == L"colemak");
+}
+
 int _tmain(int argc, _TCHAR* argv[]) {
   test_1();
   test_2();
   test_3();
   test_4();
+  test_config();
 
   system("pause");
   return boost::report_errors();
