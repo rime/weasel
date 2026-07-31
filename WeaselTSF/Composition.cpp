@@ -381,6 +381,49 @@ BOOL WeaselTSF::_InsertText(com_ptr<ITfContext> pContext,
   return TRUE;
 }
 
+class CInsertTextAtSelectionEditSession : public CEditSession {
+ public:
+  CInsertTextAtSelectionEditSession(com_ptr<WeaselTSF> pTextService,
+                                    com_ptr<ITfContext> pContext,
+                                    const std::wstring& text)
+      : CEditSession(pTextService, pContext), _text(text) {}
+
+  STDMETHODIMP DoEditSession(TfEditCookie ec) override {
+    TF_SELECTION selection = {};
+    ULONG fetched = 0;
+    if (_pContext->GetSelection(ec, TF_DEFAULT_SELECTION, 1, &selection,
+                                &fetched) != S_OK ||
+        fetched != 1 || !selection.range)
+      return E_FAIL;
+    HRESULT result = selection.range->SetText(
+        ec, TF_ST_CORRECTION, _text.c_str(), static_cast<LONG>(_text.length()));
+    if (SUCCEEDED(result)) {
+      selection.range->Collapse(ec, TF_ANCHOR_END);
+      selection.style.ase = TF_AE_NONE;
+      selection.style.fInterimChar = FALSE;
+      result = _pContext->SetSelection(ec, 1, &selection);
+    }
+    selection.range->Release();
+    return result;
+  }
+
+ private:
+  std::wstring _text;
+};
+
+BOOL WeaselTSF::_InsertTextAtSelection(com_ptr<ITfContext> pContext,
+                                       const std::wstring& text) {
+  com_ptr<CInsertTextAtSelectionEditSession> editSession;
+  editSession.Attach(new CInsertTextAtSelectionEditSession(this, pContext,
+                                                            text));
+  if (!editSession)
+    return FALSE;
+  HRESULT result;
+  return SUCCEEDED(pContext->RequestEditSession(
+      _tfClientId, editSession, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE,
+      &result));
+}
+
 void WeaselTSF::_UpdateComposition(com_ptr<ITfContext> pContext) {
   HRESULT hr;
 
