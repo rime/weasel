@@ -414,8 +414,8 @@ class CInsertTextAtSelectionEditSession : public CEditSession {
 BOOL WeaselTSF::_InsertTextAtSelection(com_ptr<ITfContext> pContext,
                                        const std::wstring& text) {
   com_ptr<CInsertTextAtSelectionEditSession> editSession;
-  editSession.Attach(new CInsertTextAtSelectionEditSession(this, pContext,
-                                                            text));
+  editSession.Attach(
+      new CInsertTextAtSelectionEditSession(this, pContext, text));
   if (!editSession)
     return FALSE;
   HRESULT result;

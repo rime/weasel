@@ -139,8 +139,7 @@ void RimeWithWeaselHandler::Initialize() {
     if (rime_api->config_get_bool(&config, "global_ascii", &global_ascii))
       m_global_ascii_mode = !!global_ascii;
     char keyboard_layout[32] = {};
-    if (rime_api->config_get_string(&config, "keyboard_layout",
-                                    keyboard_layout,
+    if (rime_api->config_get_string(&config, "keyboard_layout", keyboard_layout,
                                     sizeof(keyboard_layout) - 1))
       m_keyboard_layout = keyboard_layout;
     if (!rime_api->config_get_int(&config, "show_notifications_time",

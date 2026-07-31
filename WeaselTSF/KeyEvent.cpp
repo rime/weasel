@@ -47,8 +47,8 @@ std::wstring ResolveKeyboardLayoutId(LPCWSTR value) {
       DWORD type = 0;
       DWORD size = sizeof(name);
       if (RegQueryValueExW(layout, L"Layout Text", nullptr, &type,
-                           reinterpret_cast<LPBYTE>(name), &size) ==
-              ERROR_SUCCESS &&
+                           reinterpret_cast<LPBYTE>(name),
+                           &size) == ERROR_SUCCESS &&
           type == REG_SZ && _wcsicmp(value, name) == 0) {
         if (!match.empty()) {
           RegCloseKey(layout);
@@ -86,9 +86,9 @@ HKL FindKeyboardLayout(LPCWSTR value) {
   wchar_t layoutId[5] = {};
   DWORD type = 0;
   DWORD size = sizeof(layoutId);
-  const LSTATUS status = RegQueryValueExW(
-      key, L"Layout Id", nullptr, &type, reinterpret_cast<LPBYTE>(layoutId),
-      &size);
+  const LSTATUS status =
+      RegQueryValueExW(key, L"Layout Id", nullptr, &type,
+                       reinterpret_cast<LPBYTE>(layoutId), &size);
   RegCloseKey(key);
 
   ULONG_PTR expected = 0;
@@ -174,8 +174,8 @@ bool ConvertKeyEvent(UINT vkey,
   memcpy(table, keyState, sizeof(table));
   table[VK_CONTROL] = 0;
   table[VK_MENU] = 0;
-  int ret = ToUnicodeEx(vkey, kinfo.scanCode, table, buf, buf_len, 0,
-                        keyboardLayout);
+  int ret =
+      ToUnicodeEx(vkey, kinfo.scanCode, table, buf, buf_len, 0, keyboardLayout);
   if (ret == 1) {
     result.keycode = UINT(buf[0]);
     return true;

@@ -17,8 +17,8 @@ int main() {
   assert(FindKeyboardLayout(L"colemak") == colemak);
   HKL activeLayout = GetKeyboardLayout(0);
   HKL loadedLayouts[64] = {};
-  int loadedCount = GetKeyboardLayoutList(_countof(loadedLayouts),
-                                          loadedLayouts);
+  int loadedCount =
+      GetKeyboardLayoutList(_countof(loadedLayouts), loadedLayouts);
   HKL dvorak = FindKeyboardLayout(L"United States-Dvorak");
   assert(dvorak);
   assert(GetKeyboardLayout(0) == activeLayout);
