@@ -133,6 +133,11 @@ void WeaselPanel::_CreateLayout() {
 
 // 更新界面
 void WeaselPanel::Refresh() {
+  // marshal cross-thread calls to the UI thread
+  if (!_IsUiThread()) {
+    PostMessage(WM_WEASEL_REFRESH);
+    return;
+  }
   bool should_show_icon =
       (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
   m_candidateCount = min(m_ctx.cinfo.candies.size(), MAX_CANDIDATES_COUNT);
@@ -1120,6 +1125,11 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
 // 由于某些软件并不依赖 WM_PAINT 消息来重绘，在消息循环中直接忽略掉了 WM_PAINT
 // 消息， 导致 DoPaint() 永远不会被调用，这里手动调用 DoPaint() 强制重绘
 void WeaselPanel::RedrawWindow() {
+  // marshal to the UI thread to avoid concurrent BeginDraw/EndDraw
+  if (!_IsUiThread()) {
+    PostMessage(WM_WEASEL_REDRAW);
+    return;
+  }
   HDC hdc = GetDC();
   DoPaint(hdc);
   ReleaseDC(hdc);
@@ -1169,9 +1179,51 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg,
   return LRESULT();
 }
 
+bool WeaselPanel::_IsUiThread() const {
+  // window not created or already destroyed: run directly, nothing to post to
+  if (!IsWindow())
+    return true;
+  DWORD dwPid = 0;
+  DWORD dwTid = GetWindowThreadProcessId(m_hWnd, &dwPid);
+  return dwTid == GetCurrentThreadId();
+}
+
+LRESULT WeaselPanel::OnRefreshPanel(UINT uMsg,
+                                    WPARAM wParam,
+                                    LPARAM lParam,
+                                    BOOL& bHandled) {
+  Refresh();
+  return 0;
+}
+
+LRESULT WeaselPanel::OnRedrawWindow(UINT uMsg,
+                                    WPARAM wParam,
+                                    LPARAM lParam,
+                                    BOOL& bHandled) {
+  RedrawWindow();
+  return 0;
+}
+
+LRESULT WeaselPanel::OnMoveTo(UINT uMsg,
+                              WPARAM wParam,
+                              LPARAM lParam,
+                              BOOL& bHandled) {
+  // takes ownership of the heap RECT posted by MoveTo()
+  std::unique_ptr<RECT> pRc(reinterpret_cast<RECT*>(wParam));
+  if (pRc)
+    MoveTo(*pRc);
+  return 0;
+}
+
 void WeaselPanel::MoveTo(RECT const& rc) {
   if (!m_layout)
     return;  // avoid handling nullptr in _RepositionWindow
+  // marshal to the UI thread to avoid concurrent drawing
+  if (!_IsUiThread()) {
+    RECT* pRc = new RECT(rc);
+    PostMessage(WM_WEASEL_MOVETO, reinterpret_cast<WPARAM>(pRc));
+    return;
+  }
   m_redraw_by_monitor_change = false;
   // The conditions for resetting the sticky state:
   // 1. When the input session ends (ctx.empty() is true)

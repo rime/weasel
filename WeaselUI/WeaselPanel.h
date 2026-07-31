@@ -21,6 +21,13 @@ enum class BackType {
   BACKGROUND = 2  // background
 };
 
+// Custom messages to marshal cross-thread UI calls back to the UI thread;
+// ID2D1RenderTarget is not thread-safe. Start at WM_APP + 0x1000 to stay
+// clear of the messages defined in WeaselIPC.h.
+#define WM_WEASEL_REFRESH (WM_APP + 0x1000)
+#define WM_WEASEL_REDRAW (WM_APP + 0x1001)
+#define WM_WEASEL_MOVETO (WM_APP + 0x1002)
+
 class WeaselPanel
     : public CWindowImpl<WeaselPanel, CWindow, CWeaselPanelTraits>,
       CDoubleBufferImpl<WeaselPanel> {
@@ -35,12 +42,24 @@ class WeaselPanel
   MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
   MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
   MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
+  MESSAGE_HANDLER(WM_WEASEL_REFRESH, OnRefreshPanel)
+  MESSAGE_HANDLER(WM_WEASEL_REDRAW, OnRedrawWindow)
+  MESSAGE_HANDLER(WM_WEASEL_MOVETO, OnMoveTo)
   CHAIN_MSG_MAP(CDoubleBufferImpl<WeaselPanel>)
   END_MSG_MAP()
 
   LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  LRESULT OnRefreshPanel(UINT uMsg,
+                         WPARAM wParam,
+                         LPARAM lParam,
+                         BOOL& bHandled);
+  LRESULT OnRedrawWindow(UINT uMsg,
+                         WPARAM wParam,
+                         LPARAM lParam,
+                         BOOL& bHandled);
+  LRESULT OnMoveTo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnMouseActivate(UINT uMsg,
                           WPARAM wParam,
                           LPARAM lParam,
@@ -78,6 +97,8 @@ class WeaselPanel
   int DPI_SCALE(T t) {
     return (int)(t * dpiScaleLayout);
   }
+  // whether the calling thread is the one that owns the window (UI thread)
+  bool _IsUiThread() const;
   void _InitFontRes(bool forced = false);
   void _CaptureRect(CRect& rect);
   bool m_mouse_entry = false;
