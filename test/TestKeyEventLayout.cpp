@@ -14,6 +14,19 @@ int main() {
   assert(FindKeyboardLayout(L"ffffffff") == nullptr);
 
   HKL colemak = FindKeyboardLayout(L"00060409");
+  assert(FindKeyboardLayout(L"colemak") == colemak);
+  HKL activeLayout = GetKeyboardLayout(0);
+  HKL loadedLayouts[64] = {};
+  int loadedCount = GetKeyboardLayoutList(_countof(loadedLayouts),
+                                          loadedLayouts);
+  HKL dvorak = FindKeyboardLayout(L"United States-Dvorak");
+  assert(dvorak);
+  assert(GetKeyboardLayout(0) == activeLayout);
+  bool dvorakWasLoaded = false;
+  for (int i = 0; i < loadedCount; ++i)
+    dvorakWasLoaded |= loadedLayouts[i] == dvorak;
+  if (!dvorakWasLoaded)
+    assert(UnloadKeyboardLayout(dvorak));
   if (colemak) {
     assert(VirtualKeyForLayout('Q', qKey, colemak) == 'Q');
 

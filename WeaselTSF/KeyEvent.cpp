@@ -3,18 +3,81 @@
 
 #include <vector>
 
-HKL FindKeyboardLayout(LPCWSTR klid) {
-  if (!klid || !*klid)
+namespace {
+
+constexpr wchar_t kKeyboardLayoutsKey[] =
+    L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts";
+
+bool IsKlid(LPCWSTR value) {
+  if (wcslen(value) != 8)
+    return false;
+  wchar_t* end = nullptr;
+  wcstoul(value, &end, 16);
+  return end && !*end;
+}
+
+std::wstring ResolveKeyboardLayoutId(LPCWSTR value) {
+  if (!value || !*value)
+    return {};
+
+  HKEY layouts = nullptr;
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, kKeyboardLayoutsKey, 0, KEY_READ,
+                    &layouts) != ERROR_SUCCESS)
+    return {};
+
+  if (IsKlid(value)) {
+    HKEY layout = nullptr;
+    const bool exists =
+        RegOpenKeyExW(layouts, value, 0, KEY_READ, &layout) == ERROR_SUCCESS;
+    if (layout)
+      RegCloseKey(layout);
+    RegCloseKey(layouts);
+    return exists ? value : L"";
+  }
+
+  std::wstring match;
+  DWORD index = 0;
+  wchar_t klid[256] = {};
+  DWORD length = _countof(klid);
+  while (RegEnumKeyExW(layouts, index++, klid, &length, nullptr, nullptr,
+                       nullptr, nullptr) == ERROR_SUCCESS) {
+    HKEY layout = nullptr;
+    if (RegOpenKeyExW(layouts, klid, 0, KEY_READ, &layout) == ERROR_SUCCESS) {
+      wchar_t name[256] = {};
+      DWORD type = 0;
+      DWORD size = sizeof(name);
+      if (RegQueryValueExW(layout, L"Layout Text", nullptr, &type,
+                           reinterpret_cast<LPBYTE>(name), &size) ==
+              ERROR_SUCCESS &&
+          type == REG_SZ && _wcsicmp(value, name) == 0) {
+        if (!match.empty()) {
+          RegCloseKey(layout);
+          RegCloseKey(layouts);
+          return {};
+        }
+        match = klid;
+      }
+      RegCloseKey(layout);
+    }
+    length = _countof(klid);
+  }
+  RegCloseKey(layouts);
+  return match;
+}
+
+}  // namespace
+
+HKL FindKeyboardLayout(LPCWSTR value) {
+  const std::wstring klid = ResolveKeyboardLayoutId(value);
+  if (klid.empty())
     return nullptr;
 
   wchar_t* end = nullptr;
-  const ULONG value = wcstoul(klid, &end, 16);
-  if (wcslen(klid) != 8 || !end || *end)
-    return nullptr;
+  const ULONG klidValue = wcstoul(klid.c_str(), &end, 16);
 
   HKEY key = nullptr;
-  std::wstring path =
-      L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
+  std::wstring path = kKeyboardLayoutsKey;
+  path += L"\\";
   path += klid;
   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, path.c_str(), 0, KEY_READ, &key) !=
       ERROR_SUCCESS)
@@ -34,9 +97,9 @@ HKL FindKeyboardLayout(LPCWSTR klid) {
     const ULONG device = wcstoul(layoutId, &layoutIdEnd, 16);
     if (!layoutIdEnd || *layoutIdEnd)
       return nullptr;
-    expected = ((0xf000u | device) << 16) | (value & 0xffffu);
+    expected = ((0xf000u | device) << 16) | (klidValue & 0xffffu);
   } else {
-    expected = ((value & 0xffffu) << 16) | (value & 0xffffu);
+    expected = ((klidValue & 0xffffu) << 16) | (klidValue & 0xffffu);
   }
 
   const int count = GetKeyboardLayoutList(0, nullptr);
@@ -47,7 +110,7 @@ HKL FindKeyboardLayout(LPCWSTR klid) {
         return layout;
     }
   }
-  return nullptr;
+  return LoadKeyboardLayoutW(klid.c_str(), KLF_NOTELLSHELL);
 }
 
 UINT VirtualKeyForLayout(UINT vkey, KeyInfo kinfo, HKL keyboardLayout) {
