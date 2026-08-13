@@ -3,6 +3,7 @@
 #include <RimeWithWeasel.h>
 #include <StringAlgorithm.hpp>
 #include <WeaselConstants.h>
+#include <WeaselStyleColor.h>
 #include <WeaselUtility.h>
 
 #include <filesystem>
@@ -13,13 +14,6 @@
 #include <rime_api.h>
 
 #define TRANSPARENT_COLOR 0x00000000
-#define ARGB2ABGR(value)                                 \
-  ((value & 0xff000000) | ((value & 0x000000ff) << 16) | \
-   (value & 0x0000ff00) | ((value & 0x00ff0000) >> 16))
-#define RGBA2ABGR(value)                                   \
-  (((value & 0xff) << 24) | ((value & 0xff000000) >> 24) | \
-   ((value & 0x00ff0000) >> 8) | ((value & 0x0000ff00) << 8))
-typedef enum { COLOR_ABGR = 0, COLOR_ARGB, COLOR_RGBA } ColorFormat;
 
 using namespace weasel;
 
@@ -986,65 +980,12 @@ static Bool _RimeGetColor(RimeConfig* config,
     value = fallback;
     return False;
   }
-  const auto color_str = std::string(color);
-  // adjudge if str is 0x 0X # hex color format, return trimmed hex part
-  // out part is 6 or 8 length hex string without white space
-  const auto parse_color_code = [](const std::string& str, std::string& out) {
-    if (str.empty())
-      return false;
-    size_t start = 0;
-    if (str[0] == '#') {
-      start = 1;
-    } else if (str.size() >= 2 &&
-               (str.compare(0, 2, "0x") == 0 || str.compare(0, 2, "0X") == 0)) {
-      start = 2;
-    } else {
-      return false;
-    }
-    const std::string hex_part = str.substr(start);
-    if (hex_part.empty())
-      return false;
-    if ((start == 1 || start == 2) && hex_part.length() != 3 &&
-        hex_part.length() != 4 && hex_part.length() != 6 &&
-        hex_part.length() != 8) {
-      return false;
-    }
-    for (char c : hex_part) {
-      if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
-            (c >= 'A' && c <= 'F')))
-        return false;
-    }
-    out = str.substr(start).substr(0, 8);
-#define _2C(c) std::string(2, c)
-    if (out.size() == 3)
-      out = _2C(out[0]) + _2C(out[1]) + _2C(out[2]);
-    else if (out.size() == 4)
-      out = _2C(out[0]) + _2C(out[1]) + _2C(out[2]) + _2C(out[3]);
-#undef _2C
-    return true;
-  };
-  auto hex_color = std::string();
-  if (parse_color_code(color_str, hex_color)) {
-    value = std::stoul(hex_color, 0, 16);
-    if (hex_color.length() == 6)
-      value = (fmt != COLOR_RGBA) ? (value | 0xff000000)
-                                  : (((unsigned int)value << 8) | 0x000000ff);
-  } else {
-    if (!rime_api->config_get_int(config, key.c_str(), &value)) {
-      value = fallback;
-      return False;
-    }
-    if (value <= 0xffffff)
-      value = (fmt != COLOR_RGBA) ? (value | 0xff000000)
-                                  : (((unsigned int)value << 8) | 0x000000ff);
-    else if (value > 0xffffffff)
-      value &= 0xffffffff;
+  unsigned int parsed = 0;
+  if (!ParseColorValue(std::string(color), fmt, &parsed)) {
+    value = fallback;
+    return False;
   }
-  if (fmt == COLOR_ARGB)
-    value = ARGB2ABGR(value);
-  else if (fmt == COLOR_RGBA)
-    value = RGBA2ABGR(value);
-  value &= 0xffffffff;
+  value = static_cast<int>(parsed);
   return True;
 }
 
@@ -1166,9 +1107,17 @@ void RimeWithWeaselHandler::_UpdateShowNotifications(RimeConfig* config,
   }
 }
 
-// update ui's style parameters, ui has been check before referenced
-static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
-  UIStyle& style(ui->style());
+// Load style parameters from `config` into `style`. When `initialize` is true,
+// unset values are replaced with defaults; otherwise existing values are kept.
+// A non-empty `color_scheme` selects that scheme instead of the active one.
+void LoadWeaselUIStyle(RimeConfig* config,
+                       UIStyle& style,
+                       bool initialize,
+                       const std::string& color_scheme) {
+  if (!rime_api)
+    rime_api = rime_get_api();
+  if (!rime_api || !config)
+    return;
   const std::function<void(std::wstring&)> rmspace = [](std::wstring& str) {
     str = std::regex_replace(str, std::wregex(L"\\s*(,|:|^|$)\\s*"), L"$1");
   };
@@ -1387,15 +1336,24 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   // get color scheme
   const int BUF_SIZE = 255;
   char buffer[BUF_SIZE + 1] = {0};
-  if (initialize && rime_api->config_get_string(config, "style/color_scheme",
-                                                buffer, BUF_SIZE))
-    _UpdateUIStyleColor(config, style);
+  if ((initialize && rime_api->config_get_string(config, "style/color_scheme",
+                                                 buffer, BUF_SIZE)) ||
+      !color_scheme.empty())
+    _UpdateUIStyleColor(config, style, color_scheme);
+}
+
+static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
+  LoadWeaselUIStyle(config, ui->style(), initialize);
 }
 // load color configs to style, by "style/color_scheme" or specific scheme name
 // "color" which is default empty
 static bool _UpdateUIStyleColor(RimeConfig* config,
                                 UIStyle& style,
                                 const std::string& color) {
+  if (!rime_api)
+    rime_api = rime_get_api();
+  if (!rime_api || !config)
+    return false;
   const int BUF_SIZE = 255;
   char buffer[BUF_SIZE + 1] = {0};
   std::string color_mark = "style/color_scheme";

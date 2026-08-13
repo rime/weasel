@@ -21,13 +21,15 @@ class WeaselPanel {
   }
   void MoveTo(RECT rc);
   void Refresh();
+  void RepositionPreview();
 
   BOOL IsWindow() const;
   void ShowWindow(int nCmdShow);
   void DestroyWindow();
   // release all resources associated with this panel (window + shared devices)
   void ReleaseAllResources();
-  BOOL Create(HWND parent);
+  BOOL Create(HWND parent, bool preview_mode = false);
+  void SetPreviewMode(bool enabled) { m_preview_mode = enabled; }
   bool GetIsReposition() { return m_istorepos; }
 
   static const int AUTOREV_TIMER = 20241209;
@@ -116,6 +118,13 @@ class WeaselPanel {
   UICallbackFunc& m_uiCallback;
   // window handle and per-instance click timer
   HWND m_hWnd;
+  HWND m_parent = nullptr;
+  bool m_preview_mode = false;
+  bool m_preview_positioned = false;
+  bool m_preview_detached = false;
+  bool m_dragging = false;
+  POINT m_drag_start{0, 0};
+  RECT m_drag_window{0, 0, 0, 0};
   UINT_PTR m_clickTimer = 0;
   UINT_PTR m_autoHideTimer = 0;
 

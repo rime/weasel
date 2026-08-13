@@ -16,6 +16,10 @@ class UIImpl {
       return;
     panel.Refresh();
   }
+  void RepositionPreview() {
+    if (panel.IsWindow())
+      panel.RepositionPreview();
+  }
   void Show() {
     if (!panel.IsWindow())
       return;
@@ -69,6 +73,10 @@ void UI::Refresh() {
     pimpl_->Refresh();
   }
 }
+void UI::RepositionPreview() {
+  if (pimpl_)
+    pimpl_->RepositionPreview();
+}
 void UI::ShowWithTimeout(size_t millisec) {
   if (pimpl_) {
     pimpl_->ShowWithTimeout(millisec);
@@ -95,15 +103,16 @@ void UI::Destroy(bool full) {
     }
   }
 }
-bool UI::Create(HWND parent) {
+bool UI::Create(HWND parent, bool preview_mode) {
   if (pimpl_) {
-    pimpl_->panel.Create(parent);
+    pimpl_->panel.SetPreviewMode(preview_mode);
+    pimpl_->panel.Create(parent, preview_mode);
     return true;
   }
   pimpl_ = std::make_unique<UIImpl>(*this);
   if (!pimpl_)
     return false;
-  return pimpl_->panel.Create(parent);
+  return pimpl_->panel.Create(parent, preview_mode);
 }
 bool UI::GetIsReposition() {
   return pimpl_ && pimpl_->panel.GetIsReposition();
