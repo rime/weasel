@@ -310,13 +310,39 @@ void WeaselPanel::Refresh() {
   _CreateLayout();
   m_layout->DoLayout();
   _ResizeWindow();
-  _Reposition();
+  if (m_preview_mode) {
+    if (!m_preview_positioned && !m_preview_detached)
+      RepositionPreview();
+  } else {
+    _Reposition();
+  }
   RedrawWindow();
 }
 
-BOOL WeaselPanel::Create(HWND parent) {
+void WeaselPanel::RepositionPreview() {
+  if (!m_hWnd || !m_preview_mode || m_preview_detached || !m_parent ||
+      !m_layout)
+    return;
+  RECT parent_rect{};
+  if (!GetWindowRect(m_parent, &parent_rect))
+    return;
+  const int width = m_layout->GetContentSize().cx;
+  const int height = m_layout->GetContentSize().cy;
+  const int x =
+      parent_rect.left + (parent_rect.right - parent_rect.left - width) / 2;
+  const int y = parent_rect.top - height;
+  SetWindowPos(m_hWnd, HWND_TOP, x, y, 0, 0,
+               SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
+  m_preview_positioned = true;
+}
+
+BOOL WeaselPanel::Create(HWND parent, bool preview_mode) {
   if (m_hWnd)
     return !!m_hWnd;
+  m_parent = parent;
+  m_preview_mode = preview_mode;
+  m_preview_positioned = false;
+  m_preview_detached = false;
   m_hoverIndex = -1;
   POINT cursor_pos = {0, 0};
   if (::GetCursorPos(&cursor_pos)) {
@@ -335,14 +361,17 @@ BOOL WeaselPanel::Create(HWND parent) {
     return FALSE;
   }
   ThreadDpiAwarenessScope dpi_scope;
+  const DWORD ex_style = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE |
+                         (m_preview_mode ? 0 : WS_EX_TOPMOST) |
+                         WS_EX_NOREDIRECTIONBITMAP;
   m_hWnd = CreateWindowEx(
-      WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE |
-          WS_EX_NOREDIRECTIONBITMAP,
-      L"WeaselPanel", L"WeaselPanel", WS_POPUP | WS_CLIPSIBLINGS, CW_USEDEFAULT,
-      CW_USEDEFAULT, 10, 10, parent, nullptr, hInstance, this);
+      ex_style, L"WeaselPanel", L"WeaselPanel", WS_POPUP | WS_CLIPSIBLINGS,
+      CW_USEDEFAULT, CW_USEDEFAULT, 10, 10, parent, nullptr, hInstance, this);
   if (m_hWnd) {
-    if (!m_pD2D)
+    if (!m_pD2D) {
+      DEBUG << "m_style.font_face: " << m_style.font_face;
       m_pD2D = std::make_shared<D2D>(m_style);
+    }
     m_pD2D->AttachWindow(m_hWnd);
     if (!m_style.font_face.empty())
       m_pD2D->InitDirectWriteResources();
@@ -895,13 +924,18 @@ void WeaselPanel::_CaptureRect(CRect& rect) {
 void WeaselPanel::OnDestroy() {
   // ensure timers are cleared and then reset state
   _ClearTimers();
+  if (GetCapture() == m_hWnd)
+    ReleaseCapture();
 
   m_hoverIndex = -1;
   m_layout.reset();
   m_sticky = false;
+  m_dragging = false;
 }
 
 HRESULT WeaselPanel::OnScroll(UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  if (m_preview_mode)
+    return 0;
   int delta = GET_WHEEL_DELTA_WPARAM(wParam);
   if (m_uiCallback && delta != 0) {
     bool scroll_down = delta < 0;
@@ -911,6 +945,18 @@ HRESULT WeaselPanel::OnScroll(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 LRESULT WeaselPanel::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  if (m_preview_mode) {
+    if (m_dragging) {
+      POINT point{};
+      GetCursorPos(&point);
+      const int dx = point.x - m_drag_start.x;
+      const int dy = point.y - m_drag_start.y;
+      SetWindowPos(m_hWnd, nullptr, m_drag_window.left + dx,
+                   m_drag_window.top + dy, 0, 0,
+                   SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+    }
+    return 0;
+  }
   if (m_style.hover_type == UIStyle::NONE)
     return 0;
   CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -956,6 +1002,24 @@ LRESULT WeaselPanel::OnMouseActive(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 LRESULT WeaselPanel::OnLeftClickUp(UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  if (m_preview_mode) {
+    if (m_dragging) {
+      m_dragging = false;
+      ReleaseCapture();
+      // A click without a drag reattaches the preview to its parent dialog.
+      POINT point{};
+      GetCursorPos(&point);
+      const int dx = point.x - m_drag_start.x;
+      const int dy = point.y - m_drag_start.y;
+      const int cx = GetSystemMetrics(SM_CXDRAG);
+      const int cy = GetSystemMetrics(SM_CYDRAG);
+      if (dx > -cx && dx < cx && dy > -cy && dy < cy) {
+        m_preview_detached = false;
+        RepositionPreview();
+      }
+    }
+    return 0;
+  }
   if (hide_candidates || m_candidateCount <= 0)
     return 0;
   const int highlighted = (m_ctx.cinfo.highlighted >= 0 &&
@@ -985,6 +1049,14 @@ LRESULT WeaselPanel::OnLeftClickUp(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 LRESULT WeaselPanel::OnLeftClickDown(UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  if (m_preview_mode) {
+    GetCursorPos(&m_drag_start);
+    GetWindowRect(m_hWnd, &m_drag_window);
+    m_dragging = true;
+    m_preview_detached = true;
+    SetCapture(m_hWnd);
+    return 0;
+  }
   if (hide_candidates || m_candidateCount <= 0)
     return 0;
   const int highlighted = (m_ctx.cinfo.highlighted >= 0 &&

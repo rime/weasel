@@ -27,7 +27,7 @@ class UI {
   UI();
   virtual ~UI();
   // 创建输入法界面
-  bool Create(HWND parent);
+  bool Create(HWND parent, bool preview_mode = false);
   // 销毁界面
   void Destroy(bool full = false);
   // 界面显隐
@@ -38,6 +38,8 @@ class UI {
   BOOL IsShown() const;
   // 重绘界面
   void Refresh();
+  // Reattach an undragged preview window to its parent dialog.
+  void RepositionPreview();
   // 置输入焦点位置（光标跟随时移动候选窗）但不重绘
   void UpdateInputPosition(RECT const& rc);
   // 更新界面显示内容
