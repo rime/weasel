@@ -63,9 +63,10 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
 }
 
 STDAPI WeaselTSF::OnSetFocus(BOOL fForeground) {
-  if (fForeground)
+  if (fForeground) {
     m_client.FocusIn();
-  else {
+    _cand->PrewarmUIResources();
+  } else {
     m_client.FocusOut();
     _AbortComposition();
   }

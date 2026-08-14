@@ -54,6 +54,7 @@ class CCandidateList : public ITfIntegratableCandidateListUIElement,
   void DestroyAll();
   void StartUI();
   void EndUI();
+  void PrewarmUIResources();
 
   com_ptr<ITfContext> GetContextDocument();
   bool GetIsReposition() {

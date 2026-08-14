@@ -141,7 +141,7 @@ class WeaselPanel
   bool hide_candidates;
   bool m_sticky;
   // for multi font_face & font_point
-  PDWR pDWR;
+  PDWR& pDWR;
   std::function<void(size_t* const, size_t* const, bool* const, bool* const)>&
       _UICallback;
   float bar_scale_ = 1.0;

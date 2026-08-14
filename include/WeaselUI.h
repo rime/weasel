@@ -27,7 +27,7 @@ using PDWR = an<DirectWriteResources>;
 //
 class UI {
  public:
-  UI() : pimpl_(0), in_server_(false) {}
+  UI() : pimpl_(0), in_server_(false), dwr_warm_drawn_(false) {}
 
   virtual ~UI() {
     if (pimpl_)
@@ -58,13 +58,14 @@ class UI {
 
   // 更新界面显示内容
   void Update(Context const& ctx, Status const& status);
+  bool Prewarm();
 
   Context& ctx() { return ctx_; }
   Context& octx() { return octx_; }
   Status& status() { return status_; }
   UIStyle& style() { return style_; }
   UIStyle& ostyle() { return ostyle_; }
-  PDWR pdwr() { return pDWR; }
+  PDWR& pdwr() { return pDWR; }
   bool GetIsReposition();
   bool& InServer() { return in_server_; }
 
@@ -82,6 +83,7 @@ class UI {
  private:
   UIImpl* pimpl_;
   PDWR pDWR;
+  bool dwr_warm_drawn_;
 
   Context ctx_;
   Context octx_;

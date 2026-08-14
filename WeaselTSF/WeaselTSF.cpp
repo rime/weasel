@@ -160,7 +160,9 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr,
   if (!_InitThreadFocusSink())
     goto ExitError;
 
-  _EnsureServerConnected();
+  if (_EnsureServerConnected()) {
+    _cand->PrewarmUIResources();
+  }
 
   return S_OK;
 
@@ -178,8 +180,10 @@ STDMETHODIMP WeaselTSF::OnSetThreadFocus() {
     m_client.ProcessKeyEvent(0);
     weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
     bool ok = m_client.GetResponseData(std::ref(parser));
-    if (ok)
+    if (ok) {
       _UpdateLanguageBar(_status);
+      _cand->PrewarmUIResources();
+    }
   }
   return S_OK;
 }

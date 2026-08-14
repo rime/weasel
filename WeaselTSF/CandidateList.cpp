@@ -218,6 +218,7 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status) {
 }
 
 void CCandidateList::UpdateStyle(const UIStyle& sty) {
+  _style = sty;
   _ui->style() = sty;
 }
 
@@ -236,6 +237,16 @@ void CCandidateList::DestroyAll() {
   Show(FALSE);
   _DisposeUIWindowAll();
 }
+
+void CCandidateList::PrewarmUIResources() {
+  if (_ui == nullptr || _style.font_point <= 0) {
+    return;
+  }
+
+  _ui->style() = _style;
+  _ui->Prewarm();
+}
+
 UIStyle& CCandidateList::style() {
   // return _ui->style();
   return _style;
