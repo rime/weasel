@@ -8,6 +8,11 @@ set_runtimes("MT")  -- 设置运行时库为静态链接，避免/MD与/MT冲突
 add_defines("UNICODE", "_UNICODE")
 add_defines("WINDOWS")
 add_defines("MSVC")
+add_defines(
+  "VERSION_MAJOR=" .. (os.getenv("VERSION_MAJOR") or "0"),
+  "VERSION_MINOR=" .. (os.getenv("VERSION_MINOR") or "0"),
+  "VERSION_PATCH=" .. (os.getenv("VERSION_PATCH") or "0")
+)
 
 add_includedirs("$(projectdir)/include")
 -- 设置Boost库的全局路径
