@@ -269,7 +269,7 @@ int uninstall_ime_file(const std::wstring& ext,
       WCHAR sysarm32[MAX_PATH];
       if (get_wow_arm32_system_dir(sysarm32, _countof(sysarm32)) > 0) {
         std::wstring imePathARM32 = std::wstring(sysarm32) + L"\\weasel" + ext;
-        retval += func(imePathARM32, false, true, true, false, silent);
+        retval += func(imePathARM32, false, true, true, profile, silent);
         delete_file(imePathARM32);
       }
 
@@ -406,6 +406,23 @@ int install(const std::wstring& profile, bool silent) {
                        executable.c_str(), REG_SZ);
   if (FAILED(HRESULT_FROM_WIN32(ret))) {
     MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERRREGIMEWRITESVREXE,
+                          IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
+    return 1;
+  }
+
+  // persist the installing profile so that uninstall removes the right one
+  const WCHAR PROFILE_KEY[] = L"Software\\Rime\\Weasel";
+  ret = SetRegKeyValue(HKEY_CURRENT_USER, PROFILE_KEY, L"Profile",
+                       profile.c_str(), REG_SZ);
+  if (FAILED(HRESULT_FROM_WIN32(ret))) {
+    MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERR_WRITE_PROFILE,
+                          IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
+    return 1;
+  }
+  ret = SetRegKeyValue(HKEY_CURRENT_USER, PROFILE_KEY, L"Hant",
+                       (profile == L"hant" ? 1 : 0), REG_DWORD);
+  if (FAILED(HRESULT_FROM_WIN32(ret))) {
+    MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERR_WRITE_HANT,
                           IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
     return 1;
   }
