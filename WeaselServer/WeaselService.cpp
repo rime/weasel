@@ -66,9 +66,7 @@ void WeaselService::Start(DWORD dwArgc = 0, PWSTR* pszArgv = NULL) {
 
     // Perform service-specific initialization.
     // if (IsWindowsVistaOrGreater())
-    {  // always
-      RegisterApplicationRestart(NULL, 0);
-    }
+    { RegisterApplicationRestart(NULL, 0); }
     boost::thread{[this] { app.Run(); }};
     // Tell SCM that the service is started.
     SetServiceStatus(SERVICE_RUNNING);

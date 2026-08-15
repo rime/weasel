@@ -314,10 +314,8 @@ int register_text_service(const std::wstring& tsf_path,
   if (!register_ime) {
     params = L" /u " + params;  // unregister
   }
-  // if (silent)
-  {  // always silent
-    params = L" /s " + params;
-  }
+  // if (silent)  // always silent
+  { params = L" /s " + params; }
 
   if (!SetEnvironmentVariable(L"TEXTSERVICE_PROFILE",
                               hant ? L"hant" : L"hans")) {
