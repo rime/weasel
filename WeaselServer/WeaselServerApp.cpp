@@ -30,13 +30,15 @@ int WeaselServerApp::Run() {
   m_ui.Create(m_server.GetHWnd());
 
   m_handler->Initialize();
-  m_handler->OnUpdateUI([this]() { tray_icon.Refresh(); });
+  m_handler->OnUpdateUI([this]() { tray_icon.RequestRefresh(); });
 
   tray_icon.Create(m_server.GetHWnd());
-  tray_icon.Refresh();
+  m_server.SetTrayRefreshCallback([this]() { tray_icon.ApplyRefresh(); });
+  tray_icon.RequestRefresh();
 
   int ret = m_server.Run();
 
+  tray_icon.DisableRefresh();
   m_handler->Finalize();
   m_ui.Destroy();
   tray_icon.RemoveIcon();

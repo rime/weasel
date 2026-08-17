@@ -500,6 +500,9 @@ void RimeWithWeaselHandler::SetOption(WeaselSessionId ipc_id,
   } else {
     rime_api->set_option(to_session_id(ipc_id), opt.c_str(), val);
   }
+  // refresh UI (and tray icon) so the option change takes effect immediately,
+  // e.g. when toggling ascii_mode from the TSF language bar
+  _UpdateUI(ipc_id ? ipc_id : m_active_session);
 }
 
 void RimeWithWeaselHandler::OnUpdateUI(std::function<void()> const& cb) {

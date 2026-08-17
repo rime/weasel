@@ -35,6 +35,10 @@ enum WEASEL_IPC_COMMAND {
   WEASEL_IPC_LAST_COMMAND
 };
 
+// Posted by WeaselTrayIcon to the server window so that Shell_NotifyIcon runs
+// on the server message thread instead of a pipe worker thread.
+#define WM_WEASEL_SERVICE_NOTIFY (WEASEL_IPC_LAST_COMMAND + 200)
+
 namespace weasel {
 struct PipeMessage {
   WEASEL_IPC_COMMAND Msg;
@@ -162,6 +166,10 @@ class Server {
   void SetRequestHandler(RequestHandler* pHandler);
   void AddMenuHandler(UINT uID, CommandHandler handler);
   HWND GetHWnd();
+
+  // Callback invoked on the server message thread when a tray icon refresh is
+  // requested from a pipe worker thread.
+  void SetTrayRefreshCallback(std::function<void()> callback);
 
  private:
   ServerImpl* m_pImpl;
