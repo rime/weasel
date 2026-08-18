@@ -113,6 +113,8 @@ class WeaselPanel
   const bool& m_in_server;
 
   CRect m_inputPos;
+  CPoint m_lastWindowPos = {-1, -1};
+  bool m_hasLastWindowPos = false;
   int m_offsetys[MAX_CANDIDATES_COUNT];  // offset y for candidates when
                                          // vertical layout over bottom
   int m_offsety_preedit;

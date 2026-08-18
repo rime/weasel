@@ -39,23 +39,29 @@ UINT_PTR UIImpl::timer = 0;
 void UIImpl::Show() {
   if (!panel.IsWindow())
     return;
-  panel.ShowWindow(SW_SHOWNA);
+  bool already_shown = shown && panel.IsWindowVisible();
   shown = true;
   if (timer) {
     KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
     timer = 0;
   }
+  if (already_shown)
+    return;
+  panel.ShowWindow(SW_SHOWNA);
 }
 
 void UIImpl::Hide() {
   if (!panel.IsWindow())
     return;
-  panel.ShowWindow(SW_HIDE);
+  bool already_hidden = !shown && !panel.IsWindowVisible();
   shown = false;
   if (timer) {
     KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
     timer = 0;
   }
+  if (already_hidden)
+    return;
+  panel.ShowWindow(SW_HIDE);
 }
 
 void UIImpl::ShowWithTimeout(size_t millisec) {
