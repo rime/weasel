@@ -89,7 +89,8 @@ INT_PTR FontSettingDialog::ShowDialog() {
 }
 
 void FontSettingDialog::ScaleControlsAndFonts(UINT newDpi) {
-  const float scaleFactor = static_cast<float>(newDpi) / 96;
+  const float scaleFactor =
+      static_cast<float>(newDpi) / static_cast<float>(m_initialDpi);
   for (const auto& [hWnd, originalRect] : m_controlOriginalRects) {
     int newX = static_cast<int>(originalRect.left * scaleFactor);
     int newY = static_cast<int>(originalRect.top * scaleFactor);
@@ -100,11 +101,10 @@ void FontSettingDialog::ScaleControlsAndFonts(UINT newDpi) {
     ::SetWindowPos(hWnd, nullptr, newX, newY, newWidth, newHeight,
                    SWP_NOZORDER | SWP_NOACTIVATE);
   }
-  HFONT oldFont = (HFONT)::SendMessage(hDlg_, WM_GETFONT, 0, 0);
-  LOGFONT lf;
-  if (!GetObject(oldFont, sizeof(lf), &lf)) {
+  if (!m_hasOriginalFont) {
     return;
   }
+  LOGFONT lf = m_originalFont;
   lf.lfHeight = static_cast<int>(lf.lfHeight * scaleFactor);
   HFONT hNewFont = CreateFontIndirect(&lf);
   if (m_currentFont) {
@@ -137,17 +137,14 @@ void FontSettingDialog::InitCtrlRects() {
       },
       reinterpret_cast<LPARAM>(this));
 
-  UINT newDpi = GetWindowDpi();
-  if (newDpi != 96) {
-    float scaleFactor = (float)newDpi / (float)96.0f;
-    int width = (m_rect.right - m_rect.left) * scaleFactor;
-    int height = (m_rect.bottom - m_rect.top) * scaleFactor;
-    SetWindowPos(hDlg_, nullptr, m_rect.left, m_rect.top, width, height,
-                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW);
-    ScaleControlsAndFonts(newDpi);
-    InvalidateRect(hDlg_, nullptr, true);
+  m_initialDpi = GetWindowDpi();
+  m_currentDpi = m_initialDpi;
+
+  HFONT font = (HFONT)::SendMessage(hDlg_, WM_GETFONT, 0, 0);
+  if (font != nullptr) {
+    m_hasOriginalFont =
+        GetObject(font, sizeof(m_originalFont), &m_originalFont) != 0;
   }
-  m_currentDpi = newDpi;
 }
 
 UINT FontSettingDialog::GetWindowDpi() {

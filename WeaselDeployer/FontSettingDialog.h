@@ -311,7 +311,10 @@ class FontSettingDialog {
   HWND hParent;
 
   UINT m_currentDpi = 96;
+  UINT m_initialDpi = 96;
   RECT m_rect;
   std::unordered_map<HWND, RECT> m_controlOriginalRects;
   HFONT m_currentFont = nullptr;
+  LOGFONT m_originalFont = {};
+  bool m_hasOriginalFont = false;
 };
