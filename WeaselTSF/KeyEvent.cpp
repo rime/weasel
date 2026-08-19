@@ -1,9 +1,133 @@
 ﻿#include "stdafx.h"
 #include <KeyEvent.h>
 
+#include <vector>
+
+namespace {
+
+constexpr wchar_t kKeyboardLayoutsKey[] =
+    L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts";
+
+bool IsKlid(LPCWSTR value) {
+  if (wcslen(value) != 8)
+    return false;
+  wchar_t* end = nullptr;
+  wcstoul(value, &end, 16);
+  return end && !*end;
+}
+
+std::wstring ResolveKeyboardLayoutId(LPCWSTR value) {
+  if (!value || !*value)
+    return {};
+
+  HKEY layouts = nullptr;
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, kKeyboardLayoutsKey, 0, KEY_READ,
+                    &layouts) != ERROR_SUCCESS)
+    return {};
+
+  if (IsKlid(value)) {
+    HKEY layout = nullptr;
+    const bool exists =
+        RegOpenKeyExW(layouts, value, 0, KEY_READ, &layout) == ERROR_SUCCESS;
+    if (layout)
+      RegCloseKey(layout);
+    RegCloseKey(layouts);
+    return exists ? value : L"";
+  }
+
+  std::wstring match;
+  DWORD index = 0;
+  wchar_t klid[256] = {};
+  DWORD length = _countof(klid);
+  while (RegEnumKeyExW(layouts, index++, klid, &length, nullptr, nullptr,
+                       nullptr, nullptr) == ERROR_SUCCESS) {
+    HKEY layout = nullptr;
+    if (RegOpenKeyExW(layouts, klid, 0, KEY_READ, &layout) == ERROR_SUCCESS) {
+      wchar_t name[256] = {};
+      DWORD type = 0;
+      DWORD size = sizeof(name);
+      if (RegQueryValueExW(layout, L"Layout Text", nullptr, &type,
+                           reinterpret_cast<LPBYTE>(name),
+                           &size) == ERROR_SUCCESS &&
+          type == REG_SZ && _wcsicmp(value, name) == 0) {
+        if (!match.empty()) {
+          RegCloseKey(layout);
+          RegCloseKey(layouts);
+          return {};
+        }
+        match = klid;
+      }
+      RegCloseKey(layout);
+    }
+    length = _countof(klid);
+  }
+  RegCloseKey(layouts);
+  return match;
+}
+
+}  // namespace
+
+HKL FindKeyboardLayout(LPCWSTR value) {
+  const std::wstring klid = ResolveKeyboardLayoutId(value);
+  if (klid.empty())
+    return nullptr;
+
+  wchar_t* end = nullptr;
+  const ULONG klidValue = wcstoul(klid.c_str(), &end, 16);
+
+  HKEY key = nullptr;
+  std::wstring path = kKeyboardLayoutsKey;
+  path += L"\\";
+  path += klid;
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, path.c_str(), 0, KEY_READ, &key) !=
+      ERROR_SUCCESS)
+    return nullptr;
+
+  wchar_t layoutId[5] = {};
+  DWORD type = 0;
+  DWORD size = sizeof(layoutId);
+  const LSTATUS status =
+      RegQueryValueExW(key, L"Layout Id", nullptr, &type,
+                       reinterpret_cast<LPBYTE>(layoutId), &size);
+  RegCloseKey(key);
+
+  ULONG_PTR expected = 0;
+  if (status == ERROR_SUCCESS && type == REG_SZ) {
+    wchar_t* layoutIdEnd = nullptr;
+    const ULONG device = wcstoul(layoutId, &layoutIdEnd, 16);
+    if (!layoutIdEnd || *layoutIdEnd)
+      return nullptr;
+    expected = ((0xf000u | device) << 16) | (klidValue & 0xffffu);
+  } else {
+    expected = ((klidValue & 0xffffu) << 16) | (klidValue & 0xffffu);
+  }
+
+  const int count = GetKeyboardLayoutList(0, nullptr);
+  std::vector<HKL> layouts(count);
+  if (count && GetKeyboardLayoutList(count, layouts.data())) {
+    for (HKL layout : layouts) {
+      if ((reinterpret_cast<ULONG_PTR>(layout) & 0xffffffffu) == expected)
+        return layout;
+    }
+  }
+  return LoadKeyboardLayoutW(klid.c_str(), KLF_NOTELLSHELL);
+}
+
+UINT VirtualKeyForLayout(UINT vkey, KeyInfo kinfo, HKL keyboardLayout) {
+  if (!keyboardLayout)
+    return vkey;
+  UINT scanCode = kinfo.scanCode;
+  if (kinfo.isExtended)
+    scanCode |= 0xe000;
+  const UINT translated =
+      MapVirtualKeyExW(scanCode, MAPVK_VSC_TO_VK_EX, keyboardLayout);
+  return translated ? translated : vkey;
+}
+
 bool ConvertKeyEvent(UINT vkey,
                      KeyInfo kinfo,
                      const LPBYTE keyState,
+                     HKL keyboardLayout,
                      weasel::KeyEvent& result) {
   const BYTE KEY_DOWN = 0x80;
   const BYTE TOGGLED = 0x01;
@@ -27,6 +151,8 @@ bool ConvertKeyEvent(UINT vkey,
   if (kinfo.isKeyUp)
     result.mask |= ibus::RELEASE_MASK;
 
+  vkey = VirtualKeyForLayout(vkey, kinfo, keyboardLayout);
+
   if (vkey == VK_CAPITAL && !kinfo.isKeyUp) {
     // NOTE: rime assumes XK_Caps_Lock to be sent before modifier changes,
     // while VK_CAPITAL has the modifier changed already.
@@ -48,7 +174,8 @@ bool ConvertKeyEvent(UINT vkey,
   memcpy(table, keyState, sizeof(table));
   table[VK_CONTROL] = 0;
   table[VK_MENU] = 0;
-  int ret = ToUnicodeEx(vkey, UINT(kinfo), table, buf, buf_len, 0, NULL);
+  int ret =
+      ToUnicodeEx(vkey, kinfo.scanCode, table, buf, buf_len, 0, keyboardLayout);
   if (ret == 1) {
     result.keycode = UINT(buf[0]);
     return true;

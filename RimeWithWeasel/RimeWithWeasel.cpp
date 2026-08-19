@@ -118,6 +118,7 @@ void RimeWithWeaselHandler::Initialize() {
   }
 
   RimeConfig config = {NULL};
+  m_keyboard_layout.clear();
   if (rime_api->config_open("weasel", &config)) {
     if (m_ui) {
       _UpdateUIStyle(&config, m_ui, true);
@@ -137,6 +138,10 @@ void RimeWithWeaselHandler::Initialize() {
     Bool global_ascii = false;
     if (rime_api->config_get_bool(&config, "global_ascii", &global_ascii))
       m_global_ascii_mode = !!global_ascii;
+    char keyboard_layout[32] = {};
+    if (rime_api->config_get_string(&config, "keyboard_layout", keyboard_layout,
+                                    sizeof(keyboard_layout) - 1))
+      m_keyboard_layout = keyboard_layout;
     if (!rime_api->config_get_int(&config, "show_notifications_time",
                                   &m_show_notifications_time))
       m_show_notifications_time = 1200;
@@ -900,6 +905,9 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
   actions.push_back("config");
   body.append(L"config.inline_preedit=")
       .append(std::to_wstring((int)session_status.style.inline_preedit))
+      .append(L"\n");
+  body.append(L"config.keyboard_layout=")
+      .append(u8tow(m_keyboard_layout))
       .append(L"\n");
 
   // style

@@ -30,7 +30,11 @@ struct KeyEvent {
 bool ConvertKeyEvent(UINT vkey,
                      KeyInfo kinfo,
                      const LPBYTE keyState,
+                     HKL keyboardLayout,
                      weasel::KeyEvent& result);
+
+HKL FindKeyboardLayout(LPCWSTR klid);
+UINT VirtualKeyForLayout(UINT vkey, KeyInfo kinfo, HKL keyboardLayout);
 
 namespace ibus {
 // keycodes

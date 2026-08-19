@@ -188,8 +188,12 @@ struct Status {
 // 用於向前端告知設置信息
 struct Config {
   Config() : inline_preedit(false) {}
-  void reset() { inline_preedit = false; }
+  void reset() {
+    inline_preedit = false;
+    keyboard_layout.clear();
+  }
   bool inline_preedit;
+  std::wstring keyboard_layout;
 };
 
 struct UIStyle {
