@@ -25,17 +25,33 @@
 
 #pragma comment(lib, "Shcore.lib")
 
-template <class t0, class t1, class t2>
-inline void LoadIconNecessary(t0& a, t1& b, t2& c, int d) {
-  if (a == b)
+namespace {
+
+void LoadCustomIconIfNecessary(std::wstring& loaded_path,
+                               const std::wstring& desired_path,
+                               CIcon& icon) {
+  if (loaded_path == desired_path)
     return;
-  a = b;
-  if (b.empty())
-    c.LoadIconW(d, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
-  else
-    c = (HICON)LoadImage(NULL, b.c_str(), IMAGE_ICON, STATUS_ICON_SIZE,
-                         STATUS_ICON_SIZE, LR_LOADFROMFILE);
+  loaded_path = desired_path;
+  if (!icon.IsNull())
+    icon.DestroyIcon();
+  if (desired_path.empty())
+    return;
+  HICON hIcon = static_cast<HICON>(
+      ::LoadImageW(NULL, desired_path.c_str(), IMAGE_ICON,  //
+                   STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE));
+  if (hIcon)
+    icon.Attach(hIcon);
 }
+
+HICON GetCustomIconOrBuiltIn(const std::wstring& custom_icon_path,
+                             const CIcon& custom_icon,
+                             const CIcon& built_in_icon) {
+  return (!custom_icon_path.empty() && !custom_icon.IsNull()) ? custom_icon
+                                                              : built_in_icon;
+}
+
+}  // namespace
 
 static inline void ReconfigRoundInfo(IsToRoundStruct& rd,
                                      const int& i,
@@ -1081,14 +1097,15 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
     // status icon (I guess Metro IME stole my idea :)
     if (m_layout->ShouldDisplayStatusIcon()) {
       // decide if custom schema zhung icon to show
-      LoadIconNecessary(m_current_zhung_icon, m_style.current_zhung_icon,
-                        m_iconEnabled, IDI_ZH);
-      LoadIconNecessary(m_current_ascii_icon, m_style.current_ascii_icon,
-                        m_iconAlpha, IDI_EN);
-      LoadIconNecessary(m_current_half_icon, m_style.current_half_icon,
-                        m_iconHalf, IDI_HALF_SHAPE);
-      LoadIconNecessary(m_current_full_icon, m_style.current_full_icon,
-                        m_iconFull, IDI_FULL_SHAPE);
+      LoadCustomIconIfNecessary(m_current_zhung_icon,
+                                m_style.current_zhung_icon,
+                                m_customIconEnabled);
+      LoadCustomIconIfNecessary(m_current_ascii_icon,
+                                m_style.current_ascii_icon, m_customIconAlpha);
+      LoadCustomIconIfNecessary(m_current_half_icon, m_style.current_half_icon,
+                                m_customIconHalf);
+      LoadCustomIconIfNecessary(m_current_full_icon, m_style.current_full_icon,
+                                m_customIconFull);
       CRect iconRect(m_layout->GetStatusIconRect());
       if (m_istorepos && !m_ctx.aux.str.empty())
         iconRect.OffsetRect(0, m_offsety_aux);
@@ -1096,13 +1113,21 @@ void WeaselPanel::DoPaint(CDCHandle dc) {
                !m_ctx.preedit.str.empty())
         iconRect.OffsetRect(0, m_offsety_preedit);
 
-      CIcon& icon(
-          m_status.disabled ? m_iconDisabled
-          : m_status.ascii_mode
-              ? m_iconAlpha
-              : (m_status.type == SCHEMA
-                     ? m_iconEnabled
-                     : (m_status.full_shape ? m_iconFull : m_iconHalf)));
+      HICON icon = m_status.disabled ? m_iconDisabled.m_hIcon
+                   : m_status.ascii_mode
+                       ? GetCustomIconOrBuiltIn(m_current_ascii_icon,
+                                                m_customIconAlpha, m_iconAlpha)
+                       : (m_status.type == SCHEMA
+                              ? GetCustomIconOrBuiltIn(m_current_zhung_icon,
+                                                       m_customIconEnabled,
+                                                       m_iconEnabled)
+                              : (m_status.full_shape
+                                     ? GetCustomIconOrBuiltIn(
+                                           m_current_full_icon,
+                                           m_customIconFull, m_iconFull)
+                                     : GetCustomIconOrBuiltIn(
+                                           m_current_half_icon,
+                                           m_customIconHalf, m_iconHalf)));
       memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
       drawn = true;
     }
