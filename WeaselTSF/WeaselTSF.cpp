@@ -32,6 +32,8 @@ WeaselTSF::WeaselTSF() {
 
   _fCUASWorkaroundTested = _fCUASWorkaroundEnabled = FALSE;
 
+  _hDeferredMsgWnd = NULL;
+
   _cand = new CCandidateList(this);
 
   DllAddRef();
@@ -110,6 +112,8 @@ STDMETHODIMP WeaselTSF::Deactivate() {
 
   _UninitCompartment();
 
+  _UninitDeferredWindow();
+
   _UninitThreadMgrEventSink();
 
   _pThreadMgr = NULL;
@@ -147,6 +151,8 @@ STDMETHODIMP WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr,
   // like some opengl stuff
   _InitDisplayAttributeGuidAtom();
 
+  _InitDeferredWindow();
+
   if (!_InitPreservedKey())
     goto ExitError;
 
@@ -175,13 +181,13 @@ STDMETHODIMP WeaselTSF::OnSetThreadFocus() {
   RegGetStringValue(HKEY_CURRENT_USER, L"Software\\Rime\\weasel",
                     L"ToggleImeOnOpenClose", _ToggleImeOnOpenClose);
   _isToOpenClose = (_ToggleImeOnOpenClose == L"yes");
+  _ReconcileCompartment();
   if (m_client.Echo()) {
     m_client.ProcessKeyEvent(0);
     weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
-    bool ok = m_client.GetResponseData(std::ref(parser));
-    if (ok)
-      _UpdateLanguageBar(_status);
+    m_client.GetResponseData(std::ref(parser));
   }
+  _UpdateLanguageBar(_status);
   return S_OK;
 }
 STDMETHODIMP WeaselTSF::OnKillThreadFocus() {
@@ -204,6 +210,48 @@ void WeaselTSF::_UninitThreadFocusSink() {
     return;
   if (FAILED(pSource->UnadviseSink(_dwThreadFocusSinkCookie)))
     return;
+}
+
+BOOL WeaselTSF::_InitDeferredWindow() {
+  HWND hWnd = CreateWindowExW(0, L"STATIC", L"WeaselTSF_DeferredUpdate", 0, 0,
+                                0, 0, 0, HWND_MESSAGE, NULL, NULL, NULL);
+  if (!hWnd)
+    return FALSE;
+  SetWindowLongPtrW(hWnd, GWLP_USERDATA, (LONG_PTR)this);
+  SetWindowLongPtrW(hWnd, GWLP_WNDPROC, (LONG_PTR)_DeferredWndProc);
+  SetTimer(hWnd, 1, 2000, NULL);
+  _hDeferredMsgWnd = hWnd;
+  return TRUE;
+}
+
+void WeaselTSF::_UninitDeferredWindow() {
+  if (_hDeferredMsgWnd) {
+    KillTimer(_hDeferredMsgWnd, 1);
+    DestroyWindow(_hDeferredMsgWnd);
+    _hDeferredMsgWnd = NULL;
+  }
+}
+
+LRESULT CALLBACK WeaselTSF::_DeferredWndProc(HWND hWnd,
+                                             UINT msg,
+                                             WPARAM wParam,
+                                             LPARAM lParam) {
+  if (msg == WM_APP + 100) {
+    WeaselTSF* pThis = (WeaselTSF*)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
+    if (pThis) {
+      pThis->_ReconcileCompartment();
+      pThis->_UpdateLanguageBar(pThis->_status);
+    }
+    return 0;
+  }
+  if (msg == WM_TIMER && wParam == 1) {
+    WeaselTSF* pThis = (WeaselTSF*)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
+    if (pThis) {
+      pThis->_ReconcileCompartment();
+    }
+    return 0;
+  }
+  return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
 STDMETHODIMP WeaselTSF::OnActivated(REFCLSID clsid,
