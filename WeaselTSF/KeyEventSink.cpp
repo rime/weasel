@@ -1,14 +1,67 @@
 #include "stdafx.h"
+#include <UIAutomationClient.h>
 #include "WeaselIPC.h"
 #include "WeaselTSF.h"
 #include <KeyEvent.h>
 #include "CandidateList.h"
 
+#pragma comment(lib, "UIAutomationCore.lib")
+
 static weasel::KeyEvent prevKeyEvent;
 static BOOL prevfEaten = FALSE;
 static int keyCountToSimulate = 0;
 
+static bool IsLineProcess() {
+  WCHAR path[MAX_PATH]{};
+  if (!GetModuleFileNameW(nullptr, path, ARRAYSIZE(path)))
+    return false;
+  const WCHAR* name = wcsrchr(path, L'\\');
+  name = name ? name + 1 : path;
+  return _wcsicmp(name, L"LINE.exe") == 0;
+}
+
+static bool IsLinePasswordControlFocused() {
+  if (!IsLineProcess())
+    return false;
+
+  // OnTestKeyDown and OnKeyDown arrive back-to-back for the same physical key.
+  // Reuse the UIA result briefly to avoid making the same cross-provider query
+  // twice, while keeping focus changes responsive.
+  static thread_local ULONGLONG lastCheck = 0;
+  static thread_local bool lastResult = false;
+  const ULONGLONG now = GetTickCount64();
+  if (now - lastCheck < 50)
+    return lastResult;
+
+  lastCheck = now;
+  lastResult = false;
+
+  com_ptr<IUIAutomation> automation;
+  if (FAILED(CoCreateInstance(CLSID_CUIAutomation, nullptr,
+                              CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&automation))))
+    return false;
+
+  com_ptr<IUIAutomationElement> focused;
+  if (FAILED(automation->GetFocusedElement(&focused)) || !focused)
+    return false;
+
+  BOOL isPassword = FALSE;
+  if (SUCCEEDED(focused->get_CurrentIsPassword(&isPassword)))
+    lastResult = isPassword != FALSE;
+  return lastResult;
+}
+
 void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
+  // LINE's Qt text store does not publish a password InputScope, but its
+  // focused UI Automation element correctly exposes IsPassword. Bypass Rime
+  // only for that control so raw password keys are not composed or committed.
+  if (IsLinePasswordControlFocused()) {
+    if (_IsComposing())
+      _AbortComposition();
+    *pfEaten = FALSE;
+    return;
+  }
+
   // when _IsKeyboardDisabled don't eat the key,
   // when keyboard closable and keyboard closed, don't eat the key
   if ((_isToOpenClose && !_IsKeyboardOpen()) || _IsKeyboardDisabled()) {
