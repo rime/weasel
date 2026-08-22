@@ -188,7 +188,8 @@ class PipeChannel : public PipeChannelBase {
       _WritePipe(pipe, data_sz, pbuff, timeout_ms);
     } catch (...) {
       _Reconnect();
-      _WritePipe(pipe, data_sz, pbuff, timeout_ms);
+      // _Reconnect() closed `pipe` and opened a new handle; retry on that one
+      _WritePipe(*_GetPipeHandle(), data_sz, pbuff, timeout_ms);
     }
     ClearBufferStream();
   }
