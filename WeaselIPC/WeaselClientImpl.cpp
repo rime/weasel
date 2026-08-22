@@ -190,12 +190,40 @@ bool ClientImpl::_WriteClientInfo() {
   return true;
 }
 
+namespace {
+// Focus / notification commands:
+// a miss self-heals on the next event, so cap them tightly to keep window
+// switching imperceptible. Compose / keystroke commands need a reliable answer,
+// so keep the larger cap.
+DWORD _TimeoutForCommand(WEASEL_IPC_COMMAND msg, DWORD wParam) {
+  switch (msg) {
+    case WEASEL_IPC_ECHO:
+    case WEASEL_IPC_FOCUS_IN:
+    case WEASEL_IPC_FOCUS_OUT:
+    case WEASEL_IPC_START_SESSION:
+    case WEASEL_IPC_END_SESSION:
+    case WEASEL_IPC_START_MAINTENANCE:
+    case WEASEL_IPC_END_MAINTENANCE:
+    case WEASEL_IPC_UPDATE_INPUT_POS:
+    case WEASEL_IPC_TRAY_COMMAND:
+      return PipeChannelBase::kClientFocusTimeoutMs;
+    case WEASEL_IPC_PROCESS_KEY_EVENT:
+      // keycode 0 is the focus-refresh probe from OnSetThreadFocus, not a real
+      // keystroke; keep real keys on the reliable compose-path cap
+      return wParam == 0 ? PipeChannelBase::kClientFocusTimeoutMs
+                         : PipeChannelBase::kClientIoTimeoutMs;
+    default:
+      return PipeChannelBase::kClientIoTimeoutMs;
+  }
+}
+}  // namespace
+
 LRESULT ClientImpl::_SendMessage(WEASEL_IPC_COMMAND Msg,
                                  DWORD wParam,
                                  DWORD lParam) {
   try {
     PipeMessage req{Msg, wParam, lParam};
-    return channel.Transact(req);
+    return channel.Transact(req, _TimeoutForCommand(Msg, wParam));
   } catch (DWORD /* ex */) {
     return 0;
   }
