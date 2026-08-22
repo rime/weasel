@@ -18,7 +18,11 @@ using namespace boost;
 namespace {
 struct OverlappedOp {
   OVERLAPPED ov;
-  OverlappedOp() : ov() { ov.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL); }
+  OverlappedOp() : ov() {
+    ov.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (!ov.hEvent)
+      _ThrowLastError;
+  }
   ~OverlappedOp() {
     if (ov.hEvent)
       ::CloseHandle(ov.hEvent);
@@ -95,10 +99,14 @@ DWORD PipeChannelBase::_WaitIo(HANDLE pipe,
   }
   DWORD wait = ::WaitForSingleObject(ov.hEvent, timeout_ms);
   if (wait != WAIT_OBJECT_0) {
+    DWORD wait_err = wait == WAIT_TIMEOUT ? static_cast<DWORD>(ERROR_TIMEOUT)
+                                          : ::GetLastError();
+    // the OVERLAPPED lives on the caller's stack, so the I/O must be complete
+    // before returning; CancelIoEx fails only when the I/O already completed
+    // (ERROR_NOT_FOUND), in which case the event is already signaled
     ::CancelIoEx(pipe, &ov);
     ::WaitForSingleObject(ov.hEvent, INFINITE);
-    _ThrowCode(wait == WAIT_TIMEOUT ? static_cast<DWORD>(ERROR_TIMEOUT)
-                                    : ::GetLastError());
+    _ThrowCode(wait_err);
   }
   DWORD n = 0;
   if (!::GetOverlappedResult(pipe, &ov, &n, FALSE)) {
@@ -141,22 +149,32 @@ void PipeChannelBase::_Receive(HANDLE pipe,
                                LPVOID msg,
                                size_t rec_len,
                                DWORD timeout_ms) {
-  DWORD err;
-  {
-    OverlappedOp op;
-    BOOL success =
-        ::ReadFile(pipe, msg, static_cast<DWORD>(rec_len), NULL, &op.ov);
-    err = _WaitIo(pipe, op.ov, success, timeout_ms, NULL);
-  }
-  if (err == ERROR_MORE_DATA) {
-    auto ctx = _GetContext();
-    memset(ctx->buffer.get(), 0, buff_size);
-    OverlappedOp op;
-    BOOL success = ::ReadFile(pipe, ctx->buffer.get(),
-                              static_cast<DWORD>(buff_size), NULL, &op.ov);
-    err = _WaitIo(pipe, op.ov, success, timeout_ms, NULL);
-    if (err != ERROR_SUCCESS)
-      _ThrowCode(err);
+  try {
+    DWORD err;
+    {
+      OverlappedOp op;
+      BOOL success =
+          ::ReadFile(pipe, msg, static_cast<DWORD>(rec_len), NULL, &op.ov);
+      err = _WaitIo(pipe, op.ov, success, timeout_ms, NULL);
+    }
+    if (err == ERROR_MORE_DATA) {
+      auto ctx = _GetContext();
+      memset(ctx->buffer.get(), 0, buff_size);
+      OverlappedOp op;
+      BOOL success = ::ReadFile(pipe, ctx->buffer.get(),
+                                static_cast<DWORD>(buff_size), NULL, &op.ov);
+      err = _WaitIo(pipe, op.ov, success, timeout_ms, NULL);
+      if (err != ERROR_SUCCESS)
+        _ThrowCode(err);
+    }
+  } catch (...) {
+    // a response that was abandoned (timed out / cancelled) would otherwise
+    // arrive as the reply to the next request on this pipe, so drop the
+    // client's connection; the next transaction reconnects
+    HANDLE* phandle = _GetPipeHandle();
+    if (*phandle == pipe)
+      _FinalizePipe(*phandle);
+    throw;
   }
   _GetContext()->has_body = false;
 }
@@ -173,7 +191,12 @@ HANDLE PipeChannelBase::_ConnectServerPipe(std::wstring& pn) {
   BOOL ok = ::ConnectNamedPipe(pipe, &op.ov);
   DWORD err = ok ? ERROR_SUCCESS : ::GetLastError();
   if (!ok && err == ERROR_IO_PENDING) {
-    ::WaitForSingleObject(op.ov.hEvent, INFINITE);
+    if (::WaitForSingleObject(op.ov.hEvent, INFINITE) != WAIT_OBJECT_0) {
+      err = ::GetLastError();
+      ::CancelIoEx(pipe, &op.ov);
+      ::CloseHandle(pipe);
+      _ThrowCode(err);
+    }
     DWORD n = 0;
     if (!::GetOverlappedResult(pipe, &op.ov, &n, FALSE)) {
       err = ::GetLastError();
