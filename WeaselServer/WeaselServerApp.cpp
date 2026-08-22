@@ -49,7 +49,6 @@ int WeaselServerApp::Run() {
     LOG(ERROR) << "failed to create tray icon";
   else
     LOG(INFO) << "tray icon created";
-  m_server.SetTrayRefreshCallback([this]() { tray_icon.ApplyRefresh(); });
   tray_icon.RequestRefresh();
 
   LOG(INFO) << "entering IPC message loop";
