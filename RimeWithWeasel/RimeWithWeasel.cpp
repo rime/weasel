@@ -72,17 +72,10 @@ void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void _RefreshTrayIcon(const RimeSessionId session_id,
                       const std::function<void()> _UpdateUICallback) {
-  // Dangerous, don't touch
-  static char app_name[256] = {0};
-  auto ret = rime_api->get_property(session_id, "client_app", app_name,
-                                    sizeof(app_name) - 1);
-  if (!ret || u8tow(app_name) == std::wstring(L"explorer.exe"))
-    boost::thread th([=]() {
-      ::Sleep(100);
-      if (_UpdateUICallback)
-        _UpdateUICallback();
-    });
-  else if (_UpdateUICallback)
+  // the callback only hands a state snapshot to the tray thread,
+  // so it is safe to invoke synchronously for every client, explorer.exe
+  // included
+  if (_UpdateUICallback)
     _UpdateUICallback();
 }
 

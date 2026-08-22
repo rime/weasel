@@ -17,7 +17,21 @@ WeaselTrayIcon::WeaselTrayIcon(weasel::UI& ui)
       m_schema_ascii_icon(),
       m_disabled(false) {}
 
+WeaselTrayIcon::~WeaselTrayIcon() {
+  DisableRefresh();
+}
+
 void WeaselTrayIcon::CustomizeMenu(HMENU hMenu) {}
+
+LRESULT WeaselTrayIcon::OnTrayNotification(WPARAM uID, LPARAM lEvent) {
+  std::lock_guard<std::recursive_mutex> lock(m_tray_mutex);
+  return CSystemTray::OnTrayNotification(uID, lEvent);
+}
+
+void WeaselTrayIcon::InstallIconPending() {
+  std::lock_guard<std::recursive_mutex> lock(m_tray_mutex);
+  CSystemTray::InstallIconPending();
+}
 
 BOOL WeaselTrayIcon::Create(HWND hTargetWnd) {
   HMODULE hModule = GetModuleHandle(NULL);
@@ -34,6 +48,7 @@ BOOL WeaselTrayIcon::Create(HWND hTargetWnd) {
   } else {
     AddIcon();
   }
+  m_refresh_thread = std::thread([this] { RefreshThreadProc(); });
   return bRet;
 }
 
@@ -43,42 +58,42 @@ void WeaselTrayIcon::RequestRefresh() {
     return;
   }
   m_pending_state = WeaselTrayIconState::From(m_style, m_status);
-  if (m_refresh_pending) {
-    return;
-  }
   m_refresh_pending = true;
-  if (!::PostMessage(GetTargetWnd(), WM_WEASEL_SERVICE_NOTIFY, 0, 0)) {
-    m_refresh_pending = false;
-  }
+  m_state_cv.notify_one();
 }
 
-void WeaselTrayIcon::ApplyRefresh() {
-  WeaselTrayIconState state;
-  {
-    std::lock_guard<std::mutex> lock(m_state_mutex);
-    if (!m_refresh_pending || !m_refresh_enabled) {
-      return;
+// Pending requests are coalesced: only the latest snapshot is applied.
+void WeaselTrayIcon::RefreshThreadProc() {
+  for (;;) {
+    WeaselTrayIconState state;
+    {
+      std::unique_lock<std::mutex> lock(m_state_mutex);
+      m_state_cv.wait(
+          lock, [this] { return m_refresh_pending || !m_refresh_enabled; });
+      if (!m_refresh_enabled) {
+        return;
+      }
+      state = m_pending_state;
+      m_refresh_pending = false;
     }
-    state = m_pending_state;
-    m_refresh_pending = false;
-    m_refresh_in_progress = true;
+    Refresh(state);
   }
-  Refresh(state);
-  {
-    std::lock_guard<std::mutex> lock(m_state_mutex);
-    m_refresh_in_progress = false;
-  }
-  m_state_cv.notify_all();
 }
 
 void WeaselTrayIcon::DisableRefresh() {
-  std::unique_lock<std::mutex> lock(m_state_mutex);
-  m_refresh_enabled = false;
-  m_refresh_pending = false;
-  m_state_cv.wait(lock, [this] { return !m_refresh_in_progress; });
+  {
+    std::lock_guard<std::mutex> lock(m_state_mutex);
+    m_refresh_enabled = false;
+    m_refresh_pending = false;
+  }
+  m_state_cv.notify_all();
+  if (m_refresh_thread.joinable()) {
+    m_refresh_thread.join();
+  }
 }
 
 void WeaselTrayIcon::Refresh(const WeaselTrayIconState& state) {
+  std::lock_guard<std::recursive_mutex> lock(m_tray_mutex);
   if (!state.display_tray_icon &&
       !state.disabled)  // display notification when deploying
   {

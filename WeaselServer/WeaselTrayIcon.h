@@ -5,14 +5,18 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <thread>
 
 #define WM_WEASEL_TRAY_NOTIFY (WEASEL_IPC_LAST_COMMAND + 100)
 
 // Snapshot of the tray-relevant UI state, computed on the pipe worker thread
-// and applied on the server message thread. Keeps Shell_NotifyIcon off the
-// pipe worker threads (and away from g_api_mutex), avoiding the deadlock loop
-// where the taskbar UI thread waits on the pipe while the server waits for the
-// taskbar UI thread inside Shell_NotifyIcon.
+// and applied on a dedicated tray thread. Keeps Shell_NotifyIcon off the pipe
+// worker threads (and away from g_api_mutex) and off the server message thread:
+// Shell_NotifyIcon waits on the taskbar UI thread with SMTO_BLOCK,
+// and while the taskbar UI thread itself is waiting on the pipe,
+// a pipe worker doing a cross-thread SetWindowPos/ShowWindow on the candidate
+// window would otherwise wait on the blocked message thread, closing the
+// deadlock loop.
 struct WeaselTrayIconState {
   WeaselTrayIconState()
       : valid(false),
@@ -61,21 +65,29 @@ class WeaselTrayIcon : public CSystemTray {
   };
 
   WeaselTrayIcon(weasel::UI& ui);
+  ~WeaselTrayIcon();
 
   BOOL Create(HWND hTargetWnd);
 
-  // Captures the tray-relevant state and posts a refresh request to the server
-  // message thread. Never calls Shell_NotifyIcon itself.
+  // Captures the tray-relevant state and wakes the tray thread.
+  // Never calls Shell_NotifyIcon itself, so it is safe from any thread and
+  // under any lock.
   void RequestRefresh();
+  // Stops the tray thread; waits for an in-flight refresh to finish.
   void DisableRefresh();
-
-  // Runs on the server message thread (no g_api_mutex held).
-  void ApplyRefresh();
 
  protected:
   virtual void CustomizeMenu(HMENU hMenu);
 
+  // CSystemTray state is touched from the tray thread (Refresh) and from the
+  // server message thread (tray notifications, taskbar re-creation); every
+  // entry point takes m_tray_mutex. Recursive because a tray menu's modal
+  // loop may dispatch a taskbar re-creation while the lock is held.
+  virtual LRESULT OnTrayNotification(WPARAM uID, LPARAM lEvent) override;
+  virtual void InstallIconPending() override;
+
   void Refresh(const WeaselTrayIconState& state);
+  void RefreshThreadProc();
 
   weasel::UIStyle& m_style;
   weasel::Status& m_status;
@@ -87,8 +99,9 @@ class WeaselTrayIcon : public CSystemTray {
   // Guarded by m_state_mutex.
   bool m_refresh_enabled = true;
   bool m_refresh_pending = false;
-  bool m_refresh_in_progress = false;
   WeaselTrayIconState m_pending_state;
   std::mutex m_state_mutex;
   std::condition_variable m_state_cv;
+  std::thread m_refresh_thread;
+  std::recursive_mutex m_tray_mutex;
 };
