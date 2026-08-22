@@ -79,6 +79,13 @@ class WeaselTrayIcon : public CSystemTray {
  protected:
   virtual void CustomizeMenu(HMENU hMenu);
 
+  // CSystemTray state is touched from the tray thread (Refresh) and from the
+  // server message thread (tray notifications, taskbar re-creation); every
+  // entry point takes m_tray_mutex. Recursive because a tray menu's modal
+  // loop may dispatch a taskbar re-creation while the lock is held.
+  virtual LRESULT OnTrayNotification(WPARAM uID, LPARAM lEvent) override;
+  virtual void InstallIconPending() override;
+
   void Refresh(const WeaselTrayIconState& state);
   void RefreshThreadProc();
 
@@ -96,4 +103,5 @@ class WeaselTrayIcon : public CSystemTray {
   std::mutex m_state_mutex;
   std::condition_variable m_state_cv;
   std::thread m_refresh_thread;
+  std::recursive_mutex m_tray_mutex;
 };

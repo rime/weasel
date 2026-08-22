@@ -23,6 +23,16 @@ WeaselTrayIcon::~WeaselTrayIcon() {
 
 void WeaselTrayIcon::CustomizeMenu(HMENU hMenu) {}
 
+LRESULT WeaselTrayIcon::OnTrayNotification(WPARAM uID, LPARAM lEvent) {
+  std::lock_guard<std::recursive_mutex> lock(m_tray_mutex);
+  return CSystemTray::OnTrayNotification(uID, lEvent);
+}
+
+void WeaselTrayIcon::InstallIconPending() {
+  std::lock_guard<std::recursive_mutex> lock(m_tray_mutex);
+  CSystemTray::InstallIconPending();
+}
+
 BOOL WeaselTrayIcon::Create(HWND hTargetWnd) {
   HMODULE hModule = GetModuleHandle(NULL);
   CIcon icon;
@@ -83,6 +93,7 @@ void WeaselTrayIcon::DisableRefresh() {
 }
 
 void WeaselTrayIcon::Refresh(const WeaselTrayIconState& state) {
+  std::lock_guard<std::recursive_mutex> lock(m_tray_mutex);
   if (!state.display_tray_icon &&
       !state.disabled)  // display notification when deploying
   {

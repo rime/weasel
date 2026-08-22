@@ -145,7 +145,7 @@ public:
 // Implementation
 protected:
     void Initialise();
-    void InstallIconPending();
+    virtual void InstallIconPending();
     ATOM RegisterClass(HINSTANCE hInstance);
 
     virtual void CustomizeMenu(HMENU) {}
