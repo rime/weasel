@@ -486,6 +486,15 @@ void RimeWithWeaselHandler::EndMaintenance() {
   m_session_status_map.clear();
 }
 
+bool RimeWithWeaselHandler::GetStatus(EatLine eat) {
+  if (m_active_session) {
+    _Respond(m_active_session, eat);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 void RimeWithWeaselHandler::SetOption(WeaselSessionId ipc_id,
                                       const std::string& opt,
                                       bool val) {

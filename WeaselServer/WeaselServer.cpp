@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "WeaselService.h"
+#include <ResponseParser.h>
 #include <WeaselIPC.h>
 #include <WeaselUI.h>
 #include <RimeWithWeasel.h>
@@ -15,6 +16,7 @@
 #include <WinUser.h>
 #include <memory>
 #include <atlstr.h>
+#include <iostream>
 #pragma comment(lib, "Shcore.lib")
 CAppModule _Module;
 
@@ -69,6 +71,30 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
   }
   if (!wcscmp(L"/weaseldir", lpstrCmdLine)) {
     WeaselServerApp::explore(WeaselServerApp::install_dir());
+    return 0;
+  }
+  if (!wcscmp(L"/isascii", lpstrCmdLine)) {
+    // https://speedyleion.github.io/c/c++/windows/2021/07/11/WinMain-and-stdout.html
+    if (!GetStdHandle(STD_OUTPUT_HANDLE)) {
+      if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        freopen("CONOUT$", "wb", stdout);
+      }
+    }
+
+    weasel::Client client;
+    if (client.Connect())  // try to connect to running server
+    {
+      if (client.GetStatus()) {
+        std::wstring commit;
+        weasel::Status status;
+        weasel::ResponseParser parser(&commit, NULL, &status);
+        bool ok = client.GetResponseData(std::ref(parser));
+        if (ok) {
+          int out = status.ascii_mode ? 1 : 0;
+          std::cout << out << std::endl;
+        }
+      }
+    }
     return 0;
   }
   if (!wcscmp(L"/ascii", lpstrCmdLine) || !wcscmp(L"/nascii", lpstrCmdLine)) {
