@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include <logging.h>
 #include <RimeWithWeasel.h>
 #include <StringAlgorithm.hpp>
@@ -268,6 +268,9 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(KeyEvent keyEvent,
              << ", mask = " << keyEvent.mask << ", ipc_id = " << ipc_id;
   if (m_disabled)
     return FALSE;
+  BOOL grid_handled = FALSE;
+  if (_HandleGridKeyEvent(keyEvent, ipc_id, eat, grid_handled))
+    return grid_handled;
   RimeSessionId session_id = to_session_id(ipc_id);
   Bool handled = rime_api->process_key(session_id, keyEvent.keycode,
                                        expand_ibus_modifier(keyEvent.mask));
@@ -470,6 +473,161 @@ void RimeWithWeaselHandler::_GetCandidateInfo(CandidateInfo& cinfo,
   cinfo.highlighted = ctx.menu.highlighted_candidate_index;
   cinfo.currentPage = ctx.menu.page_no;
   cinfo.is_last_page = ctx.menu.is_last_page;
+}
+
+void RimeWithWeaselHandler::_GetCandidateInfo(CandidateInfo& cinfo,
+                                              RimeSessionId session_id,
+                                              SessionStatus& session_status) {
+  RIME_STRUCT(RimeContext, ctx);
+  if (!rime_api->get_context(session_id, &ctx))
+    return;
+
+  if (!session_status.style.grid_layout || !ctx.menu.num_candidates) {
+    _GetCandidateInfo(cinfo, ctx);
+    rime_api->free_context(&ctx);
+    return;
+  }
+
+  const int columns = session_status.style.grid_columns;
+  const int visible_rows = session_status.style.grid_visible_rows;
+  const int visible_count = columns * visible_rows;
+  const int highlighted = ctx.menu.page_no * ctx.menu.page_size +
+                          ctx.menu.highlighted_candidate_index;
+  if (session_status.grid_row_offset < 0)
+    session_status.grid_row_offset = 0;
+  if (session_status.grid_window_row_offset < 0)
+    session_status.grid_window_row_offset = 0;
+  if (highlighted < session_status.grid_window_row_offset * columns ||
+      highlighted >=
+          (session_status.grid_window_row_offset + visible_rows) * columns) {
+    session_status.grid_window_row_offset = max(0, highlighted / columns);
+    session_status.grid_row_offset = session_status.grid_window_row_offset;
+  }
+  const int start = session_status.grid_window_row_offset * columns;
+
+  RimeCandidateListIterator it = {0};
+  if (!rime_api->candidate_list_from_index(session_id, &it, start)) {
+    _GetCandidateInfo(cinfo, ctx);
+    rime_api->free_context(&ctx);
+    return;
+  }
+
+  int count = 0;
+  while (count < visible_count && rime_api->candidate_list_next(&it)) {
+    Text candidate;
+    candidate.str = escape_string(u8tow(it.candidate.text));
+    cinfo.candies.push_back(candidate);
+
+    Text comment;
+    if (it.candidate.comment)
+      comment.str = escape_string(u8tow(it.candidate.comment));
+    cinfo.comments.push_back(comment);
+
+    Text label;
+    label.str = std::to_wstring((count % columns) + 1);
+    cinfo.labels.push_back(label);
+    ++count;
+  }
+  rime_api->candidate_list_end(&it);
+
+  cinfo.highlighted = highlighted >= start && highlighted < start + count
+                          ? highlighted - start
+                          : 0;
+  cinfo.currentPage = session_status.grid_window_row_offset;
+  cinfo.is_last_page = count < visible_count;
+  rime_api->free_context(&ctx);
+}
+
+bool RimeWithWeaselHandler::_HandleGridKeyEvent(KeyEvent keyEvent,
+                                                WeaselSessionId ipc_id,
+                                                EatLine eat,
+                                                BOOL& handled) {
+  if ((keyEvent.mask & ibus::Modifier::RELEASE_MASK) || !ipc_id)
+    return false;
+  SessionStatus& session_status = get_session_status(ipc_id);
+  if (!session_status.style.grid_layout)
+    return false;
+
+  RimeSessionId session_id = session_status.session_id;
+  RIME_STRUCT(RimeContext, ctx);
+  if (!rime_api->get_context(session_id, &ctx))
+    return false;
+  const bool has_candidates = ctx.menu.num_candidates > 0;
+  rime_api->free_context(&ctx);
+  if (!has_candidates) {
+    session_status.grid_row_offset = 0;
+    session_status.grid_window_row_offset = 0;
+    return false;
+  }
+
+  const int columns = session_status.style.grid_columns;
+  const int visible_rows = session_status.style.grid_visible_rows;
+  const bool no_command_modifier =
+      (keyEvent.mask &
+       (ibus::Modifier::CONTROL_MASK | ibus::Modifier::ALT_MASK |
+        ibus::Modifier::META_MASK | ibus::Modifier::SUPER_MASK |
+        ibus::Modifier::HYPER_MASK)) == 0;
+  const bool plain =
+      no_command_modifier && !(keyEvent.mask & ibus::Modifier::SHIFT_MASK);
+
+  if (no_command_modifier &&
+      (keyEvent.keycode == '+' || keyEvent.keycode == '=' ||
+       keyEvent.keycode == ibus::KP_Add)) {
+    const int next_row_offset = session_status.grid_row_offset + 1;
+    RimeCandidateListIterator it = {0};
+    bool has_next_row = rime_api->candidate_list_from_index(
+                            session_id, &it, next_row_offset * columns) &&
+                        rime_api->candidate_list_next(&it);
+    rime_api->candidate_list_end(&it);
+    if (has_next_row) {
+      session_status.grid_row_offset = next_row_offset;
+      if (session_status.grid_row_offset >=
+          session_status.grid_window_row_offset + visible_rows) {
+        session_status.grid_window_row_offset =
+            session_status.grid_row_offset - visible_rows + 1;
+      }
+    }
+    rime_api->highlight_candidate(session_id,
+                                  session_status.grid_row_offset * columns);
+    _Respond(ipc_id, eat);
+    _UpdateUI(ipc_id);
+    m_active_session = ipc_id;
+    handled = TRUE;
+    return true;
+  }
+
+  if (plain &&
+      (keyEvent.keycode == '-' || keyEvent.keycode == ibus::KP_Subtract)) {
+    if (session_status.grid_row_offset > 0)
+      --session_status.grid_row_offset;
+    if (session_status.grid_row_offset < session_status.grid_window_row_offset)
+      session_status.grid_window_row_offset = session_status.grid_row_offset;
+    rime_api->highlight_candidate(session_id,
+                                  session_status.grid_row_offset * columns);
+    _Respond(ipc_id, eat);
+    _UpdateUI(ipc_id);
+    m_active_session = ipc_id;
+    handled = TRUE;
+    return true;
+  }
+
+  int digit = 0;
+  if (keyEvent.keycode >= '1' && keyEvent.keycode <= '9')
+    digit = keyEvent.keycode - '0';
+  else if (keyEvent.keycode >= ibus::KP_1 && keyEvent.keycode <= ibus::KP_9)
+    digit = keyEvent.keycode - ibus::KP_0;
+
+  if (plain && digit >= 1 && digit <= columns) {
+    const size_t index =
+        (size_t)(session_status.grid_row_offset * columns + digit - 1);
+    handled = (BOOL)rime_api->select_candidate(session_id, index);
+    _Respond(ipc_id, eat);
+    _UpdateUI(ipc_id);
+    m_active_session = ipc_id;
+    return true;
+  }
+
+  return false;
 }
 
 void RimeWithWeaselHandler::StartMaintenance() {
@@ -792,7 +950,7 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
     bool has_candidates = ctx.menu.num_candidates > 0;
     CandidateInfo cinfo;
     if (has_candidates) {
-      _GetCandidateInfo(cinfo, ctx);
+      _GetCandidateInfo(cinfo, session_id, session_status);
     }
     if (is_composing) {
       const auto& preedit = ctx.composition.preedit;
@@ -1285,6 +1443,19 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   _RimeGetIntStr(config, "style/layout/spacing", style.spacing, 0, 0, _abs);
   _RimeGetIntStr(config, "style/layout/candidate_spacing",
                  style.candidate_spacing, 0, 0, _abs);
+  _RimeGetBool(config, "style/layout/grid", false, style.grid_layout);
+  _RimeGetIntStr(config, "style/layout/grid_columns", style.grid_columns, 0, 0,
+                 _abs);
+  if (style.grid_columns <= 0)
+    style.grid_columns = UIStyle::DEFAULT_GRID_COLUMNS;
+  _RimeGetIntStr(config, "style/layout/grid_visible_rows",
+                 style.grid_visible_rows, 0, 0, _abs);
+  if (style.grid_visible_rows <= 0)
+    style.grid_visible_rows = UIStyle::DEFAULT_GRID_VISIBLE_ROWS;
+  _RimeGetIntStr(config, "style/layout/grid_cell_width", style.grid_cell_width,
+                 0, 0, _abs);
+  _RimeGetIntStr(config, "style/layout/grid_cell_height",
+                 style.grid_cell_height, 0, 0, _abs);
   _RimeGetIntStr(config, "style/layout/hilite_spacing", style.hilite_spacing, 0,
                  0, _abs);
   _RimeGetIntStr(config, "style/layout/hilite_padding_x",
@@ -1495,7 +1666,8 @@ void RimeWithWeaselHandler::_GetContext(Context& weasel_context,
     }
     if (ctx.menu.num_candidates) {
       CandidateInfo& cinfo(weasel_context.cinfo);
-      _GetCandidateInfo(cinfo, ctx);
+      SessionStatus& session_status = get_session_status(m_active_session);
+      _GetCandidateInfo(cinfo, session_id, session_status);
     }
     rime_api->free_context(&ctx);
   }

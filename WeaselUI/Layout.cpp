@@ -28,6 +28,8 @@ Layout::Layout(const UIStyle& style,
     _style.margin_y = (int)(_style.margin_y * scale);
     _style.spacing = (int)(_style.spacing * scale);
     _style.candidate_spacing = (int)(_style.candidate_spacing * scale);
+    _style.grid_cell_width = (int)(_style.grid_cell_width * scale);
+    _style.grid_cell_height = (int)(_style.grid_cell_height * scale);
     _style.hilite_spacing = (int)(_style.hilite_spacing * scale);
     _style.hilite_padding_x = (int)(_style.hilite_padding_x * scale);
     _style.hilite_padding_y = (int)(_style.hilite_padding_y * scale);
