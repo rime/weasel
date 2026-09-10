@@ -9,6 +9,12 @@
 #define WEASEL_IPC_WINDOW L"WeaselIPCWindow_1.0"
 #define WEASEL_IPC_PIPE_NAME L"WeaselNamedPipe"
 
+// 客户端命名管道 I/O 及连接等待的超时（毫秒）。
+// 管道请求在宿主程序的 UI 线程上同步执行，必须设置有限超时，
+// 在算法服务忙碌或重启期间把失败交还给既有的重连/守护逻辑，
+// 避免宿主窗口被无限拖死（#1696、#1909）
+constexpr DWORD WEASEL_PIPE_IO_TIMEOUT = 1000;
+
 #define WEASEL_IPC_METADATA_SIZE 1024
 #define WEASEL_IPC_BUFFER_SIZE (4 * 1024)
 #define WEASEL_IPC_BUFFER_LENGTH (WEASEL_IPC_BUFFER_SIZE / sizeof(WCHAR))

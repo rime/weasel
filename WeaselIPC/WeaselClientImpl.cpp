@@ -6,6 +6,9 @@ using namespace weasel;
 
 ClientImpl::ClientImpl()
     : session_id(0), channel(GetPipeName()), is_ime(false) {
+  // 管道请求在宿主 UI 线程上同步执行，设置有限超时，
+  // 避免算法服务无响应时拖死宿主窗口
+  channel.SetIoTimeout(WEASEL_PIPE_IO_TIMEOUT);
   _InitializeClientInfo();
 }
 

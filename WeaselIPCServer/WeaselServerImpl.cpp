@@ -428,6 +428,8 @@ void PipeServer::Listen(ServerHandler const& handler) {
           [&handler, pipe, this] { _ProcessPipeThread(pipe, handler); });
     } catch (DWORD ex) {
       _FinalizePipe(pipe);
+      // accept 持续失败时退避，避免监听线程全速空转
+      ::Sleep(20);
     }
     boost::this_thread::interruption_point();
   }
