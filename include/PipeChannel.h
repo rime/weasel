@@ -16,13 +16,22 @@ class PipeChannelBase {
     std::unique_ptr<char[]> buffer;
     std::unique_ptr<Stream> write_stream;
     bool has_body;
+    // 供重叠 I/O 等待使用的手动复位事件，同一线程内串行复用
+    HANDLE io_event = NULL;
 
     ChannelContext(size_t bs)
         : buffer(std::make_unique<char[]>(bs)), has_body(false) {}
+
+    ~ChannelContext() {
+      if (io_event != NULL)
+        CloseHandle(io_event);
+    }
   };
 
   PipeChannelBase(std::wstring&& pn_cmd, size_t bs, SECURITY_ATTRIBUTES* s);
   ~PipeChannelBase();
+  // 设置单次管道 I/O 及连接等待的超时（毫秒），INFINITE 表示不限时
+  void SetIoTimeout(DWORD ms) { io_timeout = ms; }
 
  protected:
   /* To ensure connection before operation */
@@ -38,6 +47,10 @@ class PipeChannelBase {
   void _Receive(HANDLE pipe, LPVOID msg, size_t rec_len);
   /* Try to get a connection from client */
   HANDLE _ConnectServerPipe(std::wstring& pn);
+  /* Get the thread-local event for overlapped pipe I/O */
+  HANDLE _GetIoEvent();
+  /* Perform one overlapped read/write with timeout; throws DWORD on failure */
+  DWORD _OverlappedIo(HANDLE pipe, bool is_write, LPVOID buffer, DWORD len);
   inline bool _Invalid(HANDLE p) const { return p == INVALID_HANDLE_VALUE; }
 
   HANDLE* _GetPipeHandle() const {
@@ -61,6 +74,9 @@ class PipeChannelBase {
   const size_t buff_size;
   // Thread-local context for buffer and state
   mutable boost::thread_specific_ptr<ChannelContext> context;
+  // 单次管道 I/O / 连接等待超时；服务端保持 INFINITE，客户端设置有限值，
+  // 避免算法服务无响应时把宿主 UI 线程无限拖死
+  DWORD io_timeout = INFINITE;
 
  private:
   /* Security attributes */
@@ -169,6 +185,8 @@ class PipeChannel : public PipeChannelBase {
       _WritePipe(pipe, data_sz, pbuff);
     } catch (...) {
       _Reconnect();
+      // _Reconnect 可能已更换线程本地句柄，重新取用再重写
+      pipe = *_GetPipeHandle();
       _WritePipe(pipe, data_sz, pbuff);
     }
     ClearBufferStream();
