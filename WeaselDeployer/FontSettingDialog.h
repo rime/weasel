@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <d2d1_2.h>
 #include <dwrite_2.h>
+#include <exception>
 #include <map>
 #include <regex>
 #include <string>
@@ -60,15 +61,19 @@ struct D2D {
       DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
       DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
 
+      if (font_face.empty() || font_point <= 0) {
+        _pTextFormat.Reset();
+        return S_OK;
+      }
       ParseFontFace(font_face, fontWeight, fontStyle);
       // text font text format set up
       fontFaceStrVector = WstrSplit(font_face, L",");
+      if (fontFaceStrVector.empty()) {
+        _pTextFormat.Reset();
+        return S_OK;
+      }
       fontFaceStrVector[0] = regex_replace(
           fontFaceStrVector[0], wregex(STYLEORWEIGHT, wregex::icase), L"");
-      if (font_point <= 0) {
-        _pTextFormat.Reset();
-        return S_FALSE;
-      }
       HR(m_pDWriteFactory->CreateTextFormat(
           _mainFontFace.c_str(), NULL, fontWeight, fontStyle,
           DWRITE_FONT_STRETCH_NORMAL, font_point * 96 / 72.0, L"",
@@ -83,8 +88,7 @@ struct D2D {
       decltype(fontFaceStrVector)().swap(fontFaceStrVector);
       return S_OK;
     };
-    init_font(font_face, font_point, m_pTextFormat, wrapping);
-    return S_OK;
+    return init_font(font_face, font_point, m_pTextFormat, wrapping);
   }
 
   HRESULT SetFontFallback(PtTextFormat textFormat,
@@ -176,9 +180,10 @@ struct D2D {
                                               &m_pBrush));
 
     // 初始化 DirectWrite 工厂
-    HR(DWriteCreateFactory(
-        DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
-        reinterpret_cast<IUnknown**>(m_pDWriteFactory.GetAddressOf())));
+    HR(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,
+                           __uuidof(IDWriteFactory2),
+                           reinterpret_cast<IUnknown**>(
+                               m_pDWriteFactory.ReleaseAndGetAddressOf())));
     initialized = true;
   }
 
@@ -246,7 +251,7 @@ struct D2D {
 class FontSettingDialog {
  public:
   FontSettingDialog(UIStyleSettings* settings, HWND parent = NULL)
-      : hInstance_(nullptr),
+      : hInstance_(GetModuleHandle(nullptr)),
         hDlg_(nullptr),
         hParent(parent),
         m_font_face(settings->font_face),
@@ -255,6 +260,10 @@ class FontSettingDialog {
         m_label_font_point(settings->label_font_point),
         m_comment_font_face(settings->comment_font_face),
         m_comment_font_point(settings->comment_font_point) {}
+  ~FontSettingDialog() {
+    if (m_currentFont)
+      DeleteObject(m_currentFont);
+  }
   INT_PTR ShowDialog();
 
   wstring m_font_face = L"微软雅黑";

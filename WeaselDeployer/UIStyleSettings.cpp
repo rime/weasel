@@ -9,6 +9,11 @@ UIStyleSettings::UIStyleSettings() {
   InitFontSettings();
 }
 
+UIStyleSettings::~UIStyleSettings() {
+  if (api_ && settings_)
+    api_->custom_settings_destroy(settings_);
+}
+
 void _Setup() {
   RIME_STRUCT(RimeTraits, weasel_traits);
   std::string shared_dir = wtou8(WeaselSharedDataPath().wstring());
