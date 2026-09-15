@@ -75,6 +75,7 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
     ok_.SetWindowTextW(str);
   }
 
+  InitCtrlRects();
   CenterWindow();
   return 0;
 }

@@ -23,6 +23,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
                      int /*nCmdShow*/) {
   HRESULT hRes = ::CoInitialize(NULL);
   ATLASSERT(SUCCEEDED(hRes));
+  SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 
   AtlInitCommonControls(
       ICC_BAR_CLASSES);  // add flags to support other controls
