@@ -2,6 +2,7 @@
 
 #include "resource.h"
 #include <atlstr.h>
+#include <CDialogDpiAware.h>
 
 #define MSG_BY_IDS(idInfo, idCap, uType)           \
   {                                                \
@@ -67,7 +68,7 @@ LSTATUS SetRegKeyValue(HKEY rootKey,
   return ret;
 }
 
-class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
+class InstallOptionsDialog : public CDialogDpiAware<InstallOptionsDialog> {
  public:
   enum { IDD = IDD_INSTALL_OPTIONS };
 
@@ -80,6 +81,7 @@ class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
 
  protected:
   BEGIN_MSG_MAP(InstallOptionsDialog)
+  CHAIN_MSG_MAP(CDialogDpiAware<InstallOptionsDialog>)
   MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
   MESSAGE_HANDLER(WM_CLOSE, OnClose)
   COMMAND_ID_HANDLER(IDOK, OnOK)
