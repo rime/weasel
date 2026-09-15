@@ -13,6 +13,9 @@ struct ColorSchemeInfo {
 class UIStyleSettings {
  public:
   UIStyleSettings();
+  ~UIStyleSettings();
+  UIStyleSettings(const UIStyleSettings&) = delete;
+  UIStyleSettings& operator=(const UIStyleSettings&) = delete;
 
   bool GetPresetColorSchemes(std::vector<ColorSchemeInfo>* result);
   std::string GetColorSchemePreview(const std::string& color_scheme_id);

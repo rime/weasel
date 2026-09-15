@@ -107,6 +107,8 @@ void FontSettingDialog::ScaleControlsAndFonts(UINT newDpi) {
   LOGFONT lf = m_originalFont;
   lf.lfHeight = static_cast<int>(lf.lfHeight * scaleFactor);
   HFONT hNewFont = CreateFontIndirect(&lf);
+  if (!hNewFont)
+    return;
   if (m_currentFont) {
     DeleteObject(m_currentFont);
   }
@@ -166,13 +168,16 @@ LRESULT FontSettingDialog::OnDpiChanged(UINT,
   if (newDpi == m_currentDpi)
     return 0;
   const RECT* pNewRect = reinterpret_cast<const RECT*>(lParam);
+  if (!pNewRect)
+    return 0;
   // 直接使用系统建议的矩形
   SetWindowPos(hDlg_, nullptr, pNewRect->left, pNewRect->top,
                pNewRect->right - pNewRect->left,
                pNewRect->bottom - pNewRect->top, SWP_NOZORDER | SWP_NOACTIVATE);
   ScaleControlsAndFonts(newDpi);
   m_currentDpi = newDpi;
-  m_pD2D->m_pRenderTarget->SetDpi((FLOAT)newDpi, (FLOAT)newDpi);
+  if (m_pD2D && m_pD2D->m_pRenderTarget)
+    m_pD2D->m_pRenderTarget->SetDpi((FLOAT)newDpi, (FLOAT)newDpi);
   InvalidateRect(hDlg_, nullptr, true);
   return 0;
 }
@@ -205,9 +210,7 @@ INT_PTR FontSettingDialog::HandleMsg(HWND hDlg,
     case WM_DPICHANGED: {
       BOOL handled = false;
       OnDpiChanged(message, wParam, lParam, handled);
-
-      if (!(m_pD2D && m_pD2D->GetDpi()))
-        UpdatePreview();
+      UpdatePreview();
     } break;
     case WM_COMMAND:
       return OnCommand(wParam);
@@ -320,7 +323,13 @@ void FontSettingDialog::UpdatePreview() {
   if (m_pD2D) {
     *m_font_face_ptr = GetTextOfEdit(m_hEditFontFace);
     auto font_point_str = GetComboBoxSelectStr(m_hComboBoxFontPoint);
-    *m_font_point_ptr = std::stoi(font_point_str);
+    if (font_point_str.empty())
+      font_point_str = std::to_wstring(*m_font_point_ptr);
+    try {
+      *m_font_point_ptr = std::stoi(font_point_str);
+    } catch (const std::exception&) {
+      return;
+    }
     m_text = GetTextOfEdit(m_hEditPreviewText);
     RemoveSpaceAround(*m_font_face_ptr);
     m_pD2D->GetDpi();
