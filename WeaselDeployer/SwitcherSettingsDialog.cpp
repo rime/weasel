@@ -99,6 +99,7 @@ LRESULT SwitcherSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
   get_schemata_.EnableWindow(TRUE);
 
   Populate();
+  InitCtrlRects();
 
   CenterWindow();
   BringWindowToTop();
