@@ -34,9 +34,14 @@ void _Setup() {
 
 void UIStyleSettings::InitFontSettings() {
   _Setup();
-  RimeConfig config = {0};
   RimeApi* rime = rime_get_api();
-  rime->config_open("weasel", &config);
+  RimeConfig config = {0};
+  if (!rime || !rime->config_open("weasel", &config)) {
+    font_face = L"Microsoft YaHei";
+    label_font_face = font_face;
+    comment_font_face = font_face;
+    return;
+  }
 
   auto get_font = [&](wstring& value, const char* key) {
     char buffer[4096] = {0};
@@ -53,6 +58,14 @@ void UIStyleSettings::InitFontSettings() {
   if (!rime->config_get_int(&config, "style/comment_font_point",
                             &comment_font_point))
     comment_font_point = font_point;
+  rime->config_close(&config);
+
+  if (font_face.empty())
+    font_face = L"Microsoft YaHei";
+  if (label_font_face.empty())
+    label_font_face = font_face;
+  if (comment_font_face.empty())
+    comment_font_face = font_face;
 }
 
 bool UIStyleSettings::GetPresetColorSchemes(

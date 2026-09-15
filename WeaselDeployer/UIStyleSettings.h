@@ -29,9 +29,9 @@ class UIStyleSettings {
   std::wstring font_face;
   std::wstring label_font_face;
   std::wstring comment_font_face;
-  int font_point;
-  int label_font_point;
-  int comment_font_point;
+  int font_point = 12;
+  int label_font_point = 12;
+  int comment_font_point = 12;
 
  private:
   RimeLeversApi* api_;
