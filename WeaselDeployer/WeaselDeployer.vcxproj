@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -186,7 +186,9 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ColorSchemePreview.h" />
     <ClInclude Include="Configurator.h" />
+    <ClInclude Include="CustomSchemeDialog.h" />
     <ClInclude Include="DictManagementDialog.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -198,7 +200,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\RimeWithWeasel\WeaselUtility.cpp" />
+    <ClCompile Include="ColorSchemePreview.cpp" />
     <ClCompile Include="Configurator.cpp" />
+    <ClCompile Include="CustomSchemeDialog.cpp" />
     <ClCompile Include="DictManagementDialog.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
