@@ -105,6 +105,10 @@ class WeaselPanel
   void _LayerUpdate(const CRect& rc, CDCHandle dc);
 
   weasel::Layout* m_layout;
+  // 候选窗背景图：按路径缓存。本类每个输入线程一个实例，
+  // 因此只能做成成员，不能写成函数内 static
+  Gdiplus::Bitmap* m_bg_image;
+  std::wstring m_bg_image_path;
   weasel::Context& m_ctx;
   weasel::Context& m_octx;
   weasel::Status& m_status;

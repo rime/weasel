@@ -1166,6 +1166,8 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   const std::function<void(std::wstring&)> rmspace = [](std::wstring& str) {
     str = std::regex_replace(str, std::wregex(L"\\s*(,|:|^|$)\\s*"), L"$1");
   };
+  // 背景图路径专用：保留原样，不做任何裁剪
+  const std::function<void(std::wstring&)> _keepspace = [](std::wstring&) {};
   const std::function<void(int&)> _abs = [](int& value) { value = abs(value); };
   // get font faces
   _RimeGetIntStr(config, "style/font_face", style.font_face, 0, 0, rmspace);
@@ -1174,6 +1176,9 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
                  pFallbackFontFace, rmspace);
   _RimeGetIntStr(config, "style/comment_font_face", style.comment_font_face, 0,
                  pFallbackFontFace, rmspace);
+  // 候选窗背景图：路径原样读取，不走 rmspace——路径里可以有空格
+  _RimeGetIntStr(config, "style/background_image", style.background_image,
+                 0, 0, _keepspace);
   // able to set label font/comment font empty, force fallback to font face.
   if (style.label_font_face.empty())
     style.label_font_face = style.font_face;

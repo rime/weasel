@@ -52,6 +52,7 @@ static inline void ReconfigRoundInfo(IsToRoundStruct& rd,
 
 WeaselPanel::WeaselPanel(weasel::UI& ui)
     : m_layout(NULL),
+      m_bg_image(NULL),
       m_ctx(ui.ctx()),
       m_octx(ui.octx()),
       m_status(ui.status()),
@@ -93,9 +94,12 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 }
 
 WeaselPanel::~WeaselPanel() {
-  Gdiplus::GdiplusShutdown(_m_gdiplusToken);
+  // 位图要在 Gdiplus 关闭之前释放
   delete m_layout;
   m_layout = NULL;
+  delete m_bg_image;
+  m_bg_image = NULL;
+  Gdiplus::GdiplusShutdown(_m_gdiplusToken);
   // pDWR.reset();
 }
 
@@ -525,6 +529,11 @@ LRESULT WeaselPanel::OnMouseLeave(UINT uMsg,
   return 0;
 }
 
+// 背景图预缩门槛：长边 2048 或总像素 4M，两个条件都拦。
+// 只卡长边会放过 4096×4096 这种解码后 67MB 的图
+static const UINT kBgImageMaxSide = 2048;
+static const double kBgImageMaxPixels = 4096.0 * 1024.0;
+
 void WeaselPanel::_HighlightText(CDCHandle& dc,
                                  const CRect& rc,
                                  const COLORREF& color,
@@ -608,6 +617,54 @@ void WeaselPanel::_HighlightText(CDCHandle& dc,
     Gdiplus::Color back_color = GDPCOLOR_FROM_COLORREF(color);
     Gdiplus::SolidBrush back_brush(back_color);
     g_back.FillPath(&back_brush, hiliteBackPath);
+  }
+  // 候选窗背景图：填色之后按同一圆角路径裁进来画一层，压在候选文字之下
+  // 只在整窗背景这一步绘制，候选词高亮不贴图；全屏布局跳过
+  if (type == BackType::BACKGROUND && !m_style.background_image.empty() &&
+      NOT_FULLSCREENLAYOUT(m_style)) {
+    // 按路径缓存原图：换宽高不重读盘，缩放在绘制时计算
+    if (m_bg_image_path != m_style.background_image) {
+      delete m_bg_image;
+      m_bg_image = NULL;
+      m_bg_image_path = m_style.background_image;
+      Gdiplus::Bitmap* src = Gdiplus::Bitmap::FromFile(m_bg_image_path.c_str());
+      if (src && src->GetLastStatus() == Gdiplus::Ok) {
+        UINT sw = src->GetWidth(), sh = src->GetHeight();
+        // 超大图先缩一道再保留，避免解码后常驻内存过大
+        if (sw > kBgImageMaxSide || sh > kBgImageMaxSide ||
+            (double)sw * sh > kBgImageMaxPixels) {
+          double k = (double)kBgImageMaxSide / (double)(sw > sh ? sw : sh);
+          UINT dw = (UINT)(sw * k), dh = (UINT)(sh * k);
+          Gdiplus::Bitmap* scaled =
+              new Gdiplus::Bitmap(dw, dh, PixelFormat32bppPARGB);
+          if (scaled->GetLastStatus() == Gdiplus::Ok) {
+            Gdiplus::Graphics g_pre(scaled);
+            g_pre.SetInterpolationMode(
+                Gdiplus::InterpolationModeHighQualityBicubic);
+            g_pre.DrawImage(src, 0, 0, dw, dh);
+            m_bg_image = scaled;
+          } else {
+            delete scaled;
+          }
+        } else {
+          m_bg_image = src;
+          src = NULL;
+        }
+      }
+      delete src;
+    }
+    if (m_bg_image) {
+      // 不设插值质量，大图缩到候选窗尺寸会发虚
+      Gdiplus::InterpolationMode prev_interp =
+          g_back.GetInterpolationMode();
+      g_back.SetInterpolationMode(
+          Gdiplus::InterpolationModeHighQualityBicubic);
+      g_back.SetClip(hiliteBackPath);
+      g_back.DrawImage(m_bg_image, rc.left, rc.top, rc.Width(),
+                       rc.Height());
+      g_back.ResetClip();
+      g_back.SetInterpolationMode(prev_interp);
+    }
   }
   // draw border, for bordercolor not transparent and border valid
   if (COLORNOTTRANSPARENT(bordercolor) && DPI_SCALE(m_style.border) > 0) {
@@ -1158,6 +1215,8 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg,
   m_sticky = false;
   delete m_layout;
   m_layout = NULL;
+  delete m_bg_image;
+  m_bg_image = NULL;
   return 0;
 }
 
