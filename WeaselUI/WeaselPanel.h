@@ -109,6 +109,10 @@ class WeaselPanel
   // 因此只能做成成员，不能写成函数内 static
   Gdiplus::Bitmap* m_bg_image;
   std::wstring m_bg_image_path;
+  // 按 background_fill_mode 把底图画进 rc（内部处理 stretch/tile/center/fit）
+  void _DrawBackgroundImage(Gdiplus::Graphics& g,
+                            const CRect& rc,
+                            Gdiplus::GraphicsPath* clip_path);
   weasel::Context& m_ctx;
   weasel::Context& m_octx;
   weasel::Status& m_status;

@@ -1179,6 +1179,28 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   // 候选窗背景图：路径原样读取，不走 rmspace——路径里可以有空格
   _RimeGetIntStr(config, "style/background_image", style.background_image,
                  0, 0, _keepspace);
+  // 路径写法（weasel.custom.yaml 里的 style/background_image）：
+  //   绝对路径  D:/pics/a.png  或  D:\pics\a.png  （斜杠方向都行）
+  //   相对路径  skins/a.png    ⇒ 相对 Rime 用户目录 %APPDATA%\Rime\
+  //   含空格    "skins/my pic.png"  可以，路径不做任何裁剪
+  //   支持格式  png / jpg / jpeg / bmp / gif（gif 只取第一帧），不支持 webp
+  //   改完要「重新部署」一次，再重启 WeaselServer 才生效
+  if (!style.background_image.empty() &&
+      style.background_image.find(L':') == std::wstring::npos &&
+      style.background_image.compare(0, 2, L"\\\\") != 0 &&
+      style.background_image[0] != L'/' && style.background_image[0] != L'\\') {
+    // 相对路径按 Rime 用户目录解析，绝对路径原样不动
+    std::wstring base = WeaselUserDataPath().wstring();
+    if (!base.empty() && base.back() != L'\\' && base.back() != L'/')
+      base += L'\\';
+    style.background_image = base + style.background_image;
+  }
+  // 底图填充模式：不写这一项 = stretch = 与旧行为逐像素一致
+  static constexpr Array<int, 4> _bgFillArr = {
+      {{"stretch", 0}, {"tile", 1}, {"center", 2}, {"fit", 3}}};
+  _RimeParseStringOptWithFallback(config, "style/background_fill_mode",
+                                  style.background_fill_mode, _bgFillArr,
+                                  style.background_fill_mode);
   // able to set label font/comment font empty, force fallback to font face.
   if (style.label_font_face.empty())
     style.label_font_face = style.font_face;
