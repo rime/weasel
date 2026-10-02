@@ -52,6 +52,7 @@ static inline void ReconfigRoundInfo(IsToRoundStruct& rd,
 
 WeaselPanel::WeaselPanel(weasel::UI& ui)
     : m_layout(NULL),
+      m_bg_image(NULL),
       m_ctx(ui.ctx()),
       m_octx(ui.octx()),
       m_status(ui.status()),
@@ -93,9 +94,12 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 }
 
 WeaselPanel::~WeaselPanel() {
-  Gdiplus::GdiplusShutdown(_m_gdiplusToken);
+  // 位图要在 Gdiplus 关闭之前释放
   delete m_layout;
   m_layout = NULL;
+  delete m_bg_image;
+  m_bg_image = NULL;
+  Gdiplus::GdiplusShutdown(_m_gdiplusToken);
   // pDWR.reset();
 }
 
@@ -525,6 +529,11 @@ LRESULT WeaselPanel::OnMouseLeave(UINT uMsg,
   return 0;
 }
 
+// 背景图预缩门槛：长边 2048 或总像素 4M，两个条件都拦。
+// 只卡长边会放过 4096×4096 这种解码后 67MB 的图
+static const UINT kBgImageMaxSide = 2048;
+static const double kBgImageMaxPixels = 4096.0 * 1024.0;
+
 void WeaselPanel::_HighlightText(CDCHandle& dc,
                                  const CRect& rc,
                                  const COLORREF& color,
@@ -609,6 +618,52 @@ void WeaselPanel::_HighlightText(CDCHandle& dc,
     Gdiplus::SolidBrush back_brush(back_color);
     g_back.FillPath(&back_brush, hiliteBackPath);
   }
+  // 候选窗背景图：填色之后按同一圆角路径裁进来画一层，压在候选文字之下
+  // 只在整窗背景这一步绘制，候选词高亮不贴图；全屏布局跳过
+  if (type == BackType::BACKGROUND && !m_style.background_image.empty() &&
+      NOT_FULLSCREENLAYOUT(m_style)) {
+    // 按路径缓存原图：换宽高不重读盘，缩放在绘制时计算。
+    // 图已被释放（关窗后重开）或路径变了都必须重载——
+    // 只比路径会把「图没了」误判成「已经加载过」。
+    if (m_bg_image == NULL || m_bg_image_path != m_style.background_image) {
+      delete m_bg_image;
+      m_bg_image = NULL;
+      Gdiplus::Bitmap* src =
+          Gdiplus::Bitmap::FromFile(m_style.background_image.c_str());
+      if (src && src->GetLastStatus() == Gdiplus::Ok) {
+        // 加载成功才记账
+        m_bg_image_path = m_style.background_image;
+        UINT sw = src->GetWidth(), sh = src->GetHeight();
+        // 超大图先缩一道再保留，避免解码后常驻内存过大
+        if (sw > kBgImageMaxSide || sh > kBgImageMaxSide ||
+            (double)sw * sh > kBgImageMaxPixels) {
+          double k = (double)kBgImageMaxSide / (double)(sw > sh ? sw : sh);
+          UINT dw = (UINT)(sw * k), dh = (UINT)(sh * k);
+          Gdiplus::Bitmap* scaled =
+              new Gdiplus::Bitmap(dw, dh, PixelFormat32bppPARGB);
+          if (scaled->GetLastStatus() == Gdiplus::Ok) {
+            Gdiplus::Graphics g_pre(scaled);
+            g_pre.SetInterpolationMode(
+                Gdiplus::InterpolationModeHighQualityBicubic);
+            g_pre.DrawImage(src, 0, 0, dw, dh);
+            m_bg_image = scaled;
+          } else {
+            delete scaled;
+          }
+        } else {
+          m_bg_image = src;
+          src = NULL;
+        }
+      } else {
+        // 加载失败不留账：路径不进缓存，下一帧还会重试一次
+        m_bg_image_path.clear();
+      }
+      delete src;
+    }
+    if (m_bg_image) {
+      _DrawBackgroundImage(g_back, rc, hiliteBackPath);
+    }
+  }
   // draw border, for bordercolor not transparent and border valid
   if (COLORNOTTRANSPARENT(bordercolor) && DPI_SCALE(m_style.border) > 0) {
     Gdiplus::Color border_color = GDPCOLOR_FROM_COLORREF(bordercolor);
@@ -625,6 +680,51 @@ void WeaselPanel::_HighlightText(CDCHandle& dc,
   // free memory
   delete hiliteBackPath;
   hiliteBackPath = NULL;
+}
+
+// 按 style/background_fill_mode 铺底图
+void WeaselPanel::_DrawBackgroundImage(Gdiplus::Graphics& g,
+                                       const CRect& rc,
+                                       Gdiplus::GraphicsPath* clip_path) {
+  if (!m_bg_image)
+    return;
+  // 大图缩到候选窗尺寸要高质量重采样，不然发虚
+  Gdiplus::InterpolationMode prev_interp = g.GetInterpolationMode();
+  g.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+  g.SetClip(clip_path);
+  const Gdiplus::REAL w = (Gdiplus::REAL)m_bg_image->GetWidth();
+  const Gdiplus::REAL h = (Gdiplus::REAL)m_bg_image->GetHeight();
+  const Gdiplus::RectF dst((Gdiplus::REAL)rc.left, (Gdiplus::REAL)rc.top,
+                           (Gdiplus::REAL)rc.Width(),
+                           (Gdiplus::REAL)rc.Height());
+  switch (m_style.background_fill_mode) {
+    case 1: {  // tile：原尺寸平铺，不缩放
+      Gdiplus::TextureBrush brush(m_bg_image, Gdiplus::WrapModeTile);
+      brush.TranslateTransform(dst.X, dst.Y);
+      g.FillRectangle(&brush, dst);
+      break;
+    }
+    case 2: {  // center：原尺寸居中，图大就自然被裁掉四边
+      const Gdiplus::RectF box(dst.X + (dst.Width - w) / 2,
+                               dst.Y + (dst.Height - h) / 2, w, h);
+      g.DrawImage(m_bg_image, box);
+      break;
+    }
+    case 3: {  // fit：等比缩放到整幅装得下，居中，四周留底色
+      const Gdiplus::REAL k =
+          (dst.Width / w < dst.Height / h) ? dst.Width / w : dst.Height / h;
+      const Gdiplus::REAL dw = w * k, dh = h * k;
+      g.DrawImage(m_bg_image,
+                  Gdiplus::RectF(dst.X + (dst.Width - dw) / 2,
+                                 dst.Y + (dst.Height - dh) / 2, dw, dh));
+      break;
+    }
+    default:  // 0 = stretch：与旧行为逐像素一致
+      g.DrawImage(m_bg_image, rc.left, rc.top, rc.Width(), rc.Height());
+      break;
+  }
+  g.ResetClip();
+  g.SetInterpolationMode(prev_interp);
 }
 
 // draw preedit text, text only
@@ -1158,6 +1258,9 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg,
   m_sticky = false;
   delete m_layout;
   m_layout = NULL;
+  delete m_bg_image;
+  m_bg_image = NULL;
+  m_bg_image_path.clear();  // 图已释放，路径缓存同步失效，否则新窗口永不重载
   return 0;
 }
 

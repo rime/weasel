@@ -218,6 +218,11 @@ struct UIStyle {
   std::wstring font_face;
   std::wstring label_font_face;
   std::wstring comment_font_face;
+  // 候选窗背景图
+  std::wstring background_image;
+  // 底图填充模式：0=stretch(默认，等同旧行为) 1=tile 2=center 3=fit
+  // 只在 background_image 非空时起作用
+  int background_fill_mode;
   int font_point;
   int label_font_point;
   int comment_font_point;
@@ -296,6 +301,8 @@ struct UIStyle {
       : font_face(),
         label_font_face(),
         comment_font_face(),
+        background_image(),
+        background_fill_mode(0),
         font_point(0),
         label_font_point(0),
         comment_font_point(0),
@@ -371,6 +378,8 @@ struct UIStyle {
         paging_on_scroll != st.paging_on_scroll || font_face != st.font_face ||
         label_font_face != st.label_font_face ||
         comment_font_face != st.comment_font_face ||
+        background_image != st.background_image ||
+        background_fill_mode != st.background_fill_mode ||
         hover_type != st.hover_type || font_point != st.font_point ||
         label_font_point != st.label_font_point ||
         comment_font_point != st.comment_font_point ||
@@ -431,6 +440,8 @@ void serialize(Archive& ar, weasel::UIStyle& s, const unsigned int version) {
   ar & s.font_face;
   ar & s.label_font_face;
   ar & s.comment_font_face;
+  ar & s.background_image;
+  ar & s.background_fill_mode;
   ar & s.hover_type;
   ar & s.font_point;
   ar & s.label_font_point;
