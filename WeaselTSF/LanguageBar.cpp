@@ -412,7 +412,9 @@ void WeaselTSF::_UpdateLanguageBar(weasel::Status stat) {
     flags |= TF_CONVERSIONMODE_FULLSHAPE;
   else
     flags &= (~TF_CONVERSIONMODE_FULLSHAPE);
+  _updatingLanguageBar = true;
   _SetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
+  _updatingLanguageBar = false;
 
   _pLangBarButton->UpdateWeaselStatus(stat);
 }
