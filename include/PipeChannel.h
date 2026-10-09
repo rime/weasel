@@ -169,7 +169,7 @@ class PipeChannel : public PipeChannelBase {
       _WritePipe(pipe, data_sz, pbuff);
     } catch (...) {
       _Reconnect();
-      _WritePipe(pipe, data_sz, pbuff);
+      _WritePipe(_GetPipeHandle(), data_sz, pbuff);
     }
     ClearBufferStream();
   }
