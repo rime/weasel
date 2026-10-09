@@ -1,11 +1,24 @@
 #include "stdafx.h"
 #include "WeaselTSF.h"
 #include "Compartment.h"
+#include "EditSession.h"
 #include <resource.h>
 #include <functional>
 #include "ResponseParser.h"
 #include "CandidateList.h"
 #include "LanguageBar.h"
+#include <atlstr.h>
+
+class CUpdateLangBarEditSession : public CEditSession {
+ public:
+  CUpdateLangBarEditSession(com_ptr<WeaselTSF> pTextService,
+                             com_ptr<ITfContext> pContext)
+      : CEditSession(pTextService, pContext) {}
+  STDMETHODIMP DoEditSession(TfEditCookie ec) override {
+    _pTextService->_UpdateLanguageBar(_pTextService->_status);
+    return S_OK;
+  }
+};
 
 STDMETHODIMP CCompartmentEventSink::QueryInterface(REFIID riid,
                                                    _Outptr_ void** ppvObj) {
@@ -251,10 +264,51 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
         _EndComposition(_pEditSessionContext, true);
       }
       _EnableLanguageBar(isOpen);
+      DWORD convFlags;
+      if (SUCCEEDED(_GetCompartmentDWORD(convFlags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)))
+        _status.ascii_mode = !(convFlags & TF_CONVERSIONMODE_NATIVE);
       _UpdateLanguageBar(_status);
     } else {
-      _status.ascii_mode = !_status.ascii_mode;
+      DWORD ocFlags = 0;
+      _GetCompartmentDWORD(ocFlags, GUID_COMPARTMENT_KEYBOARD_OPENCLOSE);
+      BOOL keyboardJustClosed = (ocFlags == 0);
+      DWORD convFlags = 0;
+      bool desiredAscii = false;
+      bool haveConv = SUCCEEDED(_GetCompartmentDWORD(convFlags,
+          GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION));
+      if (haveConv)
+        desiredAscii = !(convFlags & TF_CONVERSIONMODE_NATIVE);
       _SetKeyboardOpen(true);
+      if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
+        _EnableLanguageBar(true);
+      if (keyboardJustClosed && !_status.ascii_mode) {
+        _status.ascii_mode = true;
+        _HandleLangBarMenuSelect(ID_WEASELTRAY_ENABLE_ASCII);
+        if (_pEditSessionContext)
+          m_client.ClearComposition();
+        _UpdateLanguageBar(_status);
+      } else if (haveConv && desiredAscii != _status.ascii_mode) {
+        _status.ascii_mode = desiredAscii;
+        if (_pEditSessionContext)
+          m_client.ClearComposition();
+        if (_pLangBarButton)
+          _pLangBarButton->UpdateWeaselStatus(_status);
+      }
+    }
+  } else if (IsEqualGUID(guidCompartment,
+                         GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)) {
+    if (_updatingLanguageBar) {
+      return S_OK;
+    }
+    DWORD convMode = 0;
+    _GetCompartmentDWORD(convMode,
+                         GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
+    bool desiredAsciiMode = !(convMode & TF_CONVERSIONMODE_NATIVE);
+    if (desiredAsciiMode != _status.ascii_mode) {
+      _status.ascii_mode = desiredAsciiMode;
+      if (_isToOpenClose && !_IsKeyboardOpen()) {
+        _SetKeyboardOpen(true);
+      }
       if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
         _EnableLanguageBar(true);
       _HandleLangBarMenuSelect(_status.ascii_mode
@@ -262,16 +316,34 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
                                    : ID_WEASELTRAY_DISABLE_ASCII);
       if (_pEditSessionContext)
         m_client.ClearComposition();
-      _UpdateLanguageBar(_status);
-    }
-  } else if (IsEqualGUID(guidCompartment,
-                         GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)) {
-    BOOL isOpen = _IsKeyboardOpen();
-    if (isOpen) {
-      weasel::ResponseParser parser(NULL, NULL, &_status, NULL,
-                                    &_cand->style());
-      bool ok = m_client.GetResponseData(std::ref(parser));
-      _UpdateLanguageBar(_status);
+      if (_pLangBarButton)
+        _pLangBarButton->UpdateWeaselStatus(_status);
+      bool editSessionScheduled = false;
+      com_ptr<ITfDocumentMgr> pDocMgrFocus;
+      if (_pThreadMgr &&
+          SUCCEEDED(_pThreadMgr->GetFocus(&pDocMgrFocus)) && pDocMgrFocus) {
+        com_ptr<ITfContext> pContext;
+        if (SUCCEEDED(pDocMgrFocus->GetTop(&pContext)) && pContext) {
+          com_ptr<CUpdateLangBarEditSession> pSession;
+          pSession.Attach(new CUpdateLangBarEditSession(this, pContext));
+          if (pSession) {
+            HRESULT hr;
+            pContext->RequestEditSession(
+                _tfClientId, pSession,
+                TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+            pSession.Release();
+            editSessionScheduled = true;
+          }
+        }
+      }
+      if (!editSessionScheduled && _hDeferredMsgWnd)
+        PostMessage(_hDeferredMsgWnd, WM_APP + 100, 0, 0);
+    } else {
+      if (_isToOpenClose && !_IsKeyboardOpen()) {
+        _SetKeyboardOpen(true);
+        if (_pLangBarButton && _pLangBarButton->IsLangBarDisabled())
+          _EnableLanguageBar(true);
+      }
     }
   }
   return S_OK;

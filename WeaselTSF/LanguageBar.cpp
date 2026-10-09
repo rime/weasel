@@ -399,22 +399,39 @@ void WeaselTSF::_UninitLanguageBar() {
   _pLangBarButton = NULL;
 }
 
+void WeaselTSF::_ReconcileCompartment() {
+  DWORD flags;
+  _GetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
+  bool compartmentAscii = !(flags & TF_CONVERSIONMODE_NATIVE);
+  if (compartmentAscii != _status.ascii_mode) {
+    _status.ascii_mode = compartmentAscii;
+    _HandleLangBarMenuSelect(compartmentAscii
+                                 ? ID_WEASELTRAY_ENABLE_ASCII
+                                 : ID_WEASELTRAY_DISABLE_ASCII);
+    if (_pLangBarButton) {
+      _pLangBarButton->UpdateWeaselStatus(_status);
+    }
+  }
+}
+
 void WeaselTSF::_UpdateLanguageBar(weasel::Status stat) {
-  if (!_pLangBarButton)
-    return;
   DWORD flags;
   _GetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
   if (stat.ascii_mode)
     flags &= (~TF_CONVERSIONMODE_NATIVE);
   else
     flags |= TF_CONVERSIONMODE_NATIVE;
+
   if (stat.full_shape)
     flags |= TF_CONVERSIONMODE_FULLSHAPE;
   else
     flags &= (~TF_CONVERSIONMODE_FULLSHAPE);
+  _updatingLanguageBar = true;
   _SetCompartmentDWORD(flags, GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION);
+  _updatingLanguageBar = false;
 
-  _pLangBarButton->UpdateWeaselStatus(stat);
+  if (_pLangBarButton)
+    _pLangBarButton->UpdateWeaselStatus(stat);
 }
 
 void WeaselTSF::_ShowLanguageBar(BOOL show) {
