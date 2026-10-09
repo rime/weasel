@@ -268,7 +268,7 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment) {
                          GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION)) {
     BOOL isOpen = _IsKeyboardOpen();
     if (isOpen) {
-      weasel::ResponseParser parser(NULL, NULL, &_status, NULL,
+      weasel::ResponseParser parser(NULL, NULL, &_status, &_config,
                                     &_cand->style());
       bool ok = m_client.GetResponseData(std::ref(parser));
       _UpdateLanguageBar(_status);

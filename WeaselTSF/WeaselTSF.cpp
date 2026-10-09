@@ -177,7 +177,8 @@ STDMETHODIMP WeaselTSF::OnSetThreadFocus() {
   _isToOpenClose = (_ToggleImeOnOpenClose == L"yes");
   if (m_client.Echo()) {
     m_client.ProcessKeyEvent(0);
-    weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
+    weasel::ResponseParser parser(NULL, NULL, &_status, &_config,
+                                  &_cand->style());
     bool ok = m_client.GetResponseData(std::ref(parser));
     if (ok)
       _UpdateLanguageBar(_status);
@@ -227,7 +228,8 @@ void WeaselTSF::_Reconnect() {
   m_client.Disconnect();
   m_client.Connect(NULL);
   m_client.StartSession();
-  weasel::ResponseParser parser(NULL, NULL, &_status, NULL, &_cand->style());
+  weasel::ResponseParser parser(NULL, NULL, &_status, &_config,
+                                &_cand->style());
   bool ok = m_client.GetResponseData(std::ref(parser));
   if (ok) {
     _UpdateLanguageBar(_status);
