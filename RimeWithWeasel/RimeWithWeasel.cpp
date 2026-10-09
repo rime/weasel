@@ -133,6 +133,9 @@ void RimeWithWeaselHandler::Initialize() {
         }
       }
       m_base_style = m_ui->style();
+      // Warm up UI resources with finalized style to avoid first-show latency.
+      m_ui->Refresh();
+      m_ui->Hide();
     }
     Bool global_ascii = false;
     if (rime_api->config_get_bool(&config, "global_ascii", &global_ascii))
@@ -723,6 +726,9 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
                         falways != m_show_notifications.end())) ||
       m_message_type == "deploy") {
     m_ui->Update(ctx, status);
+    // For icon-only notifications, status/context may be unchanged and Update()
+    // can early-return; force a refresh before showing timeout tip.
+    m_ui->Refresh();
     if (m_show_notifications_time)
       m_ui->ShowWithTimeout(m_show_notifications_time);
     return true;
@@ -1232,25 +1238,42 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
                style.paging_on_scroll);
   _RimeGetBool(config, "style/click_to_capture", initialize,
                style.click_to_capture, true, false);
-  _RimeGetBool(config, "style/fullscreen", false, style.layout_type,
-               ((style.layout_type == UIStyle::LAYOUT_HORIZONTAL)
-                    ? UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
-                    : UIStyle::LAYOUT_VERTICAL_FULLSCREEN),
-               style.layout_type);
-  _RimeGetBool(config, "style/vertical_text", false, style.layout_type,
-               UIStyle::LAYOUT_VERTICAL_TEXT, style.layout_type);
+  bool fullscreen = false;
+  _RimeGetBool(config, "style/fullscreen", false, fullscreen);
+  bool vertical_text = false;
+  _RimeGetBool(config, "style/vertical_text", false, vertical_text);
+  if (vertical_text) {
+    if (fullscreen) {
+      style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN;
+    } else {
+      style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT;
+    }
+  } else {
+    if (fullscreen) {
+      style.layout_type = (style.layout_type == UIStyle::LAYOUT_HORIZONTAL)
+                              ? UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
+                              : UIStyle::LAYOUT_VERTICAL_FULLSCREEN;
+    }
+  }
   _RimeGetBool(config, "style/vertical_text_left_to_right", false,
                style.vertical_text_left_to_right);
   _RimeGetBool(config, "style/vertical_text_with_wrap", false,
                style.vertical_text_with_wrap);
+  _RimeGetBool(config, "style/vertical_right_to_left", initialize,
+               style.vertical_right_to_left);
   static constexpr Array<bool, 2> _text_orientation = {
       {{"horizontal", false}, {"vertical", true}}};
   bool _text_orientation_bool = false;
   _RimeParseStringOptWithFallback(config, "style/text_orientation",
                                   _text_orientation_bool, _text_orientation,
                                   _text_orientation_bool);
-  if (_text_orientation_bool)
-    style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT;
+  if (_text_orientation_bool) {
+    if (fullscreen) {
+      style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN;
+    } else {
+      style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT;
+    }
+  }
   _RimeGetIntStr(config, "style/label_format", style.label_text_format);
   _RimeGetIntStr(config, "style/mark_text", style.mark_text);
   _RimeGetIntStr(config, "style/layout/baseline", style.baseline, 0, 0, _abs);
@@ -1263,15 +1286,23 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   _RimeGetIntStr(config, "style/layout/max_height", style.max_height, 0, 0,
                  _abs);
   // layout (alternative to style/horizontal)
-  static constexpr Array<UIStyle::LayoutType, 5> _layoutArr = {
+  static constexpr Array<UIStyle::LayoutType, 6> _layoutArr = {
       {{"vertical", UIStyle::LAYOUT_VERTICAL},
        {"horizontal", UIStyle::LAYOUT_HORIZONTAL},
        {"vertical_text", UIStyle::LAYOUT_VERTICAL_TEXT},
        {"vertical+fullscreen", UIStyle::LAYOUT_VERTICAL_FULLSCREEN},
-       {"horizontal+fullscreen", UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN}}};
+       {"horizontal+fullscreen", UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN},
+       {"vertical_text+fullscreen", UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN}}};
   _RimeParseStringOptWithFallback(config, "style/layout/type",
                                   style.layout_type, _layoutArr,
                                   style.layout_type);
+  // Keep fullscreen vertical-text mode stable even when layout/type is also
+  // set. Otherwise layout/type can override the earlier
+  // fullscreen+vertical_text combination and cause unintended column wrapping
+  // behavior.
+  if (fullscreen && (vertical_text || _text_orientation_bool)) {
+    style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN;
+  }
   // disable max_width when full screen
   if (style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN ||
       style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN) {
@@ -1295,10 +1326,6 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
                  _abs);
   _RimeGetIntStr(config, "style/layout/shadow_radius", style.shadow_radius, 0,
                  0, _abs);
-  // disable shadow for fullscreen layout
-  style.shadow_radius *=
-      (!(style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN ||
-         style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN));
   _RimeGetIntStr(config, "style/layout/shadow_offset_x", style.shadow_offset_x);
   _RimeGetIntStr(config, "style/layout/shadow_offset_y", style.shadow_offset_y);
   // round_corner as alias of hilited_corner_radius
@@ -1345,6 +1372,9 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
     // hilite_padding_y vs hilite_spacing
     if (!style.inline_preedit)
       style.hilite_spacing = max(style.hilite_spacing, style.hilite_padding_y);
+  }
+  if (style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN) {
+    style.max_height = 0;
   }
   // fix padding and margin settings
   int scale = style.margin_x < 0 ? -1 : 1;

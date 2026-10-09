@@ -9,22 +9,18 @@ class FullScreenLayout : public StandardLayout {
                    const Context& context,
                    const Status& status,
                    const CRect& inputPos,
-                   Layout* layout,
-                   PDWR pDWR)
-      : StandardLayout(style, context, status, pDWR),
+                   the<Layout> layout,
+                   an<D2D>& pD2D)
+      : StandardLayout(style, context, status, pD2D),
         mr_inputPos(inputPos),
-        m_layout(layout) {}
-  virtual ~FullScreenLayout() { delete m_layout; }
+        m_layout(std::move(layout)) {}
 
-  virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL);
+  virtual void DoLayout();
 
  private:
-  bool AdjustFontPoint(CDCHandle dc,
-                       const CRect& workArea,
-                       int& step,
-                       PDWR pDWR = NULL);
+  bool AdjustFontPoint(const CRect& workArea, int& step);
 
   const CRect& mr_inputPos;
-  Layout* m_layout;
+  the<Layout> m_layout;
 };
 };  // namespace weasel

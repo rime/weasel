@@ -209,7 +209,8 @@ void CCandidateList::UpdateUI(const Context& ctx, const Status& status) {
   /// if it is owned by active view window
   //_UpdateOwner();
   _ui->Update(ctx, status);
-  _UpdateUIElement();
+  if (_pbShow == FALSE)
+    _UpdateUIElement();
 
   if (status.composing)
     Show(_pbShow);
@@ -312,6 +313,12 @@ void CCandidateList::StartUI() {
   if (_pbShow) {
     _ui->style() = _style;
     _MakeUIWindow();
+    if (!_ui_warmed_up && _ui->hwnd() != nullptr) {
+      // Warm up render resources before first visible paint in TSF path.
+      _ui->Refresh();
+      _ui->Hide();
+      _ui_warmed_up = true;
+    }
   }
 }
 
@@ -351,6 +358,7 @@ void CCandidateList::_DisposeUIWindowAll() {
 
   // call _ui->Destroy(true) to clean resources
   _ui->Destroy(true);
+  _ui_warmed_up = false;
 }
 
 void CCandidateList::_MakeUIWindow() {

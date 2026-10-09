@@ -1,75 +1,81 @@
 #pragma once
-
 #include "Layout.h"
-#include <d2d1.h>
-#include <dwrite.h>
-#pragma comment(lib, "d2d1.lib")
-#pragma comment(lib, "dwrite.lib")
 
 namespace weasel {
-const int MAX_CANDIDATES_COUNT = 100;
-const int STATUS_ICON_SIZE = GetSystemMetrics(SM_CXICON);
 
 class StandardLayout : public Layout {
  public:
   StandardLayout(const UIStyle& style,
                  const Context& context,
                  const Status& status,
-                 PDWR pDWR)
-      : Layout(style, context, status, pDWR) {}
-
-  /* Layout */
-
-  virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL) = 0;
-  virtual CSize GetContentSize() const { return _contentSize; }
-  virtual CRect GetPreeditRect() const { return _preeditRect; }
-  virtual CRect GetAuxiliaryRect() const { return _auxiliaryRect; }
-  virtual CRect GetHighlightRect() const { return _highlightRect; }
-  virtual CRect GetCandidateLabelRect(int id) const {
+                 an<D2D>& pD2D)
+      : Layout(style, context, status, pD2D) {
+    _pageEnabled = (_style.prevpage_color & 0xff000000) &&
+                   (_style.nextpage_color & 0xff000000);
+    RecalculateSizes();
+  }
+  virtual void DoLayout() = 0;
+  virtual CSize& GetContentSize() { return _contentSize; };
+  void RecalculateSizes();
+  virtual CRect& GetPreeditRect() { return _preeditRect; };
+  virtual CRect& GetAuxiliaryRect() { return _auxiliaryRect; };
+  virtual CRect& GetHighlightRect() { return _highlightRect; };
+  virtual CRect& GetCandidateLabelRect(int id) {
     return _candidateLabelRects[id];
-  }
-  virtual CRect GetCandidateTextRect(int id) const {
+  };
+  virtual CRect& GetCandidateTextRect(int id) {
     return _candidateTextRects[id];
-  }
-  virtual CRect GetCandidateCommentRect(int id) const {
+  };
+  virtual CRect& GetCandidateCommentRect(int id) {
     return _candidateCommentRects[id];
-  }
-  virtual CRect GetCandidateRect(int id) const { return _candidateRects[id]; }
-  virtual CRect GetStatusIconRect() const { return _statusIconRect; }
-  virtual std::wstring GetLabelText(const std::vector<Text>& labels,
-                                    int id,
-                                    const wchar_t* format) const;
+  };
+  virtual CRect& GetCandidateRect(int id) { return _candidateRects[id]; }
+  virtual CRect& GetStatusIconRect() { return _statusIconRect; };
+  virtual CRect& GetContentRect() { return _contentRect; };
+  virtual CRect& GetPrepageRect() { return _prePageRect; };
+  virtual CRect& GetNextpageRect() { return _nextPageRect; };
+  virtual const TextRange& GetPreeditRange() const { return _range; };
   virtual bool IsInlinePreedit() const;
   virtual bool ShouldDisplayStatusIcon() const;
-  virtual IsToRoundStruct GetRoundInfo(int id) { return _roundInfo[id]; }
-  virtual IsToRoundStruct GetTextRoundInfo() { return _textRoundInfo; }
-  virtual CRect GetContentRect() { return _contentRect; }
-  virtual CRect GetPrepageRect() { return _prePageRect; }
-  virtual CRect GetNextpageRect() { return _nextPageRect; }
-  virtual CSize GetBeforeSize() { return _beforesz; }
-  virtual CSize GetHilitedSize() { return _hilitedsz; }
-  virtual CSize GetAfterSize() { return _aftersz; }
-  virtual weasel::TextRange GetPreeditRange() { return _range; }
 
-  void GetTextSizeDW(const std::wstring& text,
-                     size_t nCount,
-                     ComPtr<IDWriteTextFormat1>& pTextFormat,
-                     PDWR pDWR,
-                     LPSIZE lpSize) const;
+  virtual const IsToRoundStruct& GetRoundInfo(int id) {
+    return _roundInfo[id];
+  };
+  virtual const IsToRoundStruct& GetTextRoundInfo() { return _textRoundInfo; };
+  // Precomputed preedit sub-rectangles for optimization
+  virtual CRect& GetPreeditBeforeRect() { return _preeditBeforeRect; };
+  virtual CRect& GetPreeditHiliteRect() { return _preeditHiliteRect; };
+  virtual CRect& GetPreeditAfterRect() { return _preeditAfterRect; };
+  virtual CRect& GetAuxBeforeRect() { return _auxBeforeRect; };
+  virtual CRect& GetAuxHiliteRect() { return _auxHiliteRect; };
+  virtual CRect& GetAuxAfterRect() { return _auxAfterRect; };
 
  protected:
-  /* Utility functions */
-  CSize GetPreeditSize(CDCHandle dc,
-                       const weasel::Text& text,
-                       ComPtr<IDWriteTextFormat1> pTextFormat = NULL,
-                       PDWR pDWR = NULL);
-  bool _IsHighlightOverCandidateWindow(CRect& rc, CDCHandle& dc);
-  void _PrepareRoundInfo(CDCHandle& dc);
+  bool _IsHighlightOverCandidateWindow(const CRect& rc);
+  void _PrepareRoundInfo();
+  CSize _GetPreeditSize(const Text& text,
+                        ComPtr<IDWriteTextFormat1>& pTextFormat);
+  void _UpdateStatusIconLayout(int* width, int* height);
+  void _CalcPageIndicator(bool vertical_text_layout, int& pgw, int& pgh);
+  void _PrecomputePreeditRects(const CRect& baseRect,
+                               const Text& text,
+                               CRect& beforeRect,
+                               CRect& hiliteRect,
+                               CRect& afterRect);
+  int _CalcMarkMetrics(bool vertical_text_layout);
+  // page indicator uses pre/next glyphs, implemented in StandardLayout
+  int _CalcStatusIconOffset(int extent) const;
+  void _LayoutInlineRect(const CSize& size,
+                         bool vertical_text_layout,
+                         bool is_preedit,
+                         int pgw,
+                         int pgh,
+                         int base_coord,
+                         int& width,
+                         int& height,
+                         CRect& rect);
 
-  void UpdateStatusIconLayout(int* width, int* height);
-
-  CSize _beforesz, _hilitedsz, _aftersz;
-  weasel::TextRange _range;
+  TextRange _range;
   CSize _contentSize;
   CRect _preeditRect, _auxiliaryRect, _highlightRect;
   CRect _candidateRects[MAX_CANDIDATES_COUNT];
@@ -79,11 +85,32 @@ class StandardLayout : public Layout {
   CRect _statusIconRect;
   CRect _bgRect;
   CRect _contentRect;
+
   IsToRoundStruct _roundInfo[MAX_CANDIDATES_COUNT];
   IsToRoundStruct _textRoundInfo;
+
   CRect _prePageRect;
   CRect _nextPageRect;
-  const std::wstring pre = L"<";
-  const std::wstring next = L">";
+  // Precomputed preedit sub-rectangles for optimization
+  CRect _preeditBeforeRect, _preeditHiliteRect, _preeditAfterRect;
+  CRect _auxBeforeRect, _auxHiliteRect, _auxAfterRect;
+
+  // Cached sizes
+  CSize _preeditSize;
+  CSize _auxSize;
+  CSize _pagePrevSize;
+  CSize _pageNextSize;
+
+  // Cached candidate sizes
+  std::vector<CSize> _candidateLabelSizes;
+  std::vector<CSize> _candidateTextSizes;
+  std::vector<CSize> _candidateCommentSizes;
+
+  CSize _markTextSize;
+
+  bool _pageEnabled;
+
+  static const wstring _pre;
+  static const wstring _next;
 };
-};  // namespace weasel
+}  // namespace weasel

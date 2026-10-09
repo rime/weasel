@@ -8,8 +8,8 @@ class HorizontalLayout : public StandardLayout {
   HorizontalLayout(const UIStyle& style,
                    const Context& context,
                    const Status& status,
-                   PDWR pDWR)
-      : StandardLayout(style, context, status, pDWR) {}
-  virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL);
+                   an<D2D>& pD2D)
+      : StandardLayout(style, context, status, pD2D) {}
+  virtual void DoLayout();
 };
 };  // namespace weasel

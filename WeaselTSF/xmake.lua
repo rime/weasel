@@ -3,6 +3,8 @@ target("WeaselTSF")
   add_files("./*.cpp", "WeaselTSF.def")
   add_rules("add_rcfiles", "use_weaselconstants")
   add_deps("WeaselIPC", "WeaselUI")
+  add_links("oleaut32")
+  add_cxflags("/GL-", {force = true})
   local fname = ''
   if is_arch("x86") then
     fname = "weasel.dll"
