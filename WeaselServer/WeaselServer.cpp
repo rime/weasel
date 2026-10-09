@@ -22,6 +22,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
                      HINSTANCE /*hPrevInstance*/,
                      LPTSTR lpstrCmdLine,
                      int nCmdShow) {
+  LoadWeaselLogLevelFromRegistry();
   LANGID langId = get_language_id();
   SetThreadUILanguage(langId);
   SetThreadLocale(langId);

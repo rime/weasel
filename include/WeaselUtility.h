@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <atomic>
 #include <filesystem>
 #include <string>
 #include <sstream>
@@ -246,29 +247,75 @@ inline LANGID get_language_id() {
 #define acptow(x) string_to_wstring(x, CP_ACP)
 #define u8toacp(x) wtoacp(u8tow(x))
 
+inline std::atomic<int>& WeaselLogLevelStorage() {
+  static std::atomic<int> level{0};
+  return level;
+}
+
+inline int GetWeaselLogLevel() {
+  return WeaselLogLevelStorage().load(std::memory_order_relaxed);
+}
+
+inline void SetWeaselLogLevel(int level) {
+  WeaselLogLevelStorage().store(level < 0 ? 0 : level,
+                                std::memory_order_relaxed);
+}
+
+inline void LoadWeaselLogLevelFromRegistry() {
+  constexpr const LPCWSTR key = L"Software\\Rime\\Weasel";
+  constexpr const LPCWSTR value = L"LogLevel";
+  DWORD type = 0;
+  DWORD data = 0;
+  DWORD size = sizeof(data);
+  const LSTATUS status = RegGetValue(HKEY_CURRENT_USER, key, value,
+                                     RRF_RT_REG_DWORD, &type, &data, &size);
+  if (status == ERROR_SUCCESS && type == REG_DWORD)
+    SetWeaselLogLevel(static_cast<int>(data));
+  else
+    SetWeaselLogLevel(0);
+}
+
+inline bool IsWeaselLogEnabled() {
+  return GetWeaselLogLevel() > 0;
+}
+
+inline std::string current_time();
+
 class DebugStream {
  public:
-  DebugStream() = default;
-  ~DebugStream() { OutputDebugString(ss.str().c_str()); }
+  DebugStream() : enabled_(IsWeaselLogEnabled()) {}
+  DebugStream(const char* file, int line) : enabled_(IsWeaselLogEnabled()) {
+    if (enabled_)
+      *this << "[" << current_time() << " " << file << ":" << line << "] ";
+  }
+  ~DebugStream() {
+    if (enabled_)
+      OutputDebugString(ss.str().c_str());
+  }
+
   template <typename T>
   DebugStream& operator<<(const T& value) {
-    ss << value;
+    if (enabled_)
+      ss << value;
     return *this;
   }
   DebugStream& operator<<(const char* value) {
-    if (value) {
+    if (enabled_ && value) {
       std::wstring wvalue(u8tow(value));  // utf-8
       ss << wvalue;
     }
     return *this;
   }
-  DebugStream& operator<<(const std::string value) {
+  DebugStream& operator<<(const std::string& value) {
+    if (!enabled_)
+      return *this;
     std::wstring wvalue(acptow(value));  // utf-8
     ss << wvalue;
     return *this;
   }
 
  private:
+  bool enabled_;
   std::wstringstream ss;
 };
 inline std::string current_time() {
@@ -284,9 +331,7 @@ inline std::string current_time() {
   return oss.str();
 }
 
-#define DEBUG                                                       \
-  (DebugStream() << "[" << current_time() << " " << __FILE__ << ":" \
-                 << __LINE__ << "] ")
+#define DEBUG DebugStream(__FILE__, __LINE__)
 
 using wstring = std::wstring;
 using string = std::string;
