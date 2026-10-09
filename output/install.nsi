@@ -177,11 +177,9 @@ call_uninstaller:
   SetRegView 32
   ; Remove files and uninstaller
   Delete  "$R1\data\opencc\*.*"
-  Delete  "$R1\data\preview\*.*"
   Delete  "$R1\data\*.*"
   Delete  "$R1\*.*"
   RMDir   "$R1\data\opencc"
-  RMDir   "$R1\data\preview"
   RMDir   "$R1\data"
   RMDir   "$R1"
   SetShellVarContext all
@@ -288,9 +286,6 @@ program_files:
   SetOutPath $INSTDIR\data\opencc
   File "data\opencc\*.json"
   File "data\opencc\*.ocd*"
-  ; images
-  SetOutPath $INSTDIR\data\preview
-  File "data\preview\*.png"
 
   SetOutPath $INSTDIR
 
@@ -397,11 +392,9 @@ Section "Uninstall"
   ; Remove files and uninstaller
   SetOutPath $TEMP
   Delete  "$INSTDIR\data\opencc\*.*"
-  Delete  "$INSTDIR\data\preview\*.*"
   Delete  "$INSTDIR\data\*.*"
   Delete  "$INSTDIR\*.*"
   RMDir  "$INSTDIR\data\opencc"
-  RMDir  "$INSTDIR\data\preview"
   RMDir  "$INSTDIR\data"
   RMDir  "$INSTDIR"
   SetShellVarContext all
