@@ -23,13 +23,20 @@ typedef std::map<std::string, AppOptions, CaseInsensitiveCompare>
     AppOptionsByAppName;
 
 struct SessionStatus {
-  SessionStatus() : style(weasel::UIStyle()), __synced(false), session_id(0) {
+  SessionStatus()
+      : style(weasel::UIStyle()),
+        __synced(false),
+        session_id(0),
+        grid_row_offset(0),
+        grid_window_row_offset(0) {
     RIME_STRUCT(RimeStatus, status);
   }
   weasel::UIStyle style;
   RimeStatus status;
   bool __synced;
   RimeSessionId session_id;
+  int grid_row_offset;
+  int grid_window_row_offset;
 };
 typedef std::map<DWORD, SessionStatus> SessionStatusMap;
 typedef DWORD WeaselSessionId;
@@ -77,6 +84,13 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
   bool _Respond(WeaselSessionId ipc_id, EatLine eat);
   void _ReadClientInfo(WeaselSessionId ipc_id, LPWSTR buffer);
   void _GetCandidateInfo(weasel::CandidateInfo& cinfo, RimeContext& ctx);
+  void _GetCandidateInfo(weasel::CandidateInfo& cinfo,
+                         RimeSessionId session_id,
+                         SessionStatus& session_status);
+  bool _HandleGridKeyEvent(weasel::KeyEvent keyEvent,
+                           WeaselSessionId ipc_id,
+                           EatLine eat,
+                           BOOL& handled);
   void _GetStatus(weasel::Status& stat,
                   WeaselSessionId ipc_id,
                   weasel::Context& ctx);
