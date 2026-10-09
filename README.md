@@ -47,6 +47,23 @@
 
 定製 Rime 的方法，請參考 Wiki [《定製指南》](https://github.com/rime/home/wiki/CustomizationGuide)。如需定製 Weasel 獨有的樣式和行為，請參考本倉庫 [Wiki 頁面](https://github.com/rime/weasel/wiki)。
 
+Jev 候選推薦（實驗性）
+----------------------
+
+本分支可使用 TypeSafe Jev 根據最近輸入的文字、當前拼音和 Rime 候選，異步推薦並高亮最合適的候選。Rime 候選會立即顯示，網絡請求不阻塞按鍵處理；請求失敗、結果過期或推薦概率低於 60% 時保持 Rime 原有選擇。
+
+此功能默認關閉。啟用前需在啟動小狼毫的用戶環境中設置：
+
+```powershell
+setx WEASEL_JEV_ENABLED 1
+setx TYPESAFE_API_KEY "你的 TypeSafe API Key"
+setx WEASEL_JEV_APPS "notepad.exe,winword.exe"
+```
+
+`WEASEL_JEV_APPS` 是必填的應用白名單；只有名單中的程序會向 `https://api.typesafe.ai/v1/systemone` 發送最多 128 個最近輸入字符、當前拼音和當頁候選。焦點離開輸入區後，本地上下文會被清除。環境變量生效後需重啟小狼毫服務。
+
+本分支構建成功後，可在 [Releases](https://github.com/sunqfeng/weasel/releases) 下載名稱以 `weasel` 開頭的實驗版安裝程序。安裝程序未簽名，Windows SmartScreen 可能顯示安全提示。
+
 致謝
 ----
 

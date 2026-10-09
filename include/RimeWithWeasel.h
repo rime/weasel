@@ -2,6 +2,7 @@
 #include <WeaselIPC.h>
 #include <WeaselUI.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <mutex>
 
@@ -22,6 +23,8 @@ typedef std::map<std::string, bool> AppOptions;
 typedef std::map<std::string, AppOptions, CaseInsensitiveCompare>
     AppOptionsByAppName;
 
+struct JevState;
+
 struct SessionStatus {
   SessionStatus() : style(weasel::UIStyle()), __synced(false), session_id(0) {
     RIME_STRUCT(RimeStatus, status);
@@ -30,6 +33,9 @@ struct SessionStatus {
   RimeStatus status;
   bool __synced;
   RimeSessionId session_id;
+  std::string client_app;
+  std::string jev_history;
+  std::string jev_last_signature;
 };
 typedef std::map<DWORD, SessionStatus> SessionStatusMap;
 typedef DWORD WeaselSessionId;
@@ -84,6 +90,10 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
   void _UpdateShowNotifications(RimeConfig* config, bool initialize = false);
 
   void _UpdateInlinePreeditStatus(WeaselSessionId ipc_id);
+  void _StartJev();
+  void _StopJev();
+  void _ScheduleJev(WeaselSessionId ipc_id, const RimeContext& ctx);
+  void _ApplyJev(WeaselSessionId ipc_id);
 
   RimeSessionId to_session_id(WeaselSessionId ipc_id) {
     return m_session_status_map[ipc_id].session_id;
@@ -120,4 +130,5 @@ class RimeWithWeaselHandler : public weasel::RequestHandler {
   bool m_global_ascii_mode;
   int m_show_notifications_time;
   DWORD m_pid;
+  std::unique_ptr<JevState> m_jev;
 };
