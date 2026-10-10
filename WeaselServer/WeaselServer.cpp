@@ -116,11 +116,20 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
 
   int nRet = 0;
   try {
+    LOG(INFO) << "constructing WeaselServerApp";
     WeaselServerApp app;
     RegisterApplicationRestart(NULL, 0);
+    LOG(INFO) << "starting WeaselServerApp";
     nRet = app.Run();
+    LOG(INFO) << "WeaselServerApp::Run returned: " << nRet;
+  } catch (DWORD error) {
+    LOG(ERROR) << "WeaselServer failed with Win32 error: " << error;
+    nRet = -1;
+  } catch (const std::exception& ex) {
+    LOG(ERROR) << "WeaselServer failed with exception: " << ex.what();
+    nRet = -1;
   } catch (...) {
-    // bad luck...
+    LOG(ERROR) << "WeaselServer failed with unknown exception";
     nRet = -1;
   }
 

@@ -160,10 +160,13 @@ HWND ServerImpl::Start() {
                    ::GetLastError() == ERROR_ACCESS_DENIED);
 
   if (areYouOK) {
+    LOG(ERROR) << "another WeaselServer instance is already running";
     return 0;  // assure single instance
   }
 
   HWND hwnd = Create(NULL);
+  if (!hwnd)
+    LOG(ERROR) << "ServerImpl::Create failed, error: " << GetLastError();
 
   return hwnd;
 }
