@@ -77,7 +77,6 @@ void LoadIconIfNeed(wstring& oicofile,
 WeaselPanel::WeaselPanel(UI& ui)
     : m_hWnd(nullptr),
       m_ctx(ui.ctx()),
-      m_octx(ui.octx()),
       m_layout(nullptr),
       m_pD2D(nullptr),
       m_status(ui.status()),

@@ -13,10 +13,10 @@ struct TextRange {
   TextRange() : start(0), end(0), cursor(-1) {}
   TextRange(int _start, int _end, int _cursor)
       : start(_start), end(_end), cursor(_cursor) {}
-  bool operator==(const TextRange& tr) {
+  bool operator==(const TextRange& tr) const {
     return (start == tr.start && end == tr.end && cursor == tr.cursor);
   }
-  bool operator!=(const TextRange& tr) {
+  bool operator!=(const TextRange& tr) const {
     return (start != tr.start || end != tr.end || cursor != tr.cursor);
   }
   int start;
@@ -28,10 +28,10 @@ struct TextAttribute {
   TextAttribute() : type(NONE) {}
   TextAttribute(int _start, int _end, TextAttributeType _type)
       : range(_start, _end, -1), type(_type) {}
-  bool operator==(const TextAttribute& ta) {
+  bool operator==(const TextAttribute& ta) const {
     return (range == ta.range && type == ta.type);
   }
-  bool operator!=(const TextAttribute& ta) {
+  bool operator!=(const TextAttribute& ta) const {
     return (range != ta.range || type != ta.type);
   }
   TextRange range;
@@ -46,7 +46,7 @@ struct Text {
     attributes.clear();
   }
   bool empty() const { return str.empty(); }
-  bool operator==(const Text& txt) {
+  bool operator==(const Text& txt) const {
     if (str != txt.str || (attributes.size() != txt.attributes.size()))
       return false;
     for (size_t i = 0; i < attributes.size(); i++) {
@@ -55,7 +55,7 @@ struct Text {
     }
     return true;
   }
-  bool operator!=(const Text& txt) {
+  bool operator!=(const Text& txt) const {
     if (str != txt.str || (attributes.size() != txt.attributes.size()))
       return true;
     for (size_t i = 0; i < attributes.size(); i++) {
@@ -85,7 +85,7 @@ struct CandidateInfo {
     labels.clear();
   }
   bool empty() const { return candies.empty(); }
-  bool operator==(const CandidateInfo& ci) {
+  bool operator==(const CandidateInfo& ci) const {
     if (currentPage != ci.currentPage || totalPages != ci.totalPages ||
         highlighted != ci.highlighted || is_last_page != ci.is_last_page ||
         notequal(candies, ci.candies) || notequal(comments, ci.comments) ||
@@ -93,7 +93,7 @@ struct CandidateInfo {
       return false;
     return true;
   }
-  bool operator!=(const CandidateInfo& ci) {
+  bool operator!=(const CandidateInfo& ci) const {
     if (currentPage != ci.currentPage || totalPages != ci.totalPages ||
         highlighted != ci.highlighted || is_last_page != ci.is_last_page ||
         notequal(candies, ci.candies) || notequal(comments, ci.comments) ||
@@ -101,7 +101,8 @@ struct CandidateInfo {
       return true;
     return false;
   }
-  bool notequal(std::vector<Text> txtSrc, std::vector<Text> txtDst) {
+  bool notequal(const std::vector<Text>& txtSrc,
+                const std::vector<Text>& txtDst) const {
     if (txtSrc.size() != txtDst.size())
       return true;
     for (size_t i = 0; i < txtSrc.size(); i++) {
@@ -127,14 +128,14 @@ struct Context {
     cinfo.clear();
   }
   bool empty() const { return preedit.empty() && aux.empty() && cinfo.empty(); }
-  bool operator==(const Context& ctx) {
+  bool operator==(const Context& ctx) const {
     if (preedit == ctx.preedit && aux == ctx.aux && cinfo == ctx.cinfo)
       return true;
     return false;
   }
-  bool operator!=(const Context& ctx) { return !(operator==(ctx)); }
+  bool operator!=(const Context& ctx) const { return !(operator==(ctx)); }
 
-  bool operator!() {
+  bool operator!() const {
     if (preedit.str.empty() && aux.str.empty() && cinfo.candies.empty() &&
         cinfo.labels.empty() && cinfo.comments.empty())
       return true;
@@ -164,7 +165,7 @@ struct Status {
     full_shape = false;
     type = SCHEMA;
   }
-  bool operator==(const Status status) {
+  bool operator==(const Status& status) const {
     return (status.schema_name == schema_name &&
             status.schema_id == schema_id && status.ascii_mode == ascii_mode &&
             status.composing == composing && status.disabled == disabled &&

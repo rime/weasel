@@ -83,7 +83,6 @@ class WeaselPanel {
   CPoint m_lastCursorPos = {-1, -1};
 
   Context& m_ctx;
-  Context& m_octx;
   Status& m_status;
   const bool& m_in_server;
   UIStyle& m_style;
