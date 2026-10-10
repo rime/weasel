@@ -16,6 +16,11 @@ STDMETHODIMP WeaselTSF::DoEditSession(TfEditCookie ec) {
   _UpdateLanguageBar(_status);
 
   bool compositionEnded = false;
+  if (ok && _status.composing) {
+    _pendingUIContext = context;
+    _pendingUIStatus = _status;
+    _hasPendingUI = true;
+  }
   if (ok) {
     compositionEnded = false;
     if (!commit.empty()) {
@@ -49,13 +54,17 @@ STDMETHODIMP WeaselTSF::DoEditSession(TfEditCookie ec) {
     }
   }
 
-  if (ok && !compositionEnded)
+  // For a normal update, position the panel before publishing new candidates.
+  // After a commit, the replacement composition's extent session flushes the
+  // pending UI from _SetCompositionPosition().
+  if (ok && _IsComposing() && !compositionEnded)
     _UpdateCompositionWindow(_pEditSessionContext);
-  // Keep the existing candidate window alive during top-word input, but
-  // publish the new candidates in this key-down edit session. Positioning is
-  // still updated by the queued read session after the new composition is
-  // created.
-  _UpdateUI(*context, _status);
+
+  // Wait for the current composition's real text extent before painting new
+  // candidates. This avoids one frame at the previous caret position.
+  if (!(_status.composing && _IsComposing())) {
+    _UpdateUI(*context, _status);
+  }
 
   return TRUE;
 }

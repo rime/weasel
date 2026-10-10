@@ -242,6 +242,16 @@ void WeaselTSF::_SetCompositionPosition(const RECT& rc) {
   _rc.top = _rc.bottom = rc.bottom;
   m_client.UpdateInputPosition(rc);
   _cand->UpdateInputPosition(rc);
+  _FlushPendingUI();
+}
+
+void WeaselTSF::_FlushPendingUI() {
+  if (!_hasPendingUI || !_pendingUIContext)
+    return;
+  auto context = std::move(_pendingUIContext);
+  auto status = _pendingUIStatus;
+  _hasPendingUI = false;
+  _UpdateUI(*context, status);
 }
 
 /* Inline Preedit */
