@@ -125,8 +125,7 @@ struct D2D {
                      DWRITE_FONT_STYLE& fontStyle,
                      DWRITE_FONT_STRETCH& fontStretch);
   HRESULT GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1>& pBitmap);
-  HRESULT GetIconFromFile(const wstring& iconPath,
-                          ComPtr<ID2D1Bitmap1>& pD2DBitmap);
+  HRESULT GetCachedBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1>& pBitmap);
 
   HRESULT CreateRoundedRectanglePath(const RECT& rc,
                                      float radius,
@@ -159,6 +158,8 @@ struct D2D {
   PtTextFormat pCommentFormat;
   ComPtr<IDWriteFactory2> m_pWriteFactory;
   ComPtr<ID2D1SolidColorBrush> m_pBrush;
+  HICON cachedIcon = nullptr;
+  ComPtr<ID2D1Bitmap1> cachedIconBitmap;
   struct CachedTextFormat {
     PtTextFormat format;
     uint64_t last_used;

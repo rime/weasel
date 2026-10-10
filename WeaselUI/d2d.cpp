@@ -155,6 +155,8 @@ D2D::~D2D() {
 void D2D::InitDirect2D() {
   // clear device-dependent caches before reinitializing
   ClearDeviceDependentCaches();
+  cachedIcon = nullptr;
+  cachedIconBitmap.Reset();
 
   // Use shared device resources to avoid recreating expensive objects per
   // window
@@ -810,72 +812,17 @@ HRESULT D2D::GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1>& pBitmap) {
   return hr;
 }
 
-HRESULT D2D::GetIconFromFile(const wstring& iconPath,
-                             ComPtr<ID2D1Bitmap1>& pD2DBitmap) {
-  IWICImagingFactory* pWicFactory = DeviceResources::Get().wicFactory.Get();
-  if (!pWicFactory) {
-    return E_POINTER;
+HRESULT D2D::GetCachedBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1>& pBitmap) {
+  if (hIcon == cachedIcon && cachedIconBitmap) {
+    pBitmap = cachedIconBitmap;
+    return S_OK;
   }
-  if (!dc) {
-    return E_POINTER;
+  HRESULT hr = GetBmpFromIcon(hIcon, pBitmap);
+  if (SUCCEEDED(hr)) {
+    cachedIcon = hIcon;
+    cachedIconBitmap = pBitmap;
   }
-
-  HRESULT hr;
-  // Step 2: Load the image from file into a WICBitmapDecoder
-  ComPtr<IWICBitmapDecoder> pDecoder;
-  hr = pWicFactory->CreateDecoderFromFilename(
-      iconPath.c_str(), nullptr, GENERIC_READ,
-      WICDecodeOptions::WICDecodeMetadataCacheOnLoad,
-      pDecoder.ReleaseAndGetAddressOf());
-  if (FAILED(hr)) {
-    DEBUG << "Failed to load image from file, HRESULT: " << std::hex << hr;
-    return hr;
-  }
-
-  // Step 3: Get the first frame of the image
-  ComPtr<IWICBitmapFrameDecode> pFrame;
-  hr = pDecoder->GetFrame(0, pFrame.ReleaseAndGetAddressOf());
-  if (FAILED(hr)) {
-    DEBUG << "Failed to get frame from decoder, HRESULT: " << std::hex << hr;
-    return hr;
-  }
-
-  // Step 4: Convert the frame to a supported format using IWICFormatConverter
-  ComPtr<IWICFormatConverter> pConvertedBitmap;
-  hr = pWicFactory->CreateFormatConverter(
-      pConvertedBitmap.ReleaseAndGetAddressOf());
-  if (FAILED(hr)) {
-    DEBUG << "Failed to create IWICFormatConverter, HRESULT: " << std::hex
-          << hr;
-    return hr;
-  }
-
-  // Initialize the format converter
-  hr = pConvertedBitmap->Initialize(
-      pFrame.Get(),  // The source bitmap (IWICBitmapFrameDecode)
-      GUID_WICPixelFormat32bppPBGRA,  // Target format (Direct2D supported
-                                      // format)
-      WICBitmapDitherTypeNone,        // Dithering type
-      nullptr,                        // Palette (nullptr to use default)
-      0.0f,                       // Alpha threshold (0.0 for no transparency)
-      WICBitmapPaletteTypeCustom  // Palette type (Custom)
-  );
-  if (FAILED(hr)) {
-    DEBUG << "Failed to initialize IWICFormatConverter, HRESULT: " << std::hex
-          << hr;
-    return hr;
-  }
-
-  // Step 5: Create a Direct2D bitmap from the converted WIC bitmap
-  hr = dc->CreateBitmapFromWicBitmap(pConvertedBitmap.Get(), nullptr,
-                                     pD2DBitmap.ReleaseAndGetAddressOf());
-  if (FAILED(hr)) {
-    DEBUG << "Failed to create Direct2D bitmap from WIC bitmap, HRESULT: "
-          << std::hex << hr;
-    return hr;
-  }
-
-  return S_OK;
+  return hr;
 }
 
 HRESULT

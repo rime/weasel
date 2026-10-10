@@ -126,6 +126,8 @@ class WeaselPanel {
   RECT m_drag_window{0, 0, 0, 0};
   UINT_PTR m_clickTimer = 0;
   UINT_PTR m_autoHideTimer = 0;
+  int m_lastWindowWidth = -1;
+  int m_lastWindowHeight = -1;
 
  public:
   void ShowWithTimeout(size_t millisec);
