@@ -359,6 +359,8 @@ void RimeWithWeaselHandler::FocusOut(DWORD param, WeaselSessionId ipc_id) {
   if (m_ui)
     m_ui->Hide();
   m_active_session = 0;
+  if (!m_disabled && RIME_API_AVAILABLE(rime_api, cleanup_stale_sessions))
+    rime_api->cleanup_stale_sessions();
 }
 
 void RimeWithWeaselHandler::UpdateInputPosition(RECT const& rc,
