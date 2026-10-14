@@ -1,7 +1,7 @@
 target("WeaselDeployer")
   set_kind("binary")
   add_files("./*.cpp")
-  add_rules("add_rcfiles", "use_weaselconstants", "subwin")
+  add_rules("add_rcfiles", "use_weaselconstants", "subcmd")
   add_links("imm32", "kernel32", "rime", "d2d1", "dwrite", "Shcore")
   add_deps("WeaselIPC", "RimeWithWeasel", "WeaselUI")
   add_files("$(projectdir)/PerMonitorHighDPIAware.manifest")
