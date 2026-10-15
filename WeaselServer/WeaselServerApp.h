@@ -18,8 +18,11 @@ namespace fs = std::filesystem;
 class WeaselServerApp {
  public:
   static bool execute(const fs::path& cmd, const std::wstring& args) {
+    const int show = cmd.filename().wstring() == L"WeaselDeployer.exe"
+                         ? SW_HIDE
+                         : SW_SHOWNORMAL;
     return (uintptr_t)ShellExecuteW(NULL, NULL, cmd.c_str(), args.c_str(), NULL,
-                                    SW_SHOWNORMAL) > 32;
+                                    show) > 32;
   }
 
   static bool explore(const fs::path& path) {
