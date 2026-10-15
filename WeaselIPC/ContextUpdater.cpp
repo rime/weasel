@@ -59,7 +59,8 @@ void ContextUpdater::_StoreText(Text& target,
       attr.type = HIGHLIGHTED;
       attr.range.start = _wtoi(vec[0].c_str());
       attr.range.end = _wtoi(vec[1].c_str());
-      attr.range.cursor = _wtoi(vec[2].c_str());
+      if (vec.size() > 2)
+        attr.range.cursor = _wtoi(vec[2].c_str());
 
       target.attributes.push_back(attr);
       return;
