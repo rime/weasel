@@ -27,7 +27,7 @@ LRESULT InstallOptionsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
   const ProfileOption options[] = {
       {L"hans", L"中文（简体，中国大陆）", L"中文（簡體，中國大陸）",
        L"Chinese (Simplified, China)"},
-      {L"hant", L"中文（繁体，中国台湾）", L"中文（繁體，中國臺灣）",
+      {L"hant", L"中文（繁体，中国台湾）", L"中文（繁體，臺灣）",
        L"Chinese (Traditional, Taiwan)"},
       {L"hongkong", L"中文（繁体，中国香港）", L"中文（繁體，中國香港）",
        L"Chinese (Traditional, Hong Kong)"},
