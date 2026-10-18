@@ -22,8 +22,8 @@ namespace {
 
 constexpr int kDictCliUsageError = 2;
 
-bool IsDictOption(const std::wstring& value, const wchar_t* option) {
-  return _wcsicmp(value.c_str(), option) == 0;
+bool IsDictCommand(const std::wstring& value, const wchar_t* command) {
+  return _wcsicmp(value.c_str(), command) == 0;
 }
 
 RimeLeversApi* GetLeversApi() {
@@ -36,11 +36,11 @@ RimeLeversApi* GetLeversApi() {
 void PrintDictCliUsage() {
   std::wcerr << L"Usage: WeaselDeployer.exe /dict <command> [arguments]\n"
              << L"Commands:\n"
-             << L"  --list\n"
-             << L"  --backup <dict-name>\n"
-             << L"  --restore <snapshot-file>\n"
-             << L"  --export <dict-name> <text-file>\n"
-             << L"  --import <dict-name> <text-file>\n";
+             << L"  list\n"
+             << L"  backup <dict-name>\n"
+             << L"  restore <snapshot-file>\n"
+             << L"  export <dict-name> <text-file>\n"
+             << L"  import <dict-name> <text-file>\n";
 }
 
 std::filesystem::path UserDataSyncDir(RimeApi* rime) {
@@ -235,16 +235,16 @@ int Configurator::DictManagement(const std::vector<std::wstring>& args) {
   }
 
   const std::wstring& command = args.front();
-  if (IsDictOption(command, L"--help")) {
+  if (IsDictCommand(command, L"help")) {
     PrintDictCliUsage();
     return args.size() == 1 ? 0 : kDictCliUsageError;
   }
 
-  const bool list = IsDictOption(command, L"--list");
-  const bool backup = IsDictOption(command, L"--backup");
-  const bool restore = IsDictOption(command, L"--restore");
-  const bool export_dict = IsDictOption(command, L"--export");
-  const bool import_dict = IsDictOption(command, L"--import");
+  const bool list = IsDictCommand(command, L"list");
+  const bool backup = IsDictCommand(command, L"backup");
+  const bool restore = IsDictCommand(command, L"restore");
+  const bool export_dict = IsDictCommand(command, L"export");
+  const bool import_dict = IsDictCommand(command, L"import");
 
   const size_t expected_args =
       list ? 1 : (backup || restore ? 2 : (export_dict || import_dict ? 3 : 0));

@@ -22,11 +22,11 @@ static int ShowHelp() {
                  sizeof(msg) / sizeof(TCHAR))) {
     std::wstring help(msg);
     help.append(
-        L"\n\n/dict --list - List user dictionaries\n"
-        L"/dict --backup <dict> - Backup a user dictionary\n"
-        L"/dict --restore <file> - Restore a user dictionary snapshot\n"
-        L"/dict --export <dict> <file> - Export a user dictionary\n"
-        L"/dict --import <dict> <file> - Import a user dictionary");
+        L"\n\n/dict list - List user dictionaries\n"
+        L"/dict backup <dict> - Backup a user dictionary\n"
+        L"/dict restore <file> - Restore a user dictionary snapshot\n"
+        L"/dict export <dict> <file> - Export a user dictionary\n"
+        L"/dict import <dict> <file> - Import a user dictionary");
     MessageBox(NULL, help.c_str(), L"Weasel Deployer",
                MB_ICONINFORMATION | MB_OK);
   } else {
@@ -35,11 +35,11 @@ static int ShowHelp() {
                L"/? or /help\t\t- Show this help message\n"
                L"/deploy\t\t- Update Workspace\n"
                L"/dict\t\t- Manage dictionary\n"
-               L"/dict --list\t\t- List user dictionaries\n"
-               L"/dict --backup <dict>\t- Backup a user dictionary\n"
-               L"/dict --restore <file>\t- Restore a user dictionary snapshot\n"
-               L"/dict --export <dict> <file>\t- Export a user dictionary\n"
-               L"/dict --import <dict> <file>\t- Import a user dictionary\n"
+               L"/dict list\t\t- List user dictionaries\n"
+               L"/dict backup <dict>\t- Backup a user dictionary\n"
+               L"/dict restore <file>\t- Restore a user dictionary snapshot\n"
+               L"/dict export <dict> <file>\t- Export a user dictionary\n"
+               L"/dict import <dict> <file>\t- Import a user dictionary\n"
                L"/sync\t\t- Sync user data\n"
                L"/install\t\t- Install Weasel (Initial deployment)",
                L"Weasel Deployer", MB_ICONINFORMATION | MB_OK);
