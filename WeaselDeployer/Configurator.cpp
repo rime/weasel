@@ -15,7 +15,41 @@
 #pragma warning(default : 4005)
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include "WeaselDeployer.h"
+
+namespace {
+
+constexpr int kDictCliUsageError = 2;
+
+bool IsDictCommand(const std::wstring& value, const wchar_t* command) {
+  return _wcsicmp(value.c_str(), command) == 0;
+}
+
+RimeLeversApi* GetLeversApi() {
+  RimeModule* levers = rime_get_api()->find_module("levers");
+  if (!levers)
+    return nullptr;
+  return (RimeLeversApi*)levers->get_api();
+}
+
+void PrintDictCliUsage() {
+  std::wcerr << L"Usage: WeaselDeployer.exe /dict <command> [arguments]\n"
+             << L"Commands:\n"
+             << L"  list\n"
+             << L"  backup <dict-name>\n"
+             << L"  restore <snapshot-file>\n"
+             << L"  export <dict-name> <text-file>\n"
+             << L"  import <dict-name> <text-file>\n";
+}
+
+std::filesystem::path UserDataSyncDir(RimeApi* rime) {
+  char dir[MAX_PATH] = {0};
+  rime->get_user_data_sync_dir(dir, _countof(dir));
+  return std::filesystem::path(u8tow(dir));
+}
+
+}  // namespace
 
 static void CreateFileIfNotExist(std::string filename) {
   std::filesystem::path file_path = WeaselUserDataPath() / u8tow(filename);
@@ -193,6 +227,118 @@ int Configurator::DictManagement() {
     client.EndMaintenance();
   }
   return 0;
+}
+
+int Configurator::DictManagement(const std::vector<std::wstring>& args) {
+  if (args.empty()) {
+    return DictManagement();
+  }
+
+  const std::wstring& command = args.front();
+  if (IsDictCommand(command, L"help")) {
+    PrintDictCliUsage();
+    return args.size() == 1 ? 0 : kDictCliUsageError;
+  }
+
+  const bool list = IsDictCommand(command, L"list");
+  const bool backup = IsDictCommand(command, L"backup");
+  const bool restore = IsDictCommand(command, L"restore");
+  const bool export_dict = IsDictCommand(command, L"export");
+  const bool import_dict = IsDictCommand(command, L"import");
+
+  const size_t expected_args =
+      list ? 1 : (backup || restore ? 2 : (export_dict || import_dict ? 3 : 0));
+  if (!expected_args || args.size() != expected_args) {
+    PrintDictCliUsage();
+    return kDictCliUsageError;
+  }
+
+  HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerMutex");
+  if (!hMutex) {
+    LOG(ERROR) << "Error creating WeaselDeployerMutex.";
+    return 1;
+  }
+  if (GetLastError() == ERROR_ALREADY_EXISTS) {
+    LOG(WARNING) << "another deployer process is running; aborting operation.";
+    CloseHandle(hMutex);
+    return 1;
+  }
+
+  weasel::Client client;
+  if (client.Connect()) {
+    LOG(INFO) << "Turning WeaselServer into maintenance mode.";
+    client.StartMaintenance();
+  }
+
+  RimeApi* rime = rime_get_api();
+  RimeLeversApi* api = GetLeversApi();
+  int result = 0;
+
+  if (!api) {
+    LOG(ERROR) << "Rime levers module is unavailable.";
+    result = 1;
+  } else if (RIME_API_AVAILABLE(rime, run_task)) {
+    rime->run_task("installation_update");
+  }
+
+  if (!result && list) {
+    RimeUserDictIterator iter = {0};
+    if (!api->user_dict_iterator_init(&iter)) {
+      LOG(ERROR) << "Failed to enumerate user dictionaries.";
+      result = 1;
+    } else {
+      while (const char* dict = api->next_user_dict(&iter)) {
+        std::wcout << u8tow(dict) << std::endl;
+      }
+      api->user_dict_iterator_destroy(&iter);
+    }
+  } else if (!result && backup) {
+    const std::string dict_name = wtou8(args[1]);
+    if (!api->backup_user_dict(dict_name.c_str())) {
+      LOG(ERROR) << "Failed to backup user dictionary: " << dict_name;
+      result = 1;
+    } else {
+      const std::filesystem::path snapshot =
+          UserDataSyncDir(rime) / (args[1] + L".userdb.txt");
+      std::wcout << snapshot.wstring() << std::endl;
+    }
+  } else if (!result && restore) {
+    const std::string snapshot = wtou8(args[1]);
+    if (!api->restore_user_dict(snapshot.c_str())) {
+      LOG(ERROR) << "Failed to restore user dictionary: " << snapshot;
+      result = 1;
+    }
+  } else if (!result && export_dict) {
+    const std::string dict_name = wtou8(args[1]);
+    const std::string text_file = wtou8(args[2]);
+    const int count =
+        api->export_user_dict(dict_name.c_str(), text_file.c_str());
+    if (count < 0) {
+      LOG(ERROR) << "Failed to export user dictionary: " << dict_name;
+      result = 1;
+    } else {
+      std::wcout << count << std::endl;
+    }
+  } else if (!result && import_dict) {
+    const std::string dict_name = wtou8(args[1]);
+    const std::string text_file = wtou8(args[2]);
+    const int count =
+        api->import_user_dict(dict_name.c_str(), text_file.c_str());
+    if (count < 0) {
+      LOG(ERROR) << "Failed to import user dictionary: " << dict_name;
+      result = 1;
+    } else {
+      std::wcout << count << std::endl;
+    }
+  }
+
+  CloseHandle(hMutex);  // should be closed before resuming service.
+
+  if (client.Connect()) {
+    LOG(INFO) << "Resuming service.";
+    client.EndMaintenance();
+  }
+  return result;
 }
 
 int Configurator::SyncUserData() {

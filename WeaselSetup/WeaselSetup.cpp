@@ -147,7 +147,7 @@ static int CustomInstall(bool installing) {
                     NULL, SW_SHOWNORMAL);
       Sleep(500);
       ShellExecuteW(NULL, NULL, (dir + L"\\WeaselDeployer.exe").c_str(),
-                    L"/deploy", NULL, SW_SHOWNORMAL);
+                    L"/deploy", NULL, SW_HIDE);
     });
     th.detach();
     MSG_BY_IDS(IDS_STR_MODIFY_SUCCESS_INFO, IDS_STR_MODIFY_SUCCESS_CAP,
