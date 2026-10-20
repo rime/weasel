@@ -155,6 +155,9 @@
     <Image Include="WeaselSetup.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CopyLanguageProfile" AfterTargets="Build">
+    <Copy SourceFiles="$(ProjectDir)WeaselLanguageProfile.ps1" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

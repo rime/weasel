@@ -28,6 +28,8 @@ target("WeaselSetup")
   end)
 
   after_build(function(target)
+      os.cp("$(projectdir)/WeaselSetup/WeaselLanguageProfile.ps1", target:targetdir())
+      os.cp("$(projectdir)/WeaselSetup/WeaselLanguageProfile.ps1", "$(projectdir)/output")
       os.cp(path.join(target:targetdir(), "WeaselSetup.exe"), "$(projectdir)/output")
       os.cp(path.join(target:targetdir(), "WeaselSetup.pdb"), "$(projectdir)/output")
   end)

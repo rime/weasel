@@ -162,7 +162,7 @@ uninst:
 
 call_uninstaller:
   ExecWait '"$R1\WeaselServer.exe" /quit'
-  ExecWait '"$R1\WeaselSetup.exe" /u'
+  ; Keep TSF profiles during upgrades so Windows does not add a default IME.
   ; Remove registry keys
   DeleteRegKey HKLM SOFTWARE\Rime
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Weasel"
@@ -209,8 +209,11 @@ Section "Weasel"
   ; Reset INSTDIR for the new version
   StrCpy $INSTDIR "${WEASEL_ROOT}"
 
-  IfFileExists "$INSTDIR\WeaselServer.exe" 0 +2
-  ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
+  ; Do not launch the old server again after removing its dependencies.
+  ${If} $0 != "Upgrade"
+    IfFileExists "$INSTDIR\WeaselServer.exe" 0 +2
+    ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
+  ${EndIf}
 
   SetOverwrite try
   ; Set output path to the installation directory.
@@ -277,6 +280,7 @@ program_files:
   ${Endif}
 
   File "WeaselSetup.exe"
+  File "WeaselLanguageProfile.ps1"
   ; shared data files
   SetOutPath $INSTDIR\data
   File "data\*.yaml"
