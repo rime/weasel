@@ -245,6 +245,9 @@ bool WeaselTSF::_EnsureServerConnected() {
       HANDLE hMutex = CreateMutex(NULL, TRUE, L"WeaselDeployerExclusiveMutex");
       const auto count_server_process = []() -> int {
         int count = 0;
+        DWORD session_id;
+        if (!ProcessIdToSessionId(GetCurrentProcessId(), &session_id))
+          return 0;
         HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         if (snap == INVALID_HANDLE_VALUE)
           return 0;
@@ -252,7 +255,10 @@ bool WeaselTSF::_EnsureServerConnected() {
         pe.dwSize = sizeof(pe);
         if (Process32First(snap, &pe)) {
           do {
-            if (_wcsicmp(pe.szExeFile, L"WeaselServer.exe") == 0)
+            DWORD server_session_id;
+            if (_wcsicmp(pe.szExeFile, L"WeaselServer.exe") == 0 &&
+                ProcessIdToSessionId(pe.th32ProcessID, &server_session_id) &&
+                server_session_id == session_id)
               count++;
           } while (Process32Next(snap, &pe));
         }
