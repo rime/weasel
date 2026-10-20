@@ -189,3 +189,30 @@ jobs:
             ./output/archives/weasel*.exe
             ./output/archives/debug_symbols.7z
           body_path: ${{ github.workspace }}/RELEASE_CHANGELOG.md
+
+  release-jev:
+    if: ${{ github.repository == 'sunqfeng/weasel' && github.ref == 'refs/heads/codex/jev-candidate-reranker' }}
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: weasel-artifact-*
+          merge-multiple: true
+          path: artifacts
+
+      - name: Publish Jev test build
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: jev-build-${{ github.run_number }}
+          name: Weasel Jev Test Build ${{ github.run_number }}
+          prerelease: true
+          make_latest: false
+          files: artifacts/weasel*.exe
+          body: |
+            Experimental Weasel build with asynchronous TypeSafe Jev candidate recommendation.
+            Configure WEASEL_JEV_ENABLED, TYPESAFE_API_KEY, and WEASEL_JEV_APPS after installation.
+            This installer is unsigned and Windows SmartScreen may show a warning.
