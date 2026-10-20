@@ -318,10 +318,10 @@ int uninstall_ime_file(const std::wstring& ext,
   GetSystemDirectoryW(path, _countof(path));
   std::wstring imePath(path);
   imePath += L"\\weasel" + ext;
-  retval += func(imePath, false, false, false, profile, silent);
+  if (func)
+    retval += func(imePath, false, false, false, profile, silent);
   delete_file(imePath);
   if (is_wow64()) {
-    retval += func(imePath, false, true, false, profile, silent);
     PVOID OldValue = NULL;
     if (Wow64DisableWow64FsRedirection(&OldValue) == FALSE) {
       MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERRCANCELFSREDIRECT,
@@ -329,11 +329,14 @@ int uninstall_ime_file(const std::wstring& ext,
       return 1;
     }
 
+    if (func)
+      retval += func(imePath, false, true, false, profile, silent);
     if (is_arm64_machine()) {
       WCHAR sysarm32[MAX_PATH];
       if (get_wow_arm32_system_dir(sysarm32, _countof(sysarm32)) > 0) {
         std::wstring imePathARM32 = std::wstring(sysarm32) + L"\\weasel" + ext;
-        retval += func(imePathARM32, false, true, true, profile, silent);
+        if (func)
+          retval += func(imePathARM32, false, true, true, profile, silent);
         delete_file(imePathARM32);
       }
 
@@ -558,9 +561,12 @@ int uninstall(bool silent) {
     RegCloseKey(hKey);
   }
 
-  if (update_user_language_profile(profile, true) !=
-      user_language_profile_result::updated)
+  if (update_user_language_profile(profile, true) ==
+      user_language_profile_result::updated) {
+    retval += uninstall_ime_file(L".ime", profile, silent, nullptr);
+  } else {
     retval++;
+  }
 
   // IMM/.ime support removed; only uninstall TSF/.dll
   retval +=

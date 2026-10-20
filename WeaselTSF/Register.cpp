@@ -10,37 +10,6 @@ static const char c_szTipKeyPrefix[] = "Software\\Microsft\\CTF\\TIP\\";
 static const char c_szInProcSvr32[] = "InprocServer32";
 static const char c_szModelName[] = "ThreadingModel";
 
-HKL FindIME(LANGID langid) {
-  HKL hKL = NULL;
-  WCHAR key[9];
-  HKEY hKey;
-  LSTATUS ret =
-      RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                    L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts", 0,
-                    KEY_READ, &hKey);
-  if (ret == ERROR_SUCCESS) {
-    for (DWORD id = (0xE0200000 | langid);
-         hKL == NULL && id <= (0xE0FF0000 | langid); id += 0x10000) {
-      StringCchPrintfW(key, _countof(key), L"%08X", id);
-      HKEY hSubKey;
-      ret = RegOpenKeyExW(hKey, key, 0, KEY_READ, &hSubKey);
-      if (ret == ERROR_SUCCESS) {
-        WCHAR data[32];
-        DWORD type;
-        DWORD size = sizeof data;
-        ret = RegQueryValueExW(hSubKey, L"Ime File", NULL, &type, (LPBYTE)data,
-                               &size);
-        if (ret == ERROR_SUCCESS && type == REG_SZ &&
-            _wcsicmp(data, L"weasel.ime") == 0)
-          hKL = (HKL)id;
-      }
-      RegCloseKey(hSubKey);
-    }
-  }
-  RegCloseKey(hKey);
-  return hKL;
-}
-
 BOOL RegisterProfiles() {
 #define CHECK_HR(hr) \
   if (FAILED(hr))    \
@@ -73,20 +42,18 @@ BOOL RegisterProfiles() {
   ULONG cchIconFile =
       GetModuleFileNameW(g_hInst, achIconFile, ARRAYSIZE(achIconFile));
 
-  const auto register_profile = [&](LANGID langId, HKL hkl, BOOL enable) {
+  const auto register_profile = [&](LANGID langId, BOOL enable) {
     return pInputProcessorProfileMgr->RegisterProfile(
         c_clsidTextService, langId, c_guidProfile, text_service_desc_str,
         text_service_desc_len, achIconFile, cchIconFile, TEXTSERVICE_ICON_INDEX,
-        hkl, 0, enable, 0);
+        NULL, 0, enable, 0);
   };
 
-  const auto hkl_hans = FindIME(TEXTSERVICE_LANGID_HANS);
-  const auto hkl_hant = FindIME(TEXTSERVICE_LANGID_HANT);
-  CHECK_HR(register_profile(TEXTSERVICE_LANGID_HANS, hkl_hans, hansEnable));
-  CHECK_HR(register_profile(TEXTSERVICE_LANGID_HANT, hkl_hant, hantEnable));
-  CHECK_HR(register_profile(TEXTSERVICE_LANGID_HONGKONG, NULL, hkEnable));
-  CHECK_HR(register_profile(TEXTSERVICE_LANGID_MACAU, NULL, macauEnable));
-  CHECK_HR(register_profile(TEXTSERVICE_LANGID_SINGAPORE, NULL, sgEnable));
+  CHECK_HR(register_profile(TEXTSERVICE_LANGID_HANS, hansEnable));
+  CHECK_HR(register_profile(TEXTSERVICE_LANGID_HANT, hantEnable));
+  CHECK_HR(register_profile(TEXTSERVICE_LANGID_HONGKONG, hkEnable));
+  CHECK_HR(register_profile(TEXTSERVICE_LANGID_MACAU, macauEnable));
+  CHECK_HR(register_profile(TEXTSERVICE_LANGID_SINGAPORE, sgEnable));
 #undef CHECK_HR
 
   return TRUE;
