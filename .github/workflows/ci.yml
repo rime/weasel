@@ -145,6 +145,19 @@ jobs:
             .\xbuild.bat arm64 installer
           }
 
+      - name: Test language profile helper
+        if: matrix.variant == 'msbuild'
+        shell: powershell
+        run: .\test\TestWeaselLanguageProfile.ps1
+
+      - name: Test upgrade language settings
+        if: matrix.variant == 'msbuild'
+        shell: powershell
+        timeout-minutes: 5
+        run: |
+          $installer = Get-Item .\output\archives\weasel*-installer.exe
+          .\test\TestWeaselUpgrade.ps1 -Installer $installer.FullName
+
       - name: Compress Debug Symbols
         if: matrix.variant == 'msbuild'
         shell: pwsh

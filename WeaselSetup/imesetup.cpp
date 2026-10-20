@@ -1,6 +1,5 @@
 ﻿#include "stdafx.h"
 #include <string>
-#include <vector>
 #include <msctf.h>
 #include <strsafe.h>
 #include <StringAlgorithm.hpp>
@@ -21,9 +20,6 @@ static const GUID c_guidProfile = {
     0x2b8e,
     0x4781,
     {0xba, 0x20, 0x1c, 0x92, 0x67, 0x52, 0x94, 0x67}};
-
-#define ILOT_UNINSTALL 0x00000001
-typedef HRESULT(WINAPI* PTF_INSTALLLAYOUTORTIP)(LPCWSTR psz, DWORD dwFlags);
 
 #define WEASEL_WER_KEY                            \
   L"SOFTWARE\\Microsoft\\Windows\\Windows Error " \
@@ -136,6 +132,74 @@ static std::wstring profile_to_title(const std::wstring& profile) {
   }
 
   return std::wstring(langidText) + L":" + clsidTextService + profileGuid;
+}
+
+enum class user_language_profile_result {
+  updated,
+  language_not_found,
+  failed,
+};
+
+static std::wstring module_directory() {
+  WCHAR path[MAX_PATH] = {0};
+  DWORD length = GetModuleFileNameW(NULL, path, _countof(path));
+  if (length == 0 || length >= _countof(path))
+    return L"";
+
+  std::wstring result(path, length);
+  const auto separator = result.find_last_of(L"\\/");
+  return separator == std::wstring::npos ? L"" : result.substr(0, separator);
+}
+
+static user_language_profile_result update_user_language_profile(
+    const std::wstring& profile,
+    bool uninstall) {
+  const std::wstring title = profile_to_title(profile);
+  if (title.empty())
+    return user_language_profile_result::failed;
+
+  const std::wstring directory = module_directory();
+  if (directory.empty())
+    return user_language_profile_result::failed;
+
+  WCHAR system_directory[MAX_PATH] = {0};
+  const UINT system_directory_length =
+      GetSystemDirectoryW(system_directory, _countof(system_directory));
+  if (system_directory_length == 0 ||
+      system_directory_length >= _countof(system_directory))
+    return user_language_profile_result::failed;
+
+  const std::wstring powershell = std::wstring(system_directory) +
+                                  L"\\WindowsPowerShell\\v1.0\\powershell.exe";
+  const std::wstring script = directory + L"\\WeaselLanguageProfile.ps1";
+
+  std::wstring command =
+      L"\"" + powershell +
+      L"\" -NoLogo -NoProfile -NonInteractive "
+      L"-ExecutionPolicy Bypass -WindowStyle Hidden -File \"" +
+      script + L"\" -Tip \"" + title + L"\"";
+  if (uninstall) {
+    command += L" -Uninstall";
+  }
+
+  STARTUPINFOW startup_info = {sizeof(startup_info)};
+  PROCESS_INFORMATION process_info = {0};
+  if (!CreateProcessW(powershell.c_str(), command.data(), NULL, NULL, FALSE,
+                      CREATE_NO_WINDOW, NULL, directory.c_str(), &startup_info,
+                      &process_info))
+    return user_language_profile_result::failed;
+
+  WaitForSingleObject(process_info.hProcess, INFINITE);
+  DWORD exit_code = 1;
+  GetExitCodeProcess(process_info.hProcess, &exit_code);
+  CloseHandle(process_info.hThread);
+  CloseHandle(process_info.hProcess);
+
+  if (exit_code == 0)
+    return user_language_profile_result::updated;
+  if (!uninstall && exit_code == 2)
+    return user_language_profile_result::language_not_found;
+  return user_language_profile_result::failed;
 }
 
 int install_ime_file(std::wstring& srcPath,
@@ -254,10 +318,10 @@ int uninstall_ime_file(const std::wstring& ext,
   GetSystemDirectoryW(path, _countof(path));
   std::wstring imePath(path);
   imePath += L"\\weasel" + ext;
-  retval += func(imePath, false, false, false, profile, silent);
+  if (func)
+    retval += func(imePath, false, false, false, profile, silent);
   delete_file(imePath);
   if (is_wow64()) {
-    retval += func(imePath, false, true, false, profile, silent);
     PVOID OldValue = NULL;
     if (Wow64DisableWow64FsRedirection(&OldValue) == FALSE) {
       MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERRCANCELFSREDIRECT,
@@ -265,11 +329,14 @@ int uninstall_ime_file(const std::wstring& ext,
       return 1;
     }
 
+    if (func)
+      retval += func(imePath, false, true, false, profile, silent);
     if (is_arm64_machine()) {
       WCHAR sysarm32[MAX_PATH];
       if (get_wow_arm32_system_dir(sysarm32, _countof(sysarm32)) > 0) {
         std::wstring imePathARM32 = std::wstring(sysarm32) + L"\\weasel" + ext;
-        retval += func(imePathARM32, false, true, true, profile, silent);
+        if (func)
+          retval += func(imePathARM32, false, true, true, profile, silent);
         delete_file(imePathARM32);
       }
 
@@ -360,10 +427,13 @@ int register_text_service(const std::wstring& tsf_path,
   shExInfo.lpDirectory = 0;
   shExInfo.nShow = SW_SHOW;
   shExInfo.hInstApp = 0;
+  DWORD exit_code = 1;
   if (ShellExecuteExW(&shExInfo)) {
     WaitForSingleObject(shExInfo.hProcess, INFINITE);
+    GetExitCodeProcess(shExInfo.hProcess, &exit_code);
     CloseHandle(shExInfo.hProcess);
-  } else {
+  }
+  if (exit_code != 0) {
     WCHAR msg[100];
     CString str;
     str.LoadStringW(IDS_STR_ERRREGTSF);
@@ -427,21 +497,17 @@ int install(const std::wstring& profile, bool silent) {
     return 1;
   }
 
-  // InstallLayoutOrTip
-  // https://learn.microsoft.com/zh-cn/windows/win32/tsf/installlayoutortip
-  // example in ref page not right with "*PTF_ INSTALLLAYOUTORTIP"
-  // space inside should be removed
-  HMODULE hInputDLL = LoadLibrary(TEXT("input.dll"));
-  if (hInputDLL) {
-    PTF_INSTALLLAYOUTORTIP pfnInstallLayoutOrTip;
-    pfnInstallLayoutOrTip =
-        (PTF_INSTALLLAYOUTORTIP)GetProcAddress(hInputDLL, "InstallLayoutOrTip");
-    if (pfnInstallLayoutOrTip) {
-      std::wstring title = profile_to_title(profile);
-      if (!title.empty())
-        (*pfnInstallLayoutOrTip)(title.c_str(), 0);
+  if (retval == 0) {
+    const auto language_result = update_user_language_profile(profile, false);
+    if (language_result == user_language_profile_result::language_not_found) {
+      MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_LANGUAGE_NOT_FOUND,
+                            IDS_STR_INSTALL_SUCCESS_CAP,
+                            MB_ICONWARNING | MB_OK);
+    } else if (language_result == user_language_profile_result::failed) {
+      MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_LANGUAGE_PROFILE_FAILED,
+                            IDS_STR_INSTALL_SUCCESS_CAP,
+                            MB_ICONWARNING | MB_OK);
     }
-    FreeLibrary(hInputDLL);
   }
 
   // https://learn.microsoft.com/zh-cn/windows/win32/wer/collecting-user-mode-dumps
@@ -492,19 +558,14 @@ int uninstall(bool silent) {
       }
     }
 
-    HMODULE hInputDLL = LoadLibrary(TEXT("input.dll"));
-    if (hInputDLL) {
-      PTF_INSTALLLAYOUTORTIP pfnInstallLayoutOrTip;
-      pfnInstallLayoutOrTip = (PTF_INSTALLLAYOUTORTIP)GetProcAddress(
-          hInputDLL, "InstallLayoutOrTip");
-      if (pfnInstallLayoutOrTip) {
-        std::wstring title = profile_to_title(profile);
-        if (!title.empty())
-          (*pfnInstallLayoutOrTip)(title.c_str(), ILOT_UNINSTALL);
-      }
-      FreeLibrary(hInputDLL);
-    }
     RegCloseKey(hKey);
+  }
+
+  if (update_user_language_profile(profile, true) ==
+      user_language_profile_result::updated) {
+    retval += uninstall_ime_file(L".ime", profile, silent, nullptr);
+  } else {
+    retval++;
   }
 
   // IMM/.ime support removed; only uninstall TSF/.dll

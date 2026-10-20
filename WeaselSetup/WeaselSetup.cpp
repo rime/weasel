@@ -90,7 +90,7 @@ static int CustomInstall(bool installing) {
     }
     RegCloseKey(hKey);
   }
-  bool _has_installed = has_installed();
+  bool _has_installed = !installing && has_installed();
   if (!silent) {
     InstallOptionsDialog dlg;
     dlg.installed = _has_installed;

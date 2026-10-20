@@ -26,6 +26,8 @@
 #define IDS_STR_MODIFY_SUCCESS_CAP      147
 #define IDS_STR_HELP                    148
 #define IDS_STR_ERR_WRITE_PROFILE       149
+#define IDS_STR_LANGUAGE_NOT_FOUND      150
+#define IDS_STR_LANGUAGE_PROFILE_FAILED 151
 #define IDD_INSTALL_OPTIONS             201
 #define IDD_DIALOG1                     203
 #define IDC_RADIO_CN                    1000
