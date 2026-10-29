@@ -25,6 +25,12 @@ class WeaselPanel {
 
   BOOL IsWindow() const;
   void ShowWindow(int nCmdShow);
+  // 首次显示前若还没拿到本次输入的光标位置，延迟到位置到达或超时后再显示
+  void ShowDeferred(UINT ms);
+  static VOID CALLBACK OnShowDeferred(HWND hwnd,
+                                      UINT uMsg,
+                                      UINT_PTR idEvent,
+                                      DWORD dwTime);
   void DestroyWindow();
   // release all resources associated with this panel (window + shared devices)
   void ReleaseAllResources();
@@ -34,6 +40,7 @@ class WeaselPanel {
 
   static const int AUTOREV_TIMER = 20241209;
   static const int AUTOHIDE_TIMER = 20241107;
+  static const UINT_PTR SHOW_DEFER_TIMER = 20250101;
 
   HWND hwnd() const;
 

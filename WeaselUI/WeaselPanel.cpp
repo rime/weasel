@@ -145,6 +145,8 @@ bool WeaselPanel::IsCountingDown() const {
 }
 
 void WeaselPanel::ShowWindow(int nCmdShow) {
+  if (nCmdShow != SW_HIDE)
+    ::KillTimer(m_hWnd, SHOW_DEFER_TIMER);
   ::ShowWindow(m_hWnd, nCmdShow);
   if (m_pD2D) {
     if (nCmdShow != SW_HIDE) {
@@ -156,6 +158,22 @@ void WeaselPanel::ShowWindow(int nCmdShow) {
       }
     }
   }
+}
+
+void WeaselPanel::ShowDeferred(UINT ms) {
+  if (!m_hWnd)
+    return;
+  ::KillTimer(m_hWnd, SHOW_DEFER_TIMER);
+  ::SetTimer(m_hWnd, SHOW_DEFER_TIMER, ms, &WeaselPanel::OnShowDeferred);
+}
+
+VOID CALLBACK WeaselPanel::OnShowDeferred(HWND hwnd,
+                                          UINT uMsg,
+                                          UINT_PTR idEvent,
+                                          DWORD dwTime) {
+  ::KillTimer(hwnd, idEvent);
+  // 兜底：个别宿主始终拿不到光标矩形时，也要把候选窗显示出来
+  ::ShowWindow(hwnd, SW_SHOWNA);
 }
 
 void WeaselPanel::DestroyWindow() {
