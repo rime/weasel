@@ -133,6 +133,166 @@ void WeaselTSF::_EndComposition(com_ptr<ITfContext> pContext,
   }
 }
 
+namespace {
+using weasel::GetUser32DpiApi;
+using weasel::ThreadDpiAwarenessScope;
+using weasel::User32DpiApi;
+
+bool IsCurrentThreadPerMonitorDpiAware(const User32DpiApi& api) {
+  if (!api.GetThreadDpiAwarenessContext ||
+      !api.GetAwarenessFromDpiAwarenessContext) {
+    return false;
+  }
+  const DPI_AWARENESS_CONTEXT ctx = api.GetThreadDpiAwarenessContext();
+  return ctx && api.GetAwarenessFromDpiAwarenessContext(ctx) ==
+                    DPI_AWARENESS_PER_MONITOR_AWARE;
+}
+
+HWND ResolveHostRootWindow(ITfContextView* contextView) {
+  HWND hwnd = nullptr;
+  if (contextView) {
+    contextView->GetWnd(&hwnd);
+  }
+  if (!hwnd || !::IsWindow(hwnd)) {
+    hwnd = ::GetFocus();
+  }
+  if (!hwnd || !::IsWindow(hwnd)) {
+    HWND fg = ::GetForegroundWindow();
+    if (fg && ::IsWindow(fg) &&
+        ::GetWindowThreadProcessId(fg, nullptr) == ::GetCurrentThreadId()) {
+      hwnd = fg;
+    }
+  }
+  if (!hwnd || !::IsWindow(hwnd))
+    return nullptr;
+
+  HWND root = ::GetAncestor(hwnd, GA_ROOT);
+  if (!root || !::IsWindow(root))
+    root = hwnd;
+  return ::IsIconic(root) ? nullptr : root;
+}
+
+bool DoesWindowMatchCurrentThreadDpiContext(const User32DpiApi& api,
+                                            HWND hwnd) {
+  if (!api.GetThreadDpiAwarenessContext || !api.GetWindowDpiAwarenessContext ||
+      !api.AreDpiAwarenessContextsEqual) {
+    return true;
+  }
+  return !!api.AreDpiAwarenessContextsEqual(
+      api.GetThreadDpiAwarenessContext(),
+      api.GetWindowDpiAwarenessContext(hwnd));
+}
+
+bool IsRectWithinBounds(const RECT& inner, const RECT& outer) {
+  return inner.left >= outer.left && inner.top >= outer.top &&
+         inner.right <= outer.right && inner.bottom <= outer.bottom;
+}
+
+bool IsRectOnSingleMonitor(const RECT& rc) {
+  const POINT lt{rc.left, rc.top};
+  const POINT rb{rc.right > rc.left ? rc.right - 1 : rc.right,
+                 rc.bottom > rc.top ? rc.bottom - 1 : rc.bottom};
+  const POINT rt{rb.x, lt.y};
+  const POINT lb{lt.x, rb.y};
+  const HMONITOR mon = ::MonitorFromPoint(lt, MONITOR_DEFAULTTONULL);
+  if (!mon)
+    return false;
+  return ::MonitorFromPoint(rb, MONITOR_DEFAULTTONULL) == mon &&
+         ::MonitorFromPoint(rt, MONITOR_DEFAULTTONULL) == mon &&
+         ::MonitorFromPoint(lb, MONITOR_DEFAULTTONULL) == mon;
+}
+
+bool TryGetPhysicalWindowRect(const User32DpiApi& api,
+                              HWND hwnd,
+                              RECT* outRect,
+                              bool* outSingleMonitor) {
+  if (!api.SetThreadDpiAwarenessContext || !hwnd || !outRect)
+    return false;
+  ThreadDpiAwarenessScope dpiScope;
+  if (!dpiScope.IsActive())
+    return false;
+  if (!::GetWindowRect(hwnd, outRect))
+    return false;
+  if (outSingleMonitor)
+    *outSingleMonitor = IsRectOnSingleMonitor(*outRect);
+  return true;
+}
+
+RECT ScaleRectBetweenWindowBounds(const RECT& rc,
+                                  const RECT& srcBounds,
+                                  const RECT& dstBounds) {
+  const int srcW = srcBounds.right - srcBounds.left;
+  const int srcH = srcBounds.bottom - srcBounds.top;
+  const int dstW = dstBounds.right - dstBounds.left;
+  const int dstH = dstBounds.bottom - dstBounds.top;
+  RECT out = rc;
+  out.left = dstBounds.left + ::MulDiv(rc.left - srcBounds.left, dstW, srcW);
+  out.right = dstBounds.left + ::MulDiv(rc.right - srcBounds.left, dstW, srcW);
+  out.top = dstBounds.top + ::MulDiv(rc.top - srcBounds.top, dstH, srcH);
+  out.bottom = dstBounds.top + ::MulDiv(rc.bottom - srcBounds.top, dstH, srcH);
+  return out;
+}
+
+bool TryConvertRectByPerMonitorDpiApi(const User32DpiApi& api,
+                                      HWND root,
+                                      const RECT& logicalRect,
+                                      RECT* outRect) {
+  if (!api.LogicalToPhysicalPointForPerMonitorDPI || !root || !outRect)
+    return false;
+  POINT lt{logicalRect.left, logicalRect.top};
+  POINT rb{logicalRect.right, logicalRect.bottom};
+  if (!api.LogicalToPhysicalPointForPerMonitorDPI(root, &lt) ||
+      !api.LogicalToPhysicalPointForPerMonitorDPI(root, &rb)) {
+    return false;
+  }
+  *outRect = RECT{lt.x, lt.y, rb.x, rb.y};
+  return true;
+}
+
+// 非 Per-Monitor DPI 宿主在副屏会被 DWM 虚拟化缩放：
+// 单显示器整窗内使用顶层窗口逻辑矩形到物理矩形的仿射映射；跨显示器骑跨或超出窗口边界时优先走逐点
+// LogicalToPhysicalPointForPerMonitorDPI。
+RECT ConvertRectToPhysicalScreen(const RECT& logicalRect,
+                                 ITfContextView* contextView) {
+  const User32DpiApi& api = GetUser32DpiApi();
+  if (IsCurrentThreadPerMonitorDpiAware(api))
+    return logicalRect;
+
+  HWND root = ResolveHostRootWindow(contextView);
+  if (!root)
+    return logicalRect;
+
+  RECT rcLogical{};
+  RECT rcPhysical{};
+  bool hasValidWindowBounds = false;
+  bool isSingleMonitorWindow = false;
+  if (DoesWindowMatchCurrentThreadDpiContext(api, root) &&
+      ::GetWindowRect(root, &rcLogical) &&
+      TryGetPhysicalWindowRect(api, root, &rcPhysical,
+                               &isSingleMonitorWindow)) {
+    const int logW = rcLogical.right - rcLogical.left;
+    const int logH = rcLogical.bottom - rcLogical.top;
+    const int physW = rcPhysical.right - rcPhysical.left;
+    const int physH = rcPhysical.bottom - rcPhysical.top;
+    hasValidWindowBounds = (logW > 0 && logH > 0 && physW > 0 && physH > 0);
+    if (hasValidWindowBounds && isSingleMonitorWindow &&
+        IsRectWithinBounds(logicalRect, rcLogical) &&
+        IsRectOnSingleMonitor(rcLogical)) {
+      return ScaleRectBetweenWindowBounds(logicalRect, rcLogical, rcPhysical);
+    }
+  }
+
+  RECT converted{};
+  if (TryConvertRectByPerMonitorDpiApi(api, root, logicalRect, &converted))
+    return converted;
+
+  if (hasValidWindowBounds)
+    return ScaleRectBetweenWindowBounds(logicalRect, rcLogical, rcPhysical);
+
+  return logicalRect;
+}
+}  // namespace
+
 /* Get Text Extent */
 class CGetTextExtentEditSession : public CEditSession {
  public:
@@ -185,25 +345,26 @@ STDMETHODIMP CGetTextExtentEditSession::DoEditSession(TfEditCookie ec) {
     // get the foreground window pos and check if rc from GetTextExt is out of
     // window
     if (_enhancedPosition) {
-      HWND hwnd;
-      RECT rcForegroundWindow;
-      hwnd = GetForegroundWindow();
-      ::GetWindowRect(hwnd, &rcForegroundWindow);
-
-      if (rc.left < rcForegroundWindow.left ||
-          rc.left > rcForegroundWindow.right ||
-          rc.top < rcForegroundWindow.top ||
-          rc.top > rcForegroundWindow.bottom) {
-        POINT pt;
-        bool hasCaret = ::GetCaretPos(&pt);
-        int offsetx = rcForegroundWindow.left - rc.left + (hasCaret ? pt.x : 0);
-        int offsety = rcForegroundWindow.top - rc.top + (hasCaret ? pt.y : 0);
-        rc.left += offsetx;
-        rc.right += offsetx;
-        rc.top += offsety;
-        rc.bottom += offsety;
+      HWND hwnd = GetForegroundWindow();
+      RECT rcForegroundWindow{};
+      if (hwnd && ::GetWindowRect(hwnd, &rcForegroundWindow)) {
+        if (rc.left < rcForegroundWindow.left ||
+            rc.left > rcForegroundWindow.right ||
+            rc.top < rcForegroundWindow.top ||
+            rc.top > rcForegroundWindow.bottom) {
+          POINT pt{};
+          bool hasCaret = ::GetCaretPos(&pt);
+          int offsetx =
+              rcForegroundWindow.left - rc.left + (hasCaret ? pt.x : 0);
+          int offsety = rcForegroundWindow.top - rc.top + (hasCaret ? pt.y : 0);
+          rc.left += offsetx;
+          rc.right += offsetx;
+          rc.top += offsety;
+          rc.bottom += offsety;
+        }
       }
     }
+    rc = ConvertRectToPhysicalScreen(rc, _pContextView);
     _pTextService->_SetCompositionPosition(rc);
   }
   return S_OK;

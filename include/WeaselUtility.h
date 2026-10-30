@@ -367,3 +367,90 @@ inline void HR_Impl(HRESULT const result, const char* file, int line) {
     throw ComException(result);
   }
 }
+
+namespace weasel {
+
+struct User32DpiApi {
+  using SetThreadDpiAwarenessContextFunc =
+      DPI_AWARENESS_CONTEXT(WINAPI*)(DPI_AWARENESS_CONTEXT);
+  using GetThreadDpiAwarenessContextFunc = DPI_AWARENESS_CONTEXT(WINAPI*)();
+  using GetWindowDpiAwarenessContextFunc = DPI_AWARENESS_CONTEXT(WINAPI*)(HWND);
+  using GetAwarenessFromDpiAwarenessContextFunc =
+      DPI_AWARENESS(WINAPI*)(DPI_AWARENESS_CONTEXT);
+  using AreDpiAwarenessContextsEqualFunc = BOOL(WINAPI*)(DPI_AWARENESS_CONTEXT,
+                                                         DPI_AWARENESS_CONTEXT);
+  using LogicalToPhysicalPointForPerMonitorDPIFunc = BOOL(WINAPI*)(HWND,
+                                                                   LPPOINT);
+
+  SetThreadDpiAwarenessContextFunc SetThreadDpiAwarenessContext;
+  GetThreadDpiAwarenessContextFunc GetThreadDpiAwarenessContext;
+  GetWindowDpiAwarenessContextFunc GetWindowDpiAwarenessContext;
+  GetAwarenessFromDpiAwarenessContextFunc GetAwarenessFromDpiAwarenessContext;
+  AreDpiAwarenessContextsEqualFunc AreDpiAwarenessContextsEqual;
+  LogicalToPhysicalPointForPerMonitorDPIFunc
+      LogicalToPhysicalPointForPerMonitorDPI;
+};
+
+inline BOOL CALLBACK InitUser32DpiApi(PINIT_ONCE, PVOID param, PVOID*) {
+  auto* loaded = static_cast<User32DpiApi*>(param);
+  HMODULE user32 = ::GetModuleHandleW(L"user32.dll");
+  if (!user32)
+    return TRUE;
+  loaded->SetThreadDpiAwarenessContext =
+      reinterpret_cast<User32DpiApi::SetThreadDpiAwarenessContextFunc>(
+          ::GetProcAddress(user32, "SetThreadDpiAwarenessContext"));
+  loaded->GetThreadDpiAwarenessContext =
+      reinterpret_cast<User32DpiApi::GetThreadDpiAwarenessContextFunc>(
+          ::GetProcAddress(user32, "GetThreadDpiAwarenessContext"));
+  loaded->GetWindowDpiAwarenessContext =
+      reinterpret_cast<User32DpiApi::GetWindowDpiAwarenessContextFunc>(
+          ::GetProcAddress(user32, "GetWindowDpiAwarenessContext"));
+  loaded->GetAwarenessFromDpiAwarenessContext =
+      reinterpret_cast<User32DpiApi::GetAwarenessFromDpiAwarenessContextFunc>(
+          ::GetProcAddress(user32, "GetAwarenessFromDpiAwarenessContext"));
+  loaded->AreDpiAwarenessContextsEqual =
+      reinterpret_cast<User32DpiApi::AreDpiAwarenessContextsEqualFunc>(
+          ::GetProcAddress(user32, "AreDpiAwarenessContextsEqual"));
+  loaded->LogicalToPhysicalPointForPerMonitorDPI = reinterpret_cast<
+      User32DpiApi::LogicalToPhysicalPointForPerMonitorDPIFunc>(
+      ::GetProcAddress(user32, "LogicalToPhysicalPointForPerMonitorDPI"));
+  return TRUE;
+}
+
+inline const User32DpiApi& GetUser32DpiApi() {
+  static INIT_ONCE init_once = INIT_ONCE_STATIC_INIT;
+  static User32DpiApi api{};
+  ::InitOnceExecuteOnce(&init_once, InitUser32DpiApi, &api, nullptr);
+  return api;
+}
+
+class ThreadDpiAwarenessScope {
+ public:
+  ThreadDpiAwarenessScope() {
+    const auto pSetThreadDpiAwarenessContext =
+        GetUser32DpiApi().SetThreadDpiAwarenessContext;
+    if (pSetThreadDpiAwarenessContext) {
+      old_context_ = pSetThreadDpiAwarenessContext(
+          DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+      if (!old_context_) {
+        old_context_ = pSetThreadDpiAwarenessContext(
+            DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+      }
+      setter_ = pSetThreadDpiAwarenessContext;
+    }
+  }
+
+  ~ThreadDpiAwarenessScope() {
+    if (setter_ && old_context_) {
+      setter_(old_context_);
+    }
+  }
+
+  bool IsActive() const { return old_context_ != nullptr; }
+
+ private:
+  DPI_AWARENESS_CONTEXT old_context_ = nullptr;
+  User32DpiApi::SetThreadDpiAwarenessContextFunc setter_ = nullptr;
+};
+
+}  // namespace weasel
