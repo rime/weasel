@@ -133,6 +133,176 @@ void WeaselTSF::_EndComposition(com_ptr<ITfContext> pContext,
   }
 }
 
+namespace {
+struct User32DpiApi {
+  using SetThreadDpiAwarenessContextFunc =
+      DPI_AWARENESS_CONTEXT(WINAPI*)(DPI_AWARENESS_CONTEXT);
+  using GetThreadDpiAwarenessContextFunc = DPI_AWARENESS_CONTEXT(WINAPI*)();
+  using GetWindowDpiAwarenessContextFunc = DPI_AWARENESS_CONTEXT(WINAPI*)(HWND);
+  using GetAwarenessFromDpiAwarenessContextFunc =
+      DPI_AWARENESS(WINAPI*)(DPI_AWARENESS_CONTEXT);
+  using AreDpiAwarenessContextsEqualFunc = BOOL(WINAPI*)(DPI_AWARENESS_CONTEXT,
+                                                         DPI_AWARENESS_CONTEXT);
+  using LogicalToPhysicalPointForPerMonitorDPIFunc = BOOL(WINAPI*)(HWND,
+                                                                   LPPOINT);
+
+  SetThreadDpiAwarenessContextFunc SetThreadDpiAwarenessContext;
+  GetThreadDpiAwarenessContextFunc GetThreadDpiAwarenessContext;
+  GetWindowDpiAwarenessContextFunc GetWindowDpiAwarenessContext;
+  GetAwarenessFromDpiAwarenessContextFunc GetAwarenessFromDpiAwarenessContext;
+  AreDpiAwarenessContextsEqualFunc AreDpiAwarenessContextsEqual;
+  LogicalToPhysicalPointForPerMonitorDPIFunc
+      LogicalToPhysicalPointForPerMonitorDPI;
+};
+
+BOOL CALLBACK InitUser32DpiApi(PINIT_ONCE, PVOID param, PVOID*) {
+  auto* loaded = static_cast<User32DpiApi*>(param);
+  HMODULE user32 = ::GetModuleHandleW(L"user32.dll");
+  if (!user32)
+    return TRUE;
+  loaded->SetThreadDpiAwarenessContext =
+      reinterpret_cast<User32DpiApi::SetThreadDpiAwarenessContextFunc>(
+          ::GetProcAddress(user32, "SetThreadDpiAwarenessContext"));
+  loaded->GetThreadDpiAwarenessContext =
+      reinterpret_cast<User32DpiApi::GetThreadDpiAwarenessContextFunc>(
+          ::GetProcAddress(user32, "GetThreadDpiAwarenessContext"));
+  loaded->GetWindowDpiAwarenessContext =
+      reinterpret_cast<User32DpiApi::GetWindowDpiAwarenessContextFunc>(
+          ::GetProcAddress(user32, "GetWindowDpiAwarenessContext"));
+  loaded->GetAwarenessFromDpiAwarenessContext =
+      reinterpret_cast<User32DpiApi::GetAwarenessFromDpiAwarenessContextFunc>(
+          ::GetProcAddress(user32, "GetAwarenessFromDpiAwarenessContext"));
+  loaded->AreDpiAwarenessContextsEqual =
+      reinterpret_cast<User32DpiApi::AreDpiAwarenessContextsEqualFunc>(
+          ::GetProcAddress(user32, "AreDpiAwarenessContextsEqual"));
+  loaded->LogicalToPhysicalPointForPerMonitorDPI = reinterpret_cast<
+      User32DpiApi::LogicalToPhysicalPointForPerMonitorDPIFunc>(
+      ::GetProcAddress(user32, "LogicalToPhysicalPointForPerMonitorDPI"));
+  return TRUE;
+}
+
+const User32DpiApi& GetUser32DpiApi() {
+  static INIT_ONCE initOnce = INIT_ONCE_STATIC_INIT;
+  static User32DpiApi api{};
+  ::InitOnceExecuteOnce(&initOnce, InitUser32DpiApi, &api, nullptr);
+  return api;
+}
+
+bool IsCurrentThreadPerMonitorDpiAware(const User32DpiApi& api) {
+  if (!api.GetThreadDpiAwarenessContext ||
+      !api.GetAwarenessFromDpiAwarenessContext) {
+    return false;
+  }
+  const DPI_AWARENESS_CONTEXT ctx = api.GetThreadDpiAwarenessContext();
+  return ctx && api.GetAwarenessFromDpiAwarenessContext(ctx) ==
+                    DPI_AWARENESS_PER_MONITOR_AWARE;
+}
+
+HWND ResolveHostRootWindow(ITfContextView* contextView) {
+  HWND hwnd = nullptr;
+  if (contextView) {
+    contextView->GetWnd(&hwnd);
+  }
+  if (!hwnd || !::IsWindow(hwnd)) {
+    hwnd = ::GetFocus();
+  }
+  if (!hwnd || !::IsWindow(hwnd)) {
+    HWND fg = ::GetForegroundWindow();
+    if (fg && ::IsWindow(fg) &&
+        ::GetWindowThreadProcessId(fg, nullptr) == ::GetCurrentThreadId()) {
+      hwnd = fg;
+    }
+  }
+  if (!hwnd || !::IsWindow(hwnd))
+    return nullptr;
+
+  HWND root = ::GetAncestor(hwnd, GA_ROOT);
+  if (!root || !::IsWindow(root))
+    root = hwnd;
+  return ::IsIconic(root) ? nullptr : root;
+}
+
+bool DoesWindowMatchCurrentThreadDpiContext(const User32DpiApi& api,
+                                            HWND hwnd) {
+  if (!api.GetThreadDpiAwarenessContext || !api.GetWindowDpiAwarenessContext ||
+      !api.AreDpiAwarenessContextsEqual) {
+    return true;
+  }
+  return !!api.AreDpiAwarenessContextsEqual(
+      api.GetThreadDpiAwarenessContext(),
+      api.GetWindowDpiAwarenessContext(hwnd));
+}
+
+bool TryGetPhysicalWindowRect(const User32DpiApi& api,
+                              HWND hwnd,
+                              RECT* outRect) {
+  if (!api.SetThreadDpiAwarenessContext || !hwnd || !outRect)
+    return false;
+  DPI_AWARENESS_CONTEXT oldCtx = api.SetThreadDpiAwarenessContext(
+      DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+  if (!oldCtx) {
+    oldCtx = api.SetThreadDpiAwarenessContext(
+        DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+  }
+  if (!oldCtx)
+    return false;
+  const BOOL ok = ::GetWindowRect(hwnd, outRect);
+  api.SetThreadDpiAwarenessContext(oldCtx);
+  return !!ok;
+}
+
+RECT ScaleRectBetweenWindowBounds(const RECT& rc,
+                                  const RECT& srcBounds,
+                                  const RECT& dstBounds) {
+  const int srcW = srcBounds.right - srcBounds.left;
+  const int srcH = srcBounds.bottom - srcBounds.top;
+  const int dstW = dstBounds.right - dstBounds.left;
+  const int dstH = dstBounds.bottom - dstBounds.top;
+  RECT out = rc;
+  out.left = dstBounds.left + ::MulDiv(rc.left - srcBounds.left, dstW, srcW);
+  out.right = dstBounds.left + ::MulDiv(rc.right - srcBounds.left, dstW, srcW);
+  out.top = dstBounds.top + ::MulDiv(rc.top - srcBounds.top, dstH, srcH);
+  out.bottom = dstBounds.top + ::MulDiv(rc.bottom - srcBounds.top, dstH, srcH);
+  return out;
+}
+
+// 非 Per-Monitor DPI 宿主（如 System-DPI-Aware 的传统桌面客户端）在副屏会被 DWM
+// 虚拟化缩放，
+// 通过宿主顶层窗口逻辑矩形到物理矩形的仿射映射还原真实屏幕物理坐标（兼容跨显示器骑跨窗口）。
+RECT ConvertRectToPhysicalScreen(const RECT& logicalRect,
+                                 ITfContextView* contextView) {
+  const User32DpiApi& api = GetUser32DpiApi();
+  if (IsCurrentThreadPerMonitorDpiAware(api))
+    return logicalRect;
+
+  HWND root = ResolveHostRootWindow(contextView);
+  if (root && DoesWindowMatchCurrentThreadDpiContext(api, root)) {
+    RECT rcLogical{};
+    RECT rcPhysical{};
+    if (::GetWindowRect(root, &rcLogical) &&
+        TryGetPhysicalWindowRect(api, root, &rcPhysical)) {
+      const int logW = rcLogical.right - rcLogical.left;
+      const int logH = rcLogical.bottom - rcLogical.top;
+      const int physW = rcPhysical.right - rcPhysical.left;
+      const int physH = rcPhysical.bottom - rcPhysical.top;
+      if (logW > 0 && logH > 0 && physW > 0 && physH > 0) {
+        return ScaleRectBetweenWindowBounds(logicalRect, rcLogical, rcPhysical);
+      }
+    }
+  }
+
+  if (api.LogicalToPhysicalPointForPerMonitorDPI) {
+    POINT lt{logicalRect.left, logicalRect.top};
+    POINT rb{logicalRect.right, logicalRect.bottom};
+    if (api.LogicalToPhysicalPointForPerMonitorDPI(root, &lt) &&
+        api.LogicalToPhysicalPointForPerMonitorDPI(root, &rb)) {
+      return RECT{lt.x, lt.y, rb.x, rb.y};
+    }
+  }
+  return logicalRect;
+}
+}  // namespace
+
 /* Get Text Extent */
 class CGetTextExtentEditSession : public CEditSession {
  public:
@@ -185,25 +355,26 @@ STDMETHODIMP CGetTextExtentEditSession::DoEditSession(TfEditCookie ec) {
     // get the foreground window pos and check if rc from GetTextExt is out of
     // window
     if (_enhancedPosition) {
-      HWND hwnd;
-      RECT rcForegroundWindow;
-      hwnd = GetForegroundWindow();
-      ::GetWindowRect(hwnd, &rcForegroundWindow);
-
-      if (rc.left < rcForegroundWindow.left ||
-          rc.left > rcForegroundWindow.right ||
-          rc.top < rcForegroundWindow.top ||
-          rc.top > rcForegroundWindow.bottom) {
-        POINT pt;
-        bool hasCaret = ::GetCaretPos(&pt);
-        int offsetx = rcForegroundWindow.left - rc.left + (hasCaret ? pt.x : 0);
-        int offsety = rcForegroundWindow.top - rc.top + (hasCaret ? pt.y : 0);
-        rc.left += offsetx;
-        rc.right += offsetx;
-        rc.top += offsety;
-        rc.bottom += offsety;
+      HWND hwnd = GetForegroundWindow();
+      RECT rcForegroundWindow{};
+      if (hwnd && ::GetWindowRect(hwnd, &rcForegroundWindow)) {
+        if (rc.left < rcForegroundWindow.left ||
+            rc.left > rcForegroundWindow.right ||
+            rc.top < rcForegroundWindow.top ||
+            rc.top > rcForegroundWindow.bottom) {
+          POINT pt{};
+          bool hasCaret = ::GetCaretPos(&pt);
+          int offsetx =
+              rcForegroundWindow.left - rc.left + (hasCaret ? pt.x : 0);
+          int offsety = rcForegroundWindow.top - rc.top + (hasCaret ? pt.y : 0);
+          rc.left += offsetx;
+          rc.right += offsetx;
+          rc.top += offsety;
+          rc.bottom += offsety;
+        }
       }
     }
+    rc = ConvertRectToPhysicalScreen(rc, _pContextView);
     _pTextService->_SetCompositionPosition(rc);
   }
   return S_OK;
