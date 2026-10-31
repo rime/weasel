@@ -6,6 +6,9 @@ namespace weasel {
 class UIImpl {
  public:
   WeaselPanel panel;
+  // 本次输入是否已经收到过有效的光标位置（见 UI::UpdateInputPosition）
+  bool has_position = false;
+  bool pending_show = false;
   UIImpl(UI& ui) : panel(ui) {}
   ~UIImpl() {}
   bool IsShown() const {
@@ -23,11 +26,22 @@ class UIImpl {
   void Show() {
     if (!panel.IsWindow())
       return;
+    // TSF 侧的光标位置是异步取回的（WeaselTSF/Composition.cpp 里
+    // RequestEditSession(TF_ES_ASYNCDONTCARE)），若此处立刻显示，
+    // 候选窗会先画在上一段输入的位置再跳过去。先挂起，等位置到达后
+    // 由 UI::UpdateInputPosition 触发显示；ShowDeferred 负责超时兜底。
+    if (!has_position) {
+      pending_show = true;
+      panel.ShowDeferred(80);
+      return;
+    }
     panel.ShowWindow(SW_SHOWNA);
   }
   void Hide() {
     if (!panel.IsWindow())
       return;
+    pending_show = false;
+    has_position = false;
     panel.ShowWindow(SW_HIDE);
   }
   void ShowWithTimeout(size_t millisec) { panel.ShowWithTimeout(millisec); }
@@ -50,6 +64,12 @@ BOOL UI::IsShown() const {
 void UI::UpdateInputPosition(RECT const& rc) {
   if (pimpl_ && pimpl_->panel.IsWindow()) {
     pimpl_->panel.MoveTo(rc);
+    pimpl_->has_position = true;
+    if (pimpl_->pending_show) {
+      // 位置已就绪，补上之前被挂起的显示
+      pimpl_->pending_show = false;
+      pimpl_->panel.ShowWindow(SW_SHOWNA);
+    }
   }
 }
 void UI::Update(const Context& ctx, const Status& status) {
