@@ -22,8 +22,14 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
     return;
   }
   weasel::KeyEvent ke;
+  KeyInfo keyInfo(lParam);
+  if (_keyboardLayoutId != _config.keyboard_layout) {
+    _keyboardLayoutId = _config.keyboard_layout;
+    _keyboardLayout = FindKeyboardLayout(_keyboardLayoutId.c_str());
+  }
   GetKeyboardState(_lpbKeyState);
-  if (!ConvertKeyEvent(static_cast<UINT>(wParam), lParam, _lpbKeyState, ke)) {
+  if (!ConvertKeyEvent(static_cast<UINT>(wParam), keyInfo, _lpbKeyState,
+                       _keyboardLayout, ke)) {
     /* Unknown key event */
     *pfEaten = FALSE;
   } else {
@@ -36,6 +42,15 @@ void WeaselTSF::_ProcessKeyEvent(WPARAM wParam, LPARAM lParam, BOOL* pfEaten) {
     }
     if (!keyCountToSimulate)
       *pfEaten = (BOOL)m_client.ProcessKeyEvent(ke);
+
+    const bool unmodified =
+        !(ke.mask & (ibus::CONTROL_MASK | ibus::ALT_MASK | ibus::META_MASK |
+                     ibus::SUPER_MASK | ibus::RELEASE_MASK));
+    if (!*pfEaten && _status.ascii_mode && !_status.composing && unmodified &&
+        _keyboardLayout && ke.keycode >= 0x20 && ke.keycode < 0xff00) {
+      _pendingAsciiText.assign(1, static_cast<wchar_t>(ke.keycode));
+      *pfEaten = TRUE;
+    }
 
     if (ke.keycode == ibus::Caps_Lock) {
       if (prevKeyEvent.keycode == ibus::Caps_Lock && prevfEaten == TRUE &&
@@ -110,6 +125,10 @@ STDMETHODIMP WeaselTSF::OnKeyDown(ITfContext* pContext,
   } else {
     _ProcessKeyEvent(wParam, lParam, pfEaten);
     _UpdateComposition(pContext);
+  }
+  if (*pfEaten && !_pendingAsciiText.empty()) {
+    _InsertTextAtSelection(pContext, _pendingAsciiText);
+    _pendingAsciiText.clear();
   }
   return S_OK;
 }
