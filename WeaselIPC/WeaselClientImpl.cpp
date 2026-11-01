@@ -174,6 +174,11 @@ bool ClientImpl::Echo() {
   return (serverEcho == session_id);
 }
 
+bool ClientImpl::GetStatus() {
+  LRESULT ret = _SendMessage(WEASEL_IPC_GET_STATUS, 0, session_id);
+  return ret != 0;
+}
+
 bool ClientImpl::GetResponseData(ResponseHandler const& handler) {
   if (!handler) {
     return false;
@@ -278,6 +283,10 @@ void Client::TrayCommand(UINT menuId) {
 
 bool Client::Echo() {
   return m_pImpl->Echo();
+}
+
+bool Client::GetStatus() {
+  return m_pImpl->GetStatus();
 }
 
 bool Client::GetResponseData(ResponseHandler handler) {
