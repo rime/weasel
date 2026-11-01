@@ -21,31 +21,64 @@ using namespace weasel;
   ((((color & 0xff000000) >> 25) & 0xff) << 24) | (color & 0x00ffffff)
 
 namespace {
+using SetThreadDpiAwarenessContextFunc =
+    DPI_AWARENESS_CONTEXT(WINAPI*)(DPI_AWARENESS_CONTEXT);
+
+BOOL CALLBACK InitSetThreadDpiAwarenessContextFunc(PINIT_ONCE,
+                                                   PVOID param,
+                                                   PVOID*) {
+  auto* fn = static_cast<SetThreadDpiAwarenessContextFunc*>(param);
+  HMODULE user32 = ::GetModuleHandleW(L"user32.dll");
+  if (user32) {
+    *fn = reinterpret_cast<SetThreadDpiAwarenessContextFunc>(
+        ::GetProcAddress(user32, "SetThreadDpiAwarenessContext"));
+  }
+  return TRUE;
+}
+
+SetThreadDpiAwarenessContextFunc GetSetThreadDpiAwarenessContextFunc() {
+  static INIT_ONCE init_once = INIT_ONCE_STATIC_INIT;
+  static SetThreadDpiAwarenessContextFunc fn = nullptr;
+  ::InitOnceExecuteOnce(&init_once, InitSetThreadDpiAwarenessContextFunc, &fn,
+                        nullptr);
+  return fn;
+}
+
 class ThreadDpiAwarenessScope {
  public:
   ThreadDpiAwarenessScope() {
-    using SetThreadDpiAwarenessContextFunc =
-        DPI_AWARENESS_CONTEXT(WINAPI*)(DPI_AWARENESS_CONTEXT);
     const auto pSetThreadDpiAwarenessContext =
-        reinterpret_cast<SetThreadDpiAwarenessContextFunc>(GetProcAddress(
-            GetModuleHandleW(L"user32.dll"), "SetThreadDpiAwarenessContext"));
+        GetSetThreadDpiAwarenessContextFunc();
     if (pSetThreadDpiAwarenessContext) {
       old_context_ = pSetThreadDpiAwarenessContext(
           DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+      if (!old_context_) {
+        old_context_ = pSetThreadDpiAwarenessContext(
+            DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+      }
       setter_ = pSetThreadDpiAwarenessContext;
     }
   }
 
   ~ThreadDpiAwarenessScope() {
-    if (setter_) {
+    if (setter_ && old_context_) {
       setter_(old_context_);
     }
   }
 
  private:
   DPI_AWARENESS_CONTEXT old_context_ = nullptr;
-  DPI_AWARENESS_CONTEXT(WINAPI* setter_)(DPI_AWARENESS_CONTEXT) = nullptr;
+  SetThreadDpiAwarenessContextFunc setter_ = nullptr;
 };
+POINT ResolveInitialPopupOrigin(HWND parent, bool preview_mode) {
+  if (!preview_mode && parent && ::IsWindow(parent)) {
+    RECT parent_rect{};
+    if (::GetWindowRect(parent, &parent_rect)) {
+      return POINT{parent_rect.left, parent_rect.top};
+    }
+  }
+  return POINT{0, 0};
+}
 
 wstring FormatCandidateLabel(const wstring& label, const wchar_t* format) {
   wchar_t buffer[128];
@@ -145,6 +178,7 @@ bool WeaselPanel::IsCountingDown() const {
 }
 
 void WeaselPanel::ShowWindow(int nCmdShow) {
+  ThreadDpiAwarenessScope dpi_scope;
   ::ShowWindow(m_hWnd, nCmdShow);
   if (m_pD2D) {
     if (nCmdShow != SW_HIDE) {
@@ -183,9 +217,23 @@ void WeaselPanel::ReleaseAllResources() {
   }
 }
 
+void WeaselPanel::_PrimeTargetMonitorPosition(const RECT& rc) {
+  m_sticky = false;
+  m_inputPos = rc;
+  m_inputPos.bottom += 6;
+  m_hMonitor = MonitorFromRect(&m_inputPos, MONITOR_DEFAULTTONEAREST);
+  SetWindowPos(m_hWnd, HWND_TOPMOST, m_inputPos.left, m_inputPos.bottom, 0, 0,
+               SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREDRAW);
+}
+
 void WeaselPanel::MoveTo(RECT rc) {
-  if (!m_hWnd || !m_layout)
+  ThreadDpiAwarenessScope dpi_scope;
+  if (!m_hWnd)
     return;
+  if (!m_layout) {
+    _PrimeTargetMonitorPosition(rc);
+    return;
+  }
   m_redraw_by_monitor_change = false;
   bool should_reset_sticky =
       (m_ctx.empty() || (abs(rc.left - m_inputPos.left) > 50) ||
@@ -194,7 +242,7 @@ void WeaselPanel::MoveTo(RECT rc) {
     m_sticky = false;
     m_inputPos = rc;
     m_inputPos.bottom += 6;
-    _Reposition(true);
+    _Reposition();
     RedrawWindow();
     return;
   }
@@ -204,7 +252,7 @@ void WeaselPanel::MoveTo(RECT rc) {
     ::GetCursorPos(&p);
     RECT irc{p.x - STATUS_ICON_SIZE, p.y - STATUS_ICON_SIZE, p.x, p.y};
     m_inputPos = irc;
-    _Reposition(true);
+    _Reposition();
     RedrawWindow();
   } else if (!(rc.left == m_inputPos.left && rc.bottom != m_inputPos.bottom &&
                abs(rc.bottom - m_inputPos.bottom) < 6) ||
@@ -212,8 +260,13 @@ void WeaselPanel::MoveTo(RECT rc) {
     m_inputPos = rc;
     m_inputPos.bottom += 6;
     bool m_istorepos_buf = m_istorepos;
-    _Reposition(true);
+    _Reposition();
     if (m_redraw_by_monitor_change) {
+      if (m_pD2D) {
+        m_pD2D->InitDpiInfo();
+        if (!m_style.font_face.empty())
+          m_pD2D->InitDirectWriteResources();
+      }
       Refresh();
       return;
     }
@@ -225,6 +278,7 @@ void WeaselPanel::MoveTo(RECT rc) {
 }
 
 void WeaselPanel::_ResizeWindow() {
+  ThreadDpiAwarenessScope dpi_scope;
   const CSize& size = m_layout->GetContentSize();
   RECT client_rect{};
   GetClientRect(m_hWnd, &client_rect);
@@ -298,6 +352,7 @@ void WeaselPanel::_UpdateHideCandidates() {
 }
 
 void WeaselPanel::Refresh() {
+  ThreadDpiAwarenessScope dpi_scope;
   if (!m_hWnd)
     return;
   if (!m_pD2D)
@@ -330,6 +385,7 @@ void WeaselPanel::Refresh() {
 }
 
 void WeaselPanel::RepositionPreview() {
+  ThreadDpiAwarenessScope dpi_scope;
   if (!m_hWnd || !m_preview_mode || m_preview_detached || !m_parent ||
       !m_layout)
     return;
@@ -349,6 +405,9 @@ void WeaselPanel::RepositionPreview() {
 BOOL WeaselPanel::Create(HWND parent, bool preview_mode) {
   if (m_hWnd)
     return !!m_hWnd;
+  // 候选窗本身以 Per-Monitor DPI Aware V2 运行，所有针对该 HWND
+  // 的坐标和尺寸操作均需统一在同一物理坐标系下执行
+  ThreadDpiAwarenessScope dpi_scope;
   m_parent = parent;
   m_preview_mode = preview_mode;
   m_preview_positioned = false;
@@ -370,13 +429,15 @@ BOOL WeaselPanel::Create(HWND parent, bool preview_mode) {
   if (!atom && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
     return FALSE;
   }
-  ThreadDpiAwarenessScope dpi_scope;
+  const POINT initial_origin =
+      ResolveInitialPopupOrigin(parent, m_preview_mode);
   const DWORD ex_style = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE |
                          (m_preview_mode ? 0 : WS_EX_TOPMOST) |
                          WS_EX_NOREDIRECTIONBITMAP;
-  m_hWnd = CreateWindowEx(
-      ex_style, L"WeaselPanel", L"WeaselPanel", WS_POPUP | WS_CLIPSIBLINGS,
-      CW_USEDEFAULT, CW_USEDEFAULT, 10, 10, parent, nullptr, hInstance, this);
+  m_hWnd = CreateWindowEx(ex_style, L"WeaselPanel", L"WeaselPanel",
+                          WS_POPUP | WS_CLIPSIBLINGS, initial_origin.x,
+                          initial_origin.y, 10, 10, parent, nullptr, hInstance,
+                          this);
   if (m_hWnd) {
     if (!m_pD2D) {
       DEBUG << "m_style.font_face: " << m_style.font_face;
@@ -822,7 +883,8 @@ void WeaselPanel::_HighlightRect(const RECT& rect,
   }
 }
 
-void WeaselPanel::_Reposition(bool adj) {
+void WeaselPanel::_Reposition() {
+  ThreadDpiAwarenessScope dpi_scope;
   if (!m_layout || !m_hWnd)
     return;
   RECT rcWorkArea;
@@ -852,11 +914,10 @@ void WeaselPanel::_Reposition(bool adj) {
           COLORTRANSPARENT(m_style.shadow_color))
              ? m_layout->offsetX
              : (m_layout->offsetX / 2);
-    if (adj)
-      y -= (DPI_SCALE(m_style.shadow_offset_y) > 0 ||
-            COLORTRANSPARENT(m_style.shadow_color))
-               ? m_layout->offsetY
-               : (m_layout->offsetY / 2);
+    y -= (DPI_SCALE(m_style.shadow_offset_y) > 0 ||
+          COLORTRANSPARENT(m_style.shadow_color))
+             ? m_layout->offsetY
+             : (m_layout->offsetY / 2);
   }
   if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT &&
       !m_style.vertical_text_left_to_right) {
@@ -864,8 +925,7 @@ void WeaselPanel::_Reposition(bool adj) {
     if (DPI_SCALE(m_style.shadow_offset_x) < 0)
       x += m_layout->offsetX;
   }
-  if (adj)
-    m_istorepos = false;
+  m_istorepos = false;
   if (x > rcWorkArea.right)
     x = rcWorkArea.right;
   if (x < rcWorkArea.left)
@@ -887,7 +947,6 @@ void WeaselPanel::_Reposition(bool adj) {
   }
   if (y < rcWorkArea.top)
     y = rcWorkArea.top;
-  m_inputPos.bottom = y;
   SetWindowPos(m_hWnd, HWND_TOPMOST, x, y, 0, 0,
                SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREDRAW);
 }
@@ -914,6 +973,7 @@ static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect) {
 }
 
 void WeaselPanel::_CaptureRect(CRect& rect) {
+  ThreadDpiAwarenessScope dpi_scope;
   HDC ScreenDC = ::GetDC(NULL);
   RECT rc_screen = rect;
   ::MapWindowPoints(m_hWnd, HWND_DESKTOP, reinterpret_cast<LPPOINT>(&rc_screen),
@@ -942,6 +1002,7 @@ void WeaselPanel::OnDestroy() {
   // The next HWND starts with a small placeholder size.
   m_lastWindowWidth = -1;
   m_lastWindowHeight = -1;
+  m_hMonitor = NULL;
   m_sticky = false;
   m_dragging = false;
 }
@@ -1181,6 +1242,7 @@ LRESULT WeaselPanel::MsgHandler(HWND hwnd,
                                 UINT uMsg,
                                 WPARAM wParam,
                                 LPARAM lParam) {
+  ThreadDpiAwarenessScope dpi_scope;
   switch (uMsg) {
     case WM_PAINT:
       DoPaint();
@@ -1214,6 +1276,7 @@ LRESULT WeaselPanel::MsgHandler(HWND hwnd,
         if (!m_style.font_face.empty())
           m_pD2D->InitDirectWriteResources();
       }
+      m_redraw_by_monitor_change = false;
       Refresh();
       return 0;
     case WM_TIMER:

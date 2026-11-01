@@ -43,7 +43,8 @@ class WeaselPanel {
   bool _DrawPreedit(const Text& text, bool isPreedit);
   bool _DrawCandidates();
   void _ResizeWindow();
-  void _Reposition(bool adj = false);
+  void _Reposition();
+  void _PrimeTargetMonitorPosition(const RECT& rc);
   void _TextOut(CRect& rc,
                 const wstring& text,
                 size_t cch,
