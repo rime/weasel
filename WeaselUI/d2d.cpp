@@ -3,6 +3,7 @@
 #include <ShellScalingApi.h>
 #include <VersionHelpers.hpp>
 #include <wincodec.h>
+#include <winternl.h>
 #include <algorithm>
 #include <regex>
 
@@ -10,6 +11,9 @@
 
 namespace weasel {
 namespace {
+// A raw TLS head has no destructor: thread/DLL detach must not release DXGI.
+thread_local D2D* deferredD2D = nullptr;
+
 UINT GetDpiForWindowCompat(HWND hwnd) {
   if (!hwnd)
     return 0;
@@ -20,16 +24,40 @@ UINT GetDpiForWindowCompat(HWND hwnd) {
 }
 }  // namespace
 
+bool IsLoaderLockHeld() {
+  using IsLockedFunc = BOOLEAN(NTAPI*)(PRTL_CRITICAL_SECTION);
+  static const auto isLocked = reinterpret_cast<IsLockedFunc>(GetProcAddress(
+      GetModuleHandleW(L"ntdll.dll"), "RtlIsCriticalSectionLockedByThread"));
+  if (!isLocked)
+    return true;
+    // PEB::LoaderLock is not exposed by the SDK; these offsets match the
+    // Windows x86 and 64-bit (x64/ARM64) PEB layouts checked by DXGI.
+#ifdef _WIN64
+  constexpr size_t loaderLockOffset = 0x110;
+#else
+  constexpr size_t loaderLockOffset = 0xa0;
+#endif
+  const auto peb =
+      reinterpret_cast<const BYTE*>(NtCurrentTeb()->ProcessEnvironmentBlock);
+  const auto lock =
+      *reinterpret_cast<PRTL_CRITICAL_SECTION const*>(peb + loaderLockOffset);
+  return !lock || isLocked(lock);
+}
+
 // DeviceResources implementation moved from cpp to header; provide definitions
 // here
 DeviceResources& DeviceResources::Get() {
-  static DeviceResources instance;
-  return instance;
+  // CRT static destruction runs under the loader lock. Explicit Reset() owns
+  // normal cleanup; let the OS reclaim any resources left at process exit.
+  static DeviceResources* const instance = new DeviceResources();
+  return *instance;
 }
 
 DeviceResources::DeviceResources() : initialized(false) {}
 
 HRESULT DeviceResources::EnsureInitialized() {
+  if (IsLoaderLockHeld())
+    return E_UNEXPECTED;
   if (initialized)
     return S_OK;
   HRESULT hr = S_OK;
@@ -92,6 +120,8 @@ HRESULT DeviceResources::EnsureInitialized() {
 }
 
 void DeviceResources::Reset() {
+  if (IsLoaderLockHeld())
+    return;
   // release shared device resources so they can be recreated
   SafeReleaseAll(direct3dDevice, dxgiDevice, dxFactory, d2Factory, d2Device,
                  dcompDevice, m_pWriteFactory, wicFactory);
@@ -126,14 +156,37 @@ void D2D::ReleaseWindowResources() {
 
 D2D::D2D(UIStyle& style)
     : m_style(style), m_hWnd(nullptr), m_dpiX(96.0f), m_dpiY(96.0f) {
+  ReleaseDeferred();
   // Prepare shared device resources early so formats can be built before window
   DeviceResources::Get().EnsureInitialized();
   // initialize dpi scales even without window (defaults to 96 DPI)
   InitDpiInfo();
 }
 
+void D2D::DeferRelease(std::shared_ptr<D2D> d2d) {
+  if (!d2d)
+    return;
+  auto* object = d2d.get();
+  object->m_nextDeferred = deferredD2D;
+  // Keep the existing control block alive without allocating another owner.
+  object->m_deferredOwner = std::move(d2d);
+  deferredD2D = object;
+}
+
+void D2D::ReleaseDeferred() {
+  if (IsLoaderLockHeld())
+    return;
+  // Only drain this thread's objects; the D2D factory is single-threaded.
+  while (deferredD2D) {
+    auto* object = deferredD2D;
+    deferredD2D = object->m_nextDeferred;
+    object->m_nextDeferred = nullptr;
+    auto owner = std::move(object->m_deferredOwner);
+  }
+}
+
 void D2D::AttachWindow(HWND hwnd) {
-  if (m_hWnd == hwnd && swapChain) {
+  if (m_hWnd == hwnd && IsReady()) {
     // Keep DPI scale in sync when window stays the same but monitor DPI
     // changes.
     InitDpiInfo();
@@ -153,6 +206,13 @@ D2D::~D2D() {
 }
 
 void D2D::InitDirect2D() {
+  if (IsLoaderLockHeld())
+    return;
+  const HWND hwnd = m_hWnd;
+  ReleaseWindowResources();
+  m_hWnd = hwnd;
+  dc.Reset();
+  m_pBrush.Reset();
   // clear device-dependent caches before reinitializing
   ClearDeviceDependentCaches();
   cachedIcon = nullptr;
@@ -177,8 +237,12 @@ void D2D::InitDirect2D() {
 
   // Create the Direct2D device context for this window (renders to
   // window-specific target)
-  HR(d2Device->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE,
-                                   dc.ReleaseAndGetAddressOf()));
+  hr = d2Device->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE,
+                                     dc.ReleaseAndGetAddressOf());
+  if (FAILED(hr)) {
+    DEBUG << "CreateDeviceContext failed: " << HRESULTToString(hr);
+    return;
+  }
   dc->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
   dc->SetTextAntialiasMode((D2D1_TEXT_ANTIALIAS_MODE)m_style.antialias_mode);
 
@@ -266,14 +330,19 @@ void D2D::InitDirect2D() {
   }
 }
 
-void D2D::OnResize(UINT width, UINT height) {
-  if (width == 0 || height == 0)
-    return;
-  if (!dc || !swapChain || !visual || !target || !dcompDevice) {
+bool D2D::OnResize(UINT width, UINT height) {
+  if (width == 0 || height == 0 || IsLoaderLockHeld())
+    return false;
+  if (!IsReady()) {
     InitDirect2D();
-    if (!dc || !swapChain || !visual || !target || !dcompDevice)
-      return;
+    return IsReady();
   }
+  // Rebuild at the current client size, then let the caller paint on success.
+  auto recover = [this](HRESULT result, const char* operation) {
+    DEBUG << operation << " failed: " << HRESULTToString(result);
+    InitDirect2D();
+    return IsReady();
+  };
   // Release Direct2D resources
   dc->SetTarget(nullptr);
   bitmap.Reset();
@@ -286,28 +355,40 @@ void D2D::OnResize(UINT width, UINT height) {
     // attempt device recovery
     DeviceResources::Get().Reset();
     // per-window resources will be recreated by re-initializing
-    InitDirect2D();
-    return;
+    return recover(hr, "ResizeBuffers");
   }
-  HR(hr);
+  // A graphics failure must not escape the TSF callback as a C++ exception.
+  if (FAILED(hr))
+    return recover(hr, "ResizeBuffers");
   // Retrieve the new swap chain's back buffer
-  HR(swapChain->GetBuffer(
+  hr = swapChain->GetBuffer(
       0, __uuidof(surface.Get()),
-      reinterpret_cast<void**>(surface.ReleaseAndGetAddressOf())));
+      reinterpret_cast<void**>(surface.ReleaseAndGetAddressOf()));
+  if (FAILED(hr))
+    return recover(hr, "GetBuffer");
   // Create a new Direct2D bitmap pointing to the new swap chain surface
   D2D1_BITMAP_PROPERTIES1 properties = {};
   properties.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
   properties.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
   properties.bitmapOptions =
       D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW;
-  HR(dc->CreateBitmapFromDxgiSurface(surface.Get(), properties,
-                                     bitmap.ReleaseAndGetAddressOf()));
+  hr = dc->CreateBitmapFromDxgiSurface(surface.Get(), properties,
+                                       bitmap.ReleaseAndGetAddressOf());
+  if (FAILED(hr))
+    return recover(hr, "CreateBitmapFromDxgiSurface");
   // Point the device context to the new bitmap for rendering
   dc->SetTarget(bitmap.Get());
   // Update DirectComposition target and visual
-  HR(visual->SetContent(swapChain.Get()));
-  HR(target->SetRoot(visual.Get()));
-  HR(dcompDevice->Commit());
+  hr = visual->SetContent(swapChain.Get());
+  if (FAILED(hr))
+    return recover(hr, "SetContent");
+  hr = target->SetRoot(visual.Get());
+  if (FAILED(hr))
+    return recover(hr, "SetRoot");
+  hr = dcompDevice->Commit();
+  if (FAILED(hr))
+    return recover(hr, "Commit");
+  return true;
 }
 
 std::vector<std::wstring> ws_split(const std::wstring& in,

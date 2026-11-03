@@ -10,6 +10,7 @@ class WeaselPanel {
  public:
   WeaselPanel(UI& ui);
   ~WeaselPanel() {
+    ReleaseAllResources();
     if (!m_current_zhung_icon.empty())
       DestroyIcon(m_iconEnabled);
     if (!m_current_ascii_icon.empty())
@@ -42,7 +43,7 @@ class WeaselPanel {
   void _CreateLayout();
   bool _DrawPreedit(const Text& text, bool isPreedit);
   bool _DrawCandidates();
-  void _ResizeWindow();
+  bool _ResizeWindow();
   void _Reposition(bool adj = false);
   void _TextOut(CRect& rc,
                 const wstring& text,
@@ -128,6 +129,8 @@ class WeaselPanel {
   UINT_PTR m_autoHideTimer = 0;
   int m_lastWindowWidth = -1;
   int m_lastWindowHeight = -1;
+  unsigned m_layoutGeneration = 0;
+  bool m_refreshPending = false;
 
  public:
   void ShowWithTimeout(size_t millisec);
