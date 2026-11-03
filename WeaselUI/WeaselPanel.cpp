@@ -226,6 +226,12 @@ void WeaselPanel::MoveTo(RECT rc) {
 
 void WeaselPanel::_ResizeWindow() {
   const CSize& size = m_layout->GetContentSize();
+  // Reject invalid signed dimensions before OnResize converts them to UINT.
+  if (size.cx <= 0 || size.cy <= 0) {
+    DEBUG << "Skipping invalid candidate window size: " << size.cx << "x"
+          << size.cy;
+    return;
+  }
   RECT client_rect{};
   GetClientRect(m_hWnd, &client_rect);
   const int client_width = client_rect.right - client_rect.left;
