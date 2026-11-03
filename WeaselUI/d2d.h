@@ -14,12 +14,15 @@
 #include <dwrite_2.h>
 #include <dxgi1_3.h>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
 #include <WeaselUtility.h>
 
 namespace weasel {
+
+bool IsLoaderLockHeld();
 
 typedef ComPtr<IDWriteTextFormat1> PtTextFormat;
 
@@ -95,9 +98,16 @@ struct IsToRoundStruct {
 struct D2D {
   // Construct without window; call AttachWindow when HWND is ready.
   D2D(UIStyle& style);
+  // No allocation or cross-thread locking while parking under the loader lock.
+  static void DeferRelease(std::shared_ptr<D2D> d2d);
+  static void ReleaseDeferred();
   // Allow constructing before window exists; attach window later to finish
   // init.
   void AttachWindow(HWND hwnd);
+  bool IsReady() const {
+    return dc && swapChain && visual && target && dcompDevice && bitmap &&
+           m_pBrush;
+  }
   ~D2D();
   void InitDirect2D();
   void InitDirectWriteResources();
@@ -112,7 +122,7 @@ struct D2D {
                        const int font_point,
                        const wstring& comment_font_face,
                        const int comment_font_point);
-  void OnResize(UINT width, UINT height);
+  bool OnResize(UINT width, UINT height);
   void SetBrushColor(uint32_t color);
   void GetTextSize(const wstring& text,
                    size_t nCount,
@@ -181,6 +191,10 @@ struct D2D {
   float m_dpiY;
   float m_dpiScaleFontPoint;
   float m_dpiScaleLayout;
+
+ private:
+  D2D* m_nextDeferred = nullptr;
+  std::shared_ptr<D2D> m_deferredOwner;
 };
 }  // namespace weasel
 #endif
