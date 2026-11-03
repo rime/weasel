@@ -135,7 +135,11 @@ void HorizontalLayout::DoLayout() {
     height = mintop_of_rows[row_cnt] + height_of_rows[row_cnt] - offsetY;
     width = MAX(width, max_width_of_rows);
   } else {
-    height -= _style.spacing + offsetY;
+    // Only laid-out preedit or auxiliary text contributes trailing spacing.
+    if ((!IsInlinePreedit() && !_context.preedit.str.empty()) ||
+        !_context.aux.str.empty())
+      height -= _style.spacing;
+    height -= offsetY;
     width += _style.hilite_spacing + _style.border;
   }
 
