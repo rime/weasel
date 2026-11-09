@@ -221,15 +221,22 @@ int install_ime_file(std::wstring& srcPath,
 
   GetSystemDirectoryW(path, _countof(path));
   std::wstring destPath = std::wstring(path) + L"\\weasel" + ext;
+  std::wstring destPath32 = destPath;
+  if (is_wow64()) {
+    WCHAR wowDir[MAX_PATH];
+    if (GetSystemWow64DirectoryW(wowDir, _countof(wowDir)) > 0) {
+      destPath32 = std::wstring(wowDir) + L"\\weasel" + ext;
+    }
+  }
 
   int retval = 0;
   // 复制 .dll/.ime 到系统目录
-  if (!copy_file(srcPath, destPath)) {
-    MSG_NOT_SILENT_ID_CAP(silent, destPath.c_str(), IDS_STR_INSTALL_FAILED,
+  if (!copy_file(srcPath, destPath32)) {
+    MSG_NOT_SILENT_ID_CAP(silent, destPath32.c_str(), IDS_STR_INSTALL_FAILED,
                           MB_ICONERROR | MB_OK);
     return 1;
   }
-  retval += func(destPath, true, false, false, profile, silent);
+  retval += func(destPath32, true, false, false, profile, silent);
   if (is_wow64()) {
     PVOID OldValue = NULL;
     // PW64DW64FR fnWow64DisableWow64FsRedirection =
@@ -244,6 +251,7 @@ int install_ime_file(std::wstring& srcPath,
       return 1;
     }
 
+    std::wstring destPathARM32;
     if (is_arm64_machine()) {
       WCHAR sysarm32[MAX_PATH];
       if (get_wow_arm32_system_dir(sysarm32, _countof(sysarm32)) > 0) {
@@ -252,13 +260,13 @@ int install_ime_file(std::wstring& srcPath,
         std::wstring srcPathARM32 = srcPath;
         ireplace_last(srcPathARM32, ext, L"ARM" + ext);
 
-        std::wstring destPathARM32 = std::wstring(sysarm32) + L"\\weasel" + ext;
+        destPathARM32 = std::wstring(sysarm32) + L"\\weasel" + ext;
         if (!copy_file(srcPathARM32, destPathARM32)) {
           MSG_NOT_SILENT_ID_CAP(silent, destPathARM32.c_str(),
                                 IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
+          Wow64RevertWow64FsRedirection(OldValue);
           return 1;
         }
-        retval += func(destPathARM32, true, true, true, profile, silent);
       }
 
       // Then install the ARM64 (and x64) version.
@@ -274,6 +282,7 @@ int install_ime_file(std::wstring& srcPath,
       if (!copy_file(srcPathX64, destPathX64)) {
         MSG_NOT_SILENT_ID_CAP(silent, destPathX64.c_str(),
                               IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
+        Wow64RevertWow64FsRedirection(OldValue);
         return 1;
       }
 
@@ -284,6 +293,7 @@ int install_ime_file(std::wstring& srcPath,
       if (!copy_file(srcPathARM64, destPathARM64)) {
         MSG_NOT_SILENT_ID_CAP(silent, destPathARM64.c_str(),
                               IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
+        Wow64RevertWow64FsRedirection(OldValue);
         return 1;
       }
 
@@ -294,17 +304,23 @@ int install_ime_file(std::wstring& srcPath,
       ireplace_last(srcPath, ext, L"x64" + ext);
     }
 
-    if (!copy_file(srcPath, destPath)) {
-      MSG_NOT_SILENT_ID_CAP(silent, destPath.c_str(), IDS_STR_INSTALL_FAILED,
-                            MB_ICONERROR | MB_OK);
-      return 1;
-    }
-    retval += func(destPath, true, true, false, profile, silent);
+    BOOL copyOk = copy_file(srcPath, destPath);
     if (Wow64RevertWow64FsRedirection(OldValue) == FALSE) {
       MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERRRECOVERFSREDIRECT,
                             IDS_STR_INSTALL_FAILED, MB_ICONERROR | MB_OK);
       return 1;
     }
+
+    if (!copyOk) {
+      MSG_NOT_SILENT_ID_CAP(silent, destPath.c_str(), IDS_STR_INSTALL_FAILED,
+                            MB_ICONERROR | MB_OK);
+      return 1;
+    }
+
+    if (!destPathARM32.empty()) {
+      retval += func(destPathARM32, true, true, true, profile, silent);
+    }
+    retval += func(destPath, true, true, false, profile, silent);
   }
   return retval;
 }
@@ -318,10 +334,31 @@ int uninstall_ime_file(const std::wstring& ext,
   GetSystemDirectoryW(path, _countof(path));
   std::wstring imePath(path);
   imePath += L"\\weasel" + ext;
-  if (func)
-    retval += func(imePath, false, false, false, profile, silent);
-  delete_file(imePath);
+  std::wstring imePath32 = imePath;
   if (is_wow64()) {
+    WCHAR wowDir[MAX_PATH];
+    if (GetSystemWow64DirectoryW(wowDir, _countof(wowDir)) > 0) {
+      imePath32 = std::wstring(wowDir) + L"\\weasel" + ext;
+    }
+  }
+
+  if (func)
+    retval += func(imePath32, false, false, false, profile, silent);
+  delete_file(imePath32);
+  if (is_wow64()) {
+    std::wstring imePathARM32;
+    if (is_arm64_machine()) {
+      WCHAR sysarm32[MAX_PATH];
+      if (get_wow_arm32_system_dir(sysarm32, _countof(sysarm32)) > 0) {
+        imePathARM32 = std::wstring(sysarm32) + L"\\weasel" + ext;
+        if (func)
+          retval += func(imePathARM32, false, true, true, profile, silent);
+      }
+    }
+
+    if (func)
+      retval += func(imePath, false, true, false, profile, silent);
+
     PVOID OldValue = NULL;
     if (Wow64DisableWow64FsRedirection(&OldValue) == FALSE) {
       MSG_NOT_SILENT_BY_IDS(silent, IDS_STR_ERRCANCELFSREDIRECT,
@@ -329,14 +366,8 @@ int uninstall_ime_file(const std::wstring& ext,
       return 1;
     }
 
-    if (func)
-      retval += func(imePath, false, true, false, profile, silent);
     if (is_arm64_machine()) {
-      WCHAR sysarm32[MAX_PATH];
-      if (get_wow_arm32_system_dir(sysarm32, _countof(sysarm32)) > 0) {
-        std::wstring imePathARM32 = std::wstring(sysarm32) + L"\\weasel" + ext;
-        if (func)
-          retval += func(imePathARM32, false, true, true, profile, silent);
+      if (!imePathARM32.empty()) {
         delete_file(imePathARM32);
       }
 
@@ -389,7 +420,7 @@ void enable_profile(BOOL fEnable, const std::wstring& profile) {
 // 注册TSF输入法
 int register_text_service(const std::wstring& tsf_path,
                           bool register_ime,
-                          bool is_wow64,
+                          bool is_x64,
                           bool is_wowarm32,
                           const std::wstring& profile,
                           bool silent) {
@@ -415,6 +446,31 @@ int register_text_service(const std::wstring& tsf_path,
     get_wow_arm32_system_dir(sysarm32, _countof(sysarm32));
 
     app = std::wstring(sysarm32) + L"\\" + app;
+  } else if (::is_wow64()) {
+    WCHAR winDir[MAX_PATH];
+    GetWindowsDirectoryW(winDir, _countof(winDir));
+    if (is_x64) {
+      std::wstring sysnative =
+          std::wstring(winDir) + L"\\Sysnative\\regsvr32.exe";
+      if (GetFileAttributesW(sysnative.c_str()) != INVALID_FILE_ATTRIBUTES) {
+        app = sysnative;
+      } else {
+        WCHAR sysDir[MAX_PATH];
+        GetSystemDirectoryW(sysDir, _countof(sysDir));
+        app = std::wstring(sysDir) + L"\\regsvr32.exe";
+      }
+    } else {
+      WCHAR wowDir[MAX_PATH];
+      if (GetSystemWow64DirectoryW(wowDir, _countof(wowDir)) > 0) {
+        app = std::wstring(wowDir) + L"\\regsvr32.exe";
+      } else {
+        app = std::wstring(winDir) + L"\\SysWOW64\\regsvr32.exe";
+      }
+    }
+  } else {
+    WCHAR sysDir[MAX_PATH];
+    GetSystemDirectoryW(sysDir, _countof(sysDir));
+    app = std::wstring(sysDir) + L"\\regsvr32.exe";
   }
 
   SHELLEXECUTEINFOW shExInfo = {0};
