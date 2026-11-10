@@ -21,6 +21,8 @@ using namespace weasel;
   ((((color & 0xff000000) >> 25) & 0xff) << 24) | (color & 0x00ffffff)
 
 namespace {
+constexpr UINT WM_WEASEL_REFRESH = WM_APP + 1;
+
 class ThreadDpiAwarenessScope {
  public:
   ThreadDpiAwarenessScope() {
@@ -145,6 +147,8 @@ bool WeaselPanel::IsCountingDown() const {
 }
 
 void WeaselPanel::ShowWindow(int nCmdShow) {
+  if (IsLoaderLockHeld())
+    return;
   ::ShowWindow(m_hWnd, nCmdShow);
   if (m_pD2D) {
     if (nCmdShow != SW_HIDE) {
@@ -163,9 +167,11 @@ void WeaselPanel::DestroyWindow() {
   _ClearTimers();
 
   if (m_pD2D) {
-    m_pD2D->ReleaseWindowResources();
-    // mark D2D as detached from any window
-    m_pD2D->m_hWnd = nullptr;
+    if (IsLoaderLockHeld()) {
+      D2D::DeferRelease(std::move(m_pD2D));
+    } else {
+      m_pD2D->ReleaseWindowResources();
+    }
   }
   ::DestroyWindow(m_hWnd);
   m_hWnd = nullptr;
@@ -176,15 +182,20 @@ void WeaselPanel::ReleaseAllResources() {
   _ClearTimers();
 
   if (m_pD2D) {
+    if (IsLoaderLockHeld()) {
+      D2D::DeferRelease(std::move(m_pD2D));
+      return;
+    }
     m_pD2D->ReleaseWindowResources();
     // explicitly reset shared devices
     DeviceResources::Get().Reset();
     m_pD2D.reset();
   }
+  D2D::ReleaseDeferred();
 }
 
 void WeaselPanel::MoveTo(RECT rc) {
-  if (!m_hWnd || !m_layout)
+  if (!m_hWnd || !m_layout || !m_pD2D || IsLoaderLockHeld())
     return;
   m_redraw_by_monitor_change = false;
   bool should_reset_sticky =
@@ -224,22 +235,42 @@ void WeaselPanel::MoveTo(RECT rc) {
   }
 }
 
-void WeaselPanel::_ResizeWindow() {
-  const CSize& size = m_layout->GetContentSize();
+bool WeaselPanel::_ResizeWindow() {
+  // SetWindowPos can re-enter Refresh() and replace the owning layout.
+  const CSize size = m_layout->GetContentSize();
+  const unsigned generation = m_layoutGeneration;
+  const HWND hwnd = m_hWnd;
+  // Reject invalid signed dimensions before OnResize converts them to UINT.
+  if (size.cx <= 0 || size.cy <= 0) {
+    DEBUG << "Skipping invalid candidate window size: " << size.cx << "x"
+          << size.cy;
+    return false;
+  }
   RECT client_rect{};
   GetClientRect(m_hWnd, &client_rect);
   const int client_width = client_rect.right - client_rect.left;
   const int client_height = client_rect.bottom - client_rect.top;
   if (m_lastWindowWidth == size.cx && m_lastWindowHeight == size.cy &&
       client_width == size.cx && client_height == size.cy &&
-      m_pD2D->swapChain) {
-    return;
+      m_pD2D->IsReady()) {
+    return true;
   }
-  SetWindowPos(m_hWnd, 0, 0, 0, size.cx, size.cy,
-               SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW);
-  m_pD2D->OnResize(size.cx, size.cy);
+  if (!SetWindowPos(hwnd, 0, 0, 0, size.cx, size.cy,
+                    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW))
+    return false;
+  if (!m_hWnd || m_hWnd != hwnd || !m_pD2D)
+    return false;
+  if (generation != m_layoutGeneration) {
+    // The outer SetWindowPos may have overwritten the nested refresh's size.
+    if (!m_refreshPending)
+      m_refreshPending = !!PostMessage(hwnd, WM_WEASEL_REFRESH, 0, 0);
+    return false;
+  }
+  if (!m_pD2D->OnResize(size.cx, size.cy))
+    return false;
   m_lastWindowWidth = size.cx;
   m_lastWindowHeight = size.cy;
+  return true;
 }
 
 void WeaselPanel::_CreateLayout() {
@@ -264,6 +295,7 @@ void WeaselPanel::_CreateLayout() {
         m_style, m_ctx, m_status, m_inputPos, std::move(layout), m_pD2D);
   }
   m_layout = std::move(layout);
+  ++m_layoutGeneration;
 }
 
 void WeaselPanel::_UpdateHideCandidates() {
@@ -298,7 +330,7 @@ void WeaselPanel::_UpdateHideCandidates() {
 }
 
 void WeaselPanel::Refresh() {
-  if (!m_hWnd)
+  if (!m_hWnd || IsLoaderLockHeld())
     return;
   if (!m_pD2D)
     m_pD2D = std::make_shared<D2D>(m_style);
@@ -319,7 +351,8 @@ void WeaselPanel::Refresh() {
   }
   _CreateLayout();
   m_layout->DoLayout();
-  _ResizeWindow();
+  if (!_ResizeWindow())
+    return;
   if (m_preview_mode) {
     if (!m_preview_positioned && !m_preview_detached)
       RepositionPreview();
@@ -347,6 +380,9 @@ void WeaselPanel::RepositionPreview() {
 }
 
 BOOL WeaselPanel::Create(HWND parent, bool preview_mode) {
+  if (IsLoaderLockHeld())
+    return FALSE;
+  D2D::ReleaseDeferred();
   if (m_hWnd)
     return !!m_hWnd;
   m_parent = parent;
@@ -421,15 +457,20 @@ void WeaselPanel::_UpdateOffsetY(CRect& arc, CRect& prc) {
 }
 
 void WeaselPanel::DoPaint() {
-  if (!m_pD2D || !m_layout || !m_pD2D->dc || !m_pD2D->swapChain)
+  if (IsLoaderLockHeld() || !m_pD2D || !m_layout)
     return;
+  if (!m_pD2D->IsReady()) {
+    m_pD2D->InitDirect2D();
+    if (!m_pD2D->IsReady())
+      return;
+  }
   auto hr = m_pD2D->direct3dDevice
                 ? m_pD2D->direct3dDevice->GetDeviceRemovedReason()
                 : DXGI_ERROR_DEVICE_REMOVED;
   if (FAILED(hr)) {
     DEBUG << HRESULTToString(hr);
     m_pD2D->InitDirect2D();
-    if (!m_pD2D->dc || !m_pD2D->swapChain)
+    if (!m_pD2D->IsReady())
       return;
   }
   m_pD2D->dc->BeginDraw();
@@ -823,7 +864,7 @@ void WeaselPanel::_HighlightRect(const RECT& rect,
 }
 
 void WeaselPanel::_Reposition(bool adj) {
-  if (!m_layout || !m_hWnd)
+  if (!m_layout || !m_hWnd || !m_pD2D || IsLoaderLockHeld())
     return;
   RECT rcWorkArea;
   memset(&rcWorkArea, 0, sizeof(rcWorkArea));
@@ -939,7 +980,9 @@ void WeaselPanel::OnDestroy() {
 
   m_hoverIndex = -1;
   m_layout.reset();
+  ++m_layoutGeneration;
   // The next HWND starts with a small placeholder size.
+  m_refreshPending = false;
   m_lastWindowWidth = -1;
   m_lastWindowHeight = -1;
   m_sticky = false;
@@ -1182,6 +1225,10 @@ LRESULT WeaselPanel::MsgHandler(HWND hwnd,
                                 WPARAM wParam,
                                 LPARAM lParam) {
   switch (uMsg) {
+    case WM_WEASEL_REFRESH:
+      m_refreshPending = false;
+      Refresh();
+      return 0;
     case WM_PAINT:
       DoPaint();
       break;
@@ -1203,6 +1250,8 @@ LRESULT WeaselPanel::MsgHandler(HWND hwnd,
     case WM_LBUTTONDOWN:
       return OnLeftClickDown(uMsg, wParam, lParam);
     case WM_DPICHANGED:
+      if (IsLoaderLockHeld())
+        return 0;
       if (lParam) {
         const auto* rc = reinterpret_cast<const RECT*>(lParam);
         ::SetWindowPos(hwnd, nullptr, rc->left, rc->top, rc->right - rc->left,

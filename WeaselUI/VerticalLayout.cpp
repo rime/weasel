@@ -135,8 +135,10 @@ void weasel::VerticalLayout::DoLayout() {
                                width - real_margin_x + offsetX, hlBot);
   }
 
-  /* Trim the last spacing if no candidates */
-  if (candidates_count == 0)
+  /* Trim trailing spacing only when preedit or auxiliary text added it. */
+  if (candidates_count == 0 &&
+      ((!IsInlinePreedit() && !_context.preedit.str.empty()) ||
+       !_context.aux.str.empty()))
     height -= _style.spacing;
 
   height += real_margin_y;
