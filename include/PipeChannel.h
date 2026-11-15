@@ -149,6 +149,7 @@ class PipeChannel : public PipeChannelBase {
       return handler((LPWSTR)_GetContext()->buffer.get(),
                      (UINT)(buff_size * sizeof(char) / sizeof(wchar_t)));
     } catch (...) {
+      OutputDebugStringW(L"weasel: IPC HandleResponseData handler threw\n");
       return false;
     }
   }

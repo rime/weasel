@@ -84,6 +84,7 @@ void ContextUpdater::_StoreCand(Deserializer::KeyType k,
   } catch (...) {
     // Stream/archive construction threw: leave cinfo untouched instead of
     // letting the exception escape into the TSF callback.
+    OutputDebugStringW(L"weasel: IPC ContextUpdater::_StoreCand construction failed\n");
     return;
   }
 

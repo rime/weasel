@@ -25,6 +25,7 @@ void Styler::Store(weasel::Deserializer::KeyType const& key,
     sty = temp;
   } catch (...) {
     // Stream/archive construction threw: leave the style unchanged.
+    OutputDebugStringW(L"weasel: IPC Styler::Store construction failed\n");
     return;
   }
 }

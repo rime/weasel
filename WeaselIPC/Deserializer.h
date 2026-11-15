@@ -17,6 +17,10 @@ bool TryDeserialize(boost::archive::text_wiarchive& ia, T& t) {
     ia >> t;
     return true;
   } catch (...) {
+    // Non-modal and non-throwing: a debugger (or log capture) can count
+    // these failures without blocking the host UI thread the way the
+    // MessageBoxA in issue #1949 did. One line per bad IPC payload.
+    OutputDebugStringW(L"weasel: IPC TryDeserialize failed\n");
     return false;
   }
 }

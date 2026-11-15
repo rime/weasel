@@ -72,6 +72,8 @@ STDMETHODIMP WeaselTSF::DoEditSession(TfEditCookie ec) {
     // An exception out of an edit-session callback is delivered to the TSF
     // manager (msctf) and crashes the host process with 0xc000041d. Swallow
     // anything here so a malformed IPC response never takes down the app.
+    // Keep the trace non-modal and non-throwing (issue #1949).
+    OutputDebugStringW(L"weasel: DoEditSession swallowed an exception\n");
     return TRUE;
   }
 }
