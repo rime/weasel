@@ -150,7 +150,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          msbuild.exe weasel.sln /t:TestResponseParser:Build /p:Configuration=Debug /p:Platform=x64 /p:WindowsTargetPlatformVersion=${{ env.SDKVER }} /fl7
+          $solutionDir = (Resolve-Path .).Path + '\'
+          msbuild.exe test\TestResponseParser\TestResponseParser.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:SolutionDir=$solutionDir /p:WindowsTargetPlatformVersion=${{ env.SDKVER }} /fl7
           if ($LASTEXITCODE -ne 0) {
             throw "TestResponseParser build failed with exit code $LASTEXITCODE"
           }
