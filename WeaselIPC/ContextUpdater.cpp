@@ -74,10 +74,16 @@ void ContextUpdater::_StoreCand(Deserializer::KeyType k,
   try {
     std::wstringstream ss(value);
     boost::archive::text_wiarchive ia(ss);
-    TryDeserialize(ia, cinfo);
+    // Deserialize into a temporary and publish it only on full success. A failed
+    // ia >> t can leave the target half-updated; TryDeserialize now reports that
+    // via its bool result, so cinfo is never polluted by a partial candidate.
+    CandidateInfo temp = cinfo;
+    if (!TryDeserialize(ia, temp))
+      return;
+    cinfo = temp;
   } catch (...) {
-    // Version/ABI mismatch between server and DLL: leave the candidate list
-    // untouched rather than let the exception escape into the TSF callback.
+    // Stream/archive construction threw: leave cinfo untouched instead of
+    // letting the exception escape into the TSF callback.
     return;
   }
 

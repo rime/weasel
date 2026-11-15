@@ -17,9 +17,14 @@ void Styler::Store(weasel::Deserializer::KeyType const& key,
   try {
     std::wstringstream ss(value);
     boost::archive::text_wiarchive ia(ss);
-    TryDeserialize(ia, sty);
+    // Deserialize into a temporary and publish it only on full success; a
+    // half-updated UIStyle would otherwise leak into the candidate UI.
+    UIStyle temp = sty;
+    if (!TryDeserialize(ia, temp))
+      return;
+    sty = temp;
   } catch (...) {
-    // Version/ABI mismatch: leave the style unchanged.
+    // Stream/archive construction threw: leave the style unchanged.
     return;
   }
 }
