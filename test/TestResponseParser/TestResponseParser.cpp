@@ -196,7 +196,6 @@ void test_9() {
   BOOST_TEST(!result);
 }
 
-
 int _tmain(int argc, _TCHAR* argv[]) {
   test_1();
   test_2();

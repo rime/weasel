@@ -74,9 +74,10 @@ void ContextUpdater::_StoreCand(Deserializer::KeyType k,
   try {
     std::wstringstream ss(value);
     boost::archive::text_wiarchive ia(ss);
-    // Deserialize into a temporary and publish it only on full success. A failed
-    // ia >> t can leave the target half-updated; TryDeserialize now reports that
-    // via its bool result, so cinfo is never polluted by a partial candidate.
+    // Deserialize into a temporary and publish it only on full success. A
+    // failed ia >> t can leave the target half-updated; TryDeserialize now
+    // reports that via its bool result, so cinfo is never polluted by a partial
+    // candidate.
     CandidateInfo temp = cinfo;
     if (!TryDeserialize(ia, temp))
       return;
@@ -84,7 +85,8 @@ void ContextUpdater::_StoreCand(Deserializer::KeyType k,
   } catch (...) {
     // Stream/archive construction threw: leave cinfo untouched instead of
     // letting the exception escape into the TSF callback.
-    OutputDebugStringW(L"weasel: IPC ContextUpdater::_StoreCand construction failed\n");
+    OutputDebugStringW(
+        L"weasel: IPC ContextUpdater::_StoreCand construction failed\n");
     return;
   }
 
