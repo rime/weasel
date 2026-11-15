@@ -14,10 +14,14 @@ void Styler::Store(weasel::Deserializer::KeyType const& key,
     return;
 
   UIStyle& sty = *m_pTarget->p_style;
-  std::wstringstream ss(value);
-  boost::archive::text_wiarchive ia(ss);
-
-  TryDeserialize(ia, sty);
+  try {
+    std::wstringstream ss(value);
+    boost::archive::text_wiarchive ia(ss);
+    TryDeserialize(ia, sty);
+  } catch (...) {
+    // Version/ABI mismatch: leave the style unchanged.
+    return;
+  }
 }
 
 weasel::Deserializer::Ptr Styler::Create(weasel::ResponseParser* pTarget) {

@@ -6,12 +6,14 @@ namespace weasel {
 
 template <typename T>
 void TryDeserialize(boost::archive::text_wiarchive& ia, T& t) {
+  // Swallow any deserialization failure. A version/ABI mismatch between
+  // WeaselServer.exe and weasel.dll must not let an exception escape into the
+  // host's UI/TSF callbacks (that surfaces as 0xc000041d and crashes the host).
+  // Do not show a modal here: a blocking MessageBoxA on the host thread is what
+  // caused issue #1949.
   try {
     ia >> t;
-  } catch (const boost::archive::archive_exception& e) {
-    const std::string msg =
-        std::string("boost::archive::archive_exception: ") + e.what();
-    MessageBoxA(NULL, msg.c_str(), "IPC exception", MB_OK | MB_ICONERROR);
+  } catch (...) {
   }
 }
 class Deserializer {

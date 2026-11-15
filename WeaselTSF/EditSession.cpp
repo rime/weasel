@@ -4,6 +4,7 @@
 #include "ResponseParser.h"
 
 STDMETHODIMP WeaselTSF::DoEditSession(TfEditCookie ec) {
+  try {
   // get commit string from server
   std::wstring commit;
   weasel::Config config;
@@ -67,4 +68,10 @@ STDMETHODIMP WeaselTSF::DoEditSession(TfEditCookie ec) {
   }
 
   return TRUE;
+  } catch (...) {
+    // An exception out of an edit-session callback is delivered to the TSF
+    // manager (msctf) and crashes the host process with 0xc000041d. Swallow
+    // anything here so a malformed IPC response never takes down the app.
+    return TRUE;
+  }
 }

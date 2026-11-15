@@ -71,10 +71,15 @@ void ContextUpdater::_StoreText(Text& target,
 void ContextUpdater::_StoreCand(Deserializer::KeyType k,
                                 std::wstring const& value) {
   CandidateInfo& cinfo = m_pTarget->p_context->cinfo;
-  std::wstringstream ss(value);
-  boost::archive::text_wiarchive ia(ss);
-
-  TryDeserialize(ia, cinfo);
+  try {
+    std::wstringstream ss(value);
+    boost::archive::text_wiarchive ia(ss);
+    TryDeserialize(ia, cinfo);
+  } catch (...) {
+    // Version/ABI mismatch between server and DLL: leave the candidate list
+    // untouched rather than let the exception escape into the TSF callback.
+    return;
+  }
 
   for (auto& cand : cinfo.candies)
     cand.str = unescape_string(cand.str);
