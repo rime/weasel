@@ -62,21 +62,33 @@ void test_3() {
 }
 
 void test_4() {
-  WCHAR resp[] =
-      L"action=commit,ctx\n"
-      L"ctx.preedit=候選乙=3.14\n"
-      L"ctx.preedit.cursor=0,3\n"
-      L"ctx.cand.length=2\n"
-      L"ctx.cand.0=候選甲\n"
-      L"ctx.cand.1=候選乙\n"
-      L"ctx.cand.cursor=1\n"
-      L"ctx.cand.page=0/1\n";
-  DWORD len = wcslen(resp);
+  // ctx.cand carries one whole serialized CandidateInfo; the per-field
+  // ctx.cand.length/.0/.1 keys belong to the old protocol and are not read.
+  weasel::CandidateInfo expected;
+  weasel::Text cand0;
+  cand0.str = L"候選甲";
+  weasel::Text cand1;
+  cand1.str = L"候選乙";
+  expected.candies.push_back(cand0);
+  expected.candies.push_back(cand1);
+  expected.highlighted = 1;
+  expected.currentPage = 0;
+  expected.totalPages = 1;
+
+  std::wstringstream ss;
+  {
+    boost::archive::text_woarchive oa(ss);
+    oa << expected;
+  }
+
   std::wstring commit;
   weasel::Context ctx;
   weasel::Status status;
   weasel::ResponseParser parser(&commit, &ctx, &status);
-  parser(resp, len);
+  parser.Feed(L"action=commit,ctx");
+  parser.Feed(L"ctx.preedit=候選乙=3.14");
+  parser.Feed(L"ctx.preedit.cursor=0,3");
+  parser.Feed(L"ctx.cand=" + ss.str());
   BOOST_TEST(commit.empty());
   BOOST_TEST(ctx.preedit.str == L"候選乙=3.14");
   BOOST_ASSERT(1 == ctx.preedit.attributes.size());
