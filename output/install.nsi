@@ -109,8 +109,156 @@ LangString LNKFORUNINSTALL ${LANG_ENGLISH} "Uninstall Weasel"
 LangString CONFIRMATION ${LANG_ENGLISH} "Before installation, please uninstall the old version of Weasel.$\n$\nPress 'OK' to remove the old version, or 'Cancel' to abort installation."
 LangString SYSTEMVERSIONNOTOK ${LANG_ENGLISH} "Your system not supported, minimium system required: Windows 8.1!"
 LangString AUTOCHKUPDATE ${LANG_ENGLISH} "Automatically check for updates?"
+LangString SERVERSTILLRUNNING ${LANG_TRADCHINESE} "小狼毫算法服務無法結束，安裝已中止。$\n$\n請在工作管理員手動結束 WeaselServer.exe 後重新執行安裝程式。"
+LangString SERVERSTILLRUNNING ${LANG_SIMPCHINESE} "小狼毫算法服务无法结束，安装已中止。$\n$\n请在任务管理器手动结束 WeaselServer.exe 后重新运行安装程序。"
+LangString SERVERSTILLRUNNING ${LANG_ENGLISH} "WeaselServer.exe could not be stopped; installation aborted.$\n$\nPlease end WeaselServer.exe manually in Task Manager and run the installer again."
+LangString STALEBINARIES ${LANG_TRADCHINESE} "偵測到舊版檔案未被替換（仍被鎖定）：$\n$\n$R2$\n$\n安裝已中止，以避免半安裝狀態。請結束佔用這些檔案的程式後重試。"
+LangString STALEBINARIES ${LANG_SIMPCHINESE} "检测到旧版文件未被替换（仍被锁定）：$\n$\n$R2$\n$\n安装已中止，以避免半安装状态。请结束占用这些文件的程序后重试。"
+LangString STALEBINARIES ${LANG_ENGLISH} "Stale files could not be replaced (still locked):$\n$\n$R2$\n$\nInstallation aborted to avoid a half-installed state. Close the programs using these files and retry."
 
 ;--------------------------------
+
+; StopWeaselServer <serverExePath>
+;   Ask the running server to quit, then make sure the process is really
+;   gone. A half-quit server keeps WeaselServer.exe / rime.dll /
+;   WinSparkle.dll locked, which turned past upgrades into silent
+;   half-installs (stale binaries under a new DisplayVersion), so /quit
+;   alone is not enough.
+;
+;   Implementation notes:
+;   - NSIS cannot wait on an already-running process handle, so poll with a
+;     lock probe: a running WeaselServer.exe cannot be renamed; success
+;     means the process has exited. Undo the probe immediately.
+;   - If the server is hung (it crashed hosts in the wild and may not
+;     answer /quit), force-kill via taskkill after a bounded graceful wait.
+;     taskkill is used instead of the nsProcess plugin to avoid adding a
+;     plugin dependency to the CI build.
+;   - Only registry-free, bundled tools are used; no extra downloads.
+!macro StopWeaselServer SERVER_EXE
+  Push $R0
+  Push $R1
+  Push $R2
+  StrCpy $R1 "${SERVER_EXE}"
+  ${If} ${FileExists} "$R1"
+    ExecWait '"$R1" /quit'
+    StrCpy $R2 0
+  wait_quit_loop:
+    Sleep 500
+    IntOp $R2 $R2 + 1
+    ClearErrors
+    Rename "$R1" "$R1.weasel-lockprobe"
+    ${If} ${Errors}
+      ${If} $R2 < 20 ; bounded graceful wait: ~10s
+        Goto wait_quit_loop
+      ${EndIf}
+      ; Still locked: force kill, then one more bounded wait.
+      nsExec::Exec 'taskkill /IM WeaselServer.exe /F'
+      Pop $R0
+      StrCpy $R2 0
+    force_wait_loop:
+      Sleep 500
+      IntOp $R2 $R2 + 1
+      ClearErrors
+      Rename "$R1" "$R1.weasel-lockprobe"
+      ${If} ${Errors}
+        ${If} $R2 < 6 ; ~3s after force kill
+          Goto force_wait_loop
+        ${EndIf}
+        ; Server could not be stopped: abort, never half-install.
+        SetErrors
+        IfSilent server_abort_silent_${__LINE__}
+        MessageBox MB_OK|MB_ICONSTOP "$(SERVERSTILLRUNNING)"
+        server_abort_silent_${__LINE__}:
+        Pop $R2
+        Pop $R1
+        Pop $R0
+        Abort "$(SERVERSTILLRUNNING)"
+      ${EndIf}
+    ${EndIf}
+    ; Probe succeeded: the process is gone; restore the original name so the
+    ; following upgrade/uninstall logic sees an intact file layout.
+    ClearErrors
+    Rename "$R1.weasel-lockprobe" "$R1"
+    ${If} ${Errors}
+      ; Extremely unlikely (rename inside same dir). Old name will be
+      ; replaced by File below anyway if we are installing; for uninstall
+      ; the following Delete will drop the probe file instead.
+      Delete /REBOOTOK "$R1.weasel-lockprobe"
+    ${EndIf}
+  ${EndIf}
+  Pop $R2
+  Pop $R1
+  Pop $R0
+!macroend
+
+; VerifyFreshBinaries
+;   Run right after the File copies. SetOverwrite try silently skips locked
+;   files, so assert that the critical binaries on disk really match this
+;   build before the installer claims success in the registry.
+;
+;   Mechanism: rename-probe each critical binary right after copying. A file
+;   still held open by a live process cannot be renamed, so a failed probe
+;   marks it stale. We do not compare versions or sizes: WeaselServer.exe /
+;   rime.dll / WinSparkle.dll ship without a usable version resource
+;   (observed on the 0.17.4 build), and same-size-same-version stale copies
+;   are exactly what a locked-file skip leaves behind.
+;   The probe is undone immediately; a successful rename proves nothing is
+;   holding the file, and the copy above already delivered new content.
+!macro VerifyFreshBinaries
+  Push $R0
+  Push $R3
+  StrCpy $R3 ""
+  StrCpy $R0 "WeaselServer.exe"
+  Call VerifyOneBinary
+  StrCpy $R0 "weasel.dll"
+  Call VerifyOneBinary
+  StrCpy $R0 "weaselx64.dll"
+  Call VerifyOneBinary
+  StrCpy $R0 "rime.dll"
+  Call VerifyOneBinary
+  StrCpy $R0 "WeaselDeployer.exe"
+  Call VerifyOneBinary
+  ${If} $R3 != ""
+    StrCpy $R2 $R3
+    IfSilent verify_fail_silent
+    MessageBox MB_OK|MB_ICONSTOP "$(STALEBINARIES)"
+    verify_fail_silent:
+    Pop $R3
+    Pop $R0
+    Abort "$(STALEBINARIES)"
+  ${EndIf}
+  Pop $R3
+  Pop $R0
+!macroend
+
+; Helper called with $R0 = file name; appends stale entries to $R3.
+Function VerifyOneBinary
+  Push $R4
+  ${IfNot} ${FileExists} "$INSTDIR\$R0"
+    Goto verify_one_done
+  ${EndIf}
+  ClearErrors
+  Rename "$INSTDIR\$R0" "$INSTDIR\$R0.weasel-lockprobe"
+  ${If} ${Errors}
+    ; Rename failed: the file is still locked by a live process, i.e. the
+    ; copy above could not have replaced it. Record and continue so the
+    ; dialog lists every stale file at once.
+    StrCpy $R3 "$R3$\n$INSTDIR\$R0"
+    Goto verify_one_nofix
+  ${EndIf}
+  ; Probe succeeded: nothing holds the file. Restore the name the install
+  ; layout expects (content is already the fresh copy).
+  ClearErrors
+  Rename "$INSTDIR\$R0.weasel-lockprobe" "$INSTDIR\$R0"
+  ${If} ${Errors}
+    ; Extremely unlikely (rename inside the same directory): force the
+    ; restore at reboot rather than leaving a stray probe file.
+    Delete /REBOOTOK "$INSTDIR\$R0.weasel-lockprobe"
+  ${EndIf}
+  verify_one_nofix:
+  verify_one_done:
+  Pop $R4
+FunctionEnd
 
 Function .onInit
   ; if not version >= 8.1, quit and MessageBox(if not silent)
@@ -161,7 +309,9 @@ uninst:
   CopyFiles $R1\data\*.* $TEMP\weasel-backup
 
 call_uninstaller:
-  ExecWait '"$R1\WeaselServer.exe" /quit'
+  ; Wait until the old server is really gone before deleting files; a
+  ; half-quit server leaves locked binaries behind (stale-file cause).
+  !insertmacro StopWeaselServer "$R1\WeaselServer.exe"
   ; Keep TSF profiles during upgrades so Windows does not add a default IME.
   ; Remove registry keys
   DeleteRegKey HKLM SOFTWARE\Rime
@@ -209,10 +359,11 @@ Section "Weasel"
   ; Reset INSTDIR for the new version
   StrCpy $INSTDIR "${WEASEL_ROOT}"
 
-  ; Do not launch the old server again after removing its dependencies.
-  ${If} $0 != "Upgrade"
-    IfFileExists "$INSTDIR\WeaselServer.exe" 0 +2
-    ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
+  ; Stop any server left running, including on Upgrade. The old skip-on-
+  ; Upgrade path let a live server lock the binaries and silently turned
+  ; the copies below into a half-install.
+  ${If} ${FileExists} "$INSTDIR\WeaselServer.exe"
+    !insertmacro StopWeaselServer "$INSTDIR\WeaselServer.exe"
   ${EndIf}
 
   SetOverwrite try
@@ -292,6 +443,11 @@ program_files:
   File "data\opencc\*.ocd*"
 
   SetOutPath $INSTDIR
+
+  ; Assert the critical binaries were really replaced before the registry
+  ; below claims the new version. A locked file skipped by SetOverwrite try
+  ; would otherwise leave stale binaries under a fresh DisplayVersion.
+  !insertmacro VerifyFreshBinaries
 
   ; test /T flag for zh_TW locale
   StrCpy $R2 "/i"
@@ -378,7 +534,9 @@ SectionEnd
 
 Section "Uninstall"
 
-  ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
+  ; Same anti-half-install guarantee for removal: wait until the server is
+  ; really gone before deleting, else locked files survive the uninstall.
+  !insertmacro StopWeaselServer "$INSTDIR\WeaselServer.exe"
 
   ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
 
