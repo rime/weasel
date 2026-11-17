@@ -15,6 +15,15 @@
 #define WEASEL_IPC_SHARED_MEMORY_SIZE \
   (sizeof(PipeMessage) + WEASEL_IPC_BUFFER_SIZE)
 
+// Version of the line-based text protocol spoken over the named pipe. Bump
+// this when the set of `action=` keys or their value encodings changes in a
+// way an older peer cannot parse. The server advertises its version in every
+// response (`protocol.version=` line) and the client compares it against its
+// own; a mismatch or a missing line (old server) is reported through
+// OutputDebugStringW only -- never a modal dialog (#1949) and never an
+// exception into the TSF callback (0xc000041d, see #1883).
+#define WEASEL_IPC_PROTOCOL_VERSION 1
+
 enum WEASEL_IPC_COMMAND {
   WEASEL_IPC_ECHO = (WM_APP + 1),
   WEASEL_IPC_START_SESSION,

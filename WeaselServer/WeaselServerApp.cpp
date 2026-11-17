@@ -21,6 +21,20 @@ int WeaselServerApp::Run() {
   }
   LOG(INFO) << "IPC server window started";
 
+  // Publish the text-protocol version this server binary speaks so that
+  // diagnostics (and future clients) can detect a half-installed pairing --
+  // e.g. an old WeaselServer.exe left in place by a locked-file installer run
+  // next to a freshly updated weasel.dll. Read-only for clients; a missing
+  // value simply means "pre-handshake server".
+  {
+    const std::wstring version_str =
+        std::to_wstring(WEASEL_IPC_PROTOCOL_VERSION);
+    RegSetKeyValueW(
+        HKEY_CURRENT_USER, L"Software\\Rime\\Weasel", L"IpcProtocolVersion",
+        REG_SZ, version_str.c_str(),
+        static_cast<DWORD>((version_str.size() + 1) * sizeof(wchar_t)));
+  }
+
   // win_sparkle_set_appcast_url("http://localhost:8000/weasel/update/appcast.xml");
   win_sparkle_set_registry_path("Software\\Rime\\Weasel\\Updates");
   if (GetThreadUILanguage() ==

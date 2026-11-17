@@ -18,6 +18,11 @@ struct ResponseParser {
   Config* p_config;
   UIStyle* p_style;
 
+  // Protocol version advertised by the server in this response, or -1 when
+  // the server sent no `protocol.version=` line (an old server without the
+  // handshake). Populated while parsing; the check happens in operator().
+  int server_protocol_version = -1;
+
   ResponseParser(std::wstring* commit,
                  Context* context = 0,
                  Status* status = 0,
