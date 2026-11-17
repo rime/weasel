@@ -34,6 +34,16 @@ struct ResponseParser {
 
   // 處理一行回應文本
   void Feed(const std::wstring& line);
+
+ private:
+  // Parse the response buffer. Returns whether it terminated cleanly with the
+  // "." line. Deliberately separate from the diagnostics so a truncated
+  // response is still reported.
+  bool _Parse(LPWSTR buffer, UINT length);
+  // Report the handshake outcome. `parsed_ok` disambiguates an absent version
+  // line: a clean response means a pre-handshake server, a failed one means the
+  // header never arrived.
+  void _ReportProtocolVersion(bool parsed_ok);
 };
 
 }  // namespace weasel

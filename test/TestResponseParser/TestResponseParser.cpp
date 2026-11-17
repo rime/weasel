@@ -153,6 +153,44 @@ void test_14() {
   BOOST_TEST(commit == L"\x4f60\x597d");
 }
 
+// A response that ends right after a newline, with no "." terminator, makes
+// getline fail inside the loop -- the early-return path in the original code.
+// The version observed so far must still be available, and the parse must
+// still report failure. Diagnostics used to be skipped entirely here.
+void test_15() {
+  WCHAR resp[] =
+      L"protocol.version=1\n"
+      L"action=commit\n"
+      L"commit=abc\n";
+  DWORD len = wcslen(resp);
+  std::wstring commit;
+  weasel::Context ctx;
+  weasel::Status status;
+  weasel::ResponseParser parser(&commit, &ctx, &status);
+
+  const bool ok = parser(resp, len);
+  BOOST_TEST(!ok);
+  BOOST_TEST_EQ(1, parser.server_protocol_version);
+}
+
+// Same early-return path, but the response was cut before the version line:
+// the field stays at -1 so the report can say "truncated before
+// protocol.version" rather than blaming an old server.
+void test_16() {
+  WCHAR resp[] =
+      L"action=commit\n"
+      L"commit=abc\n";
+  DWORD len = wcslen(resp);
+  std::wstring commit;
+  weasel::Context ctx;
+  weasel::Status status;
+  weasel::ResponseParser parser(&commit, &ctx, &status);
+
+  const bool ok = parser(resp, len);
+  BOOST_TEST(!ok);
+  BOOST_TEST_EQ(-1, parser.server_protocol_version);
+}
+
 int _tmain(int argc, _TCHAR* argv[]) {
   // test_4 still encodes the retired per-field ctx.cand protocol on this base
   // and aborts (BOOST_ASSERT) before the handshake cases would run -- #1983
@@ -166,6 +204,8 @@ int _tmain(int argc, _TCHAR* argv[]) {
     test_12();
     test_13();
     test_14();
+    test_15();
+    test_16();
   } else {
     test_1();
     test_2();
@@ -176,6 +216,8 @@ int _tmain(int argc, _TCHAR* argv[]) {
     test_12();
     test_13();
     test_14();
+    test_15();
+    test_16();
   }
 
   system("pause");

@@ -19,12 +19,22 @@ ResponseParser::ResponseParser(std::wstring* commit,
 }
 
 bool ResponseParser::operator()(LPWSTR buffer, UINT length) {
+  // Keep the parse result and the protocol diagnostics independent. A response
+  // that truncates or fails mid-read is *the* case worth diagnosing, so the
+  // reporting below runs on every exit path, not only on the happy one. An
+  // early `return` here would silently drop exactly those cases.
+  const bool parsed_ok = _Parse(buffer, length);
+  _ReportProtocolVersion(parsed_ok);
+  return parsed_ok;
+}
+
+bool ResponseParser::_Parse(LPWSTR buffer, UINT length) {
   wbufferstream bs(buffer, length);
   std::wstring line;
   while (bs.good()) {
     std::getline(bs, line);
     if (!bs.good())
-      return false;
+      break;  // truncated or unreadable; diagnosed by _ReportProtocolVersion
 
     // file ends
     if (line == L".")
@@ -32,20 +42,39 @@ bool ResponseParser::operator()(LPWSTR buffer, UINT length) {
 
     Feed(line);
   }
-  // A missing protocol.version line means the peer predates the handshake.
-  // Everything else may still parse, so this only logs -- it never throws and
-  // never blocks the host UI thread (#1949). The handshake makes a version
-  // mismatch (half-installed server/client pairing) diagnosable in DebugView
-  // instead of failing later inside a boost archive exception (#1883).
+  return bs.good();
+}
+
+void ResponseParser::_ReportProtocolVersion(bool parsed_ok) {
+  // Logging only: never throws, never blocks the host UI thread with a modal
+  // dialog (#1949). This is what makes a half-installed server/client pairing
+  // visible in DebugView instead of surfacing later as an archive exception
+  // inside a TSF callback (#1883).
   if (server_protocol_version < 0) {
+    // No version line. Either the peer predates the handshake, or the response
+    // was cut before the header could be read -- say which one.
     OutputDebugStringW(
-        L"weasel: IPC response had no protocol.version (old server?)\n");
+        parsed_ok
+            ? L"weasel: IPC response had no protocol.version (old server?)\n"
+            : L"weasel: IPC response truncated before protocol.version "
+              L"(unknown server)\n");
   } else if (server_protocol_version != WEASEL_IPC_PROTOCOL_VERSION) {
+    // Gated: a mismatched pair stays mismatched on every response, so this one
+    // sits behind the LogLevel switch instead of spamming the trace.
     DEBUG << "weasel: IPC protocol version mismatch: client="
           << WEASEL_IPC_PROTOCOL_VERSION
           << " server=" << server_protocol_version << "\n";
   }
-  return bs.good();
+
+  if (!parsed_ok) {
+    // The body did not parse. Report the version actually observed so a
+    // truncated response is not misread as an old server.
+    DEBUG << "weasel: IPC response did not parse; server protocol="
+          << (server_protocol_version < 0
+                  ? std::string("absent")
+                  : std::to_string(server_protocol_version))
+          << "\n";
+  }
 }
 
 void ResponseParser::Feed(const std::wstring& line) {
