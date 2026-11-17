@@ -18,6 +18,11 @@ struct ResponseParser {
   Config* p_config;
   UIStyle* p_style;
 
+  // Protocol version advertised by the server in this response, or -1 when
+  // the server sent no `protocol.version=` line (an old server without the
+  // handshake). Populated while parsing; the check happens in operator().
+  int server_protocol_version = -1;
+
   ResponseParser(std::wstring* commit,
                  Context* context = 0,
                  Status* status = 0,
@@ -29,6 +34,16 @@ struct ResponseParser {
 
   // 處理一行回應文本
   void Feed(const std::wstring& line);
+
+ private:
+  // Parse the response buffer. Returns whether it terminated cleanly with the
+  // "." line. Deliberately separate from the diagnostics so a truncated
+  // response is still reported.
+  bool _Parse(LPWSTR buffer, UINT length);
+  // Report the handshake outcome. `parsed_ok` disambiguates an absent version
+  // line: a clean response means a pre-handshake server, a failed one means the
+  // header never arrived.
+  void _ReportProtocolVersion(bool parsed_ok);
 };
 
 }  // namespace weasel

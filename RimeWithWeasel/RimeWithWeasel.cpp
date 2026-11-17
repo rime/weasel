@@ -922,8 +922,14 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
 
   // summarize: send header first to avoid vector head-insert cost
   std::wstring header;
+  // Advertise the text-protocol version so a mismatched client (e.g. after a
+  // half-finished installer run leaves an old WeaselServer.exe next to a new
+  // weasel.dll) can detect the pairing instead of misparsing the body. Old
+  // clients simply ignore the unknown `protocol.` action key.
+  header = std::wstring(L"protocol.version=") +
+           std::to_wstring(WEASEL_IPC_PROTOCOL_VERSION) + L"\n";
   if (actions.empty()) {
-    header = L"action=noop\n";
+    header += L"action=noop\n";
   } else {
     std::string actionList;
     actionList.reserve(64);
@@ -932,7 +938,7 @@ bool RimeWithWeaselHandler::_Respond(WeaselSessionId ipc_id, EatLine eat) {
         actionList += ',';
       actionList += actions[i];
     }
-    header = std::wstring(L"action=") + u8tow(actionList) + L"\n";
+    header += std::wstring(L"action=") + u8tow(actionList) + L"\n";
   }
   if (!eat(header))
     return false;
