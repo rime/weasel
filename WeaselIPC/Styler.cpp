@@ -14,10 +14,20 @@ void Styler::Store(weasel::Deserializer::KeyType const& key,
     return;
 
   UIStyle& sty = *m_pTarget->p_style;
-  std::wstringstream ss(value);
-  boost::archive::text_wiarchive ia(ss);
-
-  TryDeserialize(ia, sty);
+  try {
+    std::wstringstream ss(value);
+    boost::archive::text_wiarchive ia(ss);
+    // Deserialize into a temporary and publish it only on full success; a
+    // half-updated UIStyle would otherwise leak into the candidate UI.
+    UIStyle temp = sty;
+    if (!TryDeserialize(ia, temp))
+      return;
+    sty = temp;
+  } catch (...) {
+    // Stream/archive construction threw: leave the style unchanged.
+    OutputDebugStringW(L"weasel: IPC Styler::Store construction failed\n");
+    return;
+  }
 }
 
 weasel::Deserializer::Ptr Styler::Create(weasel::ResponseParser* pTarget) {

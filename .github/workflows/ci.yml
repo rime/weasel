@@ -145,6 +145,36 @@ jobs:
             .\xbuild.bat arm64 installer
           }
 
+      - name: Build IPC regression tests (Debug x64)
+        if: matrix.variant == 'msbuild'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $solutionDir = (Resolve-Path .).Path + '\'
+          msbuild.exe test\TestResponseParser\TestResponseParser.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:SolutionDir=$solutionDir /p:WindowsTargetPlatformVersion=${{ env.SDKVER }} /fl7
+          if ($LASTEXITCODE -ne 0) {
+            throw "TestResponseParser build failed with exit code $LASTEXITCODE"
+          }
+
+      - name: Run IPC regression tests
+        if: matrix.variant == 'msbuild'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = Get-ChildItem -Path . -Recurse -Filter TestResponseParser.exe |
+            Where-Object { $_.FullName -like '*\msbuild\Debug\x64\*' } |
+            Select-Object -First 1
+          if (-not $exe) {
+            throw 'TestResponseParser.exe not found under msbuild\Debug\x64'
+          }
+          Write-Host "Running $($exe.FullName)"
+          # Feed a keystroke so the test's system("pause") does not block CI.
+          $cmdLine = 'echo. | "{0}"' -f $exe.FullName
+          & cmd.exe /c $cmdLine
+          if ($LASTEXITCODE -ne 0) {
+            throw "IPC regression tests failed with exit code $LASTEXITCODE"
+          }
+
       - name: Test language profile helper
         if: matrix.variant == 'msbuild'
         shell: powershell

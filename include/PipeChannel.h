@@ -142,9 +142,16 @@ class PipeChannel : public PipeChannelBase {
       return false;
     }
 
-    // Use whole buffer to receive data in client
-    return handler((LPWSTR)_GetContext()->buffer.get(),
-                   (UINT)(buff_size * sizeof(char) / sizeof(wchar_t)));
+    // The handler (ResponseParser) parses IPC payloads and may throw, e.g. on a
+    // version/ABI mismatch between WeaselServer.exe and weasel.dll. Never let
+    // that escape the caller (the host UI thread) -> 0xc000041d.
+    try {
+      return handler((LPWSTR)_GetContext()->buffer.get(),
+                     (UINT)(buff_size * sizeof(char) / sizeof(wchar_t)));
+    } catch (...) {
+      OutputDebugStringW(L"weasel: IPC HandleResponseData handler threw\n");
+      return false;
+    }
   }
 
  protected:

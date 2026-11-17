@@ -5,13 +5,23 @@
 namespace weasel {
 
 template <typename T>
-void TryDeserialize(boost::archive::text_wiarchive& ia, T& t) {
+bool TryDeserialize(boost::archive::text_wiarchive& ia, T& t) {
+  // A version/ABI mismatch between WeaselServer.exe and weasel.dll must never
+  // let an exception escape into the host's UI/TSF callbacks (that surfaces as
+  // 0xc000041d and crashes the host). Report success/failure to the caller
+  // instead of swallowing it: the caller deserializes into a temporary and
+  // commits it only on success, so a half-updated object is never published.
+  // Do not show a modal here: a blocking MessageBoxA on the host thread caused
+  // issue #1949.
   try {
     ia >> t;
-  } catch (const boost::archive::archive_exception& e) {
-    const std::string msg =
-        std::string("boost::archive::archive_exception: ") + e.what();
-    MessageBoxA(NULL, msg.c_str(), "IPC exception", MB_OK | MB_ICONERROR);
+    return true;
+  } catch (...) {
+    // Non-modal and non-throwing: a debugger (or log capture) can count
+    // these failures without blocking the host UI thread the way the
+    // MessageBoxA in issue #1949 did. One line per bad IPC payload.
+    OutputDebugStringW(L"weasel: IPC TryDeserialize failed\n");
+    return false;
   }
 }
 class Deserializer {
