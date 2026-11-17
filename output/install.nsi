@@ -109,8 +109,237 @@ LangString LNKFORUNINSTALL ${LANG_ENGLISH} "Uninstall Weasel"
 LangString CONFIRMATION ${LANG_ENGLISH} "Before installation, please uninstall the old version of Weasel.$\n$\nPress 'OK' to remove the old version, or 'Cancel' to abort installation."
 LangString SYSTEMVERSIONNOTOK ${LANG_ENGLISH} "Your system not supported, minimium system required: Windows 8.1!"
 LangString AUTOCHKUPDATE ${LANG_ENGLISH} "Automatically check for updates?"
+LangString SERVERSTILLRUNNING ${LANG_TRADCHINESE} "小狼毫算法服務無法結束，安裝已中止。$\n$\n請在工作管理員手動結束 WeaselServer.exe 後重新執行安裝程式。"
+LangString SERVERSTILLRUNNING ${LANG_SIMPCHINESE} "小狼毫算法服务无法结束，安装已中止。$\n$\n请在任务管理器手动结束 WeaselServer.exe 后重新运行安装程序。"
+LangString SERVERSTILLRUNNING ${LANG_ENGLISH} "WeaselServer.exe could not be stopped; installation aborted.$\n$\nPlease end WeaselServer.exe manually in Task Manager and run the installer again."
+LangString STALEBINARIES ${LANG_TRADCHINESE} "以下關鍵檔案未能安裝（寫入失敗或被鎖定）：$\n$\n$R2$\n$\n安裝已中止，以避免半安裝狀態。請結束佔用這些檔案的程式後重試。"
+LangString STALEBINARIES ${LANG_SIMPCHINESE} "以下关键文件未能安装（写入失败或被锁定）：$\n$\n$R2$\n$\n安装已中止，以避免半安装状态。请结束占用这些文件的程序后重试。"
+LangString STALEBINARIES ${LANG_ENGLISH} "These critical files could not be installed (write failed or file locked):$\n$\n$R2$\n$\nInstallation aborted to avoid a half-installed state. Close the programs using these files and retry."
+LangString SETUPFAILED ${LANG_TRADCHINESE} "WeaselSetup.exe 註冊輸入法失敗，安裝已中止。$\n$\n請結束所有使用小狼毫的程式（或重新開機）後重試。"
+LangString SETUPFAILED ${LANG_SIMPCHINESE} "WeaselSetup.exe 注册输入法失败，安装已中止。$\n$\n请结束所有使用小狼毫的程序（或重启）后重试。"
+LangString SETUPFAILED ${LANG_ENGLISH} "WeaselSetup.exe failed to register the input method; installation aborted.$\n$\nClose all programs using Weasel (or reboot) and retry."
+LangString STALEIMEDLLS ${LANG_TRADCHINESE} "系統目錄中的輸入法 DLL 未更新（仍為舊版）：$\n$\n$R2$\n$\n安裝已中止，以避免半安裝狀態。請結束使用這些 DLL 的程式後重試。"
+LangString STALEIMEDLLS ${LANG_SIMPCHINESE} "系统目录中的输入法 DLL 未更新（仍为旧版）：$\n$\n$R2$\n$\n安装已中止，以避免半安装状态。请结束使用这些 DLL 的程序后重试。"
+LangString STALEIMEDLLS ${LANG_ENGLISH} "The input method DLLs in the system directory were not updated (still the old build):$\n$\n$R2$\n$\nInstallation aborted to avoid a half-installed state. Close the programs using these DLLs and retry."
 
 ;--------------------------------
+
+; FileCritical <source>
+;   Extract one critical binary and record it when the write fails.
+;   SetOverwrite must be "on" around this: with "try" NSIS silently skips a
+;   locked destination and does NOT set the error flag - exactly how the
+;   half-installs this PR fixes were produced. The error flag is checked
+;   right after each File because a later command would otherwise mask an
+;   earlier failure.
+!macro FileCritical SRC
+  ClearErrors
+  File "${SRC}"
+  ${If} ${Errors}
+    StrCpy $R3 "$R3$\n${SRC}"
+  ${EndIf}
+!macroend
+
+;--------------------------------
+
+; StopWeaselServer
+;   Input: $R1 = full path to WeaselServer.exe; all other registers preserved.
+;   Ask the running server to quit, then make sure the process is really
+;   gone. A half-quit server keeps WeaselServer.exe / rime.dll /
+;   WinSparkle.dll locked, which turned past upgrades into silent
+;   half-installs (stale binaries under a new DisplayVersion), so /quit
+;   alone is not enough.
+;
+;   Implementation notes:
+;   - NSIS cannot wait on an already-running process handle, so poll with a
+;     lock probe: a running WeaselServer.exe cannot be renamed; success
+;     means the process has exited. Undo the probe immediately.
+;   - If the server is hung (it crashed hosts in the wild and may not
+;     answer /quit), force-kill only the server whose image path is the one
+;     we are installing over: `taskkill /IM` would also terminate a Weasel
+;     installation living in another directory.
+;   - A Function rather than a macro: the installer calls it from three
+;     places, and NSIS labels are file-scoped, so a macro would collide.
+Function StopWeaselServer
+  Push $R0
+  Push $R2
+  Push $R9
+  ${If} ${FileExists} "$R1"
+    ExecWait '"$R1" /quit'
+    StrCpy $R2 0
+  wait_quit_loop:
+    Sleep 500
+    IntOp $R2 $R2 + 1
+    ; Drop a probe left over from an interrupted run, else Rename below would
+    ; fail on an existing destination and look like a locked file.
+    Delete "$R1.weasel-lockprobe"
+    ClearErrors
+    Rename "$R1" "$R1.weasel-lockprobe"
+    ${If} ${Errors}
+      ${If} $R2 < 20 ; bounded graceful wait: ~10s
+        Goto wait_quit_loop
+      ${EndIf}
+      ; Still locked: force-kill, but only processes running the very binary
+      ; we are replacing. Keep a bounded second wait after the kill.
+      InitPluginsDir
+      FileOpen $R9 "$PLUGINSDIR\stop-weasel.ps1" w
+      FileWrite $R9 "Get-Process -Name WeaselServer -ErrorAction SilentlyContinue | Where-Object { $$_.Path -ieq '$R1' } | Stop-Process -Force$\r$\n"
+      FileClose $R9
+      nsExec::ExecToStack 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$PLUGINSDIR\stop-weasel.ps1"'
+      Pop $R0
+      Pop $R0
+      StrCpy $R2 0
+    force_wait_loop:
+      Sleep 500
+      IntOp $R2 $R2 + 1
+      Delete "$R1.weasel-lockprobe"
+      ClearErrors
+      Rename "$R1" "$R1.weasel-lockprobe"
+      ${If} ${Errors}
+        ${If} $R2 < 6 ; ~3s after force kill
+          Goto force_wait_loop
+        ${EndIf}
+        ; Server could not be stopped: abort, never half-install.
+        IfSilent server_abort_silent
+        MessageBox MB_OK|MB_ICONSTOP "$(SERVERSTILLRUNNING)"
+        server_abort_silent:
+        Pop $R9
+        Pop $R2
+        Pop $R0
+        Abort "$(SERVERSTILLRUNNING)"
+      ${EndIf}
+    ${EndIf}
+    ; Probe succeeded: the process is gone; restore the original name so the
+    ; following upgrade/uninstall logic sees an intact file layout.
+    ClearErrors
+    Rename "$R1.weasel-lockprobe" "$R1"
+    ${If} ${Errors}
+      ; Extremely unlikely (rename inside the same directory): schedule the
+      ; probe file for deletion at reboot rather than leaving it behind.
+      Delete /REBOOTOK "$R1.weasel-lockprobe"
+    ${EndIf}
+  ${EndIf}
+  Pop $R9
+  Pop $R2
+  Pop $R0
+FunctionEnd
+
+; VerifyCriticalBinaries
+;   Called after the File block. $R3 already collects every critical File
+;   that failed to write (see !macro FileCritical); this function adds the
+;   ones that are simply absent, then aborts if anything is listed. A
+;   missing critical binary must never pass silently - the old code skipped
+;   absent files, so a file that was never installed looked like success.
+Function VerifyCriticalBinaries
+  Push $R0
+  Push $R2
+  Push $R3
+  StrCpy $R0 "WeaselServer.exe"
+  Call CheckOneCritical
+  StrCpy $R0 "WeaselDeployer.exe"
+  Call CheckOneCritical
+  StrCpy $R0 "rime.dll"
+  Call CheckOneCritical
+  StrCpy $R0 "WinSparkle.dll"
+  Call CheckOneCritical
+  StrCpy $R0 "weasel.dll"
+  Call CheckOneCritical
+  ${If} ${RunningX64}
+    StrCpy $R0 "weaselx64.dll"
+    Call CheckOneCritical
+  ${EndIf}
+  ${If} $R3 != ""
+    StrCpy $R2 $R3
+    IfSilent verify_fail_silent
+    MessageBox MB_OK|MB_ICONSTOP "$(STALEBINARIES)"
+    verify_fail_silent:
+    Pop $R3
+    Pop $R2
+    Pop $R0
+    Abort "$(STALEBINARIES)"
+  ${EndIf}
+  Pop $R3
+  Pop $R2
+  Pop $R0
+FunctionEnd
+
+; Helper called with $R0 = file name; appends a missing-file entry to $R3.
+; Already-recorded write failures are left alone; this only adds absence.
+Function CheckOneCritical
+  ${IfNot} ${FileExists} "$INSTDIR\$R0"
+    StrCpy $R3 "$R3$\n$INSTDIR\$R0 (missing)"
+  ${EndIf}
+FunctionEnd
+
+; VerifySystemImeDlls
+;   WeaselSetup copies the IME DLLs into the system directories; those are the
+;   copies host processes actually load, so a stale one is a half-install the
+;   $INSTDIR probe cannot see. Compare against the freshly installed sources
+;   by size (the x64 and 32-bit builds differ in size, so this distinguishes
+;   builds without relying on version resources, which these DLLs lack).
+;   A 32-bit installer is redirected away from System32, hence Sysnative.
+Function VerifySystemImeDlls
+  Push $R0
+  Push $R1
+  Push $R2
+  Push $R3
+  StrCpy $R3 ""
+  ${If} ${RunningX64}
+    ; Sysnative is the 32-bit installer's view of the real System32
+    ; (FS redirection would otherwise send it to SysWOW64).
+    StrCpy $R0 "$WINDIR\Sysnative\weasel.dll"
+    StrCpy $R1 "$INSTDIR\weaselx64.dll"
+    Call VerifyOneSystemIme
+    StrCpy $R0 "$WINDIR\SysWOW64\weasel.dll"
+    StrCpy $R1 "$INSTDIR\weasel.dll"
+    Call VerifyOneSystemIme
+  ${EndIf}
+  ${If} $R3 != ""
+    StrCpy $R2 $R3
+    IfSilent sysime_fail_silent
+    MessageBox MB_OK|MB_ICONSTOP "$(STALEIMEDLLS)"
+    sysime_fail_silent:
+    Pop $R3
+    Pop $R2
+    Pop $R1
+    Pop $R0
+    Abort "$(STALEIMEDLLS)"
+  ${EndIf}
+  Pop $R3
+  Pop $R2
+  Pop $R1
+  Pop $R0
+FunctionEnd
+
+; Helper: $R0 = system copy, $R1 = freshly installed source.
+; Appends a description to $R3 when the system copy is missing or differs.
+Function VerifyOneSystemIme
+  Push $9
+  Push $R5
+  Push $R6
+  ClearErrors
+  FileOpen $9 "$R1" r
+  ${If} ${Errors}
+    ; No such source (ARM64 layouts name files differently): nothing to check.
+    Goto verify_sys_done
+  ${EndIf}
+  FileSeek $9 0 END $R5
+  FileClose $9
+  ClearErrors
+  FileOpen $9 "$R0" r
+  ${If} ${Errors}
+    StrCpy $R3 "$R3$\n$R0 (missing)"
+    Goto verify_sys_done
+  ${EndIf}
+  FileSeek $9 0 END $R6
+  FileClose $9
+  ${If} $R5 != $R6
+    StrCpy $R3 "$R3$\n$R0 ($R6 bytes != $R5 bytes)"
+  ${EndIf}
+  verify_sys_done:
+  Pop $R6
+  Pop $R5
+  Pop $9
+FunctionEnd
 
 Function .onInit
   ; if not version >= 8.1, quit and MessageBox(if not silent)
@@ -161,7 +390,12 @@ uninst:
   CopyFiles $R1\data\*.* $TEMP\weasel-backup
 
 call_uninstaller:
-  ExecWait '"$R1\WeaselServer.exe" /quit'
+  ; Wait until the old server is really gone before deleting files; a
+  ; half-quit server leaves locked binaries behind (stale-file cause).
+  Push $R1
+  StrCpy $R1 "$R1\WeaselServer.exe"
+  Call StopWeaselServer
+  Pop $R1
   ; Keep TSF profiles during upgrades so Windows does not add a default IME.
   ; Remove registry keys
   DeleteRegKey HKLM SOFTWARE\Rime
@@ -209,10 +443,14 @@ Section "Weasel"
   ; Reset INSTDIR for the new version
   StrCpy $INSTDIR "${WEASEL_ROOT}"
 
-  ; Do not launch the old server again after removing its dependencies.
-  ${If} $0 != "Upgrade"
-    IfFileExists "$INSTDIR\WeaselServer.exe" 0 +2
-    ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
+  ; Stop any server left running, including on Upgrade. The old skip-on-
+  ; Upgrade path let a live server lock the binaries and silently turned
+  ; the copies below into a half-install.
+  ${If} ${FileExists} "$INSTDIR\WeaselServer.exe"
+    Push $R1
+    StrCpy $R1 "$INSTDIR\WeaselServer.exe"
+    Call StopWeaselServer
+    Pop $R1
   ${EndIf}
 
   SetOverwrite try
@@ -237,9 +475,16 @@ program_files:
   File "rime-install-config.bat"
   File "start_service.bat"
   File "stop_service.bat"
-  File "weasel.dll"
+  ; Critical binaries: a live server or a host process can hold these, so
+  ; every extraction is checked immediately. SetOverwrite on (not try) makes
+  ; NSIS raise the error flag instead of silently skipping a locked file.
+  ; A successful File means these exact bytes were written, so success here
+  ; is also the provenance guarantee - there is nothing left to hash.
+  StrCpy $R3 ""
+  SetOverwrite on
+  !insertmacro FileCritical "weasel.dll"
   ${If} ${RunningX64}
-    File "weaselx64.dll"
+    !insertmacro FileCritical "weaselx64.dll"
   ${EndIf}
   ${If} ${IsNativeARM64}
     File /nonfatal "weaselARM.dll"
@@ -249,35 +494,36 @@ program_files:
   ; install x64 build for NativeARM64_WINDOWS11 and NativeAMD64_WINDOWS11
   ${If} ${AtLeastWin11} ; Windows 11 and above
     ${If} ${IsNativeARM64}
-      File "WeaselDeployer.exe"
-      File "WeaselServer.exe"
-      File "rime.dll"
-      File "WinSparkle.dll"
+      !insertmacro FileCritical "WeaselDeployer.exe"
+      !insertmacro FileCritical "WeaselServer.exe"
+      !insertmacro FileCritical "rime.dll"
+      !insertmacro FileCritical "WinSparkle.dll"
     ${ElseIf} ${IsNativeAMD64}
-      File "WeaselDeployer.exe"
-      File "WeaselServer.exe"
-      File "rime.dll"
-      File "WinSparkle.dll"
+      !insertmacro FileCritical "WeaselDeployer.exe"
+      !insertmacro FileCritical "WeaselServer.exe"
+      !insertmacro FileCritical "rime.dll"
+      !insertmacro FileCritical "WinSparkle.dll"
     ${Else}
-      File "Win32\WeaselDeployer.exe"
-      File "Win32\WeaselServer.exe"
-      File "Win32\rime.dll"
-      File "Win32\WinSparkle.dll"
+      !insertmacro FileCritical "Win32\WeaselDeployer.exe"
+      !insertmacro FileCritical "Win32\WeaselServer.exe"
+      !insertmacro FileCritical "Win32\rime.dll"
+      !insertmacro FileCritical "Win32\WinSparkle.dll"
     ${Endif}
   ; install x64 build for NativeAMD64_BELLOW_WINDOWS11
   ${Else} ; Windows 10 or bellow
     ${If} ${IsNativeAMD64}
-      File "WeaselDeployer.exe"
-      File "WeaselServer.exe"
-      File "rime.dll"
-      File "WinSparkle.dll"
+      !insertmacro FileCritical "WeaselDeployer.exe"
+      !insertmacro FileCritical "WeaselServer.exe"
+      !insertmacro FileCritical "rime.dll"
+      !insertmacro FileCritical "WinSparkle.dll"
     ${Else}
-      File "Win32\WeaselDeployer.exe"
-      File "Win32\WeaselServer.exe"
-      File "Win32\rime.dll"
-      File "Win32\WinSparkle.dll"
+      !insertmacro FileCritical "Win32\WeaselDeployer.exe"
+      !insertmacro FileCritical "Win32\WeaselServer.exe"
+      !insertmacro FileCritical "Win32\rime.dll"
+      !insertmacro FileCritical "Win32\WinSparkle.dll"
     ${Endif}
-  ${Endif}
+  ${EndIf}
+  SetOverwrite try
 
   File "WeaselSetup.exe"
   File "WeaselLanguageProfile.ps1"
@@ -293,6 +539,10 @@ program_files:
 
   SetOutPath $INSTDIR
 
+  ; Assert every critical binary was really written before the registry below
+  ; claims the new version; failures are collected during the File block above.
+  Call VerifyCriticalBinaries
+
   ; test /T flag for zh_TW locale
   StrCpy $R2 "/i"
   ${GetParameters} $R0
@@ -304,7 +554,23 @@ program_files:
   IfErrors +2 0
   StrCpy $R2 "/t"
 
-  ExecWait '"$INSTDIR\WeaselSetup.exe" $R2'
+  ; WeaselSetup registers the TSF server and copies the IME DLLs into
+  ; System32 / SysWOW64 — those are the copies host processes actually load.
+  ; Its copy_file() renames a locked target aside and retries, so they do get
+  ; refreshed even while loaded, but a hard failure would leave stale IME
+  ; DLLs behind. Capture the exit code instead of discarding it.
+  ExecWait '"$INSTDIR\WeaselSetup.exe" $R2' $R4
+  ${If} $R4 != 0
+    IfSilent setup_failed_silent
+    MessageBox MB_OK|MB_ICONSTOP "$(SETUPFAILED)"
+    setup_failed_silent:
+    Abort "$(SETUPFAILED)"
+  ${EndIf}
+
+  ; Verify the system-wide IME copies match the freshly installed ones; a
+  ; stale System32/SysWOW64 weasel.dll is a half-install that the $INSTDIR
+  ; probe above cannot see.
+  Call VerifySystemImeDlls
 
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayName" "$(DISPLAYNAME)"
@@ -378,7 +644,12 @@ SectionEnd
 
 Section "Uninstall"
 
-  ExecWait '"$INSTDIR\WeaselServer.exe" /quit'
+  ; Same anti-half-install guarantee for removal: wait until the server is
+  ; really gone before deleting, else locked files survive the uninstall.
+  Push $R1
+  StrCpy $R1 "$INSTDIR\WeaselServer.exe"
+  Call StopWeaselServer
+  Pop $R1
 
   ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
 

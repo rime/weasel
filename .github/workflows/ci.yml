@@ -158,6 +158,14 @@ jobs:
           $installer = Get-Item .\output\archives\weasel*-installer.exe
           .\test\TestWeaselUpgrade.ps1 -Installer $installer.FullName
 
+      - name: Test installer half-install protection
+        if: matrix.variant == 'msbuild'
+        shell: powershell
+        timeout-minutes: 15
+        run: |
+          $installer = Get-Item .\output\archives\weasel*-installer.exe
+          .\test\TestWeaselHalfInstall.ps1 -Installer $installer.FullName
+
       - name: Compress Debug Symbols
         if: matrix.variant == 'msbuild'
         shell: pwsh
