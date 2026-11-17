@@ -151,6 +151,9 @@ Function StopWeaselServer
   wait_quit_loop:
     Sleep 500
     IntOp $R2 $R2 + 1
+    ; Drop a probe left over from an interrupted run, else Rename below would
+    ; fail on an existing destination and look like a locked file.
+    Delete "$R1.weasel-lockprobe"
     ClearErrors
     Rename "$R1" "$R1.weasel-lockprobe"
     ${If} ${Errors}
@@ -164,6 +167,7 @@ Function StopWeaselServer
     force_wait_loop:
       Sleep 500
       IntOp $R2 $R2 + 1
+      Delete "$R1.weasel-lockprobe"
       ClearErrors
       Rename "$R1" "$R1.weasel-lockprobe"
       ${If} ${Errors}
@@ -241,6 +245,7 @@ Function VerifyOneBinary
   ${IfNot} ${FileExists} "$INSTDIR\$R0"
     Goto verify_one_done
   ${EndIf}
+  Delete "$INSTDIR\$R0.weasel-lockprobe"
   ClearErrors
   Rename "$INSTDIR\$R0" "$INSTDIR\$R0.weasel-lockprobe"
   ${If} ${Errors}
