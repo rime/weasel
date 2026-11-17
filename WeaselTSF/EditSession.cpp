@@ -73,6 +73,13 @@ STDMETHODIMP WeaselTSF::DoEditSession(TfEditCookie ec) {
     // manager (msctf) and crashes the host process with 0xc000041d. Swallow
     // anything here so a malformed IPC response never takes down the app.
     // Keep the trace non-modal and non-throwing (issue #1949).
+    // This is deliberately not a rollback: the TSF side effects already
+    // performed in the try block (composition started or ended, text inserted,
+    // language bar and candidate window updated) are left as they are, so the
+    // local IME state can be inconsistent until the next edit session
+    // resynchronises it. Host liveness is preferred over that consistency;
+    // recovering at each stage is follow-up work and is not covered by this
+    // barrier.
     OutputDebugStringW(L"weasel: DoEditSession swallowed an exception\n");
     return TRUE;
   }

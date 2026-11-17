@@ -106,9 +106,15 @@ void test_4() {
   BOOST_TEST_EQ(1, c.totalPages);
 }
 
-// TryDeserialize reports failure and leaves the caller's object untouched when
-// the archive body is malformed. no_header keeps archive construction out of
-// the test: only the `ia >> t` step is under test here.
+// TryDeserialize reports failure for a malformed archive body, but it is NOT a
+// transaction: it runs `ia >> t` directly on the caller's object, so a body
+// that fails part-way through can leave `t` half-updated. This case is rejected
+// before any member is assigned, so `target` happens to stay equal to
+// `original` -- that equality is a property of this input, not a contract of
+// TryDeserialize. The transactional guarantee lives in the call sites, which
+// deserialize into a temporary and publish only on success (see test_6, test_7
+// and test_10). no_header keeps archive construction out of the test: only the
+// `ia >> t` step is under test here.
 void test_5() {
   weasel::CandidateInfo original;
   original.currentPage = 3;
@@ -123,6 +129,8 @@ void test_5() {
   boost::archive::text_wiarchive ia(ss, boost::archive::no_header);
 
   BOOST_TEST(!weasel::TryDeserialize(ia, target));
+  // Incidental to this input (it fails on the first extraction), not a rollback
+  // performed by TryDeserialize.
   BOOST_TEST(target == original);
 }
 
@@ -208,6 +216,55 @@ void test_9() {
   BOOST_TEST(!result);
 }
 
+// The transactional commit in _StoreCand is what actually protects the previous
+// state: this body is a real serialized CandidateInfo cut off well past the
+// archive header, so extraction succeeds for the leading members and only fails
+// later on. Without the temporary plus the commit-on-success in _StoreCand,
+// those already-read members would have overwritten cinfo before the failure
+// was noticed.
+void test_10() {
+  weasel::CandidateInfo serialized;
+  for (int i = 0; i < 6; ++i) {
+    weasel::Text cand;
+    cand.str = L"truncated-candidate";
+    serialized.candies.push_back(cand);
+  }
+  serialized.highlighted = 3;
+  serialized.currentPage = 4;
+  serialized.totalPages = 5;
+
+  std::wstringstream ss;
+  {
+    boost::archive::text_woarchive oa(ss);
+    oa << serialized;
+  }
+  std::wstring payload = ss.str();
+  BOOST_ASSERT(payload.size() > 120);
+  // Cut two thirds in: past the header, inside the candidate list. Trim back to
+  // the last space so the stream ends between tokens rather than mid-token,
+  // which keeps the failure a plain input-stream error instead of a bogus
+  // length field.
+  payload.resize(payload.size() * 2 / 3);
+  std::wstring::size_type last_space = payload.rfind(L' ');
+  if (last_space != std::wstring::npos && last_space > 0)
+    payload.resize(last_space);
+
+  std::wstring commit;
+  weasel::Context ctx;
+  weasel::Status status;
+  weasel::Text keep;
+  keep.str = L"keep me";
+  ctx.cinfo.candies.push_back(keep);
+  ctx.cinfo.currentPage = 9;
+  const weasel::CandidateInfo before = ctx.cinfo;
+
+  weasel::ResponseParser parser(&commit, &ctx, &status);
+  parser.Feed(L"action=ctx");
+  parser.Feed(L"ctx.cand=" + payload);
+
+  BOOST_TEST(ctx.cinfo == before);
+}
+
 int _tmain(int argc, _TCHAR* argv[]) {
   test_1();
   test_2();
@@ -218,6 +275,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
   test_7();
   test_8();
   test_9();
+  test_10();
 
   system("pause");
   return boost::report_errors();
