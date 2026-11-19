@@ -546,12 +546,12 @@ void serialize(Archive& ar, weasel::UIStyle& s, const unsigned int version) {
 template <typename Archive>
 void serialize(Archive& ar, weasel::UIStyle::ZebraSlot& s,
                const unsigned int version) {
-  ar& s.pattern;
-  ar& s.back_color;
-  ar& s.text_color;
-  ar& s.label_color;
-  ar& s.comment_color;
-  ar& s.border_color;
+  ar & s.pattern;
+  ar & s.back_color;
+  ar & s.text_color;
+  ar & s.label_color;
+  ar & s.comment_color;
+  ar & s.border_color;
 }
 
 template <typename Archive>
