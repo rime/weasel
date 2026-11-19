@@ -254,8 +254,7 @@ struct UIStyle {
     bool operator==(const ZebraSlot& s) const {
       return pattern == s.pattern && back_color == s.back_color &&
              text_color == s.text_color && label_color == s.label_color &&
-             comment_color == s.comment_color &&
-             border_color == s.border_color;
+             comment_color == s.comment_color && border_color == s.border_color;
     }
     bool operator!=(const ZebraSlot& s) const { return !(*this == s); }
   };
@@ -418,8 +417,7 @@ struct UIStyle {
         current_full_icon != st.current_full_icon ||
         enhanced_position != st.enhanced_position ||
         click_to_capture != st.click_to_capture ||
-        zebra_hilite != st.zebra_hilite ||
-        zebra_slots != st.zebra_slots ||
+        zebra_hilite != st.zebra_hilite || zebra_slots != st.zebra_slots ||
         label_text_format != st.label_text_format ||
         min_width != st.min_width || max_width != st.max_width ||
         min_height != st.min_height || max_height != st.max_height ||
@@ -548,12 +546,12 @@ void serialize(Archive& ar, weasel::UIStyle& s, const unsigned int version) {
 template <typename Archive>
 void serialize(Archive& ar, weasel::UIStyle::ZebraSlot& s,
                const unsigned int version) {
-  ar & s.pattern;
-  ar & s.back_color;
-  ar & s.text_color;
-  ar & s.label_color;
-  ar & s.comment_color;
-  ar & s.border_color;
+  ar& s.pattern;
+  ar& s.back_color;
+  ar& s.text_color;
+  ar& s.label_color;
+  ar& s.comment_color;
+  ar& s.border_color;
 }
 
 template <typename Archive>
