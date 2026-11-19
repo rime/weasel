@@ -544,7 +544,8 @@ void serialize(Archive& ar, weasel::UIStyle& s, const unsigned int version) {
 }
 
 template <typename Archive>
-void serialize(Archive& ar, weasel::UIStyle::ZebraSlot& s,
+void serialize(Archive& ar,
+               weasel::UIStyle::ZebraSlot& s,
                const unsigned int version) {
   ar & s.pattern;
   ar & s.back_color;
