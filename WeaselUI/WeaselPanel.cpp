@@ -679,6 +679,35 @@ bool WeaselPanel::_DrawCandidates() {
                              : m_style.candidate_back_color;
     int border_color = hilited ? m_style.hilited_candidate_border_color
                                : m_style.candidate_border_color;
+    // zebra stripes: the first slot whose repeating pattern selects this
+    // row (pattern[i % len], i 0-based, so "01" lights the 2nd, 4th, ...
+    // rows) lends its colors; 0 (transparent) inherits the scheme's
+    // hilited colors so a slot only overrides what it specifies. Rows
+    // matching no slot keep the scheme's normal colors. The moving
+    // selection and hover highlight keep precedence over stripes.
+    if (!hilited && i != m_hoverIndex && m_style.zebra_hilite) {
+      for (const auto& slot : m_style.zebra_slots) {
+        const size_t len = slot.pattern.size();
+        if (len && slot.pattern[i % len] == L'1') {
+          if (COLORNOTTRANSPARENT(slot.back_color))
+            back_color = slot.back_color;
+          else if (COLORNOTTRANSPARENT(m_style.hilited_candidate_back_color))
+            back_color = m_style.hilited_candidate_back_color;
+          if (COLORNOTTRANSPARENT(slot.border_color))
+            border_color = slot.border_color;
+          label_text_color = COLORNOTTRANSPARENT(slot.label_color)
+                                 ? slot.label_color
+                                 : m_style.hilited_label_text_color;
+          candidate_text_color = COLORNOTTRANSPARENT(slot.text_color)
+                                     ? slot.text_color
+                                     : m_style.hilited_candidate_text_color;
+          comment_text_color = COLORNOTTRANSPARENT(slot.comment_color)
+                                   ? slot.comment_color
+                                   : m_style.hilited_comment_text_color;
+          break;
+        }
+      }
+    }
     hilitefunc(i, back_color, 0, border_color, m_style.border);
     if (i >= 0 && i < (int)labels.size()) {
       auto rc = m_layout->GetCandidateLabelRect(i);

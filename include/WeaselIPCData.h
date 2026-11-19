@@ -233,6 +233,32 @@ struct UIStyle {
   bool enhanced_position;
   bool click_to_capture;
   HoverType hover_type;
+  // zebra stripes: named highlight slots, each with its own repeating
+  // pattern and optional colors; a candidate row matching slot k's pattern
+  // (first match wins) is drawn with that slot's colors
+  bool zebra_hilite;
+  struct ZebraSlot {
+    std::wstring pattern;
+    int back_color;
+    int text_color;
+    int label_color;
+    int comment_color;
+    int border_color;
+    ZebraSlot()
+        : pattern(L"01"),
+          back_color(0),
+          text_color(0),
+          label_color(0),
+          comment_color(0),
+          border_color(0) {}
+    bool operator==(const ZebraSlot& s) const {
+      return pattern == s.pattern && back_color == s.back_color &&
+             text_color == s.text_color && label_color == s.label_color &&
+             comment_color == s.comment_color && border_color == s.border_color;
+    }
+    bool operator!=(const ZebraSlot& s) const { return !(*this == s); }
+  };
+  std::vector<ZebraSlot> zebra_slots;
   AntiAliasMode antialias_mode;
   PreeditType preedit_type;
   // custom icon settings
@@ -311,6 +337,7 @@ struct UIStyle {
         enhanced_position(false),
         click_to_capture(false),
         hover_type(NONE),
+        zebra_hilite(false),
         antialias_mode(DEFAULT),
         preedit_type(COMPOSITION),
         current_zhung_icon(),
@@ -390,6 +417,7 @@ struct UIStyle {
         current_full_icon != st.current_full_icon ||
         enhanced_position != st.enhanced_position ||
         click_to_capture != st.click_to_capture ||
+        zebra_hilite != st.zebra_hilite || zebra_slots != st.zebra_slots ||
         label_text_format != st.label_text_format ||
         min_width != st.min_width || max_width != st.max_width ||
         min_height != st.min_height || max_height != st.max_height ||
@@ -507,6 +535,24 @@ void serialize(Archive& ar, weasel::UIStyle& s, const unsigned int version) {
   ar & s.client_caps;
   ar & s.baseline;
   ar & s.linespacing;
+  // zebra slots: appended last so the legacy stream prefix stays
+  // byte-compatible with older peers (an old peer reads the prefix and
+  // ignores the trailing bytes; a new peer against an old server only
+  // exists in a half-install window and fails deserialization there)
+  ar & s.zebra_hilite;
+  ar & s.zebra_slots;
+}
+
+template <typename Archive>
+void serialize(Archive& ar,
+               weasel::UIStyle::ZebraSlot& s,
+               const unsigned int version) {
+  ar & s.pattern;
+  ar & s.back_color;
+  ar & s.text_color;
+  ar & s.label_color;
+  ar & s.comment_color;
+  ar & s.border_color;
 }
 
 template <typename Archive>
