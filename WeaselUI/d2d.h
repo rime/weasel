@@ -76,6 +76,9 @@ class DeviceResources {
  private:
   DeviceResources();
   bool initialized;
+  // Guards EnsureInitialized()/Reset(): the shared device may be created or
+  // released from more than one thread (UI paint vs IPC pipe thread).
+  std::mutex mutex_;
 };
 
 struct IsToRoundStruct {

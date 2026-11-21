@@ -168,8 +168,20 @@ class PipeChannel : public PipeChannelBase {
     try {
       _WritePipe(pipe, data_sz, pbuff);
     } catch (...) {
+      // The handle cached for this thread is now invalid; reconnect and retry
+      // once on the fresh handle. NB: _GetPipeHandle() returns HANDLE*, so it
+      // must be dereferenced -- passing the pointer itself hands WriteFile() an
+      // invalid handle, so the retry could never succeed (the request was
+      // silently dropped and the send-context left dirty).
       _Reconnect();
-      _WritePipe(_GetPipeHandle(), data_sz, pbuff);
+      try {
+        _WritePipe(*_GetPipeHandle(), data_sz, pbuff);
+      } catch (...) {
+        // Keep the send-context clean even when the retry fails, otherwise the
+        // stale body / has_body survives into the next message.
+        ClearBufferStream();
+        throw;
+      }
     }
     ClearBufferStream();
   }

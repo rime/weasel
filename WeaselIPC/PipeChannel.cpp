@@ -40,8 +40,17 @@ bool PipeChannelBase::_Ensure() {
 
 HANDLE PipeChannelBase::_Connect(const wchar_t* name) {
   HANDLE pipe = INVALID_HANDLE_VALUE;
-  while (_Invalid(pipe = _TryConnect()))
-    ::WaitNamedPipe(name, 500);
+  // Bound the wait. _Connect() runs on the host's UI thread (TSF callbacks), so
+  // an unbounded retry loop -- e.g. the server keeps the name but every pipe
+  // instance stays busy after a wedged connection thread -- freezes typing with
+  // no way out until the user switches IME. Give up after ~2s and let the caller
+  // fall back to "don't eat the key".
+  const ULONGLONG deadline = ::GetTickCount64() + 2000;
+  while (_Invalid(pipe = _TryConnect())) {
+    if (::GetTickCount64() >= deadline)
+      return INVALID_HANDLE_VALUE;
+    ::WaitNamedPipe(name, 200);
+  }
   DWORD mode = PIPE_READMODE_MESSAGE;
   if (!SetNamedPipeHandleState(pipe, &mode, NULL, NULL)) {
     _ThrowLastError;

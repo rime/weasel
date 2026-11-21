@@ -308,15 +308,11 @@ void WeaselPanel::Refresh() {
     m_pD2D->InitDirectWriteResources();
   m_ostyle = m_style;
   _UpdateHideCandidates();
-  auto hr = m_pD2D->direct3dDevice
-                ? m_pD2D->direct3dDevice->GetDeviceRemovedReason()
-                : DXGI_ERROR_DEVICE_REMOVED;
-  if (hr != S_OK) {
-    DEBUG << "Device removed detected: " << HRESULTToString(hr);
-    DeviceResources::Get().Reset();
-    if (m_pD2D->swapChain)  // only reinit window resources if attached
-      m_pD2D->InitDirect2D();
-  }
+  // NOTE: do NOT touch/release the shared D3D device here. Refresh() runs on the
+  // IPC pipe thread while WM_PAINT (DoPaint) runs on the server's message
+  // thread; releasing DeviceResources from this thread frees COM objects
+  // mid-draw (use-after-release / torn frames). Device-lost recovery is done in
+  // DoPaint() on the message thread instead.
   _CreateLayout();
   m_layout->DoLayout();
   _ResizeWindow();
@@ -421,13 +417,20 @@ void WeaselPanel::_UpdateOffsetY(CRect& arc, CRect& prc) {
 }
 
 void WeaselPanel::DoPaint() {
-  if (!m_pD2D || !m_layout || !m_pD2D->dc || !m_pD2D->swapChain)
+  if (!m_pD2D || !m_layout)
     return;
   auto hr = m_pD2D->direct3dDevice
                 ? m_pD2D->direct3dDevice->GetDeviceRemovedReason()
                 : DXGI_ERROR_DEVICE_REMOVED;
-  if (FAILED(hr)) {
-    DEBUG << HRESULTToString(hr);
+  if (FAILED(hr) || !m_pD2D->dc || !m_pD2D->swapChain) {
+    if (FAILED(hr))
+      DEBUG << "Device removed: " << HRESULTToString(hr);
+    // Recover on the message thread (we are inside WM_PAINT): release the
+    // shared device so InitDirect2D() rebuilds from a live one. Doing this
+    // here (not in Refresh(), which runs on the IPC pipe thread) keeps all
+    // device release/recreation on the thread that owns the window, and also
+    // retries when a previous InitDirect2D() left dc/swapChain null.
+    DeviceResources::Get().Reset();
     m_pD2D->InitDirect2D();
     if (!m_pD2D->dc || !m_pD2D->swapChain)
       return;
@@ -494,8 +497,16 @@ void WeaselPanel::DoPaint() {
     m_pD2D->InitDirect2D();
     return;
   }
-  // Make the swap chain available to the composition engine
-  HRESULT hrPresent = m_pD2D->swapChain->Present(1, 0);  // sync
+  // Make the swap chain available to the composition engine.
+  // Use a non-vsync Present: this paint can run while the candidate window is
+  // occluded, the compositor is throttled, or the display is asleep, where a
+  // synchronous Present(sync interval 1) can block for a long time. While it
+  // blocks, the server holds g_api_mutex and every queued IPC request from the
+  // host stalls (keys stop being eaten -> letters pass straight through).
+  HRESULT hrPresent = m_pD2D->swapChain->Present(0, 0);
+  if (hrPresent == DXGI_ERROR_WAS_STILL_DRAWING) {
+    return;  // frame not queued this time; a later RedrawWindow() repaints
+  }
   if (hrPresent == DXGI_ERROR_DEVICE_REMOVED ||
       hrPresent == DXGI_ERROR_DEVICE_RESET) {
     DEBUG << "Device lost during Present: " << HRESULTToString(hrPresent);

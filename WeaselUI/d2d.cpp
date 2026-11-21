@@ -30,6 +30,7 @@ DeviceResources& DeviceResources::Get() {
 DeviceResources::DeviceResources() : initialized(false) {}
 
 HRESULT DeviceResources::EnsureInitialized() {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (initialized)
     return S_OK;
   HRESULT hr = S_OK;
@@ -92,6 +93,7 @@ HRESULT DeviceResources::EnsureInitialized() {
 }
 
 void DeviceResources::Reset() {
+  std::lock_guard<std::mutex> lock(mutex_);
   // release shared device resources so they can be recreated
   SafeReleaseAll(direct3dDevice, dxgiDevice, dxFactory, d2Factory, d2Device,
                  dcompDevice, m_pWriteFactory, wicFactory);
@@ -283,10 +285,10 @@ void D2D::OnResize(UINT width, UINT height) {
       swapChain->ResizeBuffers(2, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
   if (hr == DXGI_ERROR_DEVICE_RESET || hr == DXGI_ERROR_DEVICE_REMOVED) {
     DEBUG << "Device lost during ResizeBuffers: " << HRESULTToString(hr);
-    // attempt device recovery
-    DeviceResources::Get().Reset();
-    // per-window resources will be recreated by re-initializing
-    InitDirect2D();
+    // Do NOT release/recreate the shared device from here: OnResize() is
+    // reached from Refresh()->_ResizeWindow() on the IPC pipe thread. Leave the
+    // stale swap chain in place; DoPaint() detects the lost device on the
+    // message thread and rebuilds it there.
     return;
   }
   HR(hr);
