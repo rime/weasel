@@ -90,7 +90,7 @@ void test_4() {
 
 // The server's protocol.version line is tracked even when no other
 // deserializer is active.
-void test_10() {
+void protocol_version_line_is_parsed() {
   std::wstring commit;
   weasel::Context ctx;
   weasel::Status status;
@@ -101,7 +101,7 @@ void test_10() {
 
 // Whatever the compiled-in constant is, the parser reports verbatim what the
 // server sent; the comparison against the client constant happens elsewhere.
-void test_11() {
+void protocol_version_reported_verbatim() {
   std::wstring commit;
   weasel::Context ctx;
   weasel::Status status;
@@ -111,7 +111,7 @@ void test_11() {
 }
 
 // An old server without the handshake leaves the field at -1.
-void test_12() {
+void absent_protocol_version_is_minus_one() {
   std::wstring commit;
   weasel::Context ctx;
   weasel::Status status;
@@ -121,7 +121,7 @@ void test_12() {
 }
 
 // A malformed version value is treated as absent instead of guessing.
-void test_13() {
+void malformed_protocol_version_is_absent() {
   std::wstring commit;
   weasel::Context ctx;
   weasel::Status status;
@@ -136,7 +136,7 @@ void test_13() {
 
 // The handshake line flows through the full operator() path and does not
 // disturb parsing of the action lines that follow it.
-void test_14() {
+void handshake_line_does_not_disturb_action_parsing() {
   WCHAR resp[] =
       L"protocol.version=1\n"
       L"action=commit\n"
@@ -157,7 +157,7 @@ void test_14() {
 // getline fail inside the loop -- the early-return path in the original code.
 // The version observed so far must still be available, and the parse must
 // still report failure. Diagnostics used to be skipped entirely here.
-void test_15() {
+void truncated_response_keeps_protocol_version() {
   WCHAR resp[] =
       L"protocol.version=1\n"
       L"action=commit\n"
@@ -176,7 +176,7 @@ void test_15() {
 // Same early-return path, but the response was cut before the version line:
 // the field stays at -1 so the report can say "truncated before
 // protocol.version" rather than blaming an old server.
-void test_16() {
+void truncation_before_version_line_is_distinguished() {
   WCHAR resp[] =
       L"action=commit\n"
       L"commit=abc\n";
@@ -192,32 +192,30 @@ void test_16() {
 }
 
 int _tmain(int argc, _TCHAR* argv[]) {
-  // test_4 still encodes the retired per-field ctx.cand protocol on this base
-  // and aborts (BOOST_ASSERT) before the handshake cases would run -- #1983
-  // rewrites it. The selector lets the handshake subset be validated on any
-  // base:  TestResponseParser.exe /handshake
+  // Selector for validating the handshake subset alone, independent of the
+  // other response-parser cases:  TestResponseParser.exe /handshake
   const bool handshake_only = (argc > 1 && !wcscmp(argv[1], L"/handshake"));
 
   if (handshake_only) {
-    test_10();
-    test_11();
-    test_12();
-    test_13();
-    test_14();
-    test_15();
-    test_16();
+    protocol_version_line_is_parsed();
+    protocol_version_reported_verbatim();
+    absent_protocol_version_is_minus_one();
+    malformed_protocol_version_is_absent();
+    handshake_line_does_not_disturb_action_parsing();
+    truncated_response_keeps_protocol_version();
+    truncation_before_version_line_is_distinguished();
   } else {
     test_1();
     test_2();
     test_3();
     test_4();
-    test_10();
-    test_11();
-    test_12();
-    test_13();
-    test_14();
-    test_15();
-    test_16();
+    protocol_version_line_is_parsed();
+    protocol_version_reported_verbatim();
+    absent_protocol_version_is_minus_one();
+    malformed_protocol_version_is_absent();
+    handshake_line_does_not_disturb_action_parsing();
+    truncated_response_keeps_protocol_version();
+    truncation_before_version_line_is_distinguished();
   }
 
   system("pause");
