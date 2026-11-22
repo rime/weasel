@@ -695,6 +695,8 @@ bool WeaselPanel::_DrawCandidates() {
             back_color = m_style.hilited_candidate_back_color;
           if (COLORNOTTRANSPARENT(slot.border_color))
             border_color = slot.border_color;
+          else if (COLORNOTTRANSPARENT(m_style.hilited_candidate_border_color))
+            border_color = m_style.hilited_candidate_border_color;
           label_text_color = COLORNOTTRANSPARENT(slot.label_color)
                                  ? slot.label_color
                                  : m_style.hilited_label_text_color;
