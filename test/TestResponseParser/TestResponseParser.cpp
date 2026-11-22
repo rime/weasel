@@ -112,10 +112,10 @@ void test_4() {
 // before any member is assigned, so `target` happens to stay equal to
 // `original` -- that equality is a property of this input, not a contract of
 // TryDeserialize. The transactional guarantee lives in the call sites, which
-// deserialize into a temporary and publish only on success (see test_6, test_7
-// and test_10). no_header keeps archive construction out of the test: only the
-// `ia >> t` step is under test here.
-void test_5() {
+// deserialize into a temporary and publish only on success (see the
+// malformed_ctx_cand and malformed_style cases below). no_header keeps archive
+// construction out of the test: only the `ia >> t` step is under test here.
+void try_deserialize_reports_failure_without_transaction() {
   weasel::CandidateInfo original;
   original.currentPage = 3;
   original.totalPages = 7;
@@ -136,7 +136,7 @@ void test_5() {
 
 // A malformed ctx.cand value goes through the real ResponseParser dispatch.
 // _StoreCand must swallow the exception and leave the previous cinfo intact.
-void test_6() {
+void malformed_ctx_cand_keeps_previous_cinfo() {
   std::wstring commit;
   weasel::Context ctx;
   weasel::Status status;
@@ -156,7 +156,7 @@ void test_6() {
 }
 
 // Same guarantee for the style deserializer.
-void test_7() {
+void malformed_style_keeps_previous_values() {
   std::wstring commit;
   weasel::Context ctx;
   weasel::Status status;
@@ -175,7 +175,7 @@ void test_7() {
 }
 
 // The transactional change must still publish a well-formed archive.
-void test_8() {
+void transactional_store_publishes_valid_archive() {
   weasel::CandidateInfo expected;
   weasel::Text cand;
   cand.str = L"candidate-one";
@@ -207,7 +207,7 @@ void test_8() {
 
 // The outermost IPC barrier converts a throwing handler into `false`
 // instead of letting the exception reach the caller / TSF callback.
-void test_9() {
+void pipe_channel_swallows_handler_exception() {
   weasel::PipeChannel<DWORD> channel(
       std::wstring(L"\\\\.\\pipe\\weasel-p2-unused"));
   bool result = channel.HandleResponseData([](LPWSTR, UINT) -> bool {
@@ -222,7 +222,7 @@ void test_9() {
 // later on. Without the temporary plus the commit-on-success in _StoreCand,
 // those already-read members would have overwritten cinfo before the failure
 // was noticed.
-void test_10() {
+void truncated_candidate_transaction_commits_nothing() {
   weasel::CandidateInfo serialized;
   for (int i = 0; i < 6; ++i) {
     weasel::Text cand;
@@ -270,12 +270,12 @@ int _tmain(int argc, _TCHAR* argv[]) {
   test_2();
   test_3();
   test_4();
-  test_5();
-  test_6();
-  test_7();
-  test_8();
-  test_9();
-  test_10();
+  try_deserialize_reports_failure_without_transaction();
+  malformed_ctx_cand_keeps_previous_cinfo();
+  malformed_style_keeps_previous_values();
+  transactional_store_publishes_valid_archive();
+  pipe_channel_swallows_handler_exception();
+  truncated_candidate_transaction_commits_nothing();
 
   system("pause");
   return boost::report_errors();
