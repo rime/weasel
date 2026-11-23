@@ -134,6 +134,50 @@ void malformed_protocol_version_is_absent() {
   BOOST_TEST_EQ(-1, parser2.server_protocol_version);
 }
 
+// Only a plain non-negative decimal is accepted. A negative value must not
+// share the -1 "absent" sentinel, and surrounding whitespace/signs are not
+// part of the version grammar.
+void non_decimal_protocol_version_is_absent() {
+  std::wstring commit;
+  weasel::Context ctx;
+  weasel::Status status;
+
+  weasel::ResponseParser negative(&commit, &ctx, &status);
+  negative.Feed(L"protocol.version=-1");
+  BOOST_TEST_EQ(-1, negative.server_protocol_version);
+
+  weasel::ResponseParser leading_space(&commit, &ctx, &status);
+  leading_space.Feed(L"protocol.version= 1");
+  BOOST_TEST_EQ(-1, leading_space.server_protocol_version);
+
+  weasel::ResponseParser trailing_space(&commit, &ctx, &status);
+  trailing_space.Feed(L"protocol.version=1 ");
+  BOOST_TEST_EQ(-1, trailing_space.server_protocol_version);
+
+  weasel::ResponseParser plus_sign(&commit, &ctx, &status);
+  plus_sign.Feed(L"protocol.version=+1");
+  BOOST_TEST_EQ(-1, plus_sign.server_protocol_version);
+}
+
+// A version outside the int field's range is rejected rather than wrapped.
+void out_of_range_protocol_version_is_absent() {
+  std::wstring commit;
+  weasel::Context ctx;
+  weasel::Status status;
+
+  weasel::ResponseParser at_max(&commit, &ctx, &status);
+  at_max.Feed(L"protocol.version=2147483647");
+  BOOST_TEST_EQ(2147483647, at_max.server_protocol_version);
+
+  weasel::ResponseParser too_large(&commit, &ctx, &status);
+  too_large.Feed(L"protocol.version=2147483648");
+  BOOST_TEST_EQ(-1, too_large.server_protocol_version);
+
+  weasel::ResponseParser huge(&commit, &ctx, &status);
+  huge.Feed(L"protocol.version=99999999999999999999");
+  BOOST_TEST_EQ(-1, huge.server_protocol_version);
+}
+
 // The handshake line flows through the full operator() path and does not
 // disturb parsing of the action lines that follow it.
 void handshake_line_does_not_disturb_action_parsing() {
@@ -201,6 +245,8 @@ int _tmain(int argc, _TCHAR* argv[]) {
     protocol_version_reported_verbatim();
     absent_protocol_version_is_minus_one();
     malformed_protocol_version_is_absent();
+    non_decimal_protocol_version_is_absent();
+    out_of_range_protocol_version_is_absent();
     handshake_line_does_not_disturb_action_parsing();
     truncated_response_keeps_protocol_version();
     truncation_before_version_line_is_distinguished();
@@ -213,6 +259,8 @@ int _tmain(int argc, _TCHAR* argv[]) {
     protocol_version_reported_verbatim();
     absent_protocol_version_is_minus_one();
     malformed_protocol_version_is_absent();
+    non_decimal_protocol_version_is_absent();
+    out_of_range_protocol_version_is_absent();
     handshake_line_does_not_disturb_action_parsing();
     truncated_response_keeps_protocol_version();
     truncation_before_version_line_is_distinguished();

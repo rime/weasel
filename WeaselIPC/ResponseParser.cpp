@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include <cerrno>
+#include <climits>
 #include <StringAlgorithm.hpp>
 #include <WeaselIPC.h>
 #include "Deserializer.h"
@@ -87,12 +89,27 @@ void ResponseParser::Feed(const std::wstring& line) {
   const std::wstring kVersionKey = L"protocol.version=";
   if (starts_with(line, kVersionKey)) {
     const std::wstring value = line.substr(kVersionKey.length());
-    wchar_t* end = nullptr;
-    const long parsed = wcstol(value.c_str(), &end, 10);
-    if (end && *end == L'\0' && end != value.c_str())
-      server_protocol_version = static_cast<int>(parsed);
-    else
-      server_protocol_version = -1;  // malformed value: treat as absent
+    // Only a plain, non-negative decimal integer is a valid version. wcstol
+    // alone would accept leading whitespace and a sign, letting "-1" collide
+    // with the "absent" sentinel used by the diagnostics below.
+    bool valid = !value.empty();
+    for (wchar_t ch : value) {
+      if (ch < L'0' || ch > L'9') {
+        valid = false;
+        break;
+      }
+    }
+    long parsed = 0;
+    if (valid) {
+      errno = 0;
+      wchar_t* end = nullptr;
+      parsed = wcstol(value.c_str(), &end, 10);
+      // ERANGE catches values beyond long; the INT_MAX cap also covers
+      // platforms where long is wider than the int field.
+      valid = errno != ERANGE && end != value.c_str() && *end == L'\0' &&
+              parsed <= INT_MAX;
+    }
+    server_protocol_version = valid ? static_cast<int>(parsed) : -1;
     return;
   }
 
