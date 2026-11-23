@@ -30,13 +30,14 @@ function Invoke-Setup {
   param(
     [string]$Path,
     [string]$Arguments,
-    [switch]$ExpectFailure
+    [switch]$ExpectFailure,
+    [int]$TimeoutMs = 180000
   )
   Write-Output ('Running: ' + $Path + ' ' + $Arguments)
   $process = [Diagnostics.Process]::Start($Path, $Arguments)
-  if (-not $process.WaitForExit(180000)) {
+  if (-not $process.WaitForExit($TimeoutMs)) {
     $process.Kill()
-    throw 'Setup timed out.'
+    throw ('Setup timed out after ' + $TimeoutMs + ' ms.')
   }
   $code = $process.ExitCode
   Write-Output ('Exit code: ' + $code)
@@ -207,4 +208,62 @@ foreach ($oldPid in $oldPids) {
 $afterServer = Get-BinaryState $installRoot
 Compare-BinaryState -Expected $expected -Actual $afterServer -Context 'Reinstall with a running server'
 
-Write-Output 'Half-install protection verified: stale files replaced, locked files abort, running server stopped.'
+# --- 5. A /quit client that never returns must not block the installer -------
+# WeaselServer.exe /quit is a synchronous named-pipe client: PipeChannel's
+# _Connect() loops in WaitNamedPipe() with no overall deadline. If the server's
+# pipe is stuck, a real /quit process hangs forever. An installer that used
+# ExecWait would then hang behind it and its force-kill would never run.
+#
+# Simulate both halves with a stub named WeaselServer.exe that sleeps forever
+# whether started with no arguments (the "server") or with /quit (the stuck
+# client). The installer uses Exec fire-and-forget, so the helper still gets
+# its 10s graceful window, force-kills by image path, and finishes.
+Write-Output '--- Phase 5: unresponsive /quit client ---'
+$cscPath = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+if (-not (Test-Path -LiteralPath $cscPath)) {
+  throw ('Cannot find C# compiler at ' + $cscPath + '; needed to build the hanging /quit stub.')
+}
+$stubSource = Join-Path ([IO.Path]::GetTempPath()) ('weasel-quit-stub-' + $PID + '.cs')
+$stubPath = Join-Path ([IO.Path]::GetTempPath()) ('weasel-quit-stub-' + $PID + '.exe')
+@'
+using System;
+using System.Threading;
+public class HangingWeaselServer {
+  public static void Main(string[] args) { Thread.Sleep(Timeout.Infinite); }
+}
+'@ | Set-Content -LiteralPath $stubSource -Encoding ASCII
+& $cscPath -nologo -target:exe -out:$stubPath $stubSource | Out-Null
+if (-not (Test-Path -LiteralPath $stubPath)) {
+  throw 'Failed to compile the hanging /quit stub.'
+}
+
+$realServerPath = Join-Path $installRoot 'WeaselServer.exe'
+$backupPath = Join-Path ([IO.Path]::GetTempPath()) ('weasel-server-real-' + $PID + '.exe')
+Copy-Item -LiteralPath $realServerPath -Destination $backupPath -Force
+try {
+  Stop-WeaselServers -Root $installRoot
+  Copy-Item -LiteralPath $stubPath -Destination $realServerPath -Force
+  $stubServer = Start-Process -FilePath $realServerPath -PassThru
+  Start-Sleep -Seconds 1
+  if ($stubServer.HasExited) {
+    throw 'The hanging /quit stub exited unexpectedly; the test fixture is invalid.'
+  }
+  Write-Output ('Hanging server stub started: pid ' + $stubServer.Id)
+
+  # 45s: generous over the expected ~13s, far below an unbounded ExecWait.
+  # If the installer ever waits on the /quit process, this times out and fails.
+  Invoke-Setup $Installer '/S' -TimeoutMs 45000
+
+  if (-not $stubServer.HasExited) {
+    throw ('The hanging server stub (pid ' + $stubServer.Id + ') survived the installer; force-kill never ran.')
+  }
+  Write-Output 'Hanging /quit stub was force-killed by the installer.'
+  $afterHang = Get-BinaryState $installRoot
+  Compare-BinaryState -Expected $expected -Actual $afterHang -Context 'Reinstall after unresponsive /quit'
+} finally {
+  Stop-WeaselServers -Root $installRoot
+  Copy-Item -LiteralPath $backupPath -Destination $realServerPath -Force
+  Remove-Item -LiteralPath $stubSource, $stubPath, $backupPath -Force -ErrorAction SilentlyContinue
+}
+
+Write-Output 'Half-install protection verified: stale files replaced, locked files abort, running server stopped, hung /quit force-killed.'

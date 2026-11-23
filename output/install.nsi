@@ -166,6 +166,15 @@ LangString STALEIMEDLLS ${LANG_ENGLISH} "The input method DLLs in the system dir
 ;   alone is not enough.
 ;
 ;   Implementation notes:
+;   - The graceful request is launched with `Exec`, NOT `ExecWait`:
+;     WeaselServer.exe /quit is itself a client that connects to the running
+;     server through a synchronous named-pipe IPC. PipeChannel::_Connect()
+;     loops in WaitNamedPipe() with no overall deadline, and ShutdownServer()
+;     blocks on a response with no timeout. If the server's pipe is stuck,
+;     the /quit client hangs, and ExecWait would hang the installer behind it
+;     before the helper below ever gets a chance to enforce its deadline.
+;     Exec starts the request and returns immediately; only the helper below
+;     waits, and it always reaches the force-kill and final check.
 ;   - Existence is polled by image path, NOT by a file lock probe: Windows
 ;     lets a running executable's file be renamed (only writes and deletes
 ;     are denied), so "rename succeeded" does not prove the process exited.
@@ -197,7 +206,10 @@ Function ${UN}StopWeaselServer
     FileWrite $R0 "while((Get-Date) -lt $$d){ if((Get-Self).Count -eq 0){ exit 0 }; Start-Sleep -Milliseconds 250 }$\r$\n"
     FileWrite $R0 "exit 1$\r$\n"
     FileClose $R0
-    ExecWait '"$R1" /quit'
+    ; Fire-and-forget: the helper below owns the whole timeout budget. Never
+    ; ExecWait here - a /quit client stuck in WaitNamedPipe() would otherwise
+    ; block this installer forever, so the force-kill below would never run.
+    Exec '"$R1" /quit'
     nsExec::ExecToStack 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$PLUGINSDIR\stop-weasel.ps1" -Path "$R1"'
     Pop $R0 ; exit code: 0 = no path-matched process left
     Pop $R2 ; captured output (unused)
