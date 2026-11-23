@@ -52,14 +52,41 @@ void ResponseParser::_ReportProtocolVersion(bool parsed_ok) {
   // dialog (#1949). This is what makes a half-installed server/client pairing
   // visible in DebugView instead of surfacing later as an archive exception
   // inside a TSF callback (#1883).
-  if (server_protocol_version < 0) {
+  //
+  // DoEditSession builds a fresh ResponseParser for every response, so a
+  // per-instance flag cannot dedupe. Keep one-shot flags at process scope,
+  // keyed by the diagnostic, so an old server does not grow the debug log
+  // with one identical line per keystroke.
+  static bool reported_missing = false;
+  static bool reported_truncated = false;
+  static bool reported_invalid = false;
+
+  if (protocol_version_state == ProtocolVersionState::Missing) {
     // No version line. Either the peer predates the handshake, or the response
     // was cut before the header could be read -- say which one.
-    OutputDebugStringW(
-        parsed_ok
-            ? L"weasel: IPC response had no protocol.version (old server?)\n"
-            : L"weasel: IPC response truncated before protocol.version "
-              L"(unknown server)\n");
+    if (parsed_ok) {
+      if (!reported_missing) {
+        OutputDebugStringW(
+            L"weasel: IPC response had no protocol.version (old server?)\n");
+        reported_missing = true;
+      }
+    } else {
+      if (!reported_truncated) {
+        OutputDebugStringW(
+            L"weasel: IPC response truncated before protocol.version "
+            L"(unknown server)\n");
+        reported_truncated = true;
+      }
+    }
+  } else if (protocol_version_state == ProtocolVersionState::Invalid) {
+    // A version line was present but malformed -- a different diagnosis from
+    // an old server that never sends one.
+    if (!reported_invalid) {
+      OutputDebugStringW(
+          L"weasel: IPC response had an invalid "
+          L"protocol.version value\n");
+      reported_invalid = true;
+    }
   } else if (server_protocol_version != WEASEL_IPC_PROTOCOL_VERSION) {
     // Gated: a mismatched pair stays mismatched on every response, so this one
     // sits behind the LogLevel switch instead of spamming the trace.
@@ -69,13 +96,25 @@ void ResponseParser::_ReportProtocolVersion(bool parsed_ok) {
   }
 
   if (!parsed_ok) {
-    // The body did not parse. Report the version actually observed so a
-    // truncated response is not misread as an old server.
+    // The body did not parse. Describe the version state actually observed so
+    // a truncated response is not misread as an old server.
+    const char* version_desc = nullptr;
+    switch (protocol_version_state) {
+      case ProtocolVersionState::Missing:
+        version_desc = "absent";
+        break;
+      case ProtocolVersionState::Invalid:
+        version_desc = "invalid";
+        break;
+      case ProtocolVersionState::Valid:
+        version_desc = "valid";
+        break;
+    }
     DEBUG << "weasel: IPC response did not parse; server protocol="
-          << (server_protocol_version < 0
-                  ? std::string("absent")
-                  : std::to_string(server_protocol_version))
-          << "\n";
+          << version_desc;
+    if (protocol_version_state == ProtocolVersionState::Valid)
+      DEBUG << "=" << server_protocol_version;
+    DEBUG << "\n";
   }
 }
 
@@ -109,7 +148,13 @@ void ResponseParser::Feed(const std::wstring& line) {
       valid = errno != ERANGE && end != value.c_str() && *end == L'\0' &&
               parsed <= INT_MAX;
     }
-    server_protocol_version = valid ? static_cast<int>(parsed) : -1;
+    if (valid) {
+      protocol_version_state = ProtocolVersionState::Valid;
+      server_protocol_version = static_cast<int>(parsed);
+    } else {
+      protocol_version_state = ProtocolVersionState::Invalid;
+      server_protocol_version = -1;
+    }
     return;
   }
 

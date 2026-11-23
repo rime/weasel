@@ -8,6 +8,16 @@
 namespace weasel {
 class Deserializer;
 
+// How the server advertised its protocol version in the current response.
+// Kept separate from the numeric field: an invalid version line and a missing
+// one both leave that field at -1, but they mean different things
+// diagnostically.
+enum class ProtocolVersionState {
+  Missing,
+  Valid,
+  Invalid,
+};
+
 // 解析server回應文本
 struct ResponseParser {
   std::map<std::wstring, std::shared_ptr<Deserializer> > deserializers;
@@ -19,9 +29,10 @@ struct ResponseParser {
   UIStyle* p_style;
 
   // Protocol version advertised by the server in this response, or -1 when
-  // the server sent no `protocol.version=` line (an old server without the
-  // handshake). Populated while parsing; the check happens in operator().
+  // the line was absent or invalid. Populated while parsing; the check happens
+  // in operator(). For the reason behind -1, see `protocol_version_state`.
   int server_protocol_version = -1;
+  ProtocolVersionState protocol_version_state = ProtocolVersionState::Missing;
 
   ResponseParser(std::wstring* commit,
                  Context* context = 0,

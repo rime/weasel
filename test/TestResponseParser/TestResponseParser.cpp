@@ -97,6 +97,8 @@ void protocol_version_line_is_parsed() {
   weasel::ResponseParser parser(&commit, &ctx, &status);
   parser.Feed(L"protocol.version=1");
   BOOST_TEST_EQ(WEASEL_IPC_PROTOCOL_VERSION, parser.server_protocol_version);
+  BOOST_TEST(parser.protocol_version_state ==
+             weasel::ProtocolVersionState::Valid);
 }
 
 // Whatever the compiled-in constant is, the parser reports verbatim what the
@@ -118,6 +120,8 @@ void absent_protocol_version_is_minus_one() {
   weasel::ResponseParser parser(&commit, &ctx, &status);
   parser.Feed(L"action=noop");
   BOOST_TEST_EQ(-1, parser.server_protocol_version);
+  BOOST_TEST(parser.protocol_version_state ==
+             weasel::ProtocolVersionState::Missing);
 }
 
 // A malformed version value is treated as absent instead of guessing.
@@ -128,10 +132,14 @@ void malformed_protocol_version_is_absent() {
   weasel::ResponseParser parser(&commit, &ctx, &status);
   parser.Feed(L"protocol.version=not-a-number");
   BOOST_TEST_EQ(-1, parser.server_protocol_version);
+  BOOST_TEST(parser.protocol_version_state ==
+             weasel::ProtocolVersionState::Invalid);
 
   weasel::ResponseParser parser2(&commit, &ctx, &status);
   parser2.Feed(L"protocol.version=1garbage");
   BOOST_TEST_EQ(-1, parser2.server_protocol_version);
+  BOOST_TEST(parser2.protocol_version_state ==
+             weasel::ProtocolVersionState::Invalid);
 }
 
 // Only a plain non-negative decimal is accepted. A negative value must not
@@ -215,6 +223,8 @@ void truncated_response_keeps_protocol_version() {
   const bool ok = parser(resp, len);
   BOOST_TEST(!ok);
   BOOST_TEST_EQ(1, parser.server_protocol_version);
+  BOOST_TEST(parser.protocol_version_state ==
+             weasel::ProtocolVersionState::Valid);
 }
 
 // Same early-return path, but the response was cut before the version line:
@@ -233,6 +243,39 @@ void truncation_before_version_line_is_distinguished() {
   const bool ok = parser(resp, len);
   BOOST_TEST(!ok);
   BOOST_TEST_EQ(-1, parser.server_protocol_version);
+  BOOST_TEST(parser.protocol_version_state ==
+             weasel::ProtocolVersionState::Missing);
+}
+
+// A fresh parser per response must classify each response independently: the
+// missing / invalid states are per-response even though the debug warnings are
+// deduplicated at process scope.
+void repeated_responses_classify_independently() {
+  WCHAR old_server[] =
+      L"action=noop\n"
+      L".\n";
+  WCHAR bad_version[] =
+      L"protocol.version=1garbage\n"
+      L"action=noop\n"
+      L".\n";
+  std::wstring commit;
+  weasel::Context ctx;
+  weasel::Status status;
+
+  weasel::ResponseParser first(&commit, &ctx, &status);
+  BOOST_TEST(first(old_server, wcslen(old_server)));
+  BOOST_TEST(first.protocol_version_state ==
+             weasel::ProtocolVersionState::Missing);
+
+  weasel::ResponseParser second(&commit, &ctx, &status);
+  BOOST_TEST(second(bad_version, wcslen(bad_version)));
+  BOOST_TEST(second.protocol_version_state ==
+             weasel::ProtocolVersionState::Invalid);
+
+  weasel::ResponseParser third(&commit, &ctx, &status);
+  BOOST_TEST(third(old_server, wcslen(old_server)));
+  BOOST_TEST(third.protocol_version_state ==
+             weasel::ProtocolVersionState::Missing);
 }
 
 int _tmain(int argc, _TCHAR* argv[]) {
@@ -250,6 +293,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
     handshake_line_does_not_disturb_action_parsing();
     truncated_response_keeps_protocol_version();
     truncation_before_version_line_is_distinguished();
+    repeated_responses_classify_independently();
   } else {
     test_1();
     test_2();
@@ -264,6 +308,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
     handshake_line_does_not_disturb_action_parsing();
     truncated_response_keeps_protocol_version();
     truncation_before_version_line_is_distinguished();
+    repeated_responses_classify_independently();
   }
 
   system("pause");
