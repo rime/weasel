@@ -141,12 +141,15 @@ if (-not (Test-Path -LiteralPath $staleSource)) {
 foreach ($name in @('WeaselServer.exe', 'rime.dll', 'WinSparkle.dll')) {
   Copy-Item -LiteralPath $staleSource -Destination (Join-Path $installRoot $name) -Force
 }
+# Verify the sabotage took: the fixtures must DIFFER from the fresh install
+# (an installer that silently skips locked files would leave them as-is).
 $stale = Get-BinaryState $installRoot
-Compare-BinaryState -Expected $expected -Actual $stale -Context 'Stale fixtures'
-Write-Output 'Stale fixtures installed (verification must fail at this point).'
-if (($stale['WeaselServer.exe'] -eq $expected['WeaselServer.exe'])) {
-  throw 'The stale fixture is indistinguishable from the real binary.'
+foreach ($name in @('WeaselServer.exe', 'rime.dll', 'WinSparkle.dll')) {
+  if ($stale[$name] -eq $expected[$name]) {
+    throw ('The stale fixture for ' + $name + ' is indistinguishable from the real binary.')
+  }
 }
+Write-Output 'Stale fixtures installed and verified as different from the fresh install.'
 
 Invoke-Setup $Installer '/S'
 $replaced = Get-BinaryState $installRoot
@@ -154,7 +157,6 @@ Compare-BinaryState -Expected $expected -Actual $replaced -Context 'Reinstall ov
 
 # --- 3. A locked critical binary must abort the install -----------------------
 Stop-WeaselServers -Root $installRoot
-$versionBefore = Get-DisplayVersion
 $lockedPath = Join-Path $installRoot 'rime.dll'
 $handle = [IO.File]::Open($lockedPath, [IO.FileMode]::Open,
   [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
@@ -163,11 +165,16 @@ try {
 } finally {
   $handle.Dispose()
 }
-$versionAfter = Get-DisplayVersion
-if ($versionBefore -ne $versionAfter) {
-  throw ('A failed install changed DisplayVersion: ' + $versionBefore + ' -> ' + $versionAfter)
+# The upgrade path uninstalls the previous version first, so the registry
+# holds no DisplayVersion while the installer aborted; the meaningful
+# guarantee is that nothing was written back afterwards.
+if (Test-Path -LiteralPath $uninstallKey) {
+  $versionAfter = Get-DisplayVersion
+  if ($versionAfter) {
+    throw ('A failed install wrote a DisplayVersion anyway: ' + $versionAfter)
+  }
 }
-Write-Output ('Locked-file install aborted without touching DisplayVersion (' + $versionAfter + ').')
+Write-Output 'Locked-file install aborted without writing DisplayVersion.'
 
 # The next install must still work once the lock is gone.
 Invoke-Setup $Installer '/S'

@@ -126,14 +126,30 @@ LangString STALEIMEDLLS ${LANG_ENGLISH} "The input method DLLs in the system dir
 
 ; FileCritical <source>
 ;   Extract one critical binary and record it when the write fails.
-;   SetOverwrite must be "on" around this: with "try" NSIS silently skips a
-;   locked destination and does NOT set the error flag - exactly how the
-;   half-installs this PR fixes were produced. The error flag is checked
-;   right after each File because a later command would otherwise mask an
-;   earlier failure.
+;   SetOverwrite is "on" around this block: a locked destination is then
+;   reported instead of being skipped silently, and an interactive install
+;   offers Retry so the user can close the locking program and continue.
+;   ("try" skips without any prompt; it sets the error flag too, but it never
+;   gives the user a chance to fix the lock mid-install - the old script did
+;   not check the flag either way, which is what produced the half-installs
+;   this PR fixes.) The error flag is checked right after each File because a
+;   later command would otherwise mask an earlier failure.
 !macro FileCritical SRC
   ClearErrors
   File "${SRC}"
+  ${If} ${Errors}
+    StrCpy $R3 "$R3$\n${SRC}"
+  ${EndIf}
+!macroend
+
+; FileCriticalNonfatal <source>
+;   Same as FileCritical for files the build may legitimately omit (the ARM
+;   DLLs on a non-arm64 build): /nonfatal turns a missing source into a
+;   compile warning, and a write failure of a packaged file is still
+;   recorded.
+!macro FileCriticalNonfatal SRC
+  ClearErrors
+  File /nonfatal "${SRC}"
   ${If} ${Errors}
     StrCpy $R3 "$R3$\n${SRC}"
   ${EndIf}
@@ -150,78 +166,58 @@ LangString STALEIMEDLLS ${LANG_ENGLISH} "The input method DLLs in the system dir
 ;   alone is not enough.
 ;
 ;   Implementation notes:
-;   - NSIS cannot wait on an already-running process handle, so poll with a
-;     lock probe: a running WeaselServer.exe cannot be renamed; success
-;     means the process has exited. Undo the probe immediately.
-;   - If the server is hung (it crashed hosts in the wild and may not
-;     answer /quit), force-kill only the server whose image path is the one
-;     we are installing over: `taskkill /IM` would also terminate a Weasel
-;     installation living in another directory.
-;   - A Function rather than a macro: the installer calls it from three
-;     places, and NSIS labels are file-scoped, so a macro would collide.
-Function StopWeaselServer
+;   - Existence is polled by image path, NOT by a file lock probe: Windows
+;     lets a running executable's file be renamed (only writes and deletes
+;     are denied), so "rename succeeded" does not prove the process exited.
+;     The helper script below waits up to 10s for the path-matched processes
+;     to disappear, force-kills them if they do not, waits up to 3s more,
+;     and exits 0 only when none is left; its exit code is the verdict.
+;   - Every match is filtered by full image path: `taskkill /IM
+;     WeaselServer.exe` would also terminate a Weasel installation living in
+;     another directory.
+;   - One body, two functions: NSIS compiles the installer and the
+;     uninstaller as separate programs, and uninstaller code may only call
+;     un.-prefixed functions (calling a plain one is a compile error), so
+;     the uninstaller gets its own copy. Labels are function-scoped, so the
+;     two copies cannot collide.
+!macro StopWeaselServerDef UN
+Function ${UN}StopWeaselServer
   Push $R0
   Push $R2
-  Push $R9
   ${If} ${FileExists} "$R1"
+    InitPluginsDir
+    FileOpen $R0 "$PLUGINSDIR\stop-weasel.ps1" w
+    FileWrite $R0 "param([string]$$Path)$\r$\n"
+    FileWrite $R0 "$$ErrorActionPreference='Stop'$\r$\n"
+    FileWrite $R0 "function Get-Self { @(Get-CimInstance Win32_Process -Filter $\"Name='WeaselServer.exe'$\" | Where-Object { $$_.ExecutablePath -ieq $$Path }) }$\r$\n"
+    FileWrite $R0 "$$d=(Get-Date).AddSeconds(10)$\r$\n"
+    FileWrite $R0 "while((Get-Date) -lt $$d){ if((Get-Self).Count -eq 0){ exit 0 }; Start-Sleep -Milliseconds 250 }$\r$\n"
+    FileWrite $R0 "Get-Self | ForEach-Object { Stop-Process -Id $$_.ProcessId -Force -ErrorAction SilentlyContinue }$\r$\n"
+    FileWrite $R0 "$$d=(Get-Date).AddSeconds(3)$\r$\n"
+    FileWrite $R0 "while((Get-Date) -lt $$d){ if((Get-Self).Count -eq 0){ exit 0 }; Start-Sleep -Milliseconds 250 }$\r$\n"
+    FileWrite $R0 "exit 1$\r$\n"
+    FileClose $R0
     ExecWait '"$R1" /quit'
-    StrCpy $R2 0
-  wait_quit_loop:
-    Sleep 500
-    IntOp $R2 $R2 + 1
-    ; Drop a probe left over from an interrupted run, else Rename below would
-    ; fail on an existing destination and look like a locked file.
-    Delete "$R1.weasel-lockprobe"
-    ClearErrors
-    Rename "$R1" "$R1.weasel-lockprobe"
-    ${If} ${Errors}
-      ${If} $R2 < 20 ; bounded graceful wait: ~10s
-        Goto wait_quit_loop
-      ${EndIf}
-      ; Still locked: force-kill, but only processes running the very binary
-      ; we are replacing. Keep a bounded second wait after the kill.
-      InitPluginsDir
-      FileOpen $R9 "$PLUGINSDIR\stop-weasel.ps1" w
-      FileWrite $R9 "Get-Process -Name WeaselServer -ErrorAction SilentlyContinue | Where-Object { $$_.Path -ieq '$R1' } | Stop-Process -Force$\r$\n"
-      FileClose $R9
-      nsExec::ExecToStack 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$PLUGINSDIR\stop-weasel.ps1"'
+    nsExec::ExecToStack 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$PLUGINSDIR\stop-weasel.ps1" -Path "$R1"'
+    Pop $R0 ; exit code: 0 = no path-matched process left
+    Pop $R2 ; captured output (unused)
+    ${If} $R0 != "0"
+      ; Server could not be stopped: abort, never half-install.
+      IfSilent server_abort_silent
+      MessageBox MB_OK|MB_ICONSTOP "$(SERVERSTILLRUNNING)"
+      server_abort_silent:
+      Pop $R2
       Pop $R0
-      Pop $R0
-      StrCpy $R2 0
-    force_wait_loop:
-      Sleep 500
-      IntOp $R2 $R2 + 1
-      Delete "$R1.weasel-lockprobe"
-      ClearErrors
-      Rename "$R1" "$R1.weasel-lockprobe"
-      ${If} ${Errors}
-        ${If} $R2 < 6 ; ~3s after force kill
-          Goto force_wait_loop
-        ${EndIf}
-        ; Server could not be stopped: abort, never half-install.
-        IfSilent server_abort_silent
-        MessageBox MB_OK|MB_ICONSTOP "$(SERVERSTILLRUNNING)"
-        server_abort_silent:
-        Pop $R9
-        Pop $R2
-        Pop $R0
-        Abort "$(SERVERSTILLRUNNING)"
-      ${EndIf}
-    ${EndIf}
-    ; Probe succeeded: the process is gone; restore the original name so the
-    ; following upgrade/uninstall logic sees an intact file layout.
-    ClearErrors
-    Rename "$R1.weasel-lockprobe" "$R1"
-    ${If} ${Errors}
-      ; Extremely unlikely (rename inside the same directory): schedule the
-      ; probe file for deletion at reboot rather than leaving it behind.
-      Delete /REBOOTOK "$R1.weasel-lockprobe"
+      Abort "$(SERVERSTILLRUNNING)"
     ${EndIf}
   ${EndIf}
-  Pop $R9
   Pop $R2
   Pop $R0
 FunctionEnd
+!macroend
+
+!insertmacro StopWeaselServerDef ""
+!insertmacro StopWeaselServerDef "un."
 
 ; VerifyCriticalBinaries
 ;   Called after the File block. $R3 already collects every critical File
@@ -487,9 +483,12 @@ program_files:
     !insertmacro FileCritical "weaselx64.dll"
   ${EndIf}
   ${If} ${IsNativeARM64}
-    File /nonfatal "weaselARM.dll"
-    File /nonfatal "weaselARM64.dll"
-    File /nonfatal "weaselARM64X.dll"
+    ; ARM64-only layouts name files differently; on other arches these files
+    ; are simply not packaged, so /nonfatal. When they ARE packaged, a write
+    ; failure is still recorded like any other critical binary.
+    !insertmacro FileCriticalNonfatal "weaselARM.dll"
+    !insertmacro FileCriticalNonfatal "weaselARM64.dll"
+    !insertmacro FileCriticalNonfatal "weaselARM64X.dll"
   ${EndIf}
   ; install x64 build for NativeARM64_WINDOWS11 and NativeAMD64_WINDOWS11
   ${If} ${AtLeastWin11} ; Windows 11 and above
@@ -648,7 +647,7 @@ Section "Uninstall"
   ; really gone before deleting, else locked files survive the uninstall.
   Push $R1
   StrCpy $R1 "$INSTDIR\WeaselServer.exe"
-  Call StopWeaselServer
+  Call un.StopWeaselServer
   Pop $R1
 
   ExecWait '"$INSTDIR\WeaselSetup.exe" /u'
