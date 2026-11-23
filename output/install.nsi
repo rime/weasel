@@ -181,6 +181,10 @@ LangString STALEIMEDLLS ${LANG_ENGLISH} "The input method DLLs in the system dir
 ;     The helper script below waits up to 10s for the path-matched processes
 ;     to disappear, force-kills them if they do not, waits up to 3s more,
 ;     and exits 0 only when none is left; its exit code is the verdict.
+;     The ExecToStack call also has a 20s /TIMEOUT as a last-resort wall
+;     clock: if PowerShell or its WMI query hangs before the helper reaches
+;     its own deadlines, nsExec kills the process and returns "timeout",
+;     which the check below treats like any other non-zero result.
 ;   - Every match is filtered by full image path: `taskkill /IM
 ;     WeaselServer.exe` would also terminate a Weasel installation living in
 ;     another directory.
@@ -210,8 +214,8 @@ Function ${UN}StopWeaselServer
     ; ExecWait here - a /quit client stuck in WaitNamedPipe() would otherwise
     ; block this installer forever, so the force-kill below would never run.
     Exec '"$R1" /quit'
-    nsExec::ExecToStack 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$PLUGINSDIR\stop-weasel.ps1" -Path "$R1"'
-    Pop $R0 ; exit code: 0 = no path-matched process left
+    nsExec::ExecToStack /TIMEOUT=20000 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$PLUGINSDIR\stop-weasel.ps1" -Path "$R1"'
+    Pop $R0 ; exit code: 0 = no path-matched process left; "timeout" = killed
     Pop $R2 ; captured output (unused)
     ${If} $R0 != "0"
       ; Server could not be stopped: abort, never half-install.
