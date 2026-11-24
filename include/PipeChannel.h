@@ -188,7 +188,7 @@ class PipeChannel : public PipeChannelBase {
       _WritePipe(pipe, data_sz, pbuff, timeout_ms);
     } catch (...) {
       _Reconnect();
-      _WritePipe(_GetPipeHandle(), data_sz, pbuff, timeout_ms);
+      _WritePipe(*_GetPipeHandle(), data_sz, pbuff, timeout_ms);
     }
     ClearBufferStream();
   }
