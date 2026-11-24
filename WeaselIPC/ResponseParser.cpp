@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <atomic>
 #include <cerrno>
 #include <climits>
 #include <StringAlgorithm.hpp>
@@ -57,35 +58,38 @@ void ResponseParser::_ReportProtocolVersion(bool parsed_ok) {
   // per-instance flag cannot dedupe. Keep one-shot flags at process scope,
   // keyed by the diagnostic, so an old server does not grow the debug log
   // with one identical line per keystroke.
-  static bool reported_missing = false;
-  static bool reported_truncated = false;
-  static bool reported_invalid = false;
+  //
+  // The flags are atomic: more than one TSF thread can parse a response at
+  // the same time, and a plain bool would be a data race (undefined
+  // behavior) even though the only visible effect would be a duplicated
+  // warning. exchange() hands the flag to exactly one caller, so the
+  // one-shot guarantee holds without a lock.
+  static std::atomic<bool> reported_missing{false};
+  static std::atomic<bool> reported_truncated{false};
+  static std::atomic<bool> reported_invalid{false};
 
   if (protocol_version_state == ProtocolVersionState::Missing) {
     // No version line. Either the peer predates the handshake, or the response
     // was cut before the header could be read -- say which one.
     if (parsed_ok) {
-      if (!reported_missing) {
+      if (!reported_missing.exchange(true)) {
         OutputDebugStringW(
             L"weasel: IPC response had no protocol.version (old server?)\n");
-        reported_missing = true;
       }
     } else {
-      if (!reported_truncated) {
+      if (!reported_truncated.exchange(true)) {
         OutputDebugStringW(
             L"weasel: IPC response truncated before protocol.version "
             L"(unknown server)\n");
-        reported_truncated = true;
       }
     }
   } else if (protocol_version_state == ProtocolVersionState::Invalid) {
     // A version line was present but malformed -- a different diagnosis from
     // an old server that never sends one.
-    if (!reported_invalid) {
+    if (!reported_invalid.exchange(true)) {
       OutputDebugStringW(
           L"weasel: IPC response had an invalid "
-          L"protocol.version value\n");
-      reported_invalid = true;
+          "protocol.version value\n");
     }
   } else if (server_protocol_version != WEASEL_IPC_PROTOCOL_VERSION) {
     // Gated: a mismatched pair stays mismatched on every response, so this one

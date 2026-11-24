@@ -21,17 +21,21 @@ int WeaselServerApp::Run() {
   }
   LOG(INFO) << "IPC server window started";
 
-  // Publish the text-protocol version this server binary spoke at its last
-  // successful startup, so diagnostics can identify a half-installed pairing
-  // without a debugger -- e.g. an old WeaselServer.exe left in place by a
-  // locked-file installer run next to a freshly updated weasel.dll.
+  // Publish the text-protocol version this server binary spoke when it last
+  // started its IPC server window, so diagnostics can identify a half-installed
+  // pairing without a debugger -- e.g. an old WeaselServer.exe left in place
+  // by a locked-file installer run next to a freshly updated weasel.dll.
   //
-  // This is a *last-startup* marker, not proof of which binary is currently
-  // active: an old/rolled-back server does not remove the value. The live
-  // version is the protocol.version line in each IPC response; this registry
-  // entry only answers "which handshake-capable server last ran here".
-  // Read-only for clients; a missing value means "no handshake-capable server
-  // has published a version yet".
+  // The value is written right after the IPC server window comes up, so it
+  // records "a handshake-capable server started here", not "the whole server
+  // finished starting up": creating the candidate UI and initializing the Rime
+  // handler can still fail afterwards, and the value is not rolled back when
+  // they do. It is also a *last-startup* marker, not proof of which binary is
+  // currently active -- an old/rolled-back server does not remove the value.
+  // The live version is the protocol.version line in each IPC response; this
+  // registry entry only answers "which handshake-capable server last ran
+  // here". Read-only for clients; a missing value means "no handshake-capable
+  // server has published a version yet".
   {
     const std::wstring version_str =
         std::to_wstring(WEASEL_IPC_PROTOCOL_VERSION);
