@@ -124,8 +124,8 @@ void absent_protocol_version_is_minus_one() {
              weasel::ProtocolVersionState::Missing);
 }
 
-// A malformed version value is treated as absent instead of guessing.
-void malformed_protocol_version_is_absent() {
+// A malformed version value is rejected as invalid instead of guessing.
+void malformed_protocol_version_is_invalid() {
   std::wstring commit;
   weasel::Context ctx;
   weasel::Status status;
@@ -287,7 +287,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
     protocol_version_line_is_parsed();
     protocol_version_reported_verbatim();
     absent_protocol_version_is_minus_one();
-    malformed_protocol_version_is_absent();
+    malformed_protocol_version_is_invalid();
     non_decimal_protocol_version_is_absent();
     out_of_range_protocol_version_is_absent();
     handshake_line_does_not_disturb_action_parsing();
@@ -302,7 +302,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
     protocol_version_line_is_parsed();
     protocol_version_reported_verbatim();
     absent_protocol_version_is_minus_one();
-    malformed_protocol_version_is_absent();
+    malformed_protocol_version_is_invalid();
     non_decimal_protocol_version_is_absent();
     out_of_range_protocol_version_is_absent();
     handshake_line_does_not_disturb_action_parsing();
