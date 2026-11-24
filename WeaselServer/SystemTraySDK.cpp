@@ -802,10 +802,13 @@ LRESULT CSystemTray::OnTrayNotification(WPARAM wParam, LPARAM lParam) {
 #endif
 
     ::SetForegroundWindow(m_tnd.hWnd);
-    ::TrackPopupMenu(hSubMenu, 0, pos.x, pos.y, 0, hTargetWnd, NULL);
+    UINT uCmd = ::TrackPopupMenu(hSubMenu, TPM_RETURNCMD | TPM_NONOTIFY, pos.x,
+                                 pos.y, 0, m_tnd.hWnd, NULL);
 
     // BUGFIX: See "PRB: Menus for Notification Icons Don't Work Correctly"
     ::PostMessage(m_tnd.hWnd, WM_NULL, 0, 0);
+    if (uCmd)
+      ::PostMessage(hTargetWnd, WM_COMMAND, uCmd, 0);
 
     DestroyMenu(hMenu);
   }

@@ -3,11 +3,13 @@
 #include <WeaselIPC.h>
 #include "SystemTraySDK.h"
 
-#include <condition_variable>
+#include <future>
 #include <mutex>
 #include <thread>
 
 #define WM_WEASEL_TRAY_NOTIFY (WEASEL_IPC_LAST_COMMAND + 100)
+#define WM_WEASEL_TRAY_REFRESH (WEASEL_IPC_LAST_COMMAND + 101)
+#define WM_WEASEL_TRAY_QUIT (WEASEL_IPC_LAST_COMMAND + 102)
 
 // Snapshot of the tray-relevant UI state, computed on the pipe worker thread
 // and applied on a dedicated tray thread. Keeps Shell_NotifyIcon off the pipe
@@ -67,27 +69,32 @@ class WeaselTrayIcon : public CSystemTray {
   WeaselTrayIcon(weasel::UI& ui);
   ~WeaselTrayIcon();
 
+  // Starts the tray thread, which owns the hidden tray window, its message
+  // loop and the tray menu; every CSystemTray call happens on that thread, so
+  // the server message thread never waits on a thread blocked in
+  // Shell_NotifyIcon. Menu choices reach hTargetWnd via PostMessage.
   BOOL Create(HWND hTargetWnd);
 
   // Captures the tray-relevant state and wakes the tray thread.
   // Never calls Shell_NotifyIcon itself, so it is safe from any thread and
   // under any lock.
   void RequestRefresh();
-  // Stops the tray thread; waits for an in-flight refresh to finish.
+  // Stops the tray thread, which removes the icon and destroys its window;
+  // waits for an in-flight refresh to finish.
   void DisableRefresh();
 
  protected:
   virtual void CustomizeMenu(HMENU hMenu);
 
-  // CSystemTray state is touched from the tray thread (Refresh) and from the
-  // server message thread (tray notifications, taskbar re-creation); every
-  // entry point takes m_tray_mutex. Recursive because a tray menu's modal
-  // loop may dispatch a taskbar re-creation while the lock is held.
-  virtual LRESULT OnTrayNotification(WPARAM uID, LPARAM lEvent) override;
-  virtual void InstallIconPending() override;
-
   void Refresh(const WeaselTrayIconState& state);
-  void RefreshThreadProc();
+  void ApplyPendingRefresh();
+  void TrayThreadProc(HWND hTargetWnd,
+                      bool display_tray_icon,
+                      std::promise<BOOL>& created);
+  static LRESULT CALLBACK TrayWindowProc(HWND hWnd,
+                                         UINT message,
+                                         WPARAM wParam,
+                                         LPARAM lParam);
 
   weasel::UIStyle& m_style;
   weasel::Status& m_status;
@@ -100,8 +107,8 @@ class WeaselTrayIcon : public CSystemTray {
   bool m_refresh_enabled = true;
   bool m_refresh_pending = false;
   WeaselTrayIconState m_pending_state;
+  HWND m_tray_hwnd = NULL;
   std::mutex m_state_mutex;
-  std::condition_variable m_state_cv;
-  std::thread m_refresh_thread;
-  std::recursive_mutex m_tray_mutex;
+  std::thread m_tray_thread;
+  WNDPROC m_base_wndproc = NULL;
 };

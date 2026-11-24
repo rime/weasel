@@ -58,7 +58,6 @@ int WeaselServerApp::Run() {
   tray_icon.DisableRefresh();
   m_handler->Finalize();
   m_ui.Destroy();
-  tray_icon.RemoveIcon();
   win_sparkle_cleanup();
 
   return ret;
