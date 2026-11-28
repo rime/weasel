@@ -67,24 +67,26 @@ if (($os -ne "Windows") -and ($os -ne "macOS")) {
   SafeExit
 }
 # set patterns
+# Releases use a version number; older releases and nightlies use a commit hash.
+$revision_pattern = '(?:[0-9]+\.[0-9]+\.[0-9]+|[0-9a-fA-F]+)'
 if ($os -eq "Windows") {
   if (!$build_variant -or ($build_variant -eq "msvc")) {
     $build_variant = "msvc"
     $pattern = ""
     if ($use -eq "weasel") {
-      $pattern = "rime-[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x(64|86)\.7z"
+      $pattern = "rime-" + $revision_pattern + "-" + $os + "-" + $build_variant + "-x(64|86)\.7z"
     } else {
-      $pattern = "rime-(deps-)?[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x(64|86)\.7z"
+      $pattern = "rime-(deps-)?" + $revision_pattern + "-" + $os + "-" + $build_variant + "-x(64|86)\.7z"
     }
   } elseif ($build_variant -eq "mingw") {
-    $pattern = "rime-[0-9a-fA-F]+-" + $os + "-" + $build_variant + "\.tar.bz2"
+    $pattern = "rime-" + $revision_pattern + "-" + $os + "-" + $build_variant + "\.tar.bz2"
   } elseif ($build_variant -eq "clang") {
-    $pattern = "rime-(deps-)?[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x64\.7z"
+    $pattern = "rime-(deps-)?" + $revision_pattern + "-" + $os + "-" + $build_variant + "-x64\.7z"
   }
   $home_dir = $env:UserProfile
 } else {
   $build_variant = "universal"
-  $pattern = "rime-(deps-)?[0-9a-fA-F]+-" + $os + "-" + $build_variant + "\.tar.bz2"
+  $pattern = "rime-(deps-)?" + $revision_pattern + "-" + $os + "-" + $build_variant + "\.tar.bz2"
   $home_dir = $HOME
 }
 if ($PSBoundParameters.ContainsKey("use") -and ($use -eq "weasel" -or $use -eq "dev")) {
@@ -196,9 +198,9 @@ function Is64Bit {
 }
 if ($os -eq "Windows" -and $use -eq "weasel") {
   if (Is64Bit) {
-    $pattern = "rime-[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x64\.7z"
+    $pattern = "rime-" + $revision_pattern + "-" + $os + "-" + $build_variant + "-x64\.7z"
   } else {
-    $pattern = "rime-[0-9a-fA-F]+-" + $os + "-" + $build_variant + "-x86\.7z"
+    $pattern = "rime-" + $revision_pattern + "-" + $os + "-" + $build_variant + "-x86\.7z"
   }
 }
 # check if file already downloaded
@@ -290,8 +292,8 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
   if ($fileNames -and $cmdOk -and $extract) {
     $fileNames.GetEnumerator() | ForEach-Object {
       $outPath = $_ -replace "(\.7z|\.tar\.bz2)|(deps-)", ''
-      if ((-not $hash) -and $outPath -match "rime-([0-9a-fA-F]+)(.*$)") {
-        $hash = $matches[1]
+      if ((-not $revision) -and $outPath -match "^rime-($revision_pattern)-") {
+        $revision = $matches[1]
       }
       if ($_ -match ".*\.tar\.bz2") {
         $tmpTarFile = $_ -replace '.bz2$', ''
@@ -304,8 +306,8 @@ if ($null -ne $response.assets -and $response.assets.Count -gt 0) {
       Write-Host "☑  Extracted $_ to $outPath"
     }
     if ($os -eq "Windows" -and $build_variant -eq "msvc") {
-      $dir86 = Get-ChildItem -Path $("rime-"+$hash+"-*x86") -Directory
-      $dir64 = Get-ChildItem -Path $("rime-"+$hash+"-*x64") -Directory
+      $dir86 = Get-ChildItem -Path $("rime-"+$revision+"-*x86") -Directory
+      $dir64 = Get-ChildItem -Path $("rime-"+$revision+"-*x64") -Directory
       function MyCopyItem {
         param ([string]$src, [string]$subpath, [string]$dest)
         if (-not (Test-Path -Path $dest)) {
