@@ -17,42 +17,108 @@ WeaselTrayIcon::WeaselTrayIcon(weasel::UI& ui)
       m_schema_ascii_icon(),
       m_disabled(false) {}
 
+WeaselTrayIcon::~WeaselTrayIcon() {
+  DisableRefresh();
+}
+
 void WeaselTrayIcon::CustomizeMenu(HMENU hMenu) {}
 
 BOOL WeaselTrayIcon::Create(HWND hTargetWnd) {
+  std::promise<BOOL> created;
+  std::future<BOOL> result = created.get_future();
+  bool display_tray_icon = m_style.display_tray_icon;
+  m_tray_thread = std::thread([this, hTargetWnd, display_tray_icon, &created] {
+    TrayThreadProc(hTargetWnd, display_tray_icon, created);
+  });
+  return result.get();
+}
+
+void WeaselTrayIcon::TrayThreadProc(HWND hTargetWnd,
+                                    bool display_tray_icon,
+                                    std::promise<BOOL>& created) {
   HMODULE hModule = GetModuleHandle(NULL);
   CIcon icon;
   icon.LoadIconW(IDI_ZH);
   BOOL bRet =
       CSystemTray::Create(hModule, NULL, WM_WEASEL_TRAY_NOTIFY,
                           get_weasel_ime_name().c_str(), icon, IDR_MENU_POPUP);
-  if (hTargetWnd) {
-    SetTargetWnd(hTargetWnd);
+  HWND hWnd = GetSafeHwnd();
+  bool run = false;
+  if (hWnd) {
+    m_base_wndproc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(
+        hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(TrayWindowProc)));
+    if (hTargetWnd) {
+      SetTargetWnd(hTargetWnd);
+    }
+    if (!display_tray_icon) {
+      RemoveIcon();
+    } else {
+      AddIcon();
+    }
+    std::lock_guard<std::mutex> lock(m_state_mutex);
+    run = m_refresh_enabled;
+    if (run) {
+      m_tray_hwnd = hWnd;
+      if (m_refresh_pending) {
+        ::PostMessage(hWnd, WM_WEASEL_TRAY_REFRESH, 0, 0);
+      }
+    }
   }
-  if (!m_style.display_tray_icon) {
-    RemoveIcon();
-  } else {
-    AddIcon();
+  created.set_value(bRet);
+  if (!hWnd) {
+    return;
   }
-  return bRet;
+  MSG msg;
+  while (run && ::GetMessage(&msg, NULL, 0, 0) > 0) {
+    ::TranslateMessage(&msg);
+    ::DispatchMessage(&msg);
+  }
+  {
+    std::lock_guard<std::mutex> lock(m_state_mutex);
+    m_tray_hwnd = NULL;
+  }
+  RemoveIcon();
+  ::DestroyWindow(m_hWnd);
+  m_hWnd = NULL;
+}
+
+LRESULT CALLBACK WeaselTrayIcon::TrayWindowProc(HWND hWnd,
+                                                UINT message,
+                                                WPARAM wParam,
+                                                LPARAM lParam) {
+  WeaselTrayIcon* self = static_cast<WeaselTrayIcon*>(m_pThis);
+  switch (message) {
+    case WM_WEASEL_TRAY_REFRESH:
+      self->ApplyPendingRefresh();
+      return 0;
+    case WM_WEASEL_TRAY_QUIT:
+      ::PostQuitMessage(0);
+      return 0;
+  }
+  return ::CallWindowProc(self->m_base_wndproc, hWnd, message, wParam, lParam);
 }
 
 void WeaselTrayIcon::RequestRefresh() {
-  std::lock_guard<std::mutex> lock(m_state_mutex);
-  if (!m_refresh_enabled) {
-    return;
+  HWND hWnd = NULL;
+  {
+    std::lock_guard<std::mutex> lock(m_state_mutex);
+    if (!m_refresh_enabled) {
+      return;
+    }
+    m_pending_state = WeaselTrayIconState::From(m_style, m_status);
+    if (m_refresh_pending) {
+      return;
+    }
+    m_refresh_pending = true;
+    hWnd = m_tray_hwnd;
   }
-  m_pending_state = WeaselTrayIconState::From(m_style, m_status);
-  if (m_refresh_pending) {
-    return;
-  }
-  m_refresh_pending = true;
-  if (!::PostMessage(GetTargetWnd(), WM_WEASEL_SERVICE_NOTIFY, 0, 0)) {
-    m_refresh_pending = false;
+  if (hWnd) {
+    ::PostMessage(hWnd, WM_WEASEL_TRAY_REFRESH, 0, 0);
   }
 }
 
-void WeaselTrayIcon::ApplyRefresh() {
+// Pending requests are coalesced: only the latest snapshot is applied.
+void WeaselTrayIcon::ApplyPendingRefresh() {
   WeaselTrayIconState state;
   {
     std::lock_guard<std::mutex> lock(m_state_mutex);
@@ -61,21 +127,24 @@ void WeaselTrayIcon::ApplyRefresh() {
     }
     state = m_pending_state;
     m_refresh_pending = false;
-    m_refresh_in_progress = true;
   }
   Refresh(state);
-  {
-    std::lock_guard<std::mutex> lock(m_state_mutex);
-    m_refresh_in_progress = false;
-  }
-  m_state_cv.notify_all();
 }
 
 void WeaselTrayIcon::DisableRefresh() {
-  std::unique_lock<std::mutex> lock(m_state_mutex);
-  m_refresh_enabled = false;
-  m_refresh_pending = false;
-  m_state_cv.wait(lock, [this] { return !m_refresh_in_progress; });
+  HWND hWnd = NULL;
+  {
+    std::lock_guard<std::mutex> lock(m_state_mutex);
+    m_refresh_enabled = false;
+    m_refresh_pending = false;
+    hWnd = m_tray_hwnd;
+  }
+  if (hWnd) {
+    ::PostMessage(hWnd, WM_WEASEL_TRAY_QUIT, 0, 0);
+  }
+  if (m_tray_thread.joinable()) {
+    m_tray_thread.join();
+  }
 }
 
 void WeaselTrayIcon::Refresh(const WeaselTrayIconState& state) {

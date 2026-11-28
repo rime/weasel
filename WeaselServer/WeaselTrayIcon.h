@@ -3,16 +3,22 @@
 #include <WeaselIPC.h>
 #include "SystemTraySDK.h"
 
-#include <condition_variable>
+#include <future>
 #include <mutex>
+#include <thread>
 
 #define WM_WEASEL_TRAY_NOTIFY (WEASEL_IPC_LAST_COMMAND + 100)
+#define WM_WEASEL_TRAY_REFRESH (WEASEL_IPC_LAST_COMMAND + 101)
+#define WM_WEASEL_TRAY_QUIT (WEASEL_IPC_LAST_COMMAND + 102)
 
 // Snapshot of the tray-relevant UI state, computed on the pipe worker thread
-// and applied on the server message thread. Keeps Shell_NotifyIcon off the
-// pipe worker threads (and away from g_api_mutex), avoiding the deadlock loop
-// where the taskbar UI thread waits on the pipe while the server waits for the
-// taskbar UI thread inside Shell_NotifyIcon.
+// and applied on a dedicated tray thread. Keeps Shell_NotifyIcon off the pipe
+// worker threads (and away from g_api_mutex) and off the server message thread:
+// Shell_NotifyIcon waits on the taskbar UI thread with SMTO_BLOCK,
+// and while the taskbar UI thread itself is waiting on the pipe,
+// a pipe worker doing a cross-thread SetWindowPos/ShowWindow on the candidate
+// window would otherwise wait on the blocked message thread, closing the
+// deadlock loop.
 struct WeaselTrayIconState {
   WeaselTrayIconState()
       : valid(false),
@@ -61,21 +67,34 @@ class WeaselTrayIcon : public CSystemTray {
   };
 
   WeaselTrayIcon(weasel::UI& ui);
+  ~WeaselTrayIcon();
 
+  // Starts the tray thread, which owns the hidden tray window, its message
+  // loop and the tray menu; every CSystemTray call happens on that thread, so
+  // the server message thread never waits on a thread blocked in
+  // Shell_NotifyIcon. Menu choices reach hTargetWnd via PostMessage.
   BOOL Create(HWND hTargetWnd);
 
-  // Captures the tray-relevant state and posts a refresh request to the server
-  // message thread. Never calls Shell_NotifyIcon itself.
+  // Captures the tray-relevant state and wakes the tray thread.
+  // Never calls Shell_NotifyIcon itself, so it is safe from any thread and
+  // under any lock.
   void RequestRefresh();
+  // Stops the tray thread, which removes the icon and destroys its window;
+  // waits for an in-flight refresh to finish.
   void DisableRefresh();
-
-  // Runs on the server message thread (no g_api_mutex held).
-  void ApplyRefresh();
 
  protected:
   virtual void CustomizeMenu(HMENU hMenu);
 
   void Refresh(const WeaselTrayIconState& state);
+  void ApplyPendingRefresh();
+  void TrayThreadProc(HWND hTargetWnd,
+                      bool display_tray_icon,
+                      std::promise<BOOL>& created);
+  static LRESULT CALLBACK TrayWindowProc(HWND hWnd,
+                                         UINT message,
+                                         WPARAM wParam,
+                                         LPARAM lParam);
 
   weasel::UIStyle& m_style;
   weasel::Status& m_status;
@@ -87,8 +106,9 @@ class WeaselTrayIcon : public CSystemTray {
   // Guarded by m_state_mutex.
   bool m_refresh_enabled = true;
   bool m_refresh_pending = false;
-  bool m_refresh_in_progress = false;
   WeaselTrayIconState m_pending_state;
+  HWND m_tray_hwnd = NULL;
   std::mutex m_state_mutex;
-  std::condition_variable m_state_cv;
+  std::thread m_tray_thread;
+  WNDPROC m_base_wndproc = NULL;
 };
